@@ -14,6 +14,6 @@ void main(void)
 {
   while (1)
     {
-      OS.colr2++;
+      OS.color2++;
     }
 }
