@@ -209,7 +209,7 @@ TARGETLIST := $(subst $(COMMA),$(SPACE),$(TARGETS))
 ifeq ($(words $(TARGETLIST)),1)
  
 # Set PROGRAM to something like 'myprog.c64'.
-override PROGRAM := $(PROGRAM).com
+override PROGRAM := $(PROGRAM).atr
  
 # Set SOURCES to something like 'src/foo.c src/bar.s'.
 # Use of assembler files with names ending differently than .s is deprecated!
@@ -295,7 +295,7 @@ $(TARGETOBJDIR)/%.o: %.c | $(TARGETOBJDIR)
 vpath %.s $(SRCDIR)/$(TARGETLIST) $(SRCDIR)
  
 $(TARGETOBJDIR)/%.o: %.s | $(TARGETOBJDIR)
-	$(CC) -t $(CC65TARGET) -Wa -DDYN_DRV=0 -c --create-dep $(@:.o=.d) $(ASFLAGS) -o $@ $<
+	$(CC) -t $(CC65TARGET) -c --create-dep $(@:.o=.d) $(ASFLAGS) -o $@ $<
  
 vpath %.asm $(SRCDIR)/$(TARGETLIST) $(SRCDIR)
  
@@ -320,6 +320,7 @@ clean:
 	$(call RMFILES,$(DEPENDS))
 	$(call RMFILES,$(REMOVES))
 	$(call RMFILES,$(PROGRAM))
+	$(call RMFILES,*.map)
  
 else # $(words $(TARGETLIST)),1
  
