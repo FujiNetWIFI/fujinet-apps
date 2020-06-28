@@ -34,22 +34,7 @@
 
 ; Real entry point:
 
-	.incbin	"header.atr"
-	
-	;; Boot header
-
-	.byte	$00
-	.byte	$66
-	.byte	$00
-	.byte	$07
-	.byte	$C0
-	.byte	$E4
-	
 start:
-
-.ifdef __ATARIXL__
-        jsr     sram_init
-.endif
 
 ; Clear the BSS data.
 
@@ -59,15 +44,6 @@ start:
 
         tsx
         stx     SP_save
-
-.ifdef __ATARIXL__
-
-        lda     #<(__MAIN_START__ + __MAIN_SIZE__ + __STACKSIZE__)
-        ldx     #>(__MAIN_START__ + __MAIN_SIZE__ + __STACKSIZE__)
-        sta     sp
-        stx     sp+1
-
-.else
 
 ; Report the memory usage.
 
@@ -86,29 +62,9 @@ start:
         sta     APPMHI+1
         sta     sp+1                    ; set up runtime stack part 2
 
-.endif
-
 ; Call the module constructors.
 
         jsr     initlib
-
-; Set the left margin to 0.
-
-        lda     LMARGN
-        sta     LMARGN_save
-        ldy     #0
-        sty     LMARGN
-
-; Set the keyboard to upper-/lower-case mode.
-
-        ldx     SHFLOK
-        stx     SHFLOK_save
-        sty     SHFLOK
-
-; Initialize the conio stuff.
-
-        dey                     ; Set Y to $FF
-        sty     CH              ; remove keypress which might be in the input buffer
 
 ; Push the command-line arguments; and, call main().
 
@@ -123,73 +79,6 @@ _exit:  ldx     SP_save
 
 excexit:jsr     donelib         ; Run module destructors; 'excexit' is called from the exec routine
 
-; Restore the left margin.
-
-        lda     LMARGN_save
-        sta     LMARGN
-
-; Restore the kb mode.
-
-        lda     SHFLOK_save
-        sta     SHFLOK
-
-; Restore APPMHI.
-
-        lda     APPMHI_save
-        ldx     APPMHI_save+1
-        sta     APPMHI
-        stx     APPMHI+1
-
-.ifdef __ATARIXL__
-
-; Atari XL target stuff...
-
-        lda     PORTB_save
-        sta     PORTB
-        lda     RAMTOP_save
-        sta     RAMTOP
-        lda     MEMTOP_save
-        ldx     MEMTOP_save+1
-        sta     MEMTOP
-        stx     MEMTOP+1
-
-
-; Issue a GRAPHICS 0 call (copied'n'pasted from the TGI drivers), in
-; order to restore screen memory to its default location just
-; before the ROM.
-
-        jsr     findfreeiocb
-
-        ; Reopen it in Graphics 0
-        lda     #OPEN
-        sta     ICCOM,x
-        lda     #OPNIN | OPNOT
-        sta     ICAX1,x
-        lda     #0
-        sta     ICAX2,x
-        lda     #<scrdev
-        sta     ICBAL,x
-        lda     #>scrdev
-        sta     ICBAH,x
-        lda     #3
-        sta     ICBLL,x
-        lda     #0
-        sta     ICBLH,x
-        jsr     CIOV_org
-; No error checking here, shouldn't happen(TM); and, no way to
-; recover anyway.
-
-        lda     #CLOSE
-        sta     ICCOM,x
-        jsr     CIOV_org
-
-.endif
-
-; Turn on the cursor.
-
-        ldx     #0
-        stx     CRSINH
-
 ; Back to DOS.
 
         rts
@@ -201,11 +90,7 @@ excexit:jsr     donelib         ; Run module destructors; 'excexit' is called fr
 .bss
 
 SP_save:        .res    1
-SHFLOK_save:    .res    1
-LMARGN_save:    .res    1
-.ifndef __ATARIXL__
-APPMHI_save:    .res    2
-.endif
+APPMHI_save:	.res    1
 
 ; ------------------------------------------------------------------------
 
