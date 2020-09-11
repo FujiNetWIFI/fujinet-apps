@@ -7,19 +7,21 @@
 #include <stdlib.h>
 #include <string.h>
 #include <conio.h>
+#include <string.h>
+#include <peekpoke.h>
 #include "screen.h"
 
 unsigned char* video_ptr;
 unsigned char* dlist_ptr;
 unsigned short screen_memory;
-unsigned char* font_ptr;
 
 /**
  * Setup the screen
  */
 void screen_setup()
 {
-  
+  screen_memory=PEEKW(560)+4;
+  video_ptr=(unsigned char*)(PEEKW(screen_memory));  
 }
 
 void screen_clear()

@@ -6,6 +6,7 @@
  */
 
 #include <atari.h>
+#include <string.h>
 #include "dlist.h"
 #include "screen.h"
 
@@ -41,7 +42,7 @@ void dlist=
    DL_CHR40x8x1,
    DL_CHR40x8x1,
    DL_CHR40x8x1,
-   JVB, 0x600
+   DL_JVB, 0x600
   };
 
 /**
@@ -52,6 +53,6 @@ void dlist_setup(void)
   OS.sdmctl=0;
   memcpy((void *)DISPLAY_LIST, &dlist, sizeof(dlist));
   OS.sdlst=(void *)DISPLAY_LIST;
-  dlist_ptr(unsigned char *)OS.sdlst;
+  dlist_ptr=(unsigned char *)OS.sdlst;
   OS.sdmctl=0x2E;
 }

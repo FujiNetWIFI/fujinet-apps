@@ -11,12 +11,17 @@
 #include <atari.h>
 #include <stdlib.h>
 #include "conio.h"
+#include "font.h"
+#include "dlist.h"
+#include "screen.h"
+#include "board.h"
 
 void main(void)
 {
-  print("Booted! ");
-  while (1)
-    {
-      OS.color2++;
-    }
+  font_setup();
+  dlist_setup();
+  screen_setup();
+  board_display();
+
+  for (;;) { }
 }
