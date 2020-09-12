@@ -21,7 +21,11 @@ unsigned short screen_memory;
 void screen_setup()
 {
   screen_memory=PEEKW(560)+4;
-  video_ptr=(unsigned char*)(PEEKW(screen_memory));  
+  video_ptr=(unsigned char*)(PEEKW(screen_memory));
+  OS.color0=0xA8;
+  OS.color1=0x00;
+  OS.color2=0x0F;
+  OS.color4=0xA4;
 }
 
 void screen_clear()
@@ -31,7 +35,7 @@ void screen_clear()
 
 void screen_clear_line(unsigned char y)
 {
-  memset(&video_ptr[(y)*40],0,40);
+  memset(&video_ptr[(y)*48],0,48);
 }
 
 /**

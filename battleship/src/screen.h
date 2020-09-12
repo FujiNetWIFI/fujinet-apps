@@ -7,11 +7,11 @@
 #ifndef SCREEN_H
 #define SCREEN_H
 
-#define SetChar(x,y,a) video_ptr[(x)+(y)*40]=(a);
-#define GetChar(x,y) video_ptr[(x)+(y)*40]
-#define GRAPHICS_0_SCREEN_SIZE (40*25)
+#define SetChar(x,y,a) video_ptr[(x)+(y)*48]=(a);
+#define GetChar(x,y) video_ptr[(x)+(y)*48]
+#define GRAPHICS_0_SCREEN_SIZE (48*25)
 #define DISPLAY_LIST 0x0600
-#define DISPLAY_MEMORY 0x7400
+#define DISPLAY_MEMORY 0x7380
 #define FONT_MEMORY 0x7800
 
 /**

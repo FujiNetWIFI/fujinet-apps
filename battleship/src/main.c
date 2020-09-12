@@ -10,7 +10,6 @@
 
 #include <atari.h>
 #include <stdlib.h>
-#include "conio.h"
 #include "font.h"
 #include "dlist.h"
 #include "screen.h"
@@ -23,5 +22,8 @@ void main(void)
   screen_setup();
   board_display();
 
+  screen_puts(3,20,"TESTING SOME TEXT FOR STATUS OUTPUT");
+  screen_puts(3,21,"Blah Blah Blah Blah Blah Blah Blah ");
+  
   for (;;) { }
 }
