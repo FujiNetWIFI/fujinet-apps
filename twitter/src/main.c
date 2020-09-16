@@ -13,12 +13,14 @@
 #include "font.h"
 #include "dlist.h"
 #include "screen.h"
+#include "menu.h"
 
 void main(void)
 {
   font_setup();
   dlist_setup();
   screen_setup();
-
+  menu_main(0);
+  
   for (;;) { }
 }

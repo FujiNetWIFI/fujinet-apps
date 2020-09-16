@@ -7,18 +7,6 @@ _dlih:	PHA
 	STA	$D40A
 	STA	$D018
 	STA	$D01A
-	LDA	#<dl1
-	STA	$0200
-	LDA	#>dl1
-	STA	$0201
-	PLA
-	RTI
-
-dl1:	PHA
-	LDA	#$96
-	STA	$D40A
-	STA	$D018
-	STA	$D01A
 	LDA	#<dl2
 	STA	$0200
 	LDA	#>dl2
@@ -27,7 +15,7 @@ dl1:	PHA
 	RTI
 
 dl2:	PHA
-	LDA	#$94
+	LDA	#$96
 	STA	$D40A
 	STA	$D018
 	STA	$D01A
