@@ -4,6 +4,7 @@
  * Screen functions
  */
 
+#include <atari.h>
 #include <stdlib.h>
 #include <string.h>
 #include <conio.h>
@@ -15,6 +16,8 @@ unsigned char* video_ptr;
 unsigned char* dlist_ptr;
 unsigned short screen_memory;
 
+extern void dlih(void);
+
 /**
  * Setup the screen
  */
@@ -22,10 +25,9 @@ void screen_setup()
 {
   screen_memory=PEEKW(560)+4;
   video_ptr=(unsigned char*)(PEEKW(screen_memory));
-  OS.color0=0xA8;
-  OS.color1=0x00;
-  OS.color2=0x0F;
-  OS.color4=0xA4;
+  OS.color2=OS.color4=0x9E;
+  OS.vdslst=dlih;
+  ANTIC.nmien=0xC0;
 }
 
 void screen_clear()

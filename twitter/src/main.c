@@ -19,4 +19,6 @@ void main(void)
   font_setup();
   dlist_setup();
   screen_setup();
+
+  for (;;) { }
 }
