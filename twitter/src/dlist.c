@@ -19,7 +19,6 @@ void dlist=
    DL_BLK8,
    DL_LMS(DL_CHR40x8x1),
    DISPLAY_MEMORY,
-   DL_CHR40x8x1,
    DL_DLI(DL_CHR40x8x1),
    DL_CHR40x8x1,
    DL_CHR40x8x1,
@@ -31,6 +30,7 @@ void dlist=
    DL_CHR40x8x1,
    DL_CHR40x8x1,
    DL_DLI(DL_CHR40x8x1),
+   DL_DLI(DL_CHR40x8x1),
    DL_CHR40x8x1,
    DL_CHR40x8x1,
    DL_CHR40x8x1,
@@ -40,7 +40,7 @@ void dlist=
    DL_CHR40x8x1,
    DL_CHR40x8x1,
    DL_CHR40x8x1,
-   DL_CHR40x8x1,
+   DL_DLI(DL_CHR40x8x1),
    DL_CHR40x8x1,
    DL_JVB, 0x600
   };

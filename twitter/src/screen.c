@@ -25,7 +25,8 @@ void screen_setup()
 {
   screen_memory=PEEKW(560)+4;
   video_ptr=(unsigned char*)(PEEKW(screen_memory));
-  OS.color2=OS.color4=0x9E;
+  OS.color2=OS.color4=0x06;
+  OS.color1=0x0F;
   OS.vdslst=dlih;
   ANTIC.nmien=0xC0;
 }
@@ -67,6 +68,11 @@ void screen_puts(unsigned char x,unsigned char y,char *s)
       ++s;
       
     } while(*s!=0);
+}
+
+void screen_put(unsigned char x, unsigned char y, char c)
+{
+  SetChar(x,y,c);
 }
 
 /**

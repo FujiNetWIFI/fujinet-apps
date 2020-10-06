@@ -22,6 +22,7 @@ void screen_setup(void);
 /**
  * Print ATASCII string to display memory
  */
+void screen_put(unsigned char x, unsigned char y, char c);
 void screen_puts(unsigned char x,unsigned char y,char *s);
 
 /**

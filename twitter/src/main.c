@@ -14,6 +14,7 @@
 #include "dlist.h"
 #include "screen.h"
 #include "menu.h"
+#include "tweet.h"
 
 void main(void)
 {
@@ -21,6 +22,7 @@ void main(void)
   dlist_setup();
   screen_setup();
   menu_main(0);
+  tweets();
   
   for (;;) { }
 }
