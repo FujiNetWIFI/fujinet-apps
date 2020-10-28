@@ -89,7 +89,7 @@ unsigned char nstatus(char* devicespec)
   OS.dcb.daux=0;
   siov();
 
-  return OS.dcb.dstats == 1 ? 1 : OS.dvstat[3];
+  return OS.dvstat[3];
 }
 
 unsigned char nread(char* devicespec, unsigned char* buf, unsigned short len)

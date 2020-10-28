@@ -24,6 +24,6 @@ void get_line(char* buf, unsigned char len)
 {
   OS.iocb[0].buffer=buf;
   OS.iocb[0].buflen=len;
-  OS.iocb[0].command=5;
+  OS.iocb[0].command=IOCB_GETREC;
   ciov();
 }

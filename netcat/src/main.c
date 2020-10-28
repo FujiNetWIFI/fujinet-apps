@@ -3,10 +3,10 @@
  */
 
 #include <atari.h>
-#include <conio.h>
 #include <stdbool.h>
 #include <stdlib.h>
-#include "conio.h"
+#include <conio.h> // for kbhit() and cgetc()
+#include "conio.h" // our local one.
 #include "nio.h"
 
 char url[256];                  // URL
@@ -18,6 +18,7 @@ unsigned char trip=0;           // if trip=1, fujinet is asking us for attention
 void* old_vprced;               // old PROCEED vector, restored on exit.
 unsigned short bw=0;            // # of bytes waiting.
 unsigned char rx_buf[8192];     // RX buffer.
+
 extern void ih();               // defined in intr.s
 
 /**
@@ -49,7 +50,6 @@ void print_error(unsigned char err)
 void nc()
 {
   OS.lmargn=0;
-  OS.soundr=0;
   
   // Attempt open.
   err=nopen(url,trans);
@@ -73,7 +73,7 @@ void nc()
       // If key pressed, send it.
       if (kbhit())
 	{
-	  char c=cgetc();
+	  char c=getc();
 	  err=nwrite(url,&c,1); // Send character.
 
 	  if (err!=1)
@@ -142,11 +142,14 @@ void nc()
  */
 void main(void)
 {
+  OS.soundr=0; // Turn off SIO beeping sound
+  cursor(1);   // Keep cursor on
+  
   while (running==true)
     {
       get_url();
       nc();
     }
   
-  OS.soundr=3;
+  OS.soundr=3; // Restore SIO beeping sound
 }
