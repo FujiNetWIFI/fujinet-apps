@@ -73,7 +73,7 @@ void nc()
       // If key pressed, send it.
       if (kbhit())
 	{
-	  char c=getc();
+	  char c=cgetc();
 	  err=nwrite(url,&c,1); // Send character.
 
 	  if (err!=1)
