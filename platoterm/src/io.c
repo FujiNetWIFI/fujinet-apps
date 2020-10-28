@@ -25,7 +25,6 @@ extern padPt TTYLoc;
 
 static unsigned char hostname[256]="N:TCP://irata.online:8005/";
 static unsigned short bw=0;
-static unsigned char connected=0;
 
 unsigned char trip=0;
 extern void ih(void);
@@ -96,7 +95,7 @@ void io_main(void)
   siov();
 
   bw=(status[1]<<8)+status[0];
-  connected=status[2];
+  running=status[2];
   
   // These functions are all I needed to change to port over to the N: device.
   
@@ -113,11 +112,6 @@ void io_main(void)
       siov();
       ShowPLATO((padByte *)recv_buffer, bw);
       bw=trip=0;
-    }
-
-  if (connected==0)
-    {
-      io_done();
     }
   
   PIA.pactl |= 1;
@@ -137,4 +131,21 @@ void io_done(void)
   OS.dcb.dbyt=0;
   OS.dcb.daux=0;
   siov();
+
+  // Reset FujiNet
+  OS.dcb.ddevic=0x70;
+  OS.dcb.dunit=1;
+  OS.dcb.dcomnd=0xFF;
+  OS.dcb.dstats=0x00;
+  OS.dcb.dbuf=0;
+  OS.dcb.dtimlo=0x0f;
+  OS.dcb.dbyt=0;
+  OS.dcb.daux=0;
+  siov();
+
+  // Wait a few seconds.
+  OS.rtclok[0]=OS.rtclok[1]=OS.rtclok[2]=0;
+  while (OS.rtclok[1]<2) { }
+
+  asm("JMP $E477"); // Do coldstart.
 }
