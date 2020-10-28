@@ -123,7 +123,7 @@ void nc()
 	    }
 
 	  // Print the buffer to screen.
-	  print(rx_buf);
+	  printl(rx_buf,bw);
 	  PIA.pactl |= 1; // Flag interrupt as serviced, ready for next one.
 	}
     }

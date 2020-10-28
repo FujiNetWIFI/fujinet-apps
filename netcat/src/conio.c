@@ -6,12 +6,18 @@
 #include <string.h>
 #include "cio.h"
 
-void print(const char* c, unsigned short l)
+void printl(const char* c, unsigned short l)
 {
   OS.iocb[0].buffer=c;
   OS.iocb[0].buflen=l;
   OS.iocb[0].command=IOCB_PUTCHR;
   ciov();
+}
+
+void print(const char* c)
+{
+  int l=strlen(c);
+  printl(c,l);
 }
 
 void get_line(char* buf, unsigned char len)
