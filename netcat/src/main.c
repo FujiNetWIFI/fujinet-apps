@@ -47,7 +47,10 @@ void print_error(unsigned char err)
  * NetCat
  */
 void nc()
-{  
+{
+  OS.lmargn=0;
+  OS.soundr=0;
+  
   // Attempt open.
   err=nopen(url,trans);
 
@@ -57,8 +60,6 @@ void nc()
       print_error(err);
       return;
     }
-
-  running=true;
   
   // Open successful, set up interrupt
   
@@ -105,7 +106,7 @@ void nc()
 	}
 
       // Get # of bytes waiting, no more than size of rx_buf
-      bw=OS.dvstat[1]<<8 + OS.dvstat[0];
+      bw=OS.dvstat[1]*256+OS.dvstat[0];
 
       if (bw>sizeof(rx_buf))
 	bw=sizeof(rx_buf);
@@ -124,6 +125,8 @@ void nc()
 
 	  // Print the buffer to screen.
 	  printl(rx_buf,bw);
+	  
+	  trip=0;
 	  PIA.pactl |= 1; // Flag interrupt as serviced, ready for next one.
 	}
     }
@@ -144,4 +147,6 @@ void main(void)
       get_url();
       nc();
     }
+  
+  OS.soundr=3;
 }

@@ -6,7 +6,7 @@
 #include <string.h>
 #include "cio.h"
 
-void printl(const char* c, unsigned short l)
+void printl(const char* c, int l)
 {
   OS.iocb[0].buffer=c;
   OS.iocb[0].buflen=l;
