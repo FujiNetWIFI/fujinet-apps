@@ -3,9 +3,11 @@
  */
 
 #include "nio.h"
+#include "sio.h"
 #include <atari.h>
+#include <stddef.h>
 
-unsigned char nunit(const char* devicespec)
+unsigned char nunit(char* devicespec)
 {
   unsigned char unit=1;
   
@@ -20,7 +22,7 @@ unsigned char nunit(const char* devicespec)
   return unit;
 }
 
-unsigned char nopen(const char* devicespec, unsigned char trans)
+unsigned char nopen(char* devicespec, unsigned char trans)
 {
   unsigned char unit=nunit(devicespec);
   
@@ -39,15 +41,15 @@ unsigned char nopen(const char* devicespec, unsigned char trans)
     {
       if (OS.dcb.dstats==144)
 	{
-	  nstatus();
-	  return dvstat[3]; // return extended error.
+	  nstatus(devicespec);
+	  return OS.dvstat[3]; // return extended error.
 	}
       else
 	return OS.dcb.dstats; // Return SIO error.
     }
 }
 
-unsigned char nclose(const char* devicespec)
+unsigned char nclose(char* devicespec)
 {
   unsigned char unit=nunit(devicespec);
   
@@ -65,15 +67,15 @@ unsigned char nclose(const char* devicespec)
     {
       if (OS.dcb.dstats==144)
 	{
-	  nstatus();
-	  return dvstat[3]; // return extended error.
+	  nstatus(devicespec);
+	  return OS.dvstat[3]; // return extended error.
 	}
       else
 	return OS.dcb.dstats; // Return SIO error.
     }
 }
 
-unsigned char nstatus(const char* devicespec)
+unsigned char nstatus(char* devicespec)
 {
   unsigned char unit=nunit(devicespec);
 
@@ -86,10 +88,11 @@ unsigned char nstatus(const char* devicespec)
   OS.dcb.dbyt=sizeof(OS.dvstat);
   OS.dcb.daux=0;
   siov();
-  
+
+  return OS.dcb.dstats == 1 ? 1 : OS.dvstat[3];
 }
 
-unsigned char nread(const char* devicespec, unsigned char* buf, unsigned short len)
+unsigned char nread(char* devicespec, unsigned char* buf, unsigned short len)
 {
   unsigned char unit=nunit(devicespec);
   
@@ -106,15 +109,15 @@ unsigned char nread(const char* devicespec, unsigned char* buf, unsigned short l
     {
       if (OS.dcb.dstats==144)
 	{
-	  nstatus();
-	  return dvstat[3]; // return extended error.
+	  nstatus(devicespec);
+	  return OS.dvstat[3]; // return extended error.
 	}
       else
 	return OS.dcb.dstats; // Return SIO error.
     }
 }
 
-unsigned char nwrite(const char* devicespec, unsigned char* buf, unsigned short len)
+unsigned char nwrite(char* devicespec, unsigned char* buf, unsigned short len)
 {
   unsigned char unit=nunit(devicespec);
   
@@ -131,8 +134,8 @@ unsigned char nwrite(const char* devicespec, unsigned char* buf, unsigned short 
     {
       if (OS.dcb.dstats==144)
 	{
-	  nstatus();
-	  return dvstat[3]; // return extended error.
+	  nstatus(devicespec);
+	  return OS.dvstat[3]; // return extended error.
 	}
       else
 	return OS.dcb.dstats; // Return SIO error.

@@ -4,7 +4,10 @@
 
 #include <atari.h>
 #include <conio.h>
+#include <stdbool.h>
+#include <stdlib.h>
 #include "conio.h"
+#include "nio.h"
 
 char url[256];                  // URL
 bool running=true;              // Is program running?
@@ -14,6 +17,8 @@ unsigned char err;              // error code of last operation.
 unsigned char trip=0;           // if trip=1, fujinet is asking us for attention.
 void* old_vprced;               // old PROCEED vector, restored on exit.
 unsigned short bw=0;            // # of bytes waiting.
+unsigned char rx_buf[8192];     // RX buffer.
+extern void ih();               // defined in intr.s
 
 /**
  * Get URL from user.
@@ -22,9 +27,9 @@ void get_url()
 {
   OS.lmargn=2;
   print("NETCAT--N: DEVICESPEC?\x9b");
-  get_line(url);
+  get_line(url,128);
   print("\x9bTRANS--0=NONE, 1=CR, 2=LF, 3=CR/LF?\x9b");
-  get_line(tmp);
+  get_line(tmp,7);
   trans=atoi(tmp);
 }
 
@@ -44,7 +49,7 @@ void print_error(unsigned char err)
 void nc()
 {  
   // Attempt open.
-  err=nopen(url);
+  err=nopen(url,trans);
 
   if (err!=1)
     {
@@ -68,7 +73,7 @@ void nc()
       if (kbhit())
 	{
 	  char c=cgetc();
-	  err=nwrite(&url,&c,1); // Send character.
+	  err=nwrite(url,&c,1); // Send character.
 
 	  if (err!=1)
 	    {
@@ -83,7 +88,7 @@ void nc()
 	continue;
 
       // Something waiting for us, get status and bytes waiting.
-      err=nstatus(&url);
+      err=nstatus(url);
 
       if (err==136)
 	{
@@ -99,10 +104,15 @@ void nc()
 	  continue;
 	}
 
-      bw=OS.dcb.dvstat[1]<<8 + OS.dcb.dvstat[0];
+      // Get # of bytes waiting, no more than size of rx_buf
+      bw=OS.dvstat[1]<<8 + OS.dvstat[0];
+
+      if (bw>sizeof(rx_buf))
+	bw=sizeof(rx_buf);
+      
       if (bw>0)
 	{
-	  err=nread(&url,rx_buf,bw);
+	  err=nread(url,rx_buf,bw);
 
 	  if (err!=1)
 	    {
@@ -113,7 +123,7 @@ void nc()
 	    }
 
 	  // Print the buffer to screen.
-	  print(buf);
+	  print(rx_buf);
 	  PIA.pactl |= 1; // Flag interrupt as serviced, ready for next one.
 	}
     }
@@ -127,13 +137,11 @@ void nc()
 /**
  * Main entrypoint
  */
-int main(int argc, char* argv[])
+void main(void)
 {
   while (running==true)
     {
       get_url();
       nc();
     }
-
-  return 0;
 }

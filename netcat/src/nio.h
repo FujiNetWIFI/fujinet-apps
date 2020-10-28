@@ -8,16 +8,17 @@
 /**
  * Open N: device with devicespec
  * @param devicespec - an N: device spec, e.g. N:TCP://FOO.COM:1234/
+ * @param translation mode, 0=none, 1=cr, 2=lf, 3=cr/lf
  * @return error code, or 1 if successful.
  */
-unsigned char nopen(const char* devicespec);
+unsigned char nopen(char* devicespec, unsigned char trans);
 
 /**
  * Close N: device with devicespec
  * @param devicespec - an N: device spec to close (the unit number is extracted)
  * @return error code, or 1 if successful.
  */
-unsigned char nclose(const char* devicespec);
+unsigned char nclose(char* devicespec);
 
 /**
  * Get status of specific N: device
@@ -30,7 +31,7 @@ unsigned char nclose(const char* devicespec);
  * OS.dcb.dvstat[2] = reserved
  * OS.dcb.dvstat[3] = Error code of last I/O operation. !1 = error.
  */
-unsigned char nstatus(const char* devicespec);
+unsigned char nstatus(char* devicespec);
 
 /**
  * Read # of bytes from specific N: device.
@@ -39,7 +40,7 @@ unsigned char nstatus(const char* devicespec);
  * @param len - The # of bytes to read (up to 65535)
  * @return error code, or 1 if successful, buf is filled with data.
  */
-unsigned char nread(const char* devicespec, unsigned char* buf, unsigned short len);
+unsigned char nread(char* devicespec, unsigned char* buf, unsigned short len);
 
 /**
  * Write # of bytes to specific N: device.
@@ -48,6 +49,6 @@ unsigned char nread(const char* devicespec, unsigned char* buf, unsigned short l
  * @param len - The # of bytes to write (up to 65535)
  * @return error code, or 1 if successful, buf is filled with data.
  */
-unsigned char nwrite(const char* devicespec, unsigned char* buf, unsigned short len);
+unsigned char nwrite(char* devicespec, unsigned char* buf, unsigned short len);
 
 #endif /* NIO_H */
