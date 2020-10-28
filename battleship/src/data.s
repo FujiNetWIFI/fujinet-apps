@@ -1,3 +1,0 @@
-.segment	"DATA"
-	.byte $ff
-	
