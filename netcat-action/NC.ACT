@@ -1,0 +1,160 @@
+; 
+; A simple netcat program
+; to show how to do basic network
+; input and output.
+;
+; Author: Thomas Cherryhomes
+;  <thom.cherryhomes@gmail.com>
+;
+
+INCLUDE "D2:SYS.ACT"
+INCLUDE "D2:NIO.ACT"
+
+MODULE
+
+CARD BYTESWAITING=$02EA     ; # of bytes waiting
+BYTE KP=$02FC               ; Key pressed?
+BYTE ARRAY devicespec(256)  ; DeviceSpec
+BYTE trans                  ; translation mode
+BYTE localEcho              ; local echo off/on?
+BYTE running                ; is program running?
+BYTE ARRAY rxbuf(8192)      ; receive buffer
+
+DEFINE KEYBOARD_IOCB="2"
+DEFINE TRUE="1"
+DEFINE FALSE="0"
+
+;
+; Prompt for URL
+;
+PROC getURL()
+       PrintE("NETCAT--ENTER DEVICE SPEC?")
+       InputS(devicespec)
+       PutE()
+       
+       PrintE("TRANS--0=NONE, 1=CR, 2=LF, 3=CR/LF?")
+       trans=InputB()
+       PutE()
+
+       PrintE("LOCAL ECHO--0=NO, 1=YES?")
+       localEcho=InputB()
+       PutE()
+RETURN
+
+;
+; Handle nc output
+;
+PROC ncoutput()
+       BYTE ARRAY ch(1)
+       BYTE err
+
+       IF KP=$FF THEN
+           RETURN
+       FI
+
+       ch(0)=GetD(KEYBOARD_IOCB)
+
+       IF localEcho=1 THEN
+           Put(ch(0))
+       FI
+
+       err=nwrite(devicespec,ch,1)
+
+       IF err<>1 THEN
+           Print("Write Error: ")
+           PrintB(err)
+           running=FALSE
+       FI
+
+RETURN
+
+;
+; Handle nc input
+;
+PROC ncinput()
+       BYTE err
+       CARD I
+
+       IF trip=0 THEN
+           RETURN
+       FI
+
+       nstatus()
+
+       IF EXTERR=136 THEN
+          PrintE("Disconnected.")
+          running=FALSE
+          RETURN
+       FI
+
+       IF BYTESWAITING=0 THEN
+          RETURN 
+       FI
+
+       IF BYTESWAITING>8192 THEN
+          BYTESWAITING=8192
+       FI
+
+       ; Do the network read.
+       err=nread(devicespec,rxbuf,BYTESWAITING)
+
+       IF err<>1 THEN
+           Print("Read Error: ")
+           PrintB(err)
+           running=FALSE
+           RETURN
+       FI
+       
+       ; Drain/display rx buffer
+       FOR I=0 TO BYTESWAITING-1
+       DO
+           Put(rxbuf(I))
+       OD
+
+       ; Done, reset interrupt
+       trip=0
+       PACTL=PACTL%1
+
+RETURN
+
+;
+; The main Netcat function
+;
+PROC nc()
+       BYTE err
+
+       err=nopen(deviceSpec,trans)
+
+       IF err<>1 THEN
+           Print("Open Error: ")
+           PrintB(err)
+           RETURN
+       FI
+
+       ; flag program as running.
+       running=1
+               
+       ; Open keyboard
+       Open(KEYBOARD_IOCB,"K:",4,0)
+
+       WHILE running = TRUE  
+         DO
+         ncoutput()
+         ncinput()
+         OD
+
+       PrintE("Bye.")
+
+       ; Clean up
+       Close(KEYBOARD_IOCB) ; close kybd
+       nclose(deviceSpec)
+
+RETURN
+
+;
+; Main entrypoint
+;
+PROC main()
+       getURL()
+       nc()
+RETURN

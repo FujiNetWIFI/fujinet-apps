@@ -1,0 +1,237 @@
+;
+; #FujiNet Network I/O Library    
+; For ACTION!
+;
+; Author: Thomas Cherryhomes
+;  <thom.cherryhomes@gmail.com>
+;
+; These routines call the #Fujinet
+; directly from SIO, and thus do
+; not need the N: handler (NDEV)
+;
+
+MODULE
+
+;
+; PROCEED interrupt vars
+;
+CARD VPRCEDSAVE     ; Save vector for vprced
+CARD VPRCED = $0202 ; Proceed vector
+BYTE PACTL  = $D302 ; PIA Control for Proceed
+BYTE trip           ; Trip FLAG.
+
+;
+; DVSTAT (Status)
+;
+BYTE DVSTAT = $02EA ; PTR TO DVSTAT
+BYTE EXTERR = $02ED ; DVSTAT+3
+
+;
+; DEVICE CONTROL BLOCK (DCB)
+;
+BYTE DDEVIC = $0300 ; Device #
+BYTE DUNIT  = $0301 ; Unit #
+BYTE DCOMND = $0302 ; Command
+BYTE DSTATS = $0303 ; <-> and error
+CARD DBUF   = $0304 ; buffer
+BYTE DTIMLO = $0306 ; timeout secs
+BYTE DUNUSE = $0307 ; reserved
+CARD DBYT   = $0308 ; pyld byte len
+CARD DAUX   = $030A ; daux1/daux2
+BYTE DAUX1  = $030A ; daux1
+BYTE DAUX2  = $030B ; daux2
+
+;
+; Interrupt handler
+;
+; A9 01    LDA #$01
+; 8D XX XX STA trip
+; 68       PLA
+; 40       RTI
+; 
+PROC ninterrupt_handler=*()
+[$A9$01$8D trip $68$40]
+
+;
+; Enable Interrupt handler.
+;
+PROC nenableproc()
+
+    trip=0
+    VPRCEDSAVE=VPRCED
+    VPRCED=ninterrupt_handler
+    PACTL = PACTL % 1
+
+RETURN
+
+;
+; Disable Interrupt handler.
+;
+PROC ndisableproc()
+
+    trip=0
+    VPRCED=VPRCEDSAVE
+
+RETURN
+
+;
+; PROC to call SIO Vector (SIOV)
+;
+PROC siov=$E459()
+
+;
+; Get the unit number from devicespec
+;
+BYTE FUNC ngetunit(BYTE ARRAY ds)
+    BYTE unit=1
+                   
+    IF ds(2)=': THEN
+        unit=1
+    ELSEIF ds(3)=': THEN
+        unit=ds(2)-$30
+    ELSE
+        unit=1
+    FI
+
+RETURN (unit)
+
+;
+; Get status of last NIO operation,
+; Return in DVSTAT
+; 
+; @param devicespec N: devicespec
+;
+PROC nstatus(BYTE ARRAY ds)
+
+  DDEVIC = $71
+  DUNIT  = ngetunit(ds)
+  DCOMND = 'S     ; STATUS
+  DSTATS = $40    ; Payload to Atari
+  DBUF   = $02EA  ; status buffer
+  DTIMLO = $1F    ; 32 second timeout
+  DBYT   = 4      ; 4 byte payload
+  DAUX1  = 0      ; R/W
+  DAUX2  = 0      ; translation
+  siov()   
+
+RETURN
+
+;
+; Return error of last NIO operation.
+; If SIO error = 144, then a status
+; is done, and the extended err is 
+; returned.
+;
+; @param devicespec N: devicespec
+; @return error 1=successful
+;
+BYTE FUNC geterror(BYTE ARRAY ds)
+  BYTE errno
+
+  IF DSTATS=144 THEN
+    nstatus(ds)
+    errno=EXTERR
+  ELSE
+    errno=DSTATS
+  FI
+
+RETURN (errno)
+
+;
+; Open the N: device pointed to by
+; devicespec.
+; 
+; @param devicespec N: devicespec
+; @param trans - translation mode
+;   0=NONE, 1=CR, 2=LF, 3=CR/LF
+; @return error, 1=successful.
+;
+BYTE FUNC nopen(BYTE ARRAY ds, BYTE t)
+
+  DDEVIC = $71
+  DUNIT  = ngetunit(ds)
+  DCOMND = 'O    ; OPEN
+  DSTATS = $80   ; Write to fujinet
+  DBUF   = ds    ; send devicespec
+  DTIMLO = $1F   ; 32 second timeout
+  DBYT   = 256   ; 256 byte payload
+  DAUX1  = 12    ; R/W
+  DAUX2  = t     ; translation
+  siov();  
+
+  IF DSTATS=1 THEN
+      nenableproc()
+  FI
+
+RETURN (geterror(ds))
+
+;
+; Close the N: device pointed to by
+; devicespec.
+; 
+; @param devicespec N: devicespec
+; @return error, 1=successful.
+;
+BYTE FUNC nclose(BYTE ARRAY ds)
+
+  DDEVIC = $71
+  DUNIT  = ngetunit(ds)
+  DCOMND = 'C    ; CLOSE
+  DSTATS = $00   ; No Payload
+  DBUF   = 0     ; send devicespec
+  DTIMLO = $1F   ; 32 second timeout
+  DBYT   = 0     ; No payload
+  DAUX1  = 0
+  DAUX2  = 0
+  siov();  
+
+  ndisableproc()
+
+RETURN (geterror(ds))
+
+;
+; Read len bytes from N: device 
+; pointed to by devicespec.
+;
+; @param devicespec N: devicespec
+; @param buf The dest buffer
+; @param len # of bytes to read
+; @return error 1=successful
+;
+BYTE FUNC nread(BYTE ARRAY ds, BYTE ARRAY buf, CARD len)
+
+  DDEVIC = $71
+  DUNIT  = ngetunit(ds)
+  DCOMND = 'R    ; READ
+  DSTATS = $40   ; Atari<-Payload
+  DBUF   = buf   ; send devicespec
+  DTIMLO = $1F   ; 32 second timeout
+  DBYT   = len   ; No payload
+  DAUX   = len
+  siov();  
+
+RETURN (geterror(ds))
+
+;
+; Write len bytes to N: device 
+; pointed to by devicespec.
+;
+; @param devicespec N: devicespec
+; @param buf The src buffer
+; @param len # of bytes to read
+; @return error 1=successful
+;
+BYTE FUNC nwrite(BYTE ARRAY ds, BYTE ARRAY buf, CARD len)
+
+  DDEVIC = $71
+  DUNIT  = ngetunit(ds)
+  DCOMND = 'W    ; WRITE
+  DSTATS = $80   ; Payload->FujiNet
+  DBUF   = buf   ; send devicespec
+  DTIMLO = $1F   ; 32 second timeout
+  DBYT   = len   ; No payload
+  DAUX   = len
+  siov();  
+
+RETURN (geterror(ds))
+
