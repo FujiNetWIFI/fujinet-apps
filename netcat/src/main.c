@@ -18,7 +18,7 @@ unsigned char trip=0;           // if trip=1, fujinet is asking us for attention
 void* old_vprced;               // old PROCEED vector, restored on exit.
 unsigned short bw=0;            // # of bytes waiting.
 unsigned char rx_buf[8192];     // RX buffer.
-
+bool echo=false;                // local echo?
 extern void ih();               // defined in intr.s
 
 /**
@@ -26,12 +26,19 @@ extern void ih();               // defined in intr.s
  */
 void get_url()
 {
-  OS.lmargn=2;
+  OS.lmargn=2; // Set left margin to 2
+  OS.shflok=64; // turn on shift lock.
+
   print("NETCAT--N: DEVICESPEC?\x9b");
   get_line(url,128);
+  
   print("\x9bTRANS--0=NONE, 1=CR, 2=LF, 3=CR/LF?\x9b");
   get_line(tmp,7);
   trans=atoi(tmp);
+  
+  print("\x9bLOCAL ECHO?--Y=YES, N=NO?\x9b");
+  get_line(tmp,7);
+  echo=(tmp[0]=='Y' ? true : false);
 }
 
 /**
@@ -49,7 +56,8 @@ void print_error(unsigned char err)
  */
 void nc()
 {
-  OS.lmargn=0;
+  OS.lmargn=0; // Set left margin to 0
+  OS.shflok=0; // turn off shift-lock.
   
   // Attempt open.
   err=nopen(url,trans);
@@ -75,6 +83,9 @@ void nc()
 	{
 	  char c=cgetc();
 	  err=nwrite(url,&c,1); // Send character.
+
+	  if (echo==true)
+	    printc(&c);
 
 	  if (err!=1)
 	    {

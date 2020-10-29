@@ -14,6 +14,14 @@ void printl(const char* c, int l)
   ciov();
 }
 
+void printc(char* c)
+{
+  OS.iocb[0].buffer=c;
+  OS.iocb[0].buflen=1;
+  OS.iocb[0].command=IOCB_PUTCHR;
+  ciov();
+}
+
 void print(const char* c)
 {
   int l=strlen(c);
