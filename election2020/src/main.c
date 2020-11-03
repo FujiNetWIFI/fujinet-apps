@@ -88,6 +88,17 @@ void election(unsigned short r, unsigned short d, char* date, char* time)
   screen_puts(4,10,date);
   screen_puts(5,11,time);
 
+  if (d>269)
+    {
+      screen_puts(12,3,"WINS!");
+      for (;;) { OS.color1++; }
+    }
+  else if (r>269)
+    {
+      screen_puts(12,6,"WINS!");
+      for (;;) { OS.color2++; }
+    }
+  
 }
 
 void get_data(unsigned short *r, unsigned short *d, char *date, char* time)
