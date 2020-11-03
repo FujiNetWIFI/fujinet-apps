@@ -24,7 +24,7 @@ void config_dlist=
    DL_LMS(DL_CHR20x16x2),
    DISPLAY_MEMORY,
    DL_CHR20x16x2,
-   DL_CHR20x16x2,  
+   DL_CHR20x16x2,
    DL_CHR20x16x2,
    DL_CHR20x16x2,
    DL_CHR20x16x2,
@@ -41,7 +41,8 @@ void config_dlist=
 
 char buf[256];
 
-char stamp[20];
+char date[20];
+char time[20];
 
 char devicespec[256]="N:HTTPS://FUJINET.ONLINE/2020pres/";
 
@@ -50,13 +51,13 @@ extern unsigned char* dlist_ptr;
 extern unsigned short screen_memory;
 extern unsigned char* font_ptr;
 
-void election(unsigned short r, unsigned short d, char* stamp)
+void election(unsigned short r, unsigned short d, char* date, char* time)
 {
   char rs[4]={0,0,0,0};
   char ds[4]={0,0,0,0};
 
   unsigned char rp,dp,i;
-    
+
   screen_clear();
   screen_puts(0,0,"   #FUJINET  2020   ");
   screen_puts(0,1,"  ELECTION RESULTS ");
@@ -83,20 +84,21 @@ void election(unsigned short r, unsigned short d, char* stamp)
       screen_puts(i,7,"\xBA");
     }
 
-  screen_puts(0,10,"    LAST UPDATED:   ");
-  screen_puts(5,11,stamp);
+  screen_puts(0,9,"    LAST UPDATED:   ");
+  screen_puts(4,10,date);
+  screen_puts(5,11,time);
   for(;;) {}
-  
+
 }
 
-void get_data(unsigned short *r, unsigned short *d, char *stamp)
+void get_data(unsigned short *r, unsigned short *d, char *date, char* time)
 {
   char* token;
   char i;
 
   screen_clear();
   screen_puts(0,5,"   FETCHING DATA    ");
-  
+
   OS.dcb.ddevic=0x71;
   OS.dcb.dunit=1;
   OS.dcb.dcomnd='O';
@@ -133,7 +135,7 @@ void get_data(unsigned short *r, unsigned short *d, char *stamp)
   siov();
 
   // Parse it.
-  
+
   token=strtok(buf,"|");
   while (token != NULL)
     {
@@ -142,12 +144,14 @@ void get_data(unsigned short *r, unsigned short *d, char *stamp)
       else if (i==3)
 	*r=atoi(token);
       else if (i==4)
-	strcpy(stamp,token);
+	strcpy(date,token);
+      else if (i==5)
+    strcpy(time,token);
       i++;
-      
+
       token=strtok(NULL,"|");
     }
-  
+
   OS.dcb.ddevic=0x71;
   OS.dcb.dunit=1;
   OS.dcb.dcomnd='C';
@@ -158,7 +162,6 @@ void get_data(unsigned short *r, unsigned short *d, char *stamp)
   OS.dcb.daux1=0;
   OS.dcb.daux2=0; // CR/LF
   siov();
-  
 }
 
 void setup(void)
@@ -189,12 +192,12 @@ void main(void)
   unsigned short r,d;
 
   setup();
-  
+
   for (;;)
     {
-      get_data(&r,&d,stamp);
-      election(r,d,stamp);
-      
+      get_data(&r,&d,date,time);
+      election(r,d,date,time);
+
       OS.rtclok[0]=OS.rtclok[1]=OS.rtclok[2]=0;
       while (OS.rtclok[1]<0xD2) { }
     }
