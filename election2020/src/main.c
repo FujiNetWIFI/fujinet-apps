@@ -87,7 +87,6 @@ void election(unsigned short r, unsigned short d, char* date, char* time)
   screen_puts(0,9,"    LAST UPDATED:   ");
   screen_puts(4,10,date);
   screen_puts(5,11,time);
-  for(;;) {}
 
 }
 
