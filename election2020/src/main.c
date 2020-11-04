@@ -209,6 +209,6 @@ void main(void)
       election(r,d,date,time);
 
       OS.rtclok[0]=OS.rtclok[1]=OS.rtclok[2]=0;
-      while (OS.rtclok[1]<0xD2) { }
+      while (OS.rtclok[1]<0x56) { }
     }
 }
