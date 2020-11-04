@@ -208,7 +208,10 @@ void main(void)
       get_data(&r,&d,date,time);
       election(r,d,date,time);
 
+      OS.ch=0xFF;
       OS.rtclok[0]=OS.rtclok[1]=OS.rtclok[2]=0;
-      while (OS.rtclok[1]<0x56) { }
+      while (OS.rtclok[1]<0x56 && OS.ch != KEY_R) {
+	OS.atract=0;
+      }
     }
 }
