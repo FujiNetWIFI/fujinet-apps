@@ -106,6 +106,8 @@ void get_data(unsigned short *r, unsigned short *d, char *date, char* time)
   char* token;
   char i;
 
+  memset(buf,0,sizeof(buf));
+  
   screen_clear();
   screen_puts(0,5,"   FETCHING DATA    ");
 
