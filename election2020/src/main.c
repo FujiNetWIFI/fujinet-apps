@@ -95,7 +95,7 @@ void election(unsigned short r, unsigned short d, char* date, char* time)
     }
   else if (r>269)
     {
-      screen_puts(12,3"WINS!");
+      screen_puts(12,3,"WINS!");
       for (;;) { OS.color1++; }
     }
   
