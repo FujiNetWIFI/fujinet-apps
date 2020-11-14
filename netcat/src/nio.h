@@ -5,6 +5,23 @@
 #ifndef NIO_H
 #define NIO_H
 
+#define DFUJI   0x71
+#define DREAD   0x40
+#define DWRITE  0x80
+#define DUPDATE 0xC0
+
+#define OREAD   0x04
+#define OWRITE  0x08
+#define OUPDATE 0x0C
+
+#define SUCCESS 1
+#define DERROR  144
+
+#define DVSTAT_BYTES_WATING_LO  0
+#define DVSTAT_BYTES_WATING_HI  1
+#define DVSTAT_PROTOCOL		    2 
+#define DVSTAT_EXTENDED_ERROR	3
+
 /**
  * Open N: device with devicespec
  * @param devicespec - an N: device spec, e.g. N:TCP://FOO.COM:1234/
