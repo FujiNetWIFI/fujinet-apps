@@ -16,6 +16,7 @@
 #include "plato_key.h"
 #include "key.h"
 #include "io.h"
+#include "help.h"
 
 extern padBool TTY;
 extern void click();
@@ -24,6 +25,7 @@ extern bool running;
 
 static uint8_t lastkey,key;
 static uint8_t tty_ch;
+static uint8_t lastcon,t;
 
 /**
  * keyboard_out - If platoKey < 0x7f, pass off to protocol
@@ -52,7 +54,7 @@ void keyboard_out(uint8_t platoKey)
 void keyboard_main(void)
 {
   key=PEEK(764);
-    if (PEEK(0xD01F)==5 && key != lastkey)
+  if (PEEK(0xD01F)==5 && key != lastkey)
     {
       if (key==45)
 	{
@@ -77,6 +79,11 @@ void keyboard_main(void)
       TTYLoc.y-=16;
       POKE(764,255);
     }
+  else if (PEEK(0xD01F)==3 && PEEK(0xD01F) != lastcon)
+    {
+      t = !t;
+      help(t);
+    }
   else if (TTY)
     {
       if (kbhit())
@@ -98,11 +105,12 @@ void keyboard_main(void)
     }
   else if (key!=lastkey)
     {
-      //      click();
+      click();
       keyboard_out(key_to_pkey[key]);
       POKE(764,255);
     }
   lastkey=key;
+  lastcon=PEEK(0xD01F);
 }
 
 /**

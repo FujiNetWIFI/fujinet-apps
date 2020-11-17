@@ -16,6 +16,7 @@
 #include "keyboard.h"
 
 uint8_t running=true;
+void* sdlst_save;
 
 void main(void)
 {

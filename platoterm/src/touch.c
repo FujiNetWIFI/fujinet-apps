@@ -16,31 +16,31 @@
 static struct mouse_info mouse_data;
 static padBool touch_allowed=false;
 
-/* unsigned short touch_scale_320(short x) */
-/* { */
-/*    uint16_t n, q; */
-/*    n  = x << 3; */
-/*    q  = x + (x >> 1); */
-/*    q += q >> 4; */
-/*    q += q >> 8; */
-/*    n -= q << 2; */
-/*    n -= q; */
-/*    n += ((n << 1) + n) << 2; */
-/*    return q + (n >> 6); */
-/* } */
+unsigned short touch_scale_320(short x)
+{
+   uint16_t n, q;
+   n  = x << 3;
+   q  = x + (x >> 1);
+   q += q >> 4;
+   q += q >> 8;
+   n -= q << 2;
+   n -= q;
+   n += ((n << 1) + n) << 2;
+   return q + (n >> 6);
+}
 
-/* unsigned short touch_scale_192(short y) */
-/* { */
-/*   uint16_t n, q; */
-/*   n  = y << 3; */
-/*   q  = ((y << 1) + n) >> 2; */
-/*   q += q >> 4; */
-/*   q += q >> 8; */
-/*   n -= q << 1; */
-/*   n -= q; */
-/*   n += ((n << 2) + n) << 1; */
-/*   return (q + (n >> 5) ^ 0x1FF); */
-/* } */
+unsigned short touch_scale_192(short y)
+{
+  uint16_t n, q;
+  n  = y << 3;
+  q  = ((y << 1) + n) >> 2;
+  q += q >> 4;
+  q += q >> 8;
+  n -= q << 1;
+  n -= q;
+  n += ((n << 2) + n) << 1;
+  return (q + (n >> 5) ^ 0x1FF);
+}
 
 
 /**
@@ -48,8 +48,8 @@ static padBool touch_allowed=false;
  */
 void touch_init(void)
 {
-  /* mouse_install(&mouse_def_callbacks,atrjoy_mou); */
-  /* mouse_show(); */
+  mouse_install(&mouse_def_callbacks,atrjoy_mou);
+  mouse_show();
 }
 
 /**
@@ -57,21 +57,21 @@ void touch_init(void)
  */
 void touch_main(void)
 {
-  /* uint8_t lastbuttons; */
-  /* padPt coord; */
+  uint8_t lastbuttons;
+  padPt coord;
 
-  /* mouse_info(&mouse_data); */
+  mouse_info(&mouse_data);
   
-  /* if (mouse_data.buttons == lastbuttons) */
-  /*   return; /\* debounce *\/ */
-  /* else if ((mouse_data.buttons & MOUSE_BTN_LEFT)) */
-  /*   { */
-  /*     coord.x=mouse_data.pos.x; */
-  /*     coord.y=mouse_data.pos.y; */
-  /*     touch_translate(&coord); */
-  /*     Touch(&coord); */
-  /*   } */
-  /* lastbuttons = mouse_data.buttons; */
+  if (mouse_data.buttons == lastbuttons)
+    return; /* debounce */
+  else if ((mouse_data.buttons & MOUSE_BTN_LEFT))
+    {
+      coord.x=mouse_data.pos.x;
+      coord.y=mouse_data.pos.y;
+      touch_translate(&coord);
+      Touch(&coord);
+    }
+  lastbuttons = mouse_data.buttons;
 }
 
 /**
@@ -79,16 +79,16 @@ void touch_main(void)
  */
 void touch_allow(padBool allow)
 {
-  /* if (touch_allowed==false && allow==true) */
-  /*   { */
-  /*     touch_allowed=true; */
-  /*     mouse_show(); */
-  /*   } */
-  /* else if (touch_allowed==true && allow==false) */
-  /*   { */
-  /*     touch_allowed=false; */
-  /*     mouse_hide(); */
-  /*   } */
+  if (touch_allowed==false && allow==true)
+    {
+      touch_allowed=true;
+      mouse_show();
+    }
+  else if (touch_allowed==true && allow==false)
+    {
+      touch_allowed=false;
+      mouse_hide();
+    }
 }
 
 /**
@@ -96,8 +96,8 @@ void touch_allow(padBool allow)
  */
 void touch_translate(padPt* Coord)
 {
-  /* Coord->x = touch_scale_320(Coord->x); */
-  /* Coord->y = touch_scale_192(Coord->y); */
+  Coord->x = touch_scale_320(Coord->x);
+  Coord->y = touch_scale_192(Coord->y);
 }
 
 /**
@@ -105,5 +105,5 @@ void touch_translate(padPt* Coord)
  */
 void touch_done(void)
 {
-  /* mouse_uninstall(); */
+  mouse_uninstall();
 }
