@@ -27,29 +27,57 @@ extern void ih();               // defined in intr.s
 /**
  * Get URL from user.
  */
-void get_url()
+bool get_url(int argc, char* argv[])
 {
   
   OS.lmargn=2; // Set left margin to 2
   OS.shflok=64; // turn on shift lock.
-  print("Version: " __DATE__ " " __TIME__ "\x9b");
-  print("NETCAT <DEVICESPEC>\x9b");
-  print("(e.g.: N1:TCP://BBS.FOZZTEXX.NET/)\x9b");
-  get_line(url,255);
 
-  if (url[0] == '\x9b')
-    strcpy(url, "N1:TCP://BBS.FOZZTEXX.NET/");
-  
-  print("\x9bTRANSLATION\x9B  0=NONE, 1=CR, 2=LF, *3=CR/LF?\x9b  *=Default\x9b");
-  get_line(tmp,7);
-  if (tmp[0] == '\x9b')
-    trans = 3;
+  if (!_is_cmdline_dos())
+    {
+      print("Version: " __DATE__ " " __TIME__ "\x9b");
+      print("NETCAT <DEVICESPEC>\x9b");
+      print("(e.g.: N1:TCP://BBS.FOZZTEXX.NET/)\x9b");
+      get_line(url,255);
+      
+      if (url[0] == '\x9b')
+	strcpy(url, "N1:TCP://BBS.FOZZTEXX.NET/");
+      
+      print("\x9bTRANSLATION\x9B  0=NONE, 1=CR, 2=LF, *3=CR/LF?\x9b  *=Default\x9b");
+      get_line(tmp,7);
+      if (tmp[0] == '\x9b')
+	trans = 3;
+      else
+	trans=atoi(tmp);
+      
+      print("\x9bLOCAL ECHO?--Y=YES, *N=NO? *=Default\x9b");
+      get_line(tmp,7);
+      echo=(tmp[0]=='Y' ? true : false);
+    }
   else
-    trans=atoi(tmp);
-  
-  print("\x9bLOCAL ECHO?--Y=YES, *N=NO? *=Default\x9b");
-  get_line(tmp,7);
-  echo=(tmp[0]=='Y' ? true : false);
+    {
+      trans=echo=0;
+
+      strcpy(url,argv[1]);
+      
+      if (argc < 2)
+	{
+	  print("nc <Nx:proto://host:port/path/> [/CR|LF|CRLF] [/E]\x9b\x9b");
+	  print("  /CR - Convert CR<->EOL\x9b");
+	  print("  /LF - Convert LF<->EOL\x9b");
+	  print("  /CRLF - Convert CR/LF<->EOL\x9b");
+	  return false;
+	}
+      else if (argc > 3)
+	echo = ((argv[3][0]=='/') && (argv[3][1]=='E'));
+      else if ((argc > 2) || (argv[2][0]=='/') && (argv[2][1]=='C') && (argv[2][2]=='R') && (argv[2][3]=='L') && (argv[2][4]=='F'))
+	trans=3;
+      else if ((argc > 2) || (argv[2][0]=='/') && (argv[2][1]=='L') && (argv[2][2]=='F'))
+	trans=2;
+      else if ((argc > 2) || (argv[2][0]=='/') && (argv[2][1]=='C') && (argv[2][2]=='R'))
+	trans=1;
+    }
+  return true;
 }
 
 /**
@@ -171,16 +199,19 @@ void nc()
 /**
  * Main entrypoint
  */
-void main(void)
+int main(int argc, char* argv[])
 {
   OS.soundr=0; // Turn off SIO beeping sound
   cursor(1);   // Keep cursor on
   
   while (running==true)
     {
-      get_url();
-      nc();
+      if (get_url(argc, argv))
+	nc();
+      else
+	running=false;
     }
   
   OS.soundr=3; // Restore SIO beeping sound
+  return 0;
 }
