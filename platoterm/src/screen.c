@@ -31,9 +31,11 @@ unsigned char Flags;
 unsigned char* GlyphData;
 static short offset;
 
-static const char s1[]="PLATOTERM 1.3 - No Touch 16K";
-static const char s2[]="(C) 2019 IRATA.ONLINE";
-static const char s3[]="TERMINAL READY";
+static const char s1[]="PLATOTERM 1.4 - Joystick 16K";
+static const char s2[]="(C) 2020 IRATA.ONLINE";
+static const char s3[]="Press OPTION for help";
+
+extern void *sdlst_save;
 
 /**
  * screen_init() - Set up the screen
@@ -43,6 +45,7 @@ void screen_init(void)
   tgi_install(tgi_static_stddrv);
   tgi_init();
   tgi_clear();
+  sdlst_save=OS.sdlst;
 }
 
 /**
