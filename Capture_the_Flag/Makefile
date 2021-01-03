@@ -6,10 +6,10 @@
 
 all: ctf-fujinet.xex
 
-ndev.com:
-	mads src/ndev.s -l:ctf-fujinet.lst -o:ctf-fujinet.com
+ctf-fujinet.xex:
+	mads src/ctf.asm -l:ctf-fujinet.lst -o:ctf-fujinet.xex
 
 clean:
-	rm -rf ctf-fujinet.com ctf-fujinet.lst
+	rm -rf ctf-fujinet.xex ctf-fujinet.lst
 
 

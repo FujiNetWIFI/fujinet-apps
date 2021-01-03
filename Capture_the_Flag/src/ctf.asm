@@ -1,32 +1,21 @@
 ; 
-            icl 'ctf-dis6502.inc'
+            icl 'ctf.inc'
 ;
 ; Start of code
 ;
             org $2020
-;
-L2020       lsr SAVADR+1
-            jmp (L7665)
-            adc COLAC
-            .byte $73
-            adc #$6F
-            ror L6220
-            adc L4820,Y
-            .byte $4F
-            eor L5343+2
-            .byte $4F
-            lsr ROWCRS
-            jsr L203A
-L203A       .byte $20
-;
+	;; Homesoft tag :)
+L2020	.byte "  : Fileversion by HOMESOFT :  "
+	
+	;; Set coldstart 
             org $0244
-;
             .byte $01
-;
+	;; Program Start
+	
             org $4000
-;
+
             jsr L628C
-L4003       jmp L5FC1
+L4003	    jmp L5FC1
 L4006       ldx #$00
             lda #$70
             jsr L40D1
@@ -2899,12 +2888,12 @@ L5683       lda STICK0
             and STICK1
             and #$0F
             sta L0083
-            lda STRIG0
+	    lda STRIG0
             and STRIG1
             jmp L56A0
 L5696       lda STICK0,X
             and #$0F
-            sta L0083
+        sta L0083
             lda STRIG0,X
 L56A0       bne L56C3
             ldx L0083
@@ -4378,9 +4367,108 @@ L6294       lda LFBB0,X
 L62A2       eor (L00CE,X)
             bne L62A2+1
             rts
-;
-            org $02E2
-;
-            .word L4003
-;
+
+	;; PROCEED vector
+	
+PRCVEC:	LDA #$01		; store 1 into
+	STA TRIP		; ...trip
+	PLA			; clean up stack
+	RTI			; and return from interrupt.
+
+;;; COPY TABLE TO DCB AND DO SIO CALL ;;;;;;;;;;;
+
+DOSIOV: STA	DODCBL+1	; Set source address
+	STY	DODCBL+2
+	LDY	#$0C		; 12 bytes
+DODCBL	LDA	$FFFF,Y		; Changed above.
+	STA	DCB,Y		; To DCB table
+	DEY			; Count down
+	BPL	DODCBL		; Until done
+
+SIOVDST:	
+	JSR	SIOV		; Call SIOV
+	LDY	DSTATS		; Get STATUS in Y
+	TYA			; Copy it into A
+	RTS			; Done
+
+FSTRT
+	;; Set up PROCEED interrupt vector
+	LDA	#<PRCVEC
+	STA	VPRCED
+	LDA	#>PRCVEC
+	STA	VPRCED
+
+	;; Display Banner
+	
+	LDX	#$00		; IOCB #0
+	TXA			; ...
+	STA	IOCB0+ICBLH		; Go ahead and zero ICBLH.
+	LDA	#<BANNER	; Point to buffer
+	STA	IOCB0+ICBAL		; and set in ICBAL
+	LDA	#>BANNER	; and the high bit
+	STA	IOCB0+ICBAH		; And set in ICBAH
+	LDA	#$4F		; two lines below.
+	STA	IOCB0+ICBLL
+	LDA	#11		; PUT REC
+	STA	IOCB0+ICCOM		; into IOCB command
+	JSR	CIOV		; And call CIOV
+
+	;; Get hostname
+
+	LDA	#<BUF		; Point buffer to dspec
+	STA	IOCB0+ICBAL		; set in ICBAL
+	LDA	#>BUF		; hi byte
+	STA	IOCB0+ICBAH		; Set in ICBAH
+	LDA	#$7F		; 127 bytes
+	STA	IOCB0+ICBLL		; into ICBLL
+	LDA	#5		; GET RECORD
+	STA	IOCB0+ICCOM		; and put into command
+	JSR	CIOV		; call CIOV
+
+	;; Open connection to host
+FOPN:
+	LDA	#<OPNDCB	; Set up open DCB
+	LDY	#>OPNDCB	; ...
+	JSR	DOSIOV		; Do SIOV
+
+	LDA	DSTATS		; Get status
+	BMI	FSTRT		; Retry again if failed.
+
+	JMP	L4003		; Otherwise start game
+	
+OPNDCB:
+	.BY	$71		; DDEVIC
+	.BY	$01		; DUNIT
+	.BY	'O'		; OPEN
+	.BY	$80		; DSTATS
+	.WO	BUF		; DBUF
+	.BY	$1F		; DTIMLO
+	.BY	$00		; DRESVD
+	.WO	$100		; 256 bytes (DBYT)
+	.BY	$0C		; READ/WRITE
+	.BY	$00		; NO TRANSLATION
+
+WRIDCB:
+	.BY      $71	  	; DDEVIC
+	.BY      $01     	; DUNIT
+	.BY      'W'     	; DCOMND
+	.BY      $80     	; DSTATS
+	.WO      BUF    	; DBUFL
+	.BY      $1F     	; DTIMLO
+	.BY      $00     	; DRESVD
+	.BYTE      $01     	; DBYTL
+	.BYTE      $00     	; DBYTH
+	.BYTE      $01     	; DAUX1
+	.BYTE      $00     	; DAUX2
+
+	
+BANNER	.by	"       #FUJINET CAPTURE THE FLAG       ",$9B,$9B 
+MSG1	.by	"DEVICESPEC OR RETURN TO LISTEN         ",$9B
+BUF	.ds 256
+LISTEN	.BY	$00
+TRIP	.BY	$00
+	
+	;; RUNAD
+            org $02E0
+            .word FSTRT
          
