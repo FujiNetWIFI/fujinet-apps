@@ -20,7 +20,11 @@ bool old_enabled=false;         // were interrupts enabled for old vector
 void* old_vprced;               // old PROCEED vector, restored on exit.
 unsigned short bw=0;            // # of bytes waiting.
 unsigned char rx_buf[8192];     // RX buffer.
+unsigned char tx_buf[64];       // TX buffer.
 bool echo=false;                // local echo?
+unsigned char txbuflen;         // TX buffer length
+unsigned char i;
+
 extern void ih();               // defined in intr.s
 
 
@@ -124,22 +128,28 @@ void nc()
   while (running==true)
   {
     // If key pressed, send it.
-    if (kbhit())
+    while (kbhit())
     {
-      char c=cgetc();
-      err=nwrite(url,&c,1); // Send character.
-
-      if (echo==true)
-        printc(&c);
-
-      if (err!=1)
-        {
-          print("WRITE ERROR: ");
-          print_error(err);
-          running=false;
-          continue;
-        }
+      tx_buf[txbuflen++]=cgetc();
     }
+    
+    if (txbuflen>0)
+      {
+	if (echo==true)
+	  for (i=0;i<txbuflen;i++)
+	    printc(&tx_buf[i]);
+	
+	err=nwrite(url,tx_buf,txbuflen); // Send character.
+	
+	if (err!=1)
+	  {
+	    print("WRITE ERROR: ");
+	    print_error(err);
+	    running=false;
+	    continue;
+	  }
+	txbuflen=0;
+      }
 
     if (trip==0) // is nothing waiting for us?
       continue;
