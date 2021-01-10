@@ -1,14 +1,17 @@
 ;
-; RA8KEY - Remote Atari (8-bit) KEYBOARD
+; RA8KEY - Remote Atari (8-bit) 
 ;
 
 ; Shadow registers which have all the debouncing done for us
 
 	ORG	$6000
-
+	
 	icl "..\COMMON\ATARI_EQU.ASM"
 	icl "..\COMMON\FUJI_EQU.ASM"
-	
+
+DONT_RELOC	=	0
+DONT_OPEN	=	0
+SHOW_DOS	=	0
 
 COLOR_NO_CONNECTION		= 00	; BLACK
 COLOR_FUJI_OPENED		= 40	; YELLOW
@@ -21,6 +24,13 @@ CONNECTION_OPENED		= $00
 CONNECTION_PENDING		= $01
 CONNECTION_ACCEPTED		= $02
 
+DELAY_HUGE			= 60
+DELAY_LONG			= 30	; 0.5 SECONDS
+DELAY_SHORT			= 6	; 0.1 SECONDS
+DELAY_TINY			= 3
+DELAY_NONE			= 1	; 0 SECONDS
+SCREEN_CHECK_DELAY		= 30	; 2 SECONDS
+	
 FUJI_TIMEOUT			= $001F	; appoximately 30 seconds
 
 NOKEY				= $FF
@@ -48,7 +58,10 @@ STATUS_TIMEOUT			= $03	; 3 SECONDS
 ;----------------------------------------
 ;----------------------------------------
 START:
+		
 		JSR OPEN_E_DEVICE
+
+		JSR dosdetect
 
 ; we can't do anything if we can't print 
 ; try anyway
@@ -57,14 +70,36 @@ START:
 		LDY #>PROGRAM_NAME
 		JSR PRINT_STRING
 
+.if SHOW_DOS = 1
+		LDA __dos_type
+		CMP #7
+		BMI inrange
+		LDA #6	
+inrange:		
+		ASL
+		TAY
+		LDA DOSSTR,Y	; Low byte
+		PHA
+		INY
+		LDA DOSSTR,Y	; high byte
+		TAY
+		PLA
+		JSR PRINT_STRING
+.endif
+		
+
 ; Before we relocate, make sure our
 ; Data block states we're disconnected
-		
+	
 		LDA #CONNECTION_CLOSED
 		STA CONNECT_STATE		; $FF=disconnected 0=Opened 1=Accepted
 
+		LDA COLOR4
+		STA OLD_COLOR4
+		
 		LDA #COLOR_NO_CONNECTION
 		STA COLOR4
+
 
 ; Get the unit number from the URL
 
@@ -96,6 +131,10 @@ OPEN_FUJI1:
 		LDA #<FUJI_DETECT
 		LDY #>FUJI_DETECT
 		JSR PRINT_STRING_NO_EOL
+
+.if DONT_OPEN = 1
+ 		JMP OPEN_FUJI_OK1
+.endif
 	
 		; Open the Fuji Device
 		LDA LDDEVIC			; Device
@@ -117,6 +156,7 @@ OPEN_FUJI1:
 
 		LDA #<FUJI_TIMEOUT		; Approximate the number of seconds to wait
 		STA DTIMLO
+		LDA #>FUJI_TIMEOUT
 
 		LDA #<FUJI_BUFSIZE		; the size of the buffer containing the URL
 		STA DBYTLO
@@ -157,7 +197,6 @@ NOT_TIMEOUT4c:
     		JMP STOP
 
 OPEN_FUJI_OK1:
-
 		LDA #COLOR_FUJI_OPENED
 		STA COLOR4
 		
@@ -173,8 +212,7 @@ OPEN_FUJI_OK1:
 ; insure interrupts are off before changing vector
 
 ; Let the user know where it will be
-		
-		
+				
 		LDA #<RELOCATING
 		LDY #>RELOCATING
 		JSR PRINT_STRING_NO_EOL
@@ -182,9 +220,16 @@ OPEN_FUJI_OK1:
 		JSR PRINT_HEX_NO_EOL
 		LDA MEMLO
 		JSR PRINT_HEX
-		
+
+		LDA MEMLO		; If we have to unload,
+		STA OLD_MEMLO		; restore MEMLO to
+		LDA MEMLO+1		; it's original value
+		STA OLD_MEMLO+1
+
+.if DONT_RELOC = 0		
 		JSR RELOCATE_TO_MEMLO
 		JSR ADJUST_MEMLO
+.endif
 		
 ;*****************************************************
 ; -- FROM THIS POINT ON MAKE SURE YOU'RE USING
@@ -195,33 +240,30 @@ OPEN_FUJI_OK1:
 		; MEMLO has been changed
 
 SET_INTERRUPTS:
-		LDA #<VPRCED_INTERRUPT_SETTING
-		LDY #>VPRCED_INTERRUPT_SETTING
-relocate000	JSR PRINT_STRING_NO_EOL
 
 ;------------------------------------
 		SEI
 		LDA PACTL			; IRQ Enable: If set, enables interrupts from peripheral A. 
-relocate001	STA OLD_INTERRUPT_STATE
+relocate000	STA OLD_INTERRUPT_STATE
 		AND #~IRQ_ENABLE 		; disable the interrupt
 		STA PACTL
 		CLI
 		
 		LDA VPRCED			; save the old interrupt vector, but jump to it after
-relocate002	STA OLD_INTERRUPT_HANDLER	; we process it
+relocate001	STA OLD_VPRCED			; we process it
 		LDA VPRCED+1
-relocate003	STA OLD_INTERRUPT_HANDLER+1
+relocate002	STA OLD_VPRCED+1
 
 		SEI
-relocate004	LDA RELOC_FUJI_INTERRUPT_HANDLER		; put our interrupt handler in place
+relocate003	LDA RELOC_FUJI_INTERRUPT_HANDLER ; put our interrupt handler in place
 		STA VPRCED
-relocate005	LDA RELOC_FUJI_INTERRUPT_HANDLER+1
+relocate004	LDA RELOC_FUJI_INTERRUPT_HANDLER+1
 		STA VPRCED+1
 		CLI
 ;------------------------------------
 		
 		LDA #DATA_CHECKED			
-relocate006	STA FUJI_ACTIVITY		; before we start interrupts, let's tell it we have no data
+relocate005	STA FUJI_ACTIVITY		; before we start interrupts, let's tell it we have no data
 		
 		SEI
 		LDA PACTL			; IRQ Enable 
@@ -231,72 +273,67 @@ relocate006	STA FUJI_ACTIVITY		; before we start interrupts, let's tell it we ha
 		
 		LDA #<SUCCESS
 		LDY #>SUCCESS
-relocate007	JSR PRINT_STRING
-
-		LDA #<VBLANK_INTERRUPT_SETTING
-		LDY #>VBLANK_INTERRUPT_SETTING
-relocate008	JSR PRINT_STRING_NO_EOL
-			
+relocate006	JSR PRINT_STRING
+		
 		LDA #$00			; VBLANK not process
-relocate009	STA VBLANK_PROCESSING
+relocate007	STA VBLANK_PROCESSING
+		LDA #DELAY_NONE
+relocate008	LDA DELAY_COUNTER
 		
-		LDA #$07 			; DEFERRED
-	
-relocate010	LDX RELOC_VBLANK+1		; HIGH BYTE OF USER ROUTINE
-relocate011	LDY RELOC_VBLANK		; LOW BYTE
+		LDA VVBLKD
+relocate009	STA OLD_VBLANK
+		LDA VVBLKD+1
+relocate010	STA OLD_VBLANK+1
+		
+		LDA #$07 			; DEFERRED	
+relocate011	LDX RELOC_VBLANK+1		; HIGH BYTE OF USER ROUTINE
+relocate012	LDY RELOC_VBLANK		; LOW BYTE
 		JSR SETVBV
-	
-		LDA #<SUCCESS
-		LDY #>SUCCESS
-relocate012	JSR PRINT_STRING
-
-	
-		LDA #<DOSINI_VECTOR_SETTING
-		LDY #>DOSINI_VECTOR_SETTING
-relocate013	JSR PRINT_STRING_NO_EOL
-		
 	
 ;------------------------------------	
 		SEI
 		LDA DOSINI
-relocate014	STA OLD_DOSINI
+relocate013	STA OLD_DOSINI
 		LDA DOSINI+1
-relocate015	STA OLD_DOSINI+1
+relocate014	STA OLD_DOSINI+1
 
-relocate016	LDA RELOC_RESET
+relocate015	LDA RELOC_RESET
 		STA DOSINI
-relocate017	LDA RELOC_RESET+1
+relocate016	LDA RELOC_RESET+1
 		STA DOSINI+1
 		CLI
 ;------------------------------------
 		
-		LDA #<SUCCESS
-		LDY #>SUCCESS
-relocate018	JSR PRINT_STRING
-
 		LDA #<SETUP_COMPLETE
 		LDY #>SETUP_COMPLETE
-relocate019	JSR PRINT_STRING				
+relocate017	JSR PRINT_STRING				
 
 		LDA #<COLOR_INFO
 		LDY #>COLOR_INFO
+relocate018	JSR PRINT_STRING
+
+		JSR dosdetect
+relocate019	LDA __dos_type
+		CMP #ATARIDOS
+		BNE STOP
+
+		LDA #<WILL_UNLOAD
+		LDY #>WILL_UNLOAD
 relocate020	JSR PRINT_STRING
+		
+relocate021	JSR SET_UNLOADONDOS
 
-
-STOP:
-
+STOP:		
 ;		Don't close E device, we'll be using it in interrupt
 ;		JSR CLOSE_E_DEVICE
 
-
+		LDA #$00			; at this point, no more sound
+		STA SOUNDR 			; SILENCE
 
 		RTS
 
 
-
-
 RELOCATE_CODE_START:
-
 
 ;-----------------------------------------------------
 ;-----------------------------------------------------
@@ -309,13 +346,13 @@ RELOCATE_CODE_START:
 ;-----------------------------------------------------
 ;-----------------------------------------------------	
 
-
-
-VBLANK:	
-		JSR DISPLAY_SPIN
+VBLANK:
+		DEC DELAY_COUNTER	
+		BNE DONT_PROCESS
 		
 		LDA VBLANK_PROCESSING		; Set non-zero when we're in VBLANK
 		BEQ START_PROCESSING		; No previous processing going on
+DONT_PROCESS
 		JMP STILL_PROCESSING		; just leave
 		
 START_PROCESSING:
@@ -336,7 +373,8 @@ START_PROCESSING:
 		CMP #CONNECTION_ACCEPTED	; 02 Has the connection been accepted?
 		BEQ THEN_WORK	 		; yes, get to work!
 
-		JMP LEAVE_INTERRUPT 		; Unknown state	
+		JMP LEAVE_INTERRUPT 		; Unknown state
+
 THEN_WORK:	
 		JMP WORK			; opened and accepted so work
 ACCEPT:
@@ -368,6 +406,7 @@ OPEN_FUJI:
 
 		LDA #<FUJI_TIMEOUT		; Approximate the number of seconds to wait
 		STA DTIMLO
+		LDA #>FUJI_TIMEOUT
 
 		LDA #<FUJI_BUFSIZE		; the size of the buffer containing the URL
 		STA DBYTLO
@@ -385,6 +424,8 @@ OPEN_FUJI:
 		CMP #SUCCES
 		BEQ OPEN_FUJI_OK        	; Opened device successfully
 
+		LDA #DELAY_LONG
+		STA DELAY_COUNTER
 ; OPEN FAILURE
 ; JUST LEAVE
     		CLC
@@ -394,8 +435,6 @@ OPEN_FUJI_OK:
 		LDA #COLOR_FUJI_OPENED
 		STA COLOR4
 
-		LDA #$00			; at this point, no more sound
-		STA SOUNDR 			; SILENCE
 		LDA #CONNECTION_OPENED
 		STA CONNECT_STATE		; 0 = opened
 
@@ -409,16 +448,10 @@ LEAVE_INTERRUPT2
 ;---------------------------------------------------------------
 
 FUJI_AWAITING_CONNECTION:
-
-		DEC CHANGE_COUNTER
-		BPL LEAVE_INTERRUPT2
 	
 ; Check and see if we can accept a connection
 ; but only every 60 jiffies (once per second)
 		
-;		LDA #60
-		STA CHANGE_COUNTER
-
 		LDA #COLOR_AWAITING_CONNECTION
 		STA COLOR4
 
@@ -441,6 +474,7 @@ FUJI_AWAITING_CONNECTION:
 
 		LDA #<STATUS_TIMEOUT
 		STA DTIMLO
+		LDA #>STATUS_TIMEOUT
 
 		LDA #<FUJI_STATUSSIZE		; four bytes
 		STA DBYTLO
@@ -455,6 +489,8 @@ FUJI_AWAITING_CONNECTION:
 		CMP #SUCCES			; connection open?
 		BEQ CHECK_FOR_CONNECTION
 
+		LDA #DELAY_LONG
+		STA DELAY_COUNTER
 ; ACCEPT RETURNED FAILURE
 
 		CLC
@@ -464,11 +500,18 @@ CHECK_FOR_CONNECTION:
 
 		LDA DVSTAT_PROTOCOL
 		CMP #$00
-		BEQ LEAVE_INTERRUPT2		; No connection!
+		BNE CHANGE_STATE
 		
-
+		LDA #DELAY_TINY
+		STA DELAY_COUNTER
+		CLC
+		BCC LEAVE_INTERRUPT2		; No connection!
+CHANGE_STATE:		
 		LDA #CONNECTION_PENDING
 		STA CONNECT_STATE		; change the state machine
+
+		LDA #DELAY_NONE
+		STA DELAY_COUNTER
 
 		CLC
 		BCC LEAVE_INTERRUPT2		
@@ -481,7 +524,10 @@ FUJI_ACCEPT_CONNECTION:
 
 		LDA #COLOR_ACCEPTING_CONNECTION
 		STA COLOR4
-				
+	
+; Check and see if screen has changed
+; but only every 60 jiffies (once per second)
+		
 		LDA LDDEVIC			; Device
 		STA DDEVIC
 
@@ -505,7 +551,12 @@ FUJI_ACCEPT_CONNECTION:
 		
 		TYA
 		CMP #SUCCES
-		BNE LEAVE_INTERRUPT3		
+		BEQ ACCEPT_FUJI_OK
+		
+		LDA #DELAY_LONG
+		STA DELAY_COUNTER
+		CLC
+		BCC LEAVE_INTERRUPT3		
 
 ; assume connection accepted
 
@@ -515,15 +566,17 @@ FUJI_ACCEPT_CONNECTION:
 ;---------------------------------------------------------------
 ;---------------------------------------------------------------
 ACCEPT_FUJI_OK:	
-
 		LDA #CONNECTION_ACCEPTED
 		STA CONNECT_STATE
 			
 		LDA #COLOR_CONNECTED
 		STA COLOR4	
 
-		LDA #2
+		LDA #1
 		STA CHANGE_COUNTER
+		
+		LDA #DELAY_NONE
+		STA DELAY_COUNTER
 LEAVE_INTERRUPT3:
 		JMP LEAVE_INTERRUPT
 
@@ -556,12 +609,12 @@ WORK:
 ; Check and see if screen has changed
 ; but only every 60 jiffies (once per second)
 		
-		LDA #120		; wait a second before checking again
+		LDA #SCREEN_CHECK_DELAY		; wait a second before checking again
 		STA CHANGE_COUNTER
 
 ; send screen if it's changed once per second
 
-		JMP TRANSMIT_SCREEN 	; can't transmit yet -- soon
+		JMP TRANSMIT_SCREEN 	
 		
 ;---------------------------------------------------------------
 ;---------------------------------------------------------------
@@ -601,8 +654,8 @@ GET_FUJI_STATUS:
 		JSR SIOV
 		TYA
 		CMP #SUCCES			; connection open?
-		BEQ CHECK_FOR_FUJI_ACTIVITY		
-
+		BEQ CHECK_FOR_FUJI_ACTIVITY	
+		
 CLOSE_CONNECTION2:
 		JMP CLOSE_CONNECTION		; We were connected, but now we're not
 
@@ -620,12 +673,19 @@ CHECK_FOR_FUJI_ACTIVITY:
 		LDA DVSTAT_BYTES_WAITING_LO	; Apparently only the low byte is used on FujiNet
 		STA DATA_SIZE_LO		; Save this, another call to SIO could cause this to be lost
 		CMP #$00			; No data, just leave
-		BEQ LEAVE_INTERRUPT4
-		
+		BNE CHECK_ACTIVITY
+
+NO_DATA:		
+		LDA #DELAY_TINY
+		STA DELAY_COUNTER
+		CLC
+		BCC LEAVE_INTERRUPT4
+
+CHECK_ACTIVITY:		
 	    	LDA FUJI_ACTIVITY		; set by interrupt handler
   		BEQ POSSIBLE_FUJI_DATA		; something may have coming in!				
-
-; Nothing to do
+		BNE NO_DATA
+		
 LEAVE_INTERRUPT4:
 		JMP LEAVE_INTERRUPT
 
@@ -665,20 +725,28 @@ FUJI_DATA_INCOMING:
 
 		LDA DATA_SIZE_LO
 		CMP #$00
-		BEQ LEAVE_INTERRUPT4	; no data!
+		BNE BEGIN_GET
+		
+		LDA #DELAY_TINY
+		STA DELAY_COUNTER
+		CLC
+		BCC LEAVE_INTERRUPT4	; no data!
+		
+BEGIN_GET
+		LDA #DELAY_NONE
+		STA DELAY_COUNTER
 
 		LDA #<CHAR_SIZE		; only get 1 character
 		STA DATA_SIZE_LO
 		LDA #>CHAR_SIZE
 		STA DATA_SIZE_HI
 
-
 ;---------------------------------------------------------------
 ;---------------------------------------------------------------
 ; READ the data into our buffer
 ;---------------------------------------------------------------
 ;---------------------------------------------------------------
-GET_FUJI_DATA:	
+GET_FUJI_DATA:
 	  	LDA LDDEVIC			; Device
 		STA DDEVIC
 
@@ -712,6 +780,9 @@ GET_FUJI_DATA:
 		CMP #SUCCES
 	    	BEQ DATA_HANDLED          	; all is well
 
+		LDA #DELAY_NONE
+		STA DELAY_COUNTER
+
 		CLC
 		BCC LEAVE_INTERRUPT4
   	
@@ -739,7 +810,6 @@ DATA_HANDLED:
 ;---------------------------------------------------------------
 
 INJECT_KEY:
-	
 		LDX TEMP_BUFFER
 		JSR ATASCII_TO_KEYCODE
 		STY SHFLOK			; set the shift/control state
@@ -748,20 +818,29 @@ INJECT_KEY:
 		LDA #$00			; stop attract mode
 		STA ATRACT
     	
-    		LDA #$02
+    		LDA #06
 		STA CHANGE_COUNTER		; force screen update 
+
+		LDA #DELAY_TINY
+		STA DELAY_COUNTER
+
 		CLC
 		BCC LEAVE_INTERRUPT
 
 ;---------------------------------------------------------------
 ;---------------------------------------------------------------
 ; we're a long time in our interrupt.
-; more work: if the checksum has change
+; more work: if the checksum has changed
 ; transmit the whole screen
 ;---------------------------------------------------------------
 ;---------------------------------------------------------------
 
 TRANSMIT_SCREEN:
+		JSR TRANSMIT_IF_CHANGED_GRAPHICS0
+		
+		LDA #DELAY_LONG
+		STA DELAY_COUNTER
+
 		CLC		
 		BCC LEAVE_INTERRUPT
 
@@ -774,6 +853,9 @@ TRANSMIT_SCREEN:
    	
 CLOSE_CONNECTION:
 
+		LDA #DELAY_LONG
+		STA DELAY_COUNTER
+		
 		LDA LDDEVIC			; Device
 		STA DDEVIC
 
@@ -814,7 +896,6 @@ STILL_PROCESSING:
 	
 		JMP XITVBV
 		
-
 ;------------------------
 ;------------------------
 ; RESET HANDLER 
@@ -823,6 +904,12 @@ STILL_PROCESSING:
 RESET_HANDLER: 
 		JSR JMP_OLD_DOSINI         	; call original DOSINI
 
+		LDA #01
+		STA CHANGE_COUNTER
+
+		LDA #DELAY_NONE
+		STA DELAY_COUNTER
+		
 		SEI
 		LDA PACTL			; IRQ Enable: If set, enables interrupts from peripheral A. 
 		STA OLD_INTERRUPT_STATE
@@ -831,9 +918,9 @@ RESET_HANDLER:
 		CLI
 		
 		LDA VPRCED			; save the old interrupt vector, but jump to it after
-		STA OLD_INTERRUPT_HANDLER	; we process it
+		STA OLD_VPRCED			; we process it
 		LDA VPRCED+1
-		STA OLD_INTERRUPT_HANDLER+1
+		STA OLD_VPRCED+1
 
 		SEI
 		LDA RELOC_FUJI_INTERRUPT_HANDLER; put our interrupt handler in place
@@ -851,7 +938,7 @@ RESET_HANDLER:
 		ORA #IRQ_ENABLE 			
 		STA PACTL
 		CLI
-		
+
 		LDA #$00			; at this point, no more sound
 		STA SOUNDR 			; SILENCE
 			
@@ -859,21 +946,100 @@ RESET_HANDLER:
 		STA VBLANK_PROCESSING
 		
 		LDA #$07 			; DEFERRED
-	
 		LDX RELOC_VBLANK+1		; HIGH BYTE OF USER ROUTINE
 		LDY RELOC_VBLANK		; LOW BYTE
 		JSR SETVBV
-
-		LDY #'E'
-		JSR DISPLAY_CLUE 
 					 		
     		RTS    
+   
 ;------------------------
 ;------------------------
 ;;; END RESET HANDLER ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;------------------------
 ;------------------------
-	
+
+; Some DOS's don't respect MEMLO, so we 
+; have to unload all our stuff prior
+; to calling DOS or we'll crash the machine
+
+UNLOADONDOS:
+
+		LDA RELOC_UNLOADING
+		LDY RELOC_UNLOADING+1
+		JSR PRINT_STRING
+
+		LDA LDDEVIC			; Device
+		STA DDEVIC
+
+		LDA UNIT			; UNIT #
+		STA DUNIT
+
+		LDA #'C'			; Accept
+		STA DCOMND
+
+		LDA #0
+		STA DSTATS
+		STA DBUFLO
+		STA DBUFHI
+
+		STA DAUX1
+		STA DAUX2
+		LDA #$0F
+		STA DTIMLO
+
+		LDA #<FUJI_BUFSIZE
+		STA DBYTLO
+		LDA #>FUJI_BUFSIZE
+		STA DBYTHI
+		JSR SIOV
+
+		JSR CLOSE_E_DEVICE
+
+		LDA OLD_COLOR4
+		STA COLOR4
+		
+		LDA #$01			; at this point, sound
+		STA SOUNDR 			
+
+		LDA #$07 			; DEFERRED
+		LDX OLD_VBLANK+1		; HIGH BYTE OF USER ROUTINE
+		LDY OLD_VBLANK			; LOW BYTE
+		JSR SETVBV
+		
+		JSR WAIT_FOR_VBLANK		; insure vblank has changed
+			
+		LDA OLD_DOSVEC			; remove our unload on dos
+		STA DOSVEC
+		LDA OLD_DOSVEC+1
+		STA DOSVEC+1
+		
+		LDA MEMLO			; reset memory IF it hasn't 
+		CMP RELOC_VBLANK_END		; been modified by someone else
+		BNE CALL_DOS
+		LDA MEMLO+1
+		CMP RELOC_VBLANK_END+1
+		BNE CALL_DOS
+		
+		LDA OLD_MEMLO
+		STA MEMLO
+		LDA OLD_MEMLO+1
+		STA MEMLO+1
+		
+CALL_DOS:				
+		JSR JMP_OLD_DOSVEC		; call DOS
+		RTS
+		
+SET_UNLOADONDOS:
+		LDA DOSVEC
+		STA OLD_DOSVEC
+		LDA DOSVEC+1
+		STA OLD_DOSVEC+1
+		
+		LDA RELOC_UNLOAD
+		STA DOSVEC
+		LDA RELOC_UNLOAD+1
+		STA DOSVEC+1
+		RTS			
 ;------------------------
 ;------------------------ 
 ; FUJI INTERRUPT HANDLER  
@@ -884,22 +1050,26 @@ FUJI_INTERRUPT_HANDLER:
 		LDA #CHECK_FOR_DATA
 		STA FUJI_ACTIVITY	
 		.BYTE $4C 	; JMP
-OLD_INTERRUPT_HANDLER:	.WORD 0		; to the old interrupt handler
+OLD_VPRCED:	.WORD $FFFF	; to the old interrupt handler
 ;------------------------
 ;------------------------ 
 
-DO_NOTHING	RTS
 
 
 
 	icl "..\COMMON\KEYCODE.ASM"	
 	icl "..\COMMON\CIO-Routines.asm"
+	icl "ScreenRoutines.asm"
 
 RELOCATE_CODE_END:
 
 	icl "..\COMMON\KEYCODE_DATA.ASM"
 	icl "..\COMMON\CIO-Routines_DATA.ASM"
+	icl "..\COMMON\dosdetect_data.asm"
+	icl "ScreenRoutines_DATA.ASM"
 
+OLD_COLOR4			.BYTE $00
+	
 OLD_INTERRUPT_STATE		.BYTE $00	
 
 FUJI_ACTIVITY			.BYTE $00
@@ -914,6 +1084,7 @@ TEMP_BUFFER:			.DS 	FUJI_BUFSIZE
 
 VBLANK_PROCESSING		.BYTE   0
 
+; You need to relocate addresses within the data block
 
 relocate1500			
 RELOC_VBLANK			.WORD	VBLANK
@@ -933,21 +1104,35 @@ RELOC_RESET			.WORD   RESET_HANDLER
 relocate1505			
 RELOC_VBLANK_END		.WORD	VBLANK_END
 
+relocate1506
+RELOC_UNLOAD			.WORD	UNLOADONDOS
+
 JMP_OLD_DOSINI			.BYTE	$4C
 OLD_DOSINI			.WORD 	$FFFF
-				
-				
 
-FUJI_OPEN_ERROR			.BYTE 	'Could not open FujiNet Device.',EOL
-DEVICE_TIMEOUT_FAILURE	 	.BYTE 	'Device Timeout.',EOL
-COLOR_INFO			.BYTE 	'BLACK=NO FUJINET  YELLOW=OPENED,      GREY=WAITING, RED=ACCEPT PENDING      PURPLE=ACCEPTED',EOL
+JMP_OLD_DOSVEC			.BYTE	$4C
+OLD_DOSVEC			.WORD	$FFFF	
+			
+OLD_VBLANK			.WORD	$FFFF				
+
+OLD_MEMLO			.WORD	$FFFF
+
 
 CHANGE_COUNTER			.BYTE	1
+DELAY_COUNTER			.BYTE	1
+
+
 CONNECT_STATE			.BYTE	CONNECTION_CLOSED	
 URL_FUJI:			.BYTE 	'N:TCP://:6502/',EOL
 
+relocate1507
+RELOC_UNLOADING			.WORD	UNLOADING
+UNLOADING			.BYTE   'Unloading RA8...',EOL
 
-	
+relocate1508
+RELOC_WILL_UNLOAD		.WORD 	WILL_UNLOAD
+WILL_UNLOAD			.BYTE   'RA8 will unload when ''DOS'' command is used', EOL
+
 VBLANK_END: // EVERYTHING ABOVE IS RELOCATED
 
 RELOCATE_DATA_END:
@@ -955,21 +1140,41 @@ RELOCATE_DATA_END:
 // Only used during setup, doesn't need to be relocated.
 
 	icl "..\COMMON\RELOCATE.ASM"
-
+	icl "..\COMMON\dosdetect.asm"
+	
+FUJI_OPEN_ERROR			.BYTE 	'Could not open FujiNet Device.',EOL
+DEVICE_TIMEOUT_FAILURE	 	.BYTE 	'Device Timeout.',EOL
+COLOR_INFO			.BYTE 	'BLACK=NO FUJINET  YELLOW=OPENED,      GREY=WAITING, RED=ACCEPT PENDING      PURPLE=ACCEPTED',EOL
 
 FUJI_DETECT			.BYTE	'Detecting FujiNet Device...',EOL
 RELOCATING			.BYTE   'Relocating to: ',EOL
-VBLANK_INTERRUPT_SETTING	.BYTE	'Setting VBLANK interrupt...', EOL
-VPRCED_INTERRUPT_SETTING	.BYTE	'Setting VPRCED interrupt...', EOL
-DOSINI_VECTOR_SETTING		.BYTE   'Setting DOSINI vector...', EOL
 SUCCESS				.BYTE	'Success!',EOL
 SETUP_COMPLETE			.BYTE 	'Setup Complete',EOL
 
+DOSSTR				.WORD 	SPARTA		; 0
+				.WORD	REAL		; 1
+				.WORD	BW		; 2
+				.WORD	OSA		; 3
+				.WORD	X		; 4
+				.WORD	ATARI		; 5
+				.WORD	MY		; 6
+				.WORD	NONEFOUND	; 7
+
+SPARTA				.BYTE 	'This is SPARTA!',EOL
+REAL				.BYTE	'RealDos',EOL
+BW				.BYTE   'BW',EOL
+OSA				.BYTE   'OSA', EOL
+X				.BYTE   'XDOS', EOL
+ATARI				.BYTE	'Atari dos',EOL
+MY				.BYTE	'My dos', EOL
+NONEFOUND			.BYTE 	'No DOS found', EOL	
+
+
 RELOCATION_TABLE:
-		.WORD 	relocate000+1,relocate001+1,relocate002+1,relocate003+1,relocate004+1,relocate005+1,relocate006+1,relocate007+1,relocate008+1,relocate009+1
+		.WORD 	relocate000+1,relocate001+1,relocate002+1,relocate003+1,relocate004+1,relocate005+1,relocate006+1,relocate007+1,/*relocate008+1,*/relocate009+1
 		.WORD 	relocate010+1,relocate011+1,relocate012+1,relocate013+1,relocate014+1,relocate015+1,relocate016+1,relocate017+1,relocate018+1,relocate019+1
-		.WORD   relocate020+1
-		.WORD 	relocate1500,relocate1501,relocate1502,relocate1503,relocate1504,relocate1505;reloocate1506;,relocate1507,relocate1508,relocate1509
+		.WORD   relocate020+1,relocate021+1/*,relocate022+1*/
+		.WORD 	relocate1500,relocate1501,relocate1502,relocate1503,relocate1504,relocate1505,relocate1506,relocate1507;,relocate1508,relocate1509
 
 	icl "..\COMMON\CIO-Routines_RELOC.ASM"
 
@@ -979,7 +1184,7 @@ END_RELOCATION_TABLE	.WORD 	0 ; end of table
 ; This should generate an error if there are too many entries (greater than 255)
 
 	
-PROGRAM_NAME	.BYTE	'RA8KEY (Keyboard) 2020/01/06 17:00',EOL
+PROGRAM_NAME	.BYTE	'RA8 (Remote Atari) 2021/01/09 19:00',EOL
 
 
 	run START
