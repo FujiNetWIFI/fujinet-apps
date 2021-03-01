@@ -176,7 +176,7 @@ const unsigned char key_to_pkey[]={
     PKEY_NOKEY, /* 0xa8 */
     PKEY_NOKEY, /* 0xa9 */
     PKEY_EDIT, /* 0xaa */
-    PKEY_NOKEY, /* 0xab */
+    PKEY_SUB, /* 0xab */
     PKEY_NOKEY, /* 0xac */
     PKEY_TERM, /* 0xad */
     PKEY_NOKEY, /* 0xae */
