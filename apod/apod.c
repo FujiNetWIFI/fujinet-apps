@@ -10,6 +10,8 @@
   2021-03-27 - 2021-03-28
 */
 
+#define PLACEHOLDER
+
 #include <stdio.h>
 #include <atari.h>
 #include <peekpoke.h>
@@ -125,8 +127,6 @@ void mySETVBV(void * Addr)
   ANTIC.nmien = NMIEN_VBI;
 }
 
-#pragma optimize (pop)
-
 void dli(void)
 {
   asm("pha");
@@ -135,19 +135,20 @@ void dli(void)
 
   asm("ldy %v", rgb_ctr);
   asm("lda %v,y", rgb_table);
+
   asm("sta %w", (unsigned)&ANTIC.wsync);
   asm("sta %w", (unsigned)&GTIA_WRITE.colbk);
 
-  /* FIXME: Crashes! -bjk 2021.03.28 */
-//  asm("iny");
-//  asm("cpy #4");
-//  asm("bcc %g", __dli_done);
- 
-//  asm("ldy #0");
- 
-//__dli_done:
-//  asm("sty %v", rgb_ctr);
+  /* FIXME: Still crashing */
+//   asm("inc %v", rgb_ctr);
+//   asm("lda %v", rgb_ctr);
+//   asm("cmp #4");
+//   asm("bne %g", __dli_done);
 
+//  asm("lda #0");
+//  asm("sta %v", rgb_ctr);
+
+__dli_done:
   asm("pla");
   asm("tay");
   asm("pla");
@@ -167,6 +168,8 @@ void dli_clear(void)
 {
   ANTIC.nmien = NMIEN_VBI;
 }
+
+#pragma optimize (pop)
 
 
 void dlist_setup_rgb(unsigned char antic_mode) {
@@ -221,9 +224,6 @@ void dlist_setup_rgb(unsigned char antic_mode) {
   }
 
   OS.sdlst = dlist;
-
-  mySETVBV((void *) VBLANKD);
-  dli_init();
 }
 
 /* The various graphics modes, the keypresses to
@@ -337,12 +337,12 @@ void main(void) {
     }
 
     /* Load the data! */
-for (i = 0; i < size; i++) {
-  // gfx[i] = POKEY_READ.random;
-  gfx[i] = i;
-}
-
-if (0) {
+#ifdef PLACEHOLDER
+    for (i = 0; i < size; i++) {
+      // gfx[i] = POKEY_READ.random;
+      gfx[i] = i;
+    }
+#else
     snprintf(url, sizeof(url), "%s?mode=%s", baseurl, modes[choice]);
  
     nopen(1 /* unit 1 */, url, 4 /* read */);
@@ -350,12 +350,18 @@ if (0) {
 
     nread(1 /* unit 1 */, gfx, (unsigned short) size);
     nclose(1 /* unit 1 */);
-}
+#endif
+
+    if (choice == CHOICE_LOWRES_RGB) {
+      mySETVBV((void *) VBLANKD);
+      dli_init();
+    }
 
     OS.ch = KEY_NONE;
     do { } while(OS.ch == KEY_NONE);
     OS.ch = KEY_NONE;
-  
+
+    dli_clear();  
     mySETVBV((void *) OLDVEC);
   } while(1);
 }
