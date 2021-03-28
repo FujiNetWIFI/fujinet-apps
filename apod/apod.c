@@ -74,16 +74,15 @@ char url[255];
 
 /* The program! */
 void main(void) {
-  FILE * fi;
   unsigned char keypress, choice;
   int i;
 
   do {
-    if (0) {
-      /* FIXME Accept command-line options */
-      choice = CHOICE_HIRES_MONO;
-      baseurl = default_baseurl;
-    } else {
+    /* FIXME Accept command-line options */
+//  if (...) {
+//    choice = CHOICE_HIRES_MONO;
+//    baseurl = default_baseurl;
+//  } else {
       /* Prompt user for the preferred viewing mode */
       _graphics(2+16);
       myprint(0, 0, "Astronomy Picture Of");
@@ -111,7 +110,7 @@ void main(void) {
           }
         }
       } while (choice == CHOICE_NONE);
-    }
+//  }
   
     /* Set up the display, based on the choice */
     if (choice == CHOICE_HIRES_MONO || CHOICE_LOWRES_GREY) {
