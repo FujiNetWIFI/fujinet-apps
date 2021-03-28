@@ -9,4 +9,3 @@ via the "apod" server (which converts it to a format suitable for quickly loadin
 an Atari, via HTTP for an Atari with a #FujiNet and its `N:` device.)
 
 ## Work in progress
-(Thom suggests just doing SIO directly, rather than using N: device.)

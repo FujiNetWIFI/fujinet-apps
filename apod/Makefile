@@ -13,34 +13,43 @@ CC65_INC=/usr/share/cc65/include/
 CC65_ASMINC=/usr/share/cc65/asminc/
 CC65_LIB=/usr/share/cc65/lib/
 CC65_CFG=/usr/share/cc65/cfg/
-FRANNY=/usr/local/franny/bin/franny
 
-all:	apod.atr
+all:	apod.xex
 
 clean:
-	-rm apod.atr
 	-rm apod.xex
 	-rm apod.map
 	-rm apod.o
 	-rm apod.s
+	-rm nsio.o
+	-rm nsio.s
+	-rm sio.o
 
-apod.atr:	mydos_n.atr apod.xex
-	cp mydos_n.atr apod.atr
-	${FRANNY} -A apod.atr -i apod.xex -o APOD.AR1
-
-apod.xex:	apod.o atari.cfg
+apod.xex:	apod.o nsio.o sio.o atari.cfg
 	${LD65} --lib-path "${CC65_LIB}" \
 		-o apod.xex \
 		-t atari \
 		-m apod.map \
-		apod.o atari.lib
+		apod.o nsio.o sio.o atari.lib
 
 apod.o:	apod.s
 	${CA65} -I "${CC65_ASMINC}" -t atari apod.s -o apod.o
 
-apod.s:	apod.c
+apod.s:	apod.c nsio.h
 	${CC65} -I "${CC65_INC}" \
 		-t atari \
 		apod.c \
 		-o apod.s
+
+nsio.o:	nsio.s
+	${CA65} -I "${CC65_ASMINC}" -t atari nsio.s -o nsio.o
+
+nsio.s:	nsio.c nsio.h sio.h
+	${CC65} -I "${CC65_INC}" \
+		-t atari \
+		nsio.c \
+		-o nsio.s
+
+sio.o:	sio.s
+	${CA65} -I "${CC65_ASMINC}" -t atari sio.s -o sio.o
 

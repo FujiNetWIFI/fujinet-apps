@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <atari.h>
 #include <peekpoke.h>
+#include "nsio.h"
 
 /**
  * Simple text rendering onto screen memory
@@ -147,14 +148,12 @@ void main(void) {
   
     /* Load the data! */
     snprintf(url, sizeof(url), "%s?mode=%s", baseurl, modes[choice]);
-  
-    fi = fopen(default_baseurl, "rb");
-    if (fi == NULL) {
-      printf("Oops %s", url);
-    } else {
-      fread((void *) PEEKW(88), (size_t) 7680, (size_t) 1, fi);
-      fclose(fi);
-    }
+ 
+    nopen(1 /* unit 1 */, url, 4 /* read */);
+    /* FIXME: Check for error */
+
+    nread(1 /* unit 1 */, (char*) PEEKW(88), (unsigned short) 7680);
+    nclose(1 /* unit 1 */);
   
     OS.ch = KEY_NONE;
     do { } while(OS.ch == KEY_NONE);
