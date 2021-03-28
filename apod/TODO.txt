@@ -1,0 +1,5 @@
+TODO for APOD #FujiNet client
+2021-03-27
+
+ * Mend display list glitch :(
+

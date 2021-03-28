@@ -16,6 +16,9 @@ CC65_CFG=/usr/share/cc65/cfg/
 
 all:	apod.xex
 
+run:	apod.xex
+	atari800 -nobasic apod.xex
+
 clean:
 	-rm apod.xex
 	-rm apod.map
