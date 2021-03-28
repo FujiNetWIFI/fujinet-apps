@@ -321,8 +321,8 @@ clean:
 	$(call RMFILES,$(DEPENDS))
 	$(call RMFILES,$(REMOVES))
 	$(call RMFILES,$(PROGRAM))
-	$(call RMFILES,netcat.map)
-	$(call RMFILES,netcat.atr)
+	$(call RMFILES,test.map)
+	$(call RMFILES,test.atr)
  
 else # $(words $(TARGETLIST)),1
  
