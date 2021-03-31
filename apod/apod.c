@@ -25,10 +25,11 @@ extern unsigned char scr_mem[];
  * Simple text rendering onto screen memory
  */
 void myprint(unsigned char x, unsigned char y, char * str) {
-  int pos, i, SC;
+  int pos, i;
   unsigned char c;
+  unsigned char * SC;
 
-  SC = PEEKW(88);
+  SC = (unsigned char *) PEEKW(88);
 
   pos = y * 20 + x;
   for (i = 0; str[i] != '\0'; i++) {
@@ -40,7 +41,7 @@ void myprint(unsigned char x, unsigned char y, char * str) {
       c = c - 32;
     }
 
-    POKE(SC + pos + i, c);
+    SC[pos + i] = c;
   }
 }
 
@@ -169,40 +170,59 @@ void dli_clear(void)
 void dlist_setup_rgb(unsigned char antic_mode) {
   int l, i;
   unsigned int gfx_ptr1, gfx_ptr2, gfx_ptr3, next_dlist;
+  unsigned int scr_mem1, scr_mem2, scr_mem3, dl_idx;
+  unsigned char
+    gfx_ptr1_hi, gfx_ptr1_lo,
+    gfx_ptr2_hi, gfx_ptr2_lo,
+    gfx_ptr3_hi, gfx_ptr3_lo;
+
+  scr_mem1 = (unsigned int) scr_mem;
+  scr_mem2 = (unsigned int) scr_mem + 8192;
+  scr_mem3 = (unsigned int) scr_mem + 16384;
 
   for (l = 0; l < 3; l++) {
-    for (i = 0; i < 3; i++) {
-      dlist_mem[(l * DLIST_SIZE) + i] = DL_BLK8;
-    }
+    dl_idx = (l * DLIST_SIZE);
+
+    dlist_mem[dl_idx++] = DL_BLK8;
+    dlist_mem[dl_idx++] = DL_BLK8;
+    dlist_mem[dl_idx++] = DL_BLK8;
 
     if (l == 0) {
-      gfx_ptr1 = ((unsigned int) scr_mem) + (8192 * 0) + 0;
-      gfx_ptr2 = ((unsigned int) scr_mem) + (8192 * 1) + 40;
-      gfx_ptr3 = ((unsigned int) scr_mem) + (8192 * 2) + 80;
+      gfx_ptr1 = scr_mem1 + 0;
+      gfx_ptr2 = scr_mem2 + 40;
+      gfx_ptr3 = scr_mem3 + 80;
     } else if (l == 1) {
-      gfx_ptr1 = ((unsigned int) scr_mem) + (8192 * 1) + 0;
-      gfx_ptr2 = ((unsigned int) scr_mem) + (8192 * 2) + 40;
-      gfx_ptr3 = ((unsigned int) scr_mem) + (8192 * 0) + 80;
+      gfx_ptr1 = scr_mem2 + 0;
+      gfx_ptr2 = scr_mem3 + 40;
+      gfx_ptr3 = scr_mem1  + 80;
     } else {
-      gfx_ptr1 = ((unsigned int) scr_mem) + (8192 * 2) + 0;
-      gfx_ptr2 = ((unsigned int) scr_mem) + (8192 * 0) + 40;
-      gfx_ptr3 = ((unsigned int) scr_mem) + (8192 * 1) + 80;
+      gfx_ptr1 = scr_mem3 + 0;
+      gfx_ptr2 = scr_mem1 + 40;
+      gfx_ptr3 = scr_mem2 + 80;
     }
 
-    for (i = 0; i < 192; i = i + 3) {
-      dlist_mem[(l * DLIST_SIZE) + (i * 3) + 3] = DL_LMS(antic_mode);
-      dlist_mem[(l * DLIST_SIZE) + (i * 3) + 4] = (gfx_ptr1 & 255);
-      dlist_mem[(l * DLIST_SIZE) + (i * 3) + 5] = (gfx_ptr1 >> 8);
+    for (i = 0; i < 64 /* aka 192 / 3 */; i++) {
+      /* FIXME: Be more clever */
+      gfx_ptr1_hi = (gfx_ptr1 >> 8);
+      gfx_ptr1_lo = (gfx_ptr1 & 255);
+      gfx_ptr2_hi = (gfx_ptr2 >> 8);
+      gfx_ptr2_lo = (gfx_ptr2 & 255);
+      gfx_ptr3_hi = (gfx_ptr3 >> 8);
+      gfx_ptr3_lo = (gfx_ptr3 & 255);
+
+      dlist_mem[dl_idx++] = DL_LMS(antic_mode);
+      dlist_mem[dl_idx++] = gfx_ptr1_lo;
+      dlist_mem[dl_idx++] = gfx_ptr1_hi;
       gfx_ptr1 += 120;
 
-      dlist_mem[(l * DLIST_SIZE) + (i * 3) + 6] = DL_LMS(antic_mode);
-      dlist_mem[(l * DLIST_SIZE) + (i * 3) + 7] = (gfx_ptr2 & 255);
-      dlist_mem[(l * DLIST_SIZE) + (i * 3) + 8] = (gfx_ptr2 >> 8);
+      dlist_mem[dl_idx++] = DL_LMS(antic_mode);
+      dlist_mem[dl_idx++] = gfx_ptr2_lo;
+      dlist_mem[dl_idx++] = gfx_ptr2_hi;
       gfx_ptr2 += 120;
 
-      dlist_mem[(l * DLIST_SIZE) + (i * 3) + 9] = DL_LMS(antic_mode);
-      dlist_mem[(l * DLIST_SIZE) + (i * 3) + 10] = (gfx_ptr3 & 255);
-      dlist_mem[(l * DLIST_SIZE) + (i * 3) + 11] = (gfx_ptr3 >> 8);
+      dlist_mem[dl_idx++] = DL_LMS(antic_mode);
+      dlist_mem[dl_idx++] = gfx_ptr3_lo;
+      dlist_mem[dl_idx++] = gfx_ptr3_hi;
       gfx_ptr3 += 120;
     }
 
