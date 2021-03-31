@@ -7,7 +7,7 @@
   See the APOD web app (server)
 
   By Bill Kendrick <bill@newbreedsoftware.com>
-  2021-03-27 - 2021-03-28
+  2021-03-27 - 2021-03-30
 */
 
 #define PLACEHOLDER
@@ -18,14 +18,8 @@
 #include "nsio.h"
 
 #define DLIST_SIZE 1024
-#pragma data-name (push,"DLIST")
-unsigned char dlist[DLIST_SIZE * 3];
-#pragma data-name (pop)
-
-#pragma data-name (push,"GFX")
-unsigned char gfx[23040]; /* three full screens */
-#pragma data-name (pop)
-
+extern unsigned char dlist_mem[];
+extern unsigned char scr_mem[];
 
 /**
  * Simple text rendering onto screen memory
@@ -59,23 +53,23 @@ void dlist_setup(unsigned char antic_mode) {
 
   dlist_idx = 0;
 
-  dlist[dlist_idx++] = DL_BLK8;
-  dlist[dlist_idx++] = DL_BLK8;
-  dlist[dlist_idx++] = DL_BLK8;
+  dlist_mem[dlist_idx++] = DL_BLK8;
+  dlist_mem[dlist_idx++] = DL_BLK8;
+  dlist_mem[dlist_idx++] = DL_BLK8;
 
-  gfx_ptr = (unsigned int) gfx;
+  gfx_ptr = (unsigned int) scr_mem;
   for (i = 0; i < 192; i++) {
-    dlist[dlist_idx++] = DL_LMS(antic_mode);
-    dlist[dlist_idx++] = (gfx_ptr & 255);
-    dlist[dlist_idx++] = (gfx_ptr >> 8);
+    dlist_mem[dlist_idx++] = DL_LMS(antic_mode);
+    dlist_mem[dlist_idx++] = (gfx_ptr & 255);
+    dlist_mem[dlist_idx++] = (gfx_ptr >> 8);
     gfx_ptr += 40;
   }
 
-  dlist[dlist_idx++] = DL_JVB;
-  dlist[dlist_idx++] = ((unsigned int) dlist & 255);
-  dlist[dlist_idx++] = ((unsigned int) dlist >> 8);
+  dlist_mem[dlist_idx++] = DL_JVB;
+  dlist_mem[dlist_idx++] = ((unsigned int) dlist_mem & 255);
+  dlist_mem[dlist_idx++] = ((unsigned int) dlist_mem >> 8);
 
-  OS.sdlst = dlist;
+  OS.sdlst = dlist_mem;
   OS.sdmctl = DMACTL_PLAYFIELD_NORMAL | DMACTL_DMA_FETCH;
 }
 
@@ -118,7 +112,7 @@ __vbi_done:
 void mySETVBV(void * Addr)
 {
   active_dlist = 0;
-  dlist_hi = (unsigned char) (((unsigned int) dlist) >> 8);
+  dlist_hi = (unsigned char) (((unsigned int) dlist_mem) >> 8);
 
   OS.critic = 1;
   OS.vvblkd = Addr;
@@ -178,52 +172,52 @@ void dlist_setup_rgb(unsigned char antic_mode) {
 
   for (l = 0; l < 3; l++) {
     for (i = 0; i < 3; i++) {
-      dlist[(l * DLIST_SIZE) + i] = DL_BLK8;
+      dlist_mem[(l * DLIST_SIZE) + i] = DL_BLK8;
     }
 
     if (l == 0) {
-      gfx_ptr1 = ((unsigned int) gfx) + (7680 * 0) + 0;
-      gfx_ptr2 = ((unsigned int) gfx) + (7680 * 1) + 40;
-      gfx_ptr3 = ((unsigned int) gfx) + (7680 * 2) + 80;
+      gfx_ptr1 = ((unsigned int) scr_mem) + (8192 * 0) + 0;
+      gfx_ptr2 = ((unsigned int) scr_mem) + (8192 * 1) + 40;
+      gfx_ptr3 = ((unsigned int) scr_mem) + (8192 * 2) + 80;
     } else if (l == 1) {
-      gfx_ptr1 = ((unsigned int) gfx) + (7680 * 1) + 0;
-      gfx_ptr2 = ((unsigned int) gfx) + (7680 * 2) + 40;
-      gfx_ptr3 = ((unsigned int) gfx) + (7680 * 0) + 80;
+      gfx_ptr1 = ((unsigned int) scr_mem) + (8192 * 1) + 0;
+      gfx_ptr2 = ((unsigned int) scr_mem) + (8192 * 2) + 40;
+      gfx_ptr3 = ((unsigned int) scr_mem) + (8192 * 0) + 80;
     } else {
-      gfx_ptr1 = ((unsigned int) gfx) + (7680 * 2) + 0;
-      gfx_ptr2 = ((unsigned int) gfx) + (7680 * 0) + 40;
-      gfx_ptr3 = ((unsigned int) gfx) + (7680 * 1) + 80;
+      gfx_ptr1 = ((unsigned int) scr_mem) + (8192 * 2) + 0;
+      gfx_ptr2 = ((unsigned int) scr_mem) + (8192 * 0) + 40;
+      gfx_ptr3 = ((unsigned int) scr_mem) + (8192 * 1) + 80;
     }
 
     for (i = 0; i < 192; i = i + 3) {
-      dlist[(l * DLIST_SIZE) + (i * 3) + 3] = DL_LMS(antic_mode);
-      dlist[(l * DLIST_SIZE) + (i * 3) + 4] = (gfx_ptr1 & 255);
-      dlist[(l * DLIST_SIZE) + (i * 3) + 5] = (gfx_ptr1 >> 8);
+      dlist_mem[(l * DLIST_SIZE) + (i * 3) + 3] = DL_LMS(antic_mode);
+      dlist_mem[(l * DLIST_SIZE) + (i * 3) + 4] = (gfx_ptr1 & 255);
+      dlist_mem[(l * DLIST_SIZE) + (i * 3) + 5] = (gfx_ptr1 >> 8);
       gfx_ptr1 += 120;
 
-      dlist[(l * DLIST_SIZE) + (i * 3) + 6] = DL_LMS(antic_mode);
-      dlist[(l * DLIST_SIZE) + (i * 3) + 7] = (gfx_ptr2 & 255);
-      dlist[(l * DLIST_SIZE) + (i * 3) + 8] = (gfx_ptr2 >> 8);
+      dlist_mem[(l * DLIST_SIZE) + (i * 3) + 6] = DL_LMS(antic_mode);
+      dlist_mem[(l * DLIST_SIZE) + (i * 3) + 7] = (gfx_ptr2 & 255);
+      dlist_mem[(l * DLIST_SIZE) + (i * 3) + 8] = (gfx_ptr2 >> 8);
       gfx_ptr2 += 120;
 
-      dlist[(l * DLIST_SIZE) + (i * 3) + 9] = DL_LMS(antic_mode);
-      dlist[(l * DLIST_SIZE) + (i * 3) + 10] = (gfx_ptr3 & 255);
-      dlist[(l * DLIST_SIZE) + (i * 3) + 11] = (gfx_ptr3 >> 8);
+      dlist_mem[(l * DLIST_SIZE) + (i * 3) + 9] = DL_LMS(antic_mode);
+      dlist_mem[(l * DLIST_SIZE) + (i * 3) + 10] = (gfx_ptr3 & 255);
+      dlist_mem[(l * DLIST_SIZE) + (i * 3) + 11] = (gfx_ptr3 >> 8);
       gfx_ptr3 += 120;
     }
 
     if (l == 2) {
-      next_dlist = (unsigned int) dlist;
+      next_dlist = (unsigned int) dlist_mem;
     } else {
-      next_dlist = (unsigned int) dlist + (DLIST_SIZE * (l + 1));
+      next_dlist = (unsigned int) dlist_mem + (DLIST_SIZE * (l + 1));
     }
 
-    dlist[(l * DLIST_SIZE) + (192 * 3) + 3] = DL_JVB;
-    dlist[(l * DLIST_SIZE) + (192 * 3) + 4] = (next_dlist & 255);
-    dlist[(l * DLIST_SIZE) + (192 * 3) + 5] = (next_dlist >> 8);
+    dlist_mem[(l * DLIST_SIZE) + (192 * 3) + 3] = DL_JVB;
+    dlist_mem[(l * DLIST_SIZE) + (192 * 3) + 4] = (next_dlist & 255);
+    dlist_mem[(l * DLIST_SIZE) + (192 * 3) + 5] = (next_dlist >> 8);
   }
 
-  OS.sdlst = dlist;
+  OS.sdlst = dlist_mem;
 }
 
 /* The various graphics modes, the keypresses to
@@ -303,7 +297,7 @@ void main(void) {
         }
       } while (choice == CHOICE_NONE);
 //  }
-  
+
     /* Set up the display, based on the choice */
     size = 7680;
 
@@ -339,8 +333,8 @@ void main(void) {
     /* Load the data! */
 #ifdef PLACEHOLDER
     for (i = 0; i < size; i++) {
-      // gfx[i] = POKEY_READ.random;
-      gfx[i] = i;
+      // scr_mem[i] = POKEY_READ.random;
+      scr_mem[i] = i;
     }
 #else
     snprintf(url, sizeof(url), "%s?mode=%s", baseurl, modes[choice]);
@@ -348,7 +342,7 @@ void main(void) {
     nopen(1 /* unit 1 */, url, 4 /* read */);
     /* FIXME: Check for error */
 
-    nread(1 /* unit 1 */, gfx, (unsigned short) size);
+    nread(1 /* unit 1 */, scr_mem, (unsigned short) size);
     nclose(1 /* unit 1 */);
 #endif
 

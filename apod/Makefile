@@ -3,7 +3,7 @@
 # images, as converted by the 'apod' web app.
 #
 # Bill Kendrick <bill@newbreedsoftware.com>
-# 2021-03-27 - 2021-03-27
+# 2021-03-27 - 2021-03-30
 
 CC65=/usr/bin/cc65
 CA65=/usr/bin/ca65
@@ -27,13 +27,14 @@ clean:
 	-rm nsio.o
 	-rm nsio.s
 	-rm sio.o
+	-rm segments.o
 
-apod.xex:	apod.o nsio.o sio.o atari.cfg
+apod.xex:	apod.o nsio.o sio.o segments.o atari.cfg
 	${LD65} --lib-path "${CC65_LIB}" \
 		-o apod.xex \
 		-t atari \
 		-m apod.map \
-		apod.o nsio.o sio.o atari.lib
+		apod.o nsio.o sio.o segments.o atari.lib
 
 apod.o:	apod.s
 	${CA65} -I "${CC65_ASMINC}" -t atari apod.s -o apod.o
@@ -55,4 +56,7 @@ nsio.s:	nsio.c nsio.h sio.h
 
 sio.o:	sio.s
 	${CA65} -I "${CC65_ASMINC}" -t atari sio.s -o sio.o
+
+segments.o:	segments.s
+	${CA65} -I "${CC65_ASMINC}" -t atari segments.s -o segments.o
 
