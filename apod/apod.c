@@ -7,7 +7,7 @@
   See the APOD web app (server)
 
   By Bill Kendrick <bill@newbreedsoftware.com>
-  2021-03-27 - 2021-03-30
+  2021-03-27 - 2021-03-31
 */
 
 #define PLACEHOLDER
@@ -16,9 +16,11 @@
 #include <atari.h>
 #include <peekpoke.h>
 #include "nsio.h"
+#include "dli.h"
 
 #define DLIST_SIZE 1024
 extern unsigned char dlist_mem[];
+extern unsigned char rgb_table[];
 extern unsigned char scr_mem[];
 
 /**
@@ -79,7 +81,7 @@ unsigned char dlist_hi;
 void * OLDVEC;
 
 unsigned char rgb_ctr;
-unsigned char rgb_table[3] = { 0x40, 0xC0, 0x80 };
+// unsigned char rgb_table[3] = { 0x40, 0xC0, 0x80 };
 
 #pragma optimize (push, off)
 void VBLANKD(void) {
@@ -99,13 +101,14 @@ __vbi_dlist_done:
 
   asm("ldx %v", rgb_ctr);
   asm("inx");
-  asm("cmp #4");
+  asm("cpx #3");
   asm("bcc %g", __vbi_done);
 
   asm("ldx #0");
 
 __vbi_done:
   asm("stx %v", rgb_ctr);
+  asm("stx %v", dli_load_arg);
 
   asm("jmp (%v)", OLDVEC);
 }
@@ -120,34 +123,6 @@ void mySETVBV(void * Addr)
   OS.critic = 0;
 
   ANTIC.nmien = NMIEN_VBI;
-}
-
-void dli(void)
-{
-  asm("pha");
-  asm("tya");
-  asm("pha");
-
-  asm("ldy %v", rgb_ctr);
-  asm("lda %v,y", rgb_table);
-
-  asm("sta %w", (unsigned)&ANTIC.wsync);
-  asm("sta %w", (unsigned)&GTIA_WRITE.colbk);
-
-  /* FIXME: Still crashing */
-//   asm("inc %v", rgb_ctr);
-//   asm("lda %v", rgb_ctr);
-//   asm("cmp #4");
-//   asm("bne %g", __dli_done);
-
-//  asm("lda #0");
-//  asm("sta %v", rgb_ctr);
-
-__dli_done:
-  asm("pla");
-  asm("tay");
-  asm("pla");
-  asm("rti");
 }
 
 void dli_init(void)
@@ -175,6 +150,7 @@ void dlist_setup_rgb(unsigned char antic_mode) {
     gfx_ptr1_hi, gfx_ptr1_lo,
     gfx_ptr2_hi, gfx_ptr2_lo,
     gfx_ptr3_hi, gfx_ptr3_lo;
+  unsigned char *rgb_ptr;
 
   scr_mem1 = (unsigned int) scr_mem;
   scr_mem2 = (unsigned int) scr_mem + 8192;
@@ -237,6 +213,27 @@ void dlist_setup_rgb(unsigned char antic_mode) {
     dlist_mem[(l * DLIST_SIZE) + (192 * 3) + 5] = (next_dlist >> 8);
   }
 
+  rgb_ptr = rgb_table;
+  for(i = 0; i<65; i++)
+  {
+    // Altirra, NTSC
+    *rgb_ptr++ = 0x40;
+    *rgb_ptr++ = 0xC0;
+    *rgb_ptr++ = 0x80;
+    // // Altirra, PAL
+    // *rgb_ptr++ = 0x30;
+    // *rgb_ptr++ = 0xC0;
+    // *rgb_ptr++ = 0x70;
+    // // real HW - shifted RGB? different timing?
+    // *rgb_ptr++ = 0xC0;
+    // *rgb_ptr++ = 0x80;
+    // *rgb_ptr++ = 0x40;
+    // // PAL
+    // *rgb_ptr++ = 0xC0;
+    // *rgb_ptr++ = 0x70;
+    // *rgb_ptr++ = 0x30;
+  }
+
   OS.sdlst = dlist_mem;
 }
 
@@ -271,6 +268,7 @@ char * modes[NUM_CHOICES] = {
 
 /* The base URL for the web app */
 char * default_baseurl = "N:HTTP://billsgames.com/fujinet/apod/index.php";
+// char * default_baseurl = "N:TNFS://bar/MISC/apod.gfx";
 char * baseurl;
 
 /* Space to store the composed URL */
@@ -281,6 +279,12 @@ char url[255];
 void main(void) {
   unsigned char keypress, choice;
   int i, size;
+  unsigned short data_len, data_read;
+  unsigned char *scr_mem1, *scr_mem2, *scr_mem3;
+
+  scr_mem1 = scr_mem;
+  scr_mem2 = scr_mem + 8192;
+  scr_mem3 = scr_mem + 16384;
 
   do {
     /* FIXME Accept command-line options */
@@ -294,11 +298,12 @@ void main(void) {
       myprint(3, 1, "the Day (APOD)");
       myprint(4, 2, "via #FUJINET");
       myprint(1, 3, "bill kendrick 2021");
+      myprint(6, 4, "h/t apc");
   
-      myprint(0, 5, "A high res mono");
-      myprint(0, 6, "B medium res 4 shade");
-      myprint(0, 7, "C low res 16 shade");
-      myprint(0, 8, "D low res 4096 color");
+      myprint(0, 6, "A high res mono");
+      myprint(0, 7, "B medium res 4 shade");
+      myprint(0, 8, "C low res 16 shade");
+      myprint(0, 9, "D low res 4096 color");
   
       baseurl = default_baseurl;
   
@@ -352,17 +357,58 @@ void main(void) {
 
     /* Load the data! */
 #ifdef PLACEHOLDER
-    for (i = 0; i < size; i++) {
-      // scr_mem[i] = POKEY_READ.random;
-      scr_mem[i] = i;
+    if (size == 7680) {
+      for (i = 0; i < size; i++) {
+        // scr_mem[i] = POKEY_READ.random;
+        scr_mem[i] = i;
+      }
+    } else {
+      for (i = 0; i < 7680; i++) {
+        scr_mem1[i] = (i%40 >= 34 || i%40 < 14) ? 0x55 : 0;
+      }
+      for (i=0; i < 7680; i++) {
+        scr_mem2[i] = (6 < i%40 && i%40 < 28) ? 0x55 : 0;
+      }
+      for (i=0; i < 7680; i++) {
+        scr_mem3[i] = (20 < i%40) ? 0x55 : 0;
+      }
     }
 #else
     snprintf(url, sizeof(url), "%s?mode=%s", baseurl, modes[choice]);
+    // snprintf(url, sizeof(url), "%s.%s", baseurl, modes[choice]);
  
     nopen(1 /* unit 1 */, url, 4 /* read */);
     /* FIXME: Check for error */
 
-    nread(1 /* unit 1 */, scr_mem, (unsigned short) size);
+    if (size == 7680) {
+      nread(1 , scr_mem, (unsigned short) size);
+    } else {
+      for(data_read = 0; data_read < 7680; data_read += data_len)
+      {
+        nstatus(1);
+        data_len=(OS.dvstat[1]<<8)+OS.dvstat[0];
+        if (data_len==0) break;
+        if (data_read+data_len > 7680) data_len = 7680 - data_read;
+        nread(1 , scr_mem1 + data_read, data_len);
+      }
+      for(data_read = 0; data_read < 7680; data_read += data_len)
+      {
+        nstatus(1);
+        data_len=(OS.dvstat[1]<<8)+OS.dvstat[0];
+        if (data_len==0) break;
+        if (data_read+data_len > 7680) data_len = 7680 - data_read;
+        nread(1 , scr_mem2 + data_read, data_len);
+      }
+      for(data_read = 0; data_read < 7680; data_read += data_len)
+      {
+        nstatus(1);
+        data_len=(OS.dvstat[1]<<8)+OS.dvstat[0];
+        if (data_len==0) break;
+        if (data_read+data_len > 7680) data_len = 7680 - data_read;
+        nread(1 , scr_mem3 + data_read, data_len);
+      }
+    }
+
     nclose(1 /* unit 1 */);
 #endif
 

@@ -1,7 +1,10 @@
 apod (Astronomy Picture of the Day) Client for #FujiNet
 =======================================================
 
-Bill Kendrick bill@newbreedsoftware.com - 2021-03-27 - 2021-03-30
+Bill Kendrick bill@newbreedsoftware.com
+with help from apc & others (see credits, below)
+
+2021-03-27 - 2021-03-31
 
 ## Purpose
 Fetch and view [NASA's Astronomy Picture of the Day (APOD)](https://apod.nasa.gov/apod/),
@@ -16,3 +19,9 @@ h/t Wrathchild @ Atari Age forums
 (https://atariage.com/forums/profile/1822-wrathchild/)
 for a sample .cfg file in a discussion regarding cc65
 with Yaron Nir.
+
+h/t Jan (apc @ Atari Age forums and #FujiNet discord)
+(https://atariage.com/forums/profile/73813-apc/)
+for further .cfg file adjustments, and getting the DLI
+to work correctly.
+
