@@ -7,10 +7,10 @@
   See the APOD web app (server)
 
   By Bill Kendrick <bill@newbreedsoftware.com>
-  2021-03-27 - 2021-03-31
+  2021-03-27 - 2021-04-01
 */
 
-#define PLACEHOLDER
+// #define PLACEHOLDER
 
 #include <stdio.h>
 #include <atari.h>
@@ -18,10 +18,16 @@
 #include "nsio.h"
 #include "dli.h"
 
+/* In ColorView mode, we will have 3 display lists that
+   we cycle through, each interleaving between three
+   versions of the image (red, green, blue) */
 #define DLIST_SIZE 1024
 extern unsigned char dlist_mem[];
 extern unsigned char rgb_table[];
+
+/* A block of space to store the graphics */
 extern unsigned char scr_mem[];
+
 
 /**
  * Simple text rendering onto screen memory
@@ -47,7 +53,11 @@ void myprint(unsigned char x, unsigned char y, char * str) {
   }
 }
 
-
+/**
+ * Set up a basic Display List
+ *
+ * @param byte antic_mode
+ */
 void dlist_setup(unsigned char antic_mode) {
   unsigned char i;
   unsigned int gfx_ptr, dlist_idx;
@@ -76,13 +86,23 @@ void dlist_setup(unsigned char antic_mode) {
   OS.sdmctl = DMACTL_PLAYFIELD_NORMAL | DMACTL_DMA_FETCH;
 }
 
+
+/* Tracking which Display List is active */
 unsigned char active_dlist;
 unsigned char dlist_hi;
+
+/* Keep track of old VBI vector, so we can jump to it at
+   the end of ours (see below), and restore it when we're done
+   needing our VBI */
 void * OLDVEC;
 
+/* Keeping track of which RGB color we're showing
+   (for fetching from the look-up table) */
 unsigned char rgb_ctr;
-// unsigned char rgb_table[3] = { 0x40, 0xC0, 0x80 };
 
+
+/* VBI routine for flipping between our three
+   Display Lists in RGB image modes */
 #pragma optimize (push, off)
 void VBLANKD(void) {
   asm("lda %v", dlist_hi);
@@ -113,6 +133,11 @@ __vbi_done:
   asm("jmp (%v)", OLDVEC);
 }
 
+/**
+ * Set the deffered VBI vector
+ *
+ * @param void * Addr the VBI routine's location
+ */
 void mySETVBV(void * Addr)
 {
   active_dlist = 0;
@@ -125,6 +150,9 @@ void mySETVBV(void * Addr)
   ANTIC.nmien = NMIEN_VBI;
 }
 
+/**
+ * Activate our Display List Interrupt
+ */
 void dli_init(void)
 {
   rgb_ctr = 0;
@@ -134,6 +162,9 @@ void dli_init(void)
   ANTIC.nmien = NMIEN_VBI | NMIEN_DLI;
 }
 
+/**
+ * Deactivate our Display List Interrupt
+ */
 void dli_clear(void)
 {
   ANTIC.nmien = NMIEN_VBI;
@@ -142,6 +173,12 @@ void dli_clear(void)
 #pragma optimize (pop)
 
 
+/**
+ * Set up three Display Lists for RGB modes
+ * (utilizes DLI and VBI to flicker; see above)
+ *
+ * @param byte antic_mode
+ */
 void dlist_setup_rgb(unsigned char antic_mode) {
   int l, i;
   unsigned int gfx_ptr1, gfx_ptr2, gfx_ptr3, next_dlist;
@@ -213,6 +250,7 @@ void dlist_setup_rgb(unsigned char antic_mode) {
     dlist_mem[(l * DLIST_SIZE) + (192 * 3) + 5] = (next_dlist >> 8);
   }
 
+  /* Set up a color table of repeating Red, Green, and Blue hues */
   rgb_ptr = rgb_table;
   for(i = 0; i<65; i++)
   {
@@ -266,9 +304,27 @@ char * modes[NUM_CHOICES] = {
 };
 
 
+/* The various sample options, and keys to select them */
+enum {
+  SAMPLE_NONE,
+  SAMPLE_1,
+  SAMPLE_2,
+  SAMPLE_3,
+  SAMPLE_4,
+  NUM_SAMPLES
+};
+
+unsigned char sample_keys[NUM_SAMPLES] = {
+  KEY_0,
+  KEY_1,
+  KEY_2,
+  KEY_3,
+  KEY_4
+};
+
+
 /* The base URL for the web app */
 char * default_baseurl = "N:HTTP://billsgames.com/fujinet/apod/index.php";
-// char * default_baseurl = "N:TNFS://bar/MISC/apod.gfx";
 char * baseurl;
 
 /* Space to store the composed URL */
@@ -281,6 +337,8 @@ void main(void) {
   int i, size;
   unsigned short data_len, data_read;
   unsigned char *scr_mem1, *scr_mem2, *scr_mem3;
+  char tmp_str[2];
+  unsigned char sample = 0;
 
   scr_mem1 = scr_mem;
   scr_mem2 = scr_mem + 8192;
@@ -304,6 +362,8 @@ void main(void) {
       myprint(0, 7, "B medium res 4 shade");
       myprint(0, 8, "C low res 16 shade");
       myprint(0, 9, "D low res 4096 color");
+
+      myprint(0, 11, "1-4 sample, 0 apod");
   
       baseurl = default_baseurl;
   
@@ -318,6 +378,20 @@ void main(void) {
         for (i = 0; i < NUM_CHOICES; i++) {
           if (choice_keys[i] == keypress) {
             choice = i;
+          }
+        }
+
+        for (i = 0; i < NUM_SAMPLES; i++) {
+          if (sample_keys[i] == keypress) {
+            sample = i;
+
+            if (sample) {
+              tmp_str[0] = i + '0';
+              tmp_str[1] = '\0';
+              myprint(19, 11, tmp_str);
+            } else {
+              myprint(19, 11, " ");
+            }
           }
         }
       } while (choice == CHOICE_NONE);
@@ -374,7 +448,7 @@ void main(void) {
       }
     }
 #else
-    snprintf(url, sizeof(url), "%s?mode=%s", baseurl, modes[choice]);
+    snprintf(url, sizeof(url), "%s?mode=%s&sample=%d", baseurl, modes[choice], sample);
     // snprintf(url, sizeof(url), "%s.%s", baseurl, modes[choice]);
  
     nopen(1 /* unit 1 */, url, 4 /* read */);
