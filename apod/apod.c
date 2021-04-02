@@ -88,7 +88,6 @@ void dlist_setup(unsigned char antic_mode) {
 
 
 /* Tracking which Display List is active */
-unsigned char active_dlist;
 unsigned char dlist_hi;
 
 /* Keep track of old VBI vector, so we can jump to it at
@@ -105,31 +104,38 @@ unsigned char rgb_ctr;
    Display Lists in RGB image modes */
 #pragma optimize (push, off)
 void VBLANKD(void) {
-  asm("lda %v", dlist_hi);
-  asm("adc %v", active_dlist);
-  asm("sta $d403");
-
-  asm("lda %v", active_dlist);
-  asm("adc #4");
-  asm("cmp #12");
-  asm("bcc %g", __vbi_dlist_done);
-
-  asm("lda #0");
-
-__vbi_dlist_done:
-  asm("sta %v", active_dlist);
 
   asm("ldx %v", rgb_ctr);
+
+
   asm("inx");
   asm("cpx #3");
-  asm("bcc %g", __vbi_done);
+  asm("bcc %g", __vbi_ctr_set);
 
   asm("ldx #0");
 
-__vbi_done:
-  asm("stx %v", rgb_ctr);
+__vbi_ctr_set:
   asm("stx %v", dli_load_arg);
+  asm("stx %v", rgb_ctr);
 
+  /* dlist = dlist_hi + 4 * rgb_ctr */
+  asm("txa");
+  asm("asl a");
+  asm("asl a");
+  asm("adc %v", dlist_hi);
+  asm("sta $d403");
+
+  /* adjust end of the screen colors - set the last one to black color */
+  asm("lda %v+187,x", rgb_table);
+  asm("sta %v+190,x", rgb_table);
+  asm("lda %v+188,x", rgb_table);
+  asm("sta %v+191,x", rgb_table);
+  asm("lda #0");
+  asm("sta %v+192,x", rgb_table);
+
+  /* start next screen with black color at top */
+  asm("sta $d01a");
+  
   asm("jmp (%v)", OLDVEC);
 }
 
@@ -140,7 +146,7 @@ __vbi_done:
  */
 void mySETVBV(void * Addr)
 {
-  active_dlist = 0;
+  rgb_ctr = 0;
   dlist_hi = (unsigned char) (((unsigned int) dlist_mem) >> 8);
 
   OS.critic = 1;
@@ -198,7 +204,7 @@ void dlist_setup_rgb(unsigned char antic_mode) {
 
     dlist_mem[dl_idx++] = DL_BLK8;
     dlist_mem[dl_idx++] = DL_BLK8;
-    dlist_mem[dl_idx++] = DL_BLK8;
+    dlist_mem[dl_idx++] = DL_DLI(DL_BLK8); /* start with colors after this line */
 
     if (l == 0) {
       gfx_ptr1 = scr_mem1 + 0;
@@ -239,11 +245,7 @@ void dlist_setup_rgb(unsigned char antic_mode) {
       gfx_ptr3 += 120;
     }
 
-    if (l == 2) {
-      next_dlist = (unsigned int) dlist_mem;
-    } else {
-      next_dlist = (unsigned int) dlist_mem + (DLIST_SIZE * (l + 1));
-    }
+    next_dlist = (unsigned int) dlist_mem + (DLIST_SIZE * l);
 
     dlist_mem[(l * DLIST_SIZE) + (192 * 3) + 3] = DL_JVB;
     dlist_mem[(l * DLIST_SIZE) + (192 * 3) + 4] = (next_dlist & 255);
@@ -252,7 +254,7 @@ void dlist_setup_rgb(unsigned char antic_mode) {
 
   /* Set up a color table of repeating Red, Green, and Blue hues */
   rgb_ptr = rgb_table;
-  for(i = 0; i<65; i++)
+  for(i = 0; i<64; i++)
   {
     // Altirra, NTSC
     *rgb_ptr++ = 0x40;
