@@ -385,11 +385,11 @@ void main(void) {
     myprint(3, 1, "the Day (APOD)");
     myprint(4, 2, "via #FUJINET");
     myprint(1, 3, "bill kendrick 2021");
-    myprint(6, 4, "with help from apc");
+    myprint(0, 4, "with help from apc");
   
                  /*--------------------*/
     myprint(0, 6, "[A] high res mono");
-    myprint(0, 7, "[B] medium res 4 shade");
+    myprint(0, 7, "[B] med res 4 shade");
     myprint(0, 8, "[C] low res 16 shade");
     myprint(0, 9, "[D] low res 4096 clr");
     sprintf(str, "R=%02d G=%02d B=%02d", rgb_red >> 4, rgb_grn >> 4, rgb_blu >> 4);

@@ -15,7 +15,7 @@ The current image of the day (fetched by the server, if it hasn't
 already been during the current day (Pacific time zone)) will
 be loaded and displayed on your Atari!
 
-## Usage
+## Controls
 From the menu, press one of the follow keys to load and render
 an image in one of the following graphics modes:
 
@@ -25,6 +25,21 @@ an image in one of the following graphics modes:
 - `[D]` - Low resolution 4,096 color (via flickering; "ColorView" mode)
 
 Once the image appears, press `[Esc]` to return to the menu.
+
+When viewing a ColorView image, you can press `[R]`, `[G]`, or
+`[B]` to adjust the Atari color palette hue that's used for
+the red, green, and blue components of the image, respectively.
+Press those keys with `[Shift]` held down to adjust the hue
+in the opposite direction.
+
+The default hues are as follows (decimal values shown):
+
+- Red: 3 ("red-orange")
+- Green: 12 ("green")
+- Blue: 10 ("turquoise")
+
+Press `[X]` to reset the hues to their defaults.
+The hue settings are shown (in decimal) on the menu.
 
 ### Samples
 Press keys `[1]` through `[4]` to fetch a static sample image

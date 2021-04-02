@@ -1,8 +1,18 @@
 TODO for APOD #FujiNet client
-2021-04-01
+2021-04-02
 
  * In ColorView 9 mode, maybe add PGMs on the sides for solid black
    borders
 
  * ColorView 15 mode
+
+ * Occasionally, the menu doesn't reappear after viewing an image!
+   (Keyboard controls still work)
+
+ * Be more clever with storage space for bitmaps and display lists,
+   to make more space available for features.
+   + 8K allocated per bitmap, wasting 0.5K x 3
+   + 1K allocated per display list, wasting (just under 0.5K) x 3
+   (The trick is addressing 4K and 1K boundaries that affect
+   bitmaps and display lists, respectively.)
 
