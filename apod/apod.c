@@ -7,14 +7,13 @@
   See the APOD web app (server)
 
   By Bill Kendrick <bill@newbreedsoftware.com>
-  2021-03-27 - 2021-04-01
+  2021-03-27 - 2021-04-02
 */
-
-// #define PLACEHOLDER
 
 #include <stdio.h>
 #include <atari.h>
 #include <peekpoke.h>
+#include <string.h>
 #include "nsio.h"
 #include "dli.h"
 
@@ -28,6 +27,15 @@ extern unsigned char rgb_table[];
 /* A block of space to store the graphics */
 extern unsigned char scr_mem[];
 
+/* Values for Red, Green, and Blue, to allow hue adjustment */
+unsigned char rgb_red, rgb_grn, rgb_blu;
+
+/* Defaults that look good on my NTSC Atari 1200XL connected
+   to a Commodore 1902 monitor with Tint knob at its default,
+   and Color knob just below its default: */
+#define DEFAULT_RGB_RED 0x30
+#define DEFAULT_RGB_GRN 0xC0
+#define DEFAULT_RGB_BLU 0xA0
 
 /**
  * Simple text rendering onto screen memory
@@ -179,6 +187,22 @@ void dli_clear(void)
 #pragma optimize (pop)
 
 
+/* Set up a color table of repeating Red, Green, and Blue hues */
+
+void setup_rgb_table(void) {
+  unsigned char *rgb_ptr;
+  unsigned char i;
+
+  rgb_ptr = rgb_table;
+  for(i = 0; i < 64; i++)
+  {
+    *rgb_ptr++ = rgb_red;
+    *rgb_ptr++ = rgb_grn;
+    *rgb_ptr++ = rgb_blu;
+  }
+}
+
+
 /**
  * Set up three Display Lists for RGB modes
  * (utilizes DLI and VBI to flicker; see above)
@@ -193,7 +217,6 @@ void dlist_setup_rgb(unsigned char antic_mode) {
     gfx_ptr1_hi, gfx_ptr1_lo,
     gfx_ptr2_hi, gfx_ptr2_lo,
     gfx_ptr3_hi, gfx_ptr3_lo;
-  unsigned char *rgb_ptr;
 
   scr_mem1 = (unsigned int) scr_mem;
   scr_mem2 = (unsigned int) scr_mem + 8192;
@@ -213,7 +236,7 @@ void dlist_setup_rgb(unsigned char antic_mode) {
     } else if (l == 1) {
       gfx_ptr1 = scr_mem2 + 0;
       gfx_ptr2 = scr_mem3 + 40;
-      gfx_ptr3 = scr_mem1  + 80;
+      gfx_ptr3 = scr_mem1 + 80;
     } else {
       gfx_ptr1 = scr_mem3 + 0;
       gfx_ptr2 = scr_mem1 + 40;
@@ -252,30 +275,11 @@ void dlist_setup_rgb(unsigned char antic_mode) {
     dlist_mem[(l * DLIST_SIZE) + (192 * 3) + 5] = (next_dlist >> 8);
   }
 
-  /* Set up a color table of repeating Red, Green, and Blue hues */
-  rgb_ptr = rgb_table;
-  for(i = 0; i<64; i++)
-  {
-    // Altirra, NTSC
-    *rgb_ptr++ = 0x40;
-    *rgb_ptr++ = 0xC0;
-    *rgb_ptr++ = 0x80;
-    // // Altirra, PAL
-    // *rgb_ptr++ = 0x30;
-    // *rgb_ptr++ = 0xC0;
-    // *rgb_ptr++ = 0x70;
-    // // real HW - shifted RGB? different timing?
-    // *rgb_ptr++ = 0xC0;
-    // *rgb_ptr++ = 0x80;
-    // *rgb_ptr++ = 0x40;
-    // // PAL
-    // *rgb_ptr++ = 0xC0;
-    // *rgb_ptr++ = 0x70;
-    // *rgb_ptr++ = 0x30;
-  }
+  setup_rgb_table();
 
   OS.sdlst = dlist_mem;
 }
+
 
 /* The various graphics modes, the keypresses to
    choose them, and the argument to send to the
@@ -313,6 +317,7 @@ enum {
   SAMPLE_2,
   SAMPLE_3,
   SAMPLE_4,
+  SAMPLE_COLORBARS,
   NUM_SAMPLES
 };
 
@@ -321,7 +326,8 @@ unsigned char sample_keys[NUM_SAMPLES] = {
   KEY_1,
   KEY_2,
   KEY_3,
-  KEY_4
+  KEY_4,
+  KEY_5
 };
 
 
@@ -332,6 +338,25 @@ char * baseurl;
 /* Space to store the composed URL */
 char url[255];
 
+void handle_rgb_keypress(unsigned char k) {
+  if (k == KEY_R) {
+    rgb_red += 16;
+  } else if (k == KEY_G) {
+    rgb_grn += 16;
+  } else if (k == KEY_B) {
+    rgb_blu += 16;
+  } else if (k == (KEY_R | KEY_SHIFT)) {
+    rgb_red -= 16;
+  } else if (k == (KEY_G | KEY_SHIFT)) {
+    rgb_grn -= 16;
+  } else if (k == (KEY_B | KEY_SHIFT)) {
+    rgb_blu -= 16;
+  } else if (k == KEY_X) {
+    rgb_red = DEFAULT_RGB_RED;
+    rgb_grn = DEFAULT_RGB_GRN;
+    rgb_blu = DEFAULT_RGB_BLU;
+  }
+}
 
 /* The program! */
 void main(void) {
@@ -339,65 +364,73 @@ void main(void) {
   int i, size;
   unsigned short data_len, data_read;
   unsigned char *scr_mem1, *scr_mem2, *scr_mem3;
-  char tmp_str[2];
-  unsigned char sample = 0;
+  char tmp_str[2], str[20];
+  unsigned char sample = 0, done, k;
+  int grey;
 
   scr_mem1 = scr_mem;
   scr_mem2 = scr_mem + 8192;
   scr_mem3 = scr_mem + 16384;
 
+  /* Set the defaults for the RGB table */
+  rgb_red = DEFAULT_RGB_RED;
+  rgb_grn = DEFAULT_RGB_GRN;
+  rgb_blu = DEFAULT_RGB_BLU;
+
   do {
-    /* FIXME Accept command-line options */
-//  if (...) {
-//    choice = CHOICE_HIRES_MONO;
-//    baseurl = default_baseurl;
-//  } else {
-      /* Prompt user for the preferred viewing mode */
-      _graphics(2+16);
-      myprint(0, 0, "Astronomy Picture Of");
-      myprint(3, 1, "the Day (APOD)");
-      myprint(4, 2, "via #FUJINET");
-      myprint(1, 3, "bill kendrick 2021");
-      myprint(6, 4, "h/t apc");
+    /* Prompt user for the preferred viewing mode */
+    _graphics(1+16);
+                 /*--------------------*/
+    myprint(0, 0, "Astronomy Picture Of");
+    myprint(3, 1, "the Day (APOD)");
+    myprint(4, 2, "via #FUJINET");
+    myprint(1, 3, "bill kendrick 2021");
+    myprint(6, 4, "with help from apc");
   
-      myprint(0, 6, "A high res mono");
-      myprint(0, 7, "B medium res 4 shade");
-      myprint(0, 8, "C low res 16 shade");
-      myprint(0, 9, "D low res 4096 color");
+                 /*--------------------*/
+    myprint(0, 6, "[A] high res mono");
+    myprint(0, 7, "[B] medium res 4 shade");
+    myprint(0, 8, "[C] low res 16 shade");
+    myprint(0, 9, "[D] low res 4096 clr");
+    sprintf(str, "R=%02d G=%02d B=%02d", rgb_red >> 4, rgb_grn >> 4, rgb_blu >> 4);
+    myprint(2, 10, str);
+    myprint(2, 11, "[X] rbg defaults");
 
-      myprint(0, 11, "1-4 sample, 0 apod");
+                  /*--------------------*/
+    myprint(0, 13, "[0] get apod");
+    myprint(0, 14, "[1-4] get samples");
+    myprint(0, 15, "[5] color bars");
   
-      baseurl = default_baseurl;
+    baseurl = default_baseurl;
   
-      /* Accept a choice */
-      choice = CHOICE_NONE;
+    /* Accept a choice */
+    choice = CHOICE_NONE;
+    OS.ch = KEY_NONE;
+    do {
+      while (OS.ch == KEY_NONE) { OS.color0 = (OS.rtclok[2] >> 2) << 2; }
+      keypress = OS.ch;
       OS.ch = KEY_NONE;
-      do {
-        while (OS.ch == KEY_NONE) { OS.color0 = (OS.rtclok[2] >> 2) << 2; }
-        keypress = OS.ch;
-        OS.ch = KEY_NONE;
   
-        for (i = 0; i < NUM_CHOICES; i++) {
-          if (choice_keys[i] == keypress) {
-            choice = i;
+      for (i = 0; i < NUM_CHOICES; i++) {
+        if (choice_keys[i] == keypress) {
+          choice = i;
+        }
+      }
+
+      for (i = 0; i < NUM_SAMPLES; i++) {
+        if (sample_keys[i] == keypress) {
+          sample = i;
+
+          if (sample) {
+            tmp_str[0] = i + '0';
+            tmp_str[1] = '\0';
+            myprint(19, 23, tmp_str);
+          } else {
+            myprint(19, 23, " ");
           }
         }
-
-        for (i = 0; i < NUM_SAMPLES; i++) {
-          if (sample_keys[i] == keypress) {
-            sample = i;
-
-            if (sample) {
-              tmp_str[0] = i + '0';
-              tmp_str[1] = '\0';
-              myprint(19, 11, tmp_str);
-            } else {
-              myprint(19, 11, " ");
-            }
-          }
-        }
-      } while (choice == CHOICE_NONE);
-//  }
+      }
+    } while (choice == CHOICE_NONE);
 
     /* Set up the display, based on the choice */
     size = 7680;
@@ -432,69 +465,108 @@ void main(void) {
     }
 
     /* Load the data! */
-#ifdef PLACEHOLDER
-    if (size == 7680) {
-      for (i = 0; i < size; i++) {
-        // scr_mem[i] = POKEY_READ.random;
-        scr_mem[i] = i;
+    if (sample == SAMPLE_COLORBARS) {
+      if (size == 7680) {
+        for (i = 0; i < size; i++) {
+          // scr_mem[i] = POKEY_READ.random;
+          scr_mem[i] = i;
+        }
+      } else {
+        for (i = 0; i < 40; i++) {
+          scr_mem1[i] = (i >= 34 || i < 14) ? 0x55 : 0;
+          scr_mem2[i] = (6 < i && i < 28) ? 0x55 : 0;
+          scr_mem3[i] = (20 < i) ? 0x55 : 0;
+        }
+        for (i = 40; i < 5120; i += 40) {
+          memcpy(scr_mem1 + i, scr_mem1, 40);
+          memcpy(scr_mem2 + i, scr_mem2, 40);
+          memcpy(scr_mem3 + i, scr_mem3, 40);
+        }
+
+        /* 16 shades of grey */
+        for (i = 5120; i < 5160; i++) {
+          grey = ((i % 40) << 1) / 5;
+          grey = grey * 17;
+          scr_mem1[i] = grey;
+        }
+        for (i = 5160; i < 6400; i += 40) {
+          memcpy(scr_mem1 + i, scr_mem1 + 5120, 40);
+        }
+
+        /* 8 shades of grey */
+        for (i = 6400; i < 6440; i++) {
+          grey = ((i % 40) / 5) << 1;
+          grey = grey * 17;
+          scr_mem1[i] = grey;
+        }
+        for (i = 6440; i < 7680; i += 40) {
+          memcpy(scr_mem1 + i, scr_mem1 + 6400, 40);
+        }
+
+        memcpy(scr_mem2 + 5120, scr_mem1 + 5120, 2560);
+        memcpy(scr_mem3 + 5120, scr_mem1 + 5120, 2560);
       }
     } else {
-      for (i = 0; i < 7680; i++) {
-        scr_mem1[i] = (i%40 >= 34 || i%40 < 14) ? 0x55 : 0;
+      snprintf(url, sizeof(url), "%s?mode=%s&sample=%d", baseurl, modes[choice], sample);
+      // snprintf(url, sizeof(url), "%s.%s", baseurl, modes[choice]);
+   
+      nopen(1 /* unit 1 */, url, 4 /* read */);
+      /* FIXME: Check for error */
+  
+      if (size == 7680) {
+        /* Single screen image to load */
+        nread(1 , scr_mem, (unsigned short) size);
+      } else {
+        /* Multiple screen images to load... */
+        for(data_read = 0; data_read < 7680; data_read += data_len)
+        {
+          nstatus(1);
+          data_len=(OS.dvstat[1]<<8)+OS.dvstat[0];
+          if (data_len==0) break;
+          if (data_read+data_len > 7680) data_len = 7680 - data_read;
+          nread(1 , scr_mem1 + data_read, data_len);
+        }
+        for(data_read = 0; data_read < 7680; data_read += data_len)
+        {
+          nstatus(1);
+          data_len=(OS.dvstat[1]<<8)+OS.dvstat[0];
+          if (data_len==0) break;
+          if (data_read+data_len > 7680) data_len = 7680 - data_read;
+          nread(1 , scr_mem2 + data_read, data_len);
+        }
+        for(data_read = 0; data_read < 7680; data_read += data_len)
+        {
+          nstatus(1);
+          data_len=(OS.dvstat[1]<<8)+OS.dvstat[0];
+          if (data_len==0) break;
+          if (data_read+data_len > 7680) data_len = 7680 - data_read;
+          nread(1 , scr_mem3 + data_read, data_len);
+        }
       }
-      for (i=0; i < 7680; i++) {
-        scr_mem2[i] = (6 < i%40 && i%40 < 28) ? 0x55 : 0;
-      }
-      for (i=0; i < 7680; i++) {
-        scr_mem3[i] = (20 < i%40) ? 0x55 : 0;
-      }
+  
+      nclose(1 /* unit 1 */);
     }
-#else
-    snprintf(url, sizeof(url), "%s?mode=%s&sample=%d", baseurl, modes[choice], sample);
-    // snprintf(url, sizeof(url), "%s.%s", baseurl, modes[choice]);
- 
-    nopen(1 /* unit 1 */, url, 4 /* read */);
-    /* FIXME: Check for error */
-
-    if (size == 7680) {
-      nread(1 , scr_mem, (unsigned short) size);
-    } else {
-      for(data_read = 0; data_read < 7680; data_read += data_len)
-      {
-        nstatus(1);
-        data_len=(OS.dvstat[1]<<8)+OS.dvstat[0];
-        if (data_len==0) break;
-        if (data_read+data_len > 7680) data_len = 7680 - data_read;
-        nread(1 , scr_mem1 + data_read, data_len);
-      }
-      for(data_read = 0; data_read < 7680; data_read += data_len)
-      {
-        nstatus(1);
-        data_len=(OS.dvstat[1]<<8)+OS.dvstat[0];
-        if (data_len==0) break;
-        if (data_read+data_len > 7680) data_len = 7680 - data_read;
-        nread(1 , scr_mem2 + data_read, data_len);
-      }
-      for(data_read = 0; data_read < 7680; data_read += data_len)
-      {
-        nstatus(1);
-        data_len=(OS.dvstat[1]<<8)+OS.dvstat[0];
-        if (data_len==0) break;
-        if (data_read+data_len > 7680) data_len = 7680 - data_read;
-        nread(1 , scr_mem3 + data_read, data_len);
-      }
-    }
-
-    nclose(1 /* unit 1 */);
-#endif
 
     if (choice == CHOICE_LOWRES_RGB) {
       mySETVBV((void *) VBLANKD);
       dli_init();
     }
 
+
+    /* Accept keypresses while viewing */
     OS.ch = KEY_NONE;
-    do { } while(OS.ch == KEY_NONE);
+    done = 0;
+    do {
+      k = OS.ch;
+      if (k == KEY_ESC) {
+        done = 1;
+      } else if ((k & 0x3F) == KEY_R || (k & 0x3F) == KEY_G || (k & 0x3F) == KEY_B || k == KEY_X) {
+        /* [R], [G], or [B] key, with our without [Shift] */
+        handle_rgb_keypress(k);
+        setup_rgb_table();
+        OS.ch = KEY_NONE;
+      }
+    } while (!done);
     OS.ch = KEY_NONE;
 
     dli_clear();  

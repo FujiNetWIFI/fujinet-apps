@@ -1,5 +1,8 @@
 TODO for APOD #FujiNet client
-2021-03-27
+2021-04-01
 
- * Mend display list glitch :(
+ * In ColorView 9 mode, maybe add PGMs on the sides for solid black
+   borders
+
+ * ColorView 15 mode
 
