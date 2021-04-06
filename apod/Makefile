@@ -3,18 +3,22 @@
 # images, as converted by the 'apod' web app.
 #
 # Bill Kendrick <bill@newbreedsoftware.com>
-# 2021-03-27 - 2021-03-27
+# 2021-03-27 - 2021-03-30
 
-CC65=/usr/bin/cc65
-CA65=/usr/bin/ca65
-LD65=/usr/bin/ld65
+CC65BIN=/usr/bin
+CC65=${CC65BIN}/cc65
+CA65=${CC65BIN}/ca65
+LD65=${CC65BIN}/ld65
 CC65_HOME=/usr/share/cc65/
-CC65_INC=/usr/share/cc65/include/
-CC65_ASMINC=/usr/share/cc65/asminc/
-CC65_LIB=/usr/share/cc65/lib/
-CC65_CFG=/usr/share/cc65/cfg/
+CC65_INC=${CC65_HOME}/include/
+CC65_ASMINC=${CC65_HOME}/asminc/
+CC65_LIB=${CC65_HOME}/lib/
+CC65_CFG=${CC65_HOME}/cfg/
 
 all:	apod.xex
+
+run:	apod.xex
+	atari800 -nobasic apod.xex
 
 clean:
 	-rm apod.xex
@@ -24,13 +28,15 @@ clean:
 	-rm nsio.o
 	-rm nsio.s
 	-rm sio.o
+	-rm dli.o
+	-rm segments.o
 
-apod.xex:	apod.o nsio.o sio.o atari.cfg
+apod.xex:	apod.o dli.o nsio.o sio.o segments.o atari.cfg
 	${LD65} --lib-path "${CC65_LIB}" \
 		-o apod.xex \
 		-t atari \
 		-m apod.map \
-		apod.o nsio.o sio.o atari.lib
+		apod.o dli.o nsio.o sio.o segments.o atari.lib
 
 apod.o:	apod.s
 	${CA65} -I "${CC65_ASMINC}" -t atari apod.s -o apod.o
@@ -52,4 +58,10 @@ nsio.s:	nsio.c nsio.h sio.h
 
 sio.o:	sio.s
 	${CA65} -I "${CC65_ASMINC}" -t atari sio.s -o sio.o
+
+dli.o:	dli.s
+	${CA65} -I "${CC65_ASMINC}" -t atari dli.s -o dli.o
+
+segments.o:	segments.s
+	${CA65} -I "${CC65_ASMINC}" -t atari segments.s -o segments.o
 
