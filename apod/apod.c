@@ -7,7 +7,7 @@
   See the APOD web app (server)
 
   By Bill Kendrick <bill@newbreedsoftware.com>
-  2021-03-27 - 2021-04-02
+  2021-03-27 - 2021-04-05
 */
 
 #include <stdio.h>
@@ -33,7 +33,7 @@ unsigned char rgb_red, rgb_grn, rgb_blu;
 /* Defaults that look good on my NTSC Atari 1200XL connected
    to a Commodore 1902 monitor with Tint knob at its default,
    and Color knob just below its default: */
-#define DEFAULT_RGB_RED 0x30
+#define DEFAULT_RGB_RED 0x20
 #define DEFAULT_RGB_GRN 0xC0
 #define DEFAULT_RGB_BLU 0xA0
 
@@ -71,6 +71,8 @@ void dlist_setup(unsigned char antic_mode) {
   unsigned int gfx_ptr, dlist_idx;
 
   OS.sdmctl = 0;
+
+  memset(scr_mem, 0xff, 7680);
 
   dlist_idx = 0;
 
@@ -217,6 +219,8 @@ void dlist_setup_rgb(unsigned char antic_mode) {
     gfx_ptr1_hi, gfx_ptr1_lo,
     gfx_ptr2_hi, gfx_ptr2_lo,
     gfx_ptr3_hi, gfx_ptr3_lo;
+
+  memset(scr_mem, 0xff, 24576);
 
   scr_mem1 = (unsigned int) scr_mem;
   scr_mem2 = (unsigned int) scr_mem + 8192;
@@ -569,7 +573,9 @@ void main(void) {
     } while (!done);
     OS.ch = KEY_NONE;
 
-    dli_clear();  
-    mySETVBV((void *) OLDVEC);
+    if (choice == CHOICE_LOWRES_RGB) {
+      dli_clear();  
+      mySETVBV((void *) OLDVEC);
+    }
   } while(1);
 }
