@@ -7,7 +7,7 @@
   See the APOD web app (server)
 
   By Bill Kendrick <bill@newbreedsoftware.com>
-  2021-03-27 - 2021-04-05
+  2021-03-27 - 2021-04-06
 */
 
 #include <stdio.h>
@@ -35,7 +35,7 @@ unsigned char rgb_red, rgb_grn, rgb_blu;
    and Color knob just below its default: */
 #define DEFAULT_RGB_RED 0x20
 #define DEFAULT_RGB_GRN 0xC0
-#define DEFAULT_RGB_BLU 0xA0
+#define DEFAULT_RGB_BLU 0xB0
 
 /**
  * Simple text rendering onto screen memory
