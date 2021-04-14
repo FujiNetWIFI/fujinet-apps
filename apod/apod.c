@@ -7,15 +7,18 @@
   See the APOD web app (server)
 
   By Bill Kendrick <bill@newbreedsoftware.com>
-  2021-03-27 - 2021-04-02
+  2021-03-27 - 2021-04-13
 */
 
 #include <stdio.h>
 #include <atari.h>
 #include <peekpoke.h>
 #include <string.h>
+#include "sio.h"
 #include "nsio.h"
 #include "dli.h"
+
+#define VERSION "VER. 2021-04-13"
 
 /* In ColorView mode, we will have 3 display lists that
    we cycle through, each interleaving between three
@@ -27,15 +30,21 @@ extern unsigned char rgb_table[];
 /* A block of space to store the graphics */
 extern unsigned char scr_mem[];
 
+/* Storage for the current date/time */
+unsigned char time_buf[6];
+unsigned char cur_yr, cur_mo, cur_day, pick_yr, pick_mo, pick_day;
+
 /* Values for Red, Green, and Blue, to allow hue adjustment */
 unsigned char rgb_red, rgb_grn, rgb_blu;
 
 /* Defaults that look good on my NTSC Atari 1200XL connected
    to a Commodore 1902 monitor with Tint knob at its default,
    and Color knob just below its default: */
-#define DEFAULT_RGB_RED 0x30
-#define DEFAULT_RGB_GRN 0xC0
-#define DEFAULT_RGB_BLU 0xA0
+#define DEFAULT_RGB_RED 0x20 /* 2 "orange" */
+#define DEFAULT_RGB_GRN 0xC0 /* 12 "green" */
+#define DEFAULT_RGB_BLU 0xB0 /* 11 "blue green" */
+
+unsigned char last_day[13] = { 0, 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 
 /**
  * Simple text rendering onto screen memory
@@ -43,9 +52,6 @@ unsigned char rgb_red, rgb_grn, rgb_blu;
 void myprint(unsigned char x, unsigned char y, char * str) {
   int pos, i;
   unsigned char c;
-  unsigned char * SC;
-
-  SC = (unsigned char *) PEEKW(88);
 
   pos = y * 20 + x;
   for (i = 0; str[i] != '\0'; i++) {
@@ -57,9 +63,35 @@ void myprint(unsigned char x, unsigned char y, char * str) {
       c = c - 32;
     }
 
-    SC[pos + i] = c;
+    scr_mem[pos + i] = c;
   }
 }
+
+/**
+ * Disable ANTIC; clear screen memory
+ */
+void screen_off() {
+  OS.sdmctl = 0;
+  memset(scr_mem, 0, 24576);
+}
+
+/**
+ * Point to display list & re-enable ANTIC
+ */
+void screen_on() {
+  OS.sdlst = dlist_mem;
+  OS.sdmctl = DMACTL_PLAYFIELD_NORMAL | DMACTL_DMA_FETCH;
+}
+
+/**
+ * wait a moment (so screen can come to life before
+ * #FujiNet takes over, if we're fetching from the network).
+ */
+void wait_for_vblank() {
+  char frame = (OS.rtclok[2] + 2);
+  while ((OS.rtclok[2] + 2) == frame);
+}
+
 
 /**
  * Set up a basic Display List
@@ -70,7 +102,7 @@ void dlist_setup(unsigned char antic_mode) {
   unsigned char i;
   unsigned int gfx_ptr, dlist_idx;
 
-  OS.sdmctl = 0;
+  screen_off();
 
   dlist_idx = 0;
 
@@ -90,8 +122,7 @@ void dlist_setup(unsigned char antic_mode) {
   dlist_mem[dlist_idx++] = ((unsigned int) dlist_mem & 255);
   dlist_mem[dlist_idx++] = ((unsigned int) dlist_mem >> 8);
 
-  OS.sdlst = dlist_mem;
-  OS.sdmctl = DMACTL_PLAYFIELD_NORMAL | DMACTL_DMA_FETCH;
+  screen_on();
 }
 
 
@@ -218,6 +249,8 @@ void dlist_setup_rgb(unsigned char antic_mode) {
     gfx_ptr2_hi, gfx_ptr2_lo,
     gfx_ptr3_hi, gfx_ptr3_lo;
 
+  screen_off();
+
   scr_mem1 = (unsigned int) scr_mem;
   scr_mem2 = (unsigned int) scr_mem + 8192;
   scr_mem3 = (unsigned int) scr_mem + 16384;
@@ -277,7 +310,39 @@ void dlist_setup_rgb(unsigned char antic_mode) {
 
   setup_rgb_table();
 
-  OS.sdlst = dlist_mem;
+  screen_on();
+}
+
+
+void dlist_setup_menu() {
+  int dl_idx;
+
+  screen_off();
+
+  dlist_mem[0] = DL_BLK1;
+  dlist_mem[1] = DL_BLK8;
+  dlist_mem[2] = DL_BLK8;
+
+  dlist_mem[3] = DL_LMS(DL_GRAPHICS2);
+  dlist_mem[4] = ((unsigned int) scr_mem) & 255;
+  dlist_mem[5] = ((unsigned int) scr_mem) >> 8;
+  dlist_mem[6] = DL_GRAPHICS2;
+
+  for (dl_idx = 7; dl_idx < 29; dl_idx++) {
+    dlist_mem[dl_idx] = DL_GRAPHICS1;
+  }
+
+  dlist_mem[30] = DL_JVB;
+  dlist_mem[31] = ((unsigned int) dlist_mem) & 255;
+  dlist_mem[32] = ((unsigned int) dlist_mem) >> 8;
+
+  OS.color4 = 0x40;
+  OS.color0 = 0x0F;
+  OS.color1 = 0x08;
+  OS.color2 = 0x48;
+  OS.color3 = 0x88;
+
+  screen_on();
 }
 
 
@@ -358,6 +423,55 @@ void handle_rgb_keypress(unsigned char k) {
   }
 }
 
+/**
+ * Get time from #FujiNet via APETIME protocol
+ * (see https://github.com/FujiNetWIFI/fujinet-platformio/wiki/Accessing-the-Real-Time-Clock)
+ */
+void get_time() {
+  memset(time_buf, 0, 6);
+  OS.dcb.ddevic = 0x45; /* APETIME protocol */
+  OS.dcb.dunit = 0x01; /* unit 1 */
+  OS.dcb.dcomnd = 0x93; /* GETTIME request */
+  OS.dcb.dstats = 0x40; /* receive */
+  OS.dcb.dbuf = (void *) time_buf;
+  OS.dcb.dtimlo = 15; /* timeout (seconds) */
+  OS.dcb.dunuse = 0;
+  OS.dcb.dbyt = (unsigned int) 6; /* reading 6 characters */
+  OS.dcb.daux1 = 0xee;
+  OS.dcb.daux2 = 0xa0;
+  siov();
+  if (time_buf[0] != 0) {
+    cur_yr = time_buf[2];
+    cur_mo = time_buf[1];
+    cur_day = time_buf[0];
+  } else {
+    /* This shouldn't happen */
+    cur_yr = 99;
+    cur_mo = 12;
+    cur_day = 31;
+  }
+  pick_yr = 0;
+  pick_mo = 0;
+  pick_day = 0;
+}
+
+void show_chosen_date() {
+  char str[20];
+
+  if (pick_day != 0) {
+    sprintf(str, "20%02d-%02d-%02d", pick_yr, pick_mo, pick_day);
+    myprint(2, 17, str);
+  } else {
+    myprint(2, 17, "current   ");
+  }
+}
+
+void pick_today() {
+  pick_yr = cur_yr;
+  pick_mo = cur_mo;
+  pick_day = cur_day;
+}
+
 /* The program! */
 void main(void) {
   unsigned char keypress, choice;
@@ -377,29 +491,38 @@ void main(void) {
   rgb_grn = DEFAULT_RGB_GRN;
   rgb_blu = DEFAULT_RGB_BLU;
 
+  /* Get the current date/time, if we can */
+  get_time();
+
   do {
     /* Prompt user for the preferred viewing mode */
-    _graphics(1+16);
+    dlist_setup_menu();
+
                  /*--------------------*/
     myprint(0, 0, "Astronomy Picture Of");
     myprint(3, 1, "the Day (APOD)");
     myprint(4, 2, "via #FUJINET");
-    myprint(1, 3, "bill kendrick 2021");
-    myprint(0, 4, "with help from apc");
+
+                 /*--------------------*/
+    myprint(1, 4, "bill kendrick 2021");
+    myprint(0, 5, "with help from apc");
+    myprint(10 - strlen(VERSION) / 2, 6, VERSION);
   
                  /*--------------------*/
-    myprint(0, 6, "[A] high res mono");
-    myprint(0, 7, "[B] med res 4 shade");
-    myprint(0, 8, "[C] low res 16 shade");
-    myprint(0, 9, "[D] low res 4096 clr");
+    myprint(0, 8, "[A] high res mono");
+    myprint(0, 9, "[B] med res 4 shade");
+    myprint(0, 10, "[C] low res 16 shade");
+    myprint(0, 11, "[D] low res 4096 clr");
     sprintf(str, "R=%02d G=%02d B=%02d", rgb_red >> 4, rgb_grn >> 4, rgb_blu >> 4);
-    myprint(2, 10, str);
-    myprint(2, 11, "[X] rbg defaults");
+    myprint(2, 12, str);
+    myprint(2, 13, "[X] rbg defaults");
 
                   /*--------------------*/
-    myprint(0, 13, "[0] get apod");
-    myprint(0, 14, "[1-4] get samples");
-    myprint(0, 15, "[5] color bars");
+    myprint(0, 15, "[0] get apod");
+    myprint(0, 16, "[<=>] change date");
+    show_chosen_date();
+    myprint(0, 18, "[1-4] get samples");
+    myprint(0, 19, "[5] color bars");
   
     baseurl = default_baseurl;
   
@@ -407,7 +530,7 @@ void main(void) {
     choice = CHOICE_NONE;
     OS.ch = KEY_NONE;
     do {
-      while (OS.ch == KEY_NONE) { OS.color0 = (OS.rtclok[2] >> 2) << 2; }
+      while (OS.ch == KEY_NONE) { }
       keypress = OS.ch;
       OS.ch = KEY_NONE;
   
@@ -430,6 +553,48 @@ void main(void) {
           }
         }
       }
+
+      if (keypress == KEY_LESSTHAN) {
+        if (pick_day == 0) {
+          pick_today();
+        }
+        if (pick_day > 1) {
+          pick_day--;
+        } else {
+          if (pick_mo > 1) {
+            pick_mo--;
+          } else {
+            pick_yr--;
+            pick_mo = 12;
+          }
+          pick_day = last_day[pick_mo];
+        }
+        show_chosen_date();
+      } else if (keypress == KEY_GREATERTHAN) {
+        if (pick_day == 0) {
+          pick_today();
+        }
+        if (pick_day < last_day[pick_mo]) {
+          pick_day++;
+        } else {
+          pick_day = 1;
+          if (pick_mo < 12) {
+            pick_mo++;
+          } else {
+            pick_mo = 1;
+            pick_yr++;
+          }
+        }
+        if (pick_yr > cur_yr ||
+            (pick_yr == cur_yr && pick_mo > cur_mo) ||
+            (pick_yr == cur_yr && pick_mo == cur_mo && pick_day > cur_day)) {
+          pick_today();
+        }
+        show_chosen_date();
+      } else if (keypress == KEY_EQUALS) {
+        pick_day = 0;
+        show_chosen_date();
+      }
     } while (choice == CHOICE_NONE);
 
     /* Set up the display, based on the choice */
@@ -437,78 +602,70 @@ void main(void) {
 
     OLDVEC = OS.vvblkd;
 
-    if (choice == CHOICE_HIRES_MONO ||
-        choice == CHOICE_LOWRES_GREY) {
+    if (choice == CHOICE_HIRES_MONO) {
       dlist_setup(DL_GRAPHICS8);
-
-      if (choice == CHOICE_LOWRES_GREY) {
-        /* FIXME: Set up a DLI to keep text window readable */
-        OS.gprior = 64;
-        OS.color4 = 0; /* Greyscale */
-      } else {
-        OS.color4 = 128; /* Border (no reason) */
-        OS.color2 = 0; /* Background */
-        OS.color1 = 15; /* Foreground */
-      }
+      OS.color4 = 128; /* Border (no reason) */
+      OS.color2 = 0; /* Background */
+      OS.color1 = 15; /* Foreground */
+    } else if (choice == CHOICE_LOWRES_GREY) {
+      dlist_setup(DL_GRAPHICS8);
+      OS.gprior = 64;
+      OS.color4 = 0; /* Greyscale */
     } else if (choice == CHOICE_MEDRES_GREY) {
       dlist_setup(DL_GRAPHICS15);
-  
       OS.color4 = 0; /* Background (black) */
-      OS.color1 = 4; /* Dark foreground */
-      OS.color2 = 8; /* Medium foreground */
-      OS.color3 = 14; /* Light foreground */
+      OS.color0 = 4; /* Dark foreground */
+      OS.color1 = 8; /* Medium foreground */
+      OS.color2 = 14; /* Light foreground */
     } else if (choice == CHOICE_LOWRES_RGB) {
       size = 7680 * 3;
-
       dlist_setup_rgb(DL_DLI(DL_GRAPHICS8));
       OS.gprior = 64;
     }
 
+    wait_for_vblank();
+ 
     /* Load the data! */
     if (sample == SAMPLE_COLORBARS) {
-      if (size == 7680) {
-        for (i = 0; i < size; i++) {
-          // scr_mem[i] = POKEY_READ.random;
-          scr_mem[i] = i;
-        }
-      } else {
-        for (i = 0; i < 40; i++) {
-          scr_mem1[i] = (i >= 34 || i < 14) ? 0x55 : 0;
-          scr_mem2[i] = (6 < i && i < 28) ? 0x55 : 0;
-          scr_mem3[i] = (20 < i) ? 0x55 : 0;
-        }
-        for (i = 40; i < 5120; i += 40) {
-          memcpy(scr_mem1 + i, scr_mem1, 40);
-          memcpy(scr_mem2 + i, scr_mem2, 40);
-          memcpy(scr_mem3 + i, scr_mem3, 40);
-        }
-
-        /* 16 shades of grey */
-        for (i = 5120; i < 5160; i++) {
-          grey = ((i % 40) << 1) / 5;
-          grey = grey * 17;
-          scr_mem1[i] = grey;
-        }
-        for (i = 5160; i < 6400; i += 40) {
-          memcpy(scr_mem1 + i, scr_mem1 + 5120, 40);
-        }
-
-        /* 8 shades of grey */
-        for (i = 6400; i < 6440; i++) {
-          grey = ((i % 40) / 5) << 1;
-          grey = grey * 17;
-          scr_mem1[i] = grey;
-        }
-        for (i = 6440; i < 7680; i += 40) {
-          memcpy(scr_mem1 + i, scr_mem1 + 6400, 40);
-        }
-
-        memcpy(scr_mem2 + 5120, scr_mem1 + 5120, 2560);
-        memcpy(scr_mem3 + 5120, scr_mem1 + 5120, 2560);
+      for (i = 0; i < 40; i++) {
+        scr_mem1[i] = (i >= 34 || i < 14) ? 0x55 : 0;
+        scr_mem2[i] = (6 < i && i < 28) ? 0x55 : 0;
+        scr_mem3[i] = (20 < i) ? 0x55 : 0;
       }
+      for (i = 40; i < 5120; i += 40) {
+        memcpy(scr_mem1 + i, scr_mem1, 40);
+        memcpy(scr_mem2 + i, scr_mem2, 40);
+        memcpy(scr_mem3 + i, scr_mem3, 40);
+      }
+
+      /* 16 shades of grey */
+      for (i = 5120; i < 5160; i++) {
+        grey = ((i % 40) << 1) / 5;
+        grey = grey * 17;
+        scr_mem1[i] = grey;
+      }
+      for (i = 5160; i < 6400; i += 40) {
+        memcpy(scr_mem1 + i, scr_mem1 + 5120, 40);
+      }
+
+      /* 8 shades of grey */
+      for (i = 6400; i < 6440; i++) {
+        grey = ((i % 40) / 5) << 1;
+        grey = grey * 17;
+        scr_mem1[i] = grey;
+      }
+      for (i = 6440; i < 7680; i += 40) {
+        memcpy(scr_mem1 + i, scr_mem1 + 6400, 40);
+      }
+
+      memcpy(scr_mem2 + 5120, scr_mem1 + 5120, 2560);
+      memcpy(scr_mem3 + 5120, scr_mem1 + 5120, 2560);
     } else {
-      snprintf(url, sizeof(url), "%s?mode=%s&sample=%d", baseurl, modes[choice], sample);
-      // snprintf(url, sizeof(url), "%s.%s", baseurl, modes[choice]);
+      if (pick_day == 0) {
+        snprintf(url, sizeof(url), "%s?mode=%s&sample=%d", baseurl, modes[choice], sample);
+      } else {
+        snprintf(url, sizeof(url), "%s?mode=%s&sample=%d&date=%02d%02d%02d", baseurl, modes[choice], sample, pick_yr, pick_mo, pick_day);
+      }
    
       nopen(1 /* unit 1 */, url, 4 /* read */);
       /* FIXME: Check for error */
@@ -569,7 +726,10 @@ void main(void) {
     } while (!done);
     OS.ch = KEY_NONE;
 
-    dli_clear();  
-    mySETVBV((void *) OLDVEC);
+    if (choice == CHOICE_LOWRES_RGB) {
+      dli_clear();  
+      mySETVBV((void *) OLDVEC);
+    }
+    OS.gprior = 0;
   } while(1);
 }
