@@ -627,49 +627,45 @@ void main(void) {
  
     /* Load the data! */
     if (sample == SAMPLE_COLORBARS) {
-      if (size == 7680) {
-        for (i = 0; i < size; i++) {
-          // scr_mem[i] = POKEY_READ.random;
-          scr_mem[i] = i;
-        }
-      } else {
-        for (i = 0; i < 40; i++) {
-          scr_mem1[i] = (i >= 34 || i < 14) ? 0x55 : 0;
-          scr_mem2[i] = (6 < i && i < 28) ? 0x55 : 0;
-          scr_mem3[i] = (20 < i) ? 0x55 : 0;
-        }
-        for (i = 40; i < 5120; i += 40) {
-          memcpy(scr_mem1 + i, scr_mem1, 40);
-          memcpy(scr_mem2 + i, scr_mem2, 40);
-          memcpy(scr_mem3 + i, scr_mem3, 40);
-        }
-
-        /* 16 shades of grey */
-        for (i = 5120; i < 5160; i++) {
-          grey = ((i % 40) << 1) / 5;
-          grey = grey * 17;
-          scr_mem1[i] = grey;
-        }
-        for (i = 5160; i < 6400; i += 40) {
-          memcpy(scr_mem1 + i, scr_mem1 + 5120, 40);
-        }
-
-        /* 8 shades of grey */
-        for (i = 6400; i < 6440; i++) {
-          grey = ((i % 40) / 5) << 1;
-          grey = grey * 17;
-          scr_mem1[i] = grey;
-        }
-        for (i = 6440; i < 7680; i += 40) {
-          memcpy(scr_mem1 + i, scr_mem1 + 6400, 40);
-        }
-
-        memcpy(scr_mem2 + 5120, scr_mem1 + 5120, 2560);
-        memcpy(scr_mem3 + 5120, scr_mem1 + 5120, 2560);
+      for (i = 0; i < 40; i++) {
+        scr_mem1[i] = (i >= 34 || i < 14) ? 0x55 : 0;
+        scr_mem2[i] = (6 < i && i < 28) ? 0x55 : 0;
+        scr_mem3[i] = (20 < i) ? 0x55 : 0;
       }
+      for (i = 40; i < 5120; i += 40) {
+        memcpy(scr_mem1 + i, scr_mem1, 40);
+        memcpy(scr_mem2 + i, scr_mem2, 40);
+        memcpy(scr_mem3 + i, scr_mem3, 40);
+      }
+
+      /* 16 shades of grey */
+      for (i = 5120; i < 5160; i++) {
+        grey = ((i % 40) << 1) / 5;
+        grey = grey * 17;
+        scr_mem1[i] = grey;
+      }
+      for (i = 5160; i < 6400; i += 40) {
+        memcpy(scr_mem1 + i, scr_mem1 + 5120, 40);
+      }
+
+      /* 8 shades of grey */
+      for (i = 6400; i < 6440; i++) {
+        grey = ((i % 40) / 5) << 1;
+        grey = grey * 17;
+        scr_mem1[i] = grey;
+      }
+      for (i = 6440; i < 7680; i += 40) {
+        memcpy(scr_mem1 + i, scr_mem1 + 6400, 40);
+      }
+
+      memcpy(scr_mem2 + 5120, scr_mem1 + 5120, 2560);
+      memcpy(scr_mem3 + 5120, scr_mem1 + 5120, 2560);
     } else {
-      snprintf(url, sizeof(url), "%s?mode=%s&sample=%d", baseurl, modes[choice], sample);
-      // snprintf(url, sizeof(url), "%s.%s", baseurl, modes[choice]);
+      if (pick_day == 0) {
+        snprintf(url, sizeof(url), "%s?mode=%s&sample=%d", baseurl, modes[choice], sample);
+      } else {
+        snprintf(url, sizeof(url), "%s?mode=%s&sample=%d&date=%02d%02d%02d", baseurl, modes[choice], sample, pick_yr, pick_mo, pick_day);
+      }
    
       nopen(1 /* unit 1 */, url, 4 /* read */);
       /* FIXME: Check for error */
