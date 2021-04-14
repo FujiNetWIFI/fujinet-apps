@@ -1,13 +1,5 @@
 TODO for APOD #FujiNet client
-2021-04-02
-
- * In ColorView 9 mode, maybe add PGMs on the sides for solid black
-   borders
-
- * ColorView 15 mode
-
- * Occasionally, the menu doesn't reappear after viewing an image!
-   (Keyboard controls still work)
+2021-04-14
 
  * Be more clever with storage space for bitmaps and display lists,
    to make more space available for features.
@@ -16,3 +8,16 @@ TODO for APOD #FujiNet client
    (The trick is addressing 4K and 1K boundaries that affect
    bitmaps and display lists, respectively.)
 
+ * In ColorView 9 mode, maybe add PGMs on the sides for solid black
+   borders (don't use DMA, obviously).
+
+ * Apply Graphics 15 color palette (WIP project on server to
+   pick 4 "best" colors, rather than simply rendering in greyscale).
+
+ * ColorView 15 mode.
+
+ * Graphics 15 (160x192) grey combined with Graphics 11 (80x192 hues)
+   hybrid APAC mode.
+
+ * Allow Shift and Ctrl < and > to change month and year
+   (to more quickly pick dates).
