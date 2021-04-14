@@ -7,7 +7,7 @@
   See the APOD web app (server)
 
   By Bill Kendrick <bill@newbreedsoftware.com>
-  2021-03-27 - 2021-04-06
+  2021-03-27 - 2021-04-13
 */
 
 #include <stdio.h>
@@ -16,6 +16,8 @@
 #include <string.h>
 #include "nsio.h"
 #include "dli.h"
+
+#define VERSION "2021-04-13"
 
 /* In ColorView mode, we will have 3 display lists that
    we cycle through, each interleaving between three
@@ -33,9 +35,9 @@ unsigned char rgb_red, rgb_grn, rgb_blu;
 /* Defaults that look good on my NTSC Atari 1200XL connected
    to a Commodore 1902 monitor with Tint knob at its default,
    and Color knob just below its default: */
-#define DEFAULT_RGB_RED 0x20
-#define DEFAULT_RGB_GRN 0xC0
-#define DEFAULT_RGB_BLU 0xB0
+#define DEFAULT_RGB_RED 0x20 /* 2 "orange" */
+#define DEFAULT_RGB_GRN 0xC0 /* 12 "green" */
+#define DEFAULT_RGB_BLU 0xB0 /* 11 "blue green" */
 
 /**
  * Simple text rendering onto screen memory
@@ -43,9 +45,6 @@ unsigned char rgb_red, rgb_grn, rgb_blu;
 void myprint(unsigned char x, unsigned char y, char * str) {
   int pos, i;
   unsigned char c;
-  unsigned char * SC;
-
-  SC = (unsigned char *) PEEKW(88);
 
   pos = y * 20 + x;
   for (i = 0; str[i] != '\0'; i++) {
@@ -57,9 +56,35 @@ void myprint(unsigned char x, unsigned char y, char * str) {
       c = c - 32;
     }
 
-    SC[pos + i] = c;
+    scr_mem[pos + i] = c;
   }
 }
+
+/**
+ * Disable ANTIC; clear screen memory
+ */
+void screen_off() {
+  OS.sdmctl = 0;
+  memset(scr_mem, 0, 24576);
+}
+
+/**
+ * Point to display list & re-enable ANTIC
+ */
+void screen_on() {
+  OS.sdlst = dlist_mem;
+  OS.sdmctl = DMACTL_PLAYFIELD_NORMAL | DMACTL_DMA_FETCH;
+}
+
+/**
+ * wait a moment (so screen can come to life before
+ * #FujiNet takes over, if we're fetching from the network).
+ */
+void wait_for_vblank() {
+  char frame = (OS.rtclok[2] + 2);
+  while ((OS.rtclok[2] + 2) == frame);
+}
+
 
 /**
  * Set up a basic Display List
@@ -70,9 +95,7 @@ void dlist_setup(unsigned char antic_mode) {
   unsigned char i;
   unsigned int gfx_ptr, dlist_idx;
 
-  OS.sdmctl = 0;
-
-  memset(scr_mem, 0xff, 7680);
+  screen_off();
 
   dlist_idx = 0;
 
@@ -92,8 +115,7 @@ void dlist_setup(unsigned char antic_mode) {
   dlist_mem[dlist_idx++] = ((unsigned int) dlist_mem & 255);
   dlist_mem[dlist_idx++] = ((unsigned int) dlist_mem >> 8);
 
-  OS.sdlst = dlist_mem;
-  OS.sdmctl = DMACTL_PLAYFIELD_NORMAL | DMACTL_DMA_FETCH;
+  screen_on();
 }
 
 
@@ -220,7 +242,7 @@ void dlist_setup_rgb(unsigned char antic_mode) {
     gfx_ptr2_hi, gfx_ptr2_lo,
     gfx_ptr3_hi, gfx_ptr3_lo;
 
-  memset(scr_mem, 0xff, 24576);
+  screen_off();
 
   scr_mem1 = (unsigned int) scr_mem;
   scr_mem2 = (unsigned int) scr_mem + 8192;
@@ -281,7 +303,39 @@ void dlist_setup_rgb(unsigned char antic_mode) {
 
   setup_rgb_table();
 
-  OS.sdlst = dlist_mem;
+  screen_on();
+}
+
+
+void dlist_setup_menu() {
+  int dl_idx;
+
+  screen_off();
+
+  dlist_mem[0] = DL_BLK1;
+  dlist_mem[1] = DL_BLK8;
+  dlist_mem[2] = DL_BLK8;
+
+  dlist_mem[3] = DL_LMS(DL_GRAPHICS2);
+  dlist_mem[4] = ((unsigned int) scr_mem) & 255;
+  dlist_mem[5] = ((unsigned int) scr_mem) >> 8;
+  dlist_mem[6] = DL_GRAPHICS2;
+
+  for (dl_idx = 7; dl_idx < 29; dl_idx++) {
+    dlist_mem[dl_idx] = DL_GRAPHICS1;
+  }
+
+  dlist_mem[30] = DL_JVB;
+  dlist_mem[31] = ((unsigned int) dlist_mem) & 255;
+  dlist_mem[32] = ((unsigned int) dlist_mem) >> 8;
+
+  OS.color4 = 0x40;
+  OS.color0 = 0x0F;
+  OS.color1 = 0x08;
+  OS.color2 = 0x48;
+  OS.color3 = 0x88;
+
+  screen_on();
 }
 
 
@@ -383,27 +437,31 @@ void main(void) {
 
   do {
     /* Prompt user for the preferred viewing mode */
-    _graphics(1+16);
+    dlist_setup_menu();
+
                  /*--------------------*/
     myprint(0, 0, "Astronomy Picture Of");
     myprint(3, 1, "the Day (APOD)");
     myprint(4, 2, "via #FUJINET");
-    myprint(1, 3, "bill kendrick 2021");
-    myprint(0, 4, "with help from apc");
+
+                 /*--------------------*/
+    myprint(1, 4, "bill kendrick 2021");
+    myprint(0, 5, "with help from apc");
+    myprint(10 - strlen(VERSION) / 2, 6, VERSION);
   
                  /*--------------------*/
-    myprint(0, 6, "[A] high res mono");
-    myprint(0, 7, "[B] med res 4 shade");
-    myprint(0, 8, "[C] low res 16 shade");
-    myprint(0, 9, "[D] low res 4096 clr");
+    myprint(0, 8, "[A] high res mono");
+    myprint(0, 9, "[B] med res 4 shade");
+    myprint(0, 10, "[C] low res 16 shade");
+    myprint(0, 11, "[D] low res 4096 clr");
     sprintf(str, "R=%02d G=%02d B=%02d", rgb_red >> 4, rgb_grn >> 4, rgb_blu >> 4);
-    myprint(2, 10, str);
-    myprint(2, 11, "[X] rbg defaults");
+    myprint(2, 12, str);
+    myprint(2, 13, "[X] rbg defaults");
 
                   /*--------------------*/
-    myprint(0, 13, "[0] get apod");
-    myprint(0, 14, "[1-4] get samples");
-    myprint(0, 15, "[5] color bars");
+    myprint(0, 15, "[0] get apod");
+    myprint(0, 16, "[1-4] get samples");
+    myprint(0, 17, "[5] color bars");
   
     baseurl = default_baseurl;
   
@@ -411,7 +469,7 @@ void main(void) {
     choice = CHOICE_NONE;
     OS.ch = KEY_NONE;
     do {
-      while (OS.ch == KEY_NONE) { OS.color0 = (OS.rtclok[2] >> 2) << 2; }
+      while (OS.ch == KEY_NONE) { }
       keypress = OS.ch;
       OS.ch = KEY_NONE;
   
@@ -441,33 +499,29 @@ void main(void) {
 
     OLDVEC = OS.vvblkd;
 
-    if (choice == CHOICE_HIRES_MONO ||
-        choice == CHOICE_LOWRES_GREY) {
+    if (choice == CHOICE_HIRES_MONO) {
       dlist_setup(DL_GRAPHICS8);
-
-      if (choice == CHOICE_LOWRES_GREY) {
-        /* FIXME: Set up a DLI to keep text window readable */
-        OS.gprior = 64;
-        OS.color4 = 0; /* Greyscale */
-      } else {
-        OS.color4 = 128; /* Border (no reason) */
-        OS.color2 = 0; /* Background */
-        OS.color1 = 15; /* Foreground */
-      }
+      OS.color4 = 128; /* Border (no reason) */
+      OS.color2 = 0; /* Background */
+      OS.color1 = 15; /* Foreground */
+    } else if (choice == CHOICE_LOWRES_GREY) {
+      dlist_setup(DL_GRAPHICS8);
+      OS.gprior = 64;
+      OS.color4 = 0; /* Greyscale */
     } else if (choice == CHOICE_MEDRES_GREY) {
       dlist_setup(DL_GRAPHICS15);
-  
       OS.color4 = 0; /* Background (black) */
-      OS.color1 = 4; /* Dark foreground */
-      OS.color2 = 8; /* Medium foreground */
-      OS.color3 = 14; /* Light foreground */
+      OS.color0 = 4; /* Dark foreground */
+      OS.color1 = 8; /* Medium foreground */
+      OS.color2 = 14; /* Light foreground */
     } else if (choice == CHOICE_LOWRES_RGB) {
       size = 7680 * 3;
-
       dlist_setup_rgb(DL_DLI(DL_GRAPHICS8));
       OS.gprior = 64;
     }
 
+    wait_for_vblank();
+ 
     /* Load the data! */
     if (sample == SAMPLE_COLORBARS) {
       if (size == 7680) {
@@ -577,5 +631,6 @@ void main(void) {
       dli_clear();  
       mySETVBV((void *) OLDVEC);
     }
+    OS.gprior = 0;
   } while(1);
 }
