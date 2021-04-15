@@ -7,7 +7,7 @@
   See the APOD web app (server)
 
   By Bill Kendrick <bill@newbreedsoftware.com>
-  2021-03-27 - 2021-04-13
+  2021-03-27 - 2021-04-15
 */
 
 #include <stdio.h>
@@ -18,17 +18,32 @@
 #include "nsio.h"
 #include "dli.h"
 
-#define VERSION "VER. 2021-04-13"
+#define VERSION "VER. 2021-04-15"
 
 /* In ColorView mode, we will have 3 display lists that
    we cycle through, each interleaving between three
    versions of the image (red, green, blue) */
-#define DLIST_SIZE 1024
-extern unsigned char dlist_mem[];
 extern unsigned char rgb_table[];
 
-/* A block of space to store the graphics */
+/* A block of space to store the graphics & display lists */
 extern unsigned char scr_mem[];
+unsigned char * scr_mem1, * scr_mem2, * scr_mem3;
+unsigned char * dlist1, * dlist2, * dlist3;
+
+/* Screen block size is exactly 8KB; enough for
+   the screen data (40 x 192 = 7680 bytes),
+   a starting offset (see below; to help with 4K boundary limitation),
+   and a display list */
+#define SCR_BLOCK_SIZE 8192
+
+/* Start image 16 bytes into screen memory, so when we
+   hit the 102nd line, we've viewed exactly 4KB */
+#define SCR_OFFSET 16
+
+/* Tuck display list at the end of screen memory
+   (each screen + display list block has 8192 bytes;
+   so the display list gets the last 496 bytes of it) */
+#define DLIST_OFFSET (7680 + SCR_OFFSET)
 
 /* Storage for the current date/time */
 unsigned char time_buf[6];
@@ -68,23 +83,23 @@ void myprint(unsigned char x, unsigned char y, char * str) {
 }
 
 /**
- * Disable ANTIC; clear screen memory
+ * Disable ANTIC; clear screen & display list memory
  */
 void screen_off() {
   OS.sdmctl = 0;
-  memset(scr_mem, 0, 24576);
+  memset(scr_mem, 0, (SCR_BLOCK_SIZE * 3));
 }
 
 /**
- * Point to display list & re-enable ANTIC
+ * Point to display list; re-enable ANTIC
  */
 void screen_on() {
-  OS.sdlst = dlist_mem;
+  OS.sdlst = dlist1;
   OS.sdmctl = DMACTL_PLAYFIELD_NORMAL | DMACTL_DMA_FETCH;
 }
 
 /**
- * wait a moment (so screen can come to life before
+ * Wait a moment (so screen can come to life before
  * #FujiNet takes over, if we're fetching from the network).
  */
 void wait_for_vblank() {
@@ -104,30 +119,44 @@ void dlist_setup(unsigned char antic_mode) {
 
   screen_off();
 
+  gfx_ptr = (unsigned int) (scr_mem + SCR_OFFSET);
+
   dlist_idx = 0;
 
-  dlist_mem[dlist_idx++] = DL_BLK8;
-  dlist_mem[dlist_idx++] = DL_BLK8;
-  dlist_mem[dlist_idx++] = DL_BLK8;
+  dlist1[dlist_idx++] = DL_BLK8;
+  dlist1[dlist_idx++] = DL_BLK8;
+  dlist1[dlist_idx++] = DL_BLK8;
 
-  gfx_ptr = (unsigned int) scr_mem;
-  for (i = 0; i < 192; i++) {
-    dlist_mem[dlist_idx++] = DL_LMS(antic_mode);
-    dlist_mem[dlist_idx++] = (gfx_ptr & 255);
-    dlist_mem[dlist_idx++] = (gfx_ptr >> 8);
-    gfx_ptr += 40;
+  /* Row 0 */
+  dlist1[dlist_idx++] = DL_LMS(antic_mode);
+  dlist1[dlist_idx++] = (gfx_ptr & 255);
+  dlist1[dlist_idx++] = (gfx_ptr >> 8);
+
+  for (i = 1; i <= 101; i++) {
+    dlist1[dlist_idx++] = antic_mode;
   }
 
-  dlist_mem[dlist_idx++] = DL_JVB;
-  dlist_mem[dlist_idx++] = ((unsigned int) dlist_mem & 255);
-  dlist_mem[dlist_idx++] = ((unsigned int) dlist_mem >> 8);
+  /* Hitting 4K boundary! */
+  i++;
+  gfx_ptr = (unsigned int) (scr_mem + 4096);
+  dlist1[dlist_idx++] = DL_LMS(antic_mode);
+  dlist1[dlist_idx++] = (gfx_ptr & 255);
+  dlist1[dlist_idx++] = (gfx_ptr >> 8);
+
+  for (i = i; i <= 191; i++) {
+    dlist1[dlist_idx++] = antic_mode;
+  }
+
+  dlist1[dlist_idx++] = DL_JVB;
+  dlist1[dlist_idx++] = ((unsigned int) dlist1 & 255);
+  dlist1[dlist_idx++] = ((unsigned int) dlist1 >> 8);
 
   screen_on();
 }
 
 
 /* Tracking which Display List is active */
-unsigned char dlist_hi;
+unsigned char dlist_hi, dlist_lo;
 
 /* Keep track of old VBI vector, so we can jump to it at
    the end of ours (see below), and restore it when we're done
@@ -143,10 +172,10 @@ unsigned char rgb_ctr;
    Display Lists in RGB image modes */
 #pragma optimize (push, off)
 void VBLANKD(void) {
-
+  /* grab the current rgb color counter */
   asm("ldx %v", rgb_ctr);
 
-
+  /* increment it; roll from 3 back to 0 */
   asm("inx");
   asm("cpx #3");
   asm("bcc %g", __vbi_ctr_set);
@@ -154,15 +183,25 @@ void VBLANKD(void) {
   asm("ldx #0");
 
 __vbi_ctr_set:
+  /* store the current rgb color counter back;
+     also store it as a reference to our next display list */
   asm("stx %v", dli_load_arg);
   asm("stx %v", rgb_ctr);
 
-  /* dlist = dlist_hi + 4 * rgb_ctr */
+  /* display lists are 8K away from each other
+     (tucked under screen memory); that's 32 (256 byte) pages,
+     so we can shift left 5 times to multiply the rgb color counter
+     by 32... then store it in the high byte of SDLST */
   asm("txa");
+  asm("asl a");
+  asm("asl a");
+  asm("asl a");
   asm("asl a");
   asm("asl a");
   asm("adc %v", dlist_hi);
   asm("sta $d403");
+  asm("lda %v", dlist_lo);
+  asm("sta $d402");
 
   /* adjust end of the screen colors - set the last one to black color */
   asm("lda %v+187,x", rgb_table);
@@ -174,7 +213,7 @@ __vbi_ctr_set:
 
   /* start next screen with black color at top */
   asm("sta $d01a");
-  
+
   asm("jmp (%v)", OLDVEC);
 }
 
@@ -186,7 +225,8 @@ __vbi_ctr_set:
 void mySETVBV(void * Addr)
 {
   rgb_ctr = 0;
-  dlist_hi = (unsigned char) (((unsigned int) dlist_mem) >> 8);
+  dlist_hi = (unsigned char) (((unsigned int) (scr_mem + DLIST_OFFSET)) >> 8);
+  dlist_lo = (unsigned char) (((unsigned int) (scr_mem + DLIST_OFFSET)) & 255);
 
   OS.critic = 1;
   OS.vvblkd = Addr;
@@ -218,8 +258,9 @@ void dli_clear(void)
 #pragma optimize (pop)
 
 
-/* Set up a color table of repeating Red, Green, and Blue hues */
-
+/**
+ * Set up a color table of repeating Red, Green, and Blue hues
+ */
 void setup_rgb_table(void) {
   unsigned char *rgb_ptr;
   unsigned char i;
@@ -242,70 +283,52 @@ void setup_rgb_table(void) {
  */
 void dlist_setup_rgb(unsigned char antic_mode) {
   int l, i;
-  unsigned int gfx_ptr1, gfx_ptr2, gfx_ptr3, next_dlist;
-  unsigned int scr_mem1, scr_mem2, scr_mem3, dl_idx;
-  unsigned char
-    gfx_ptr1_hi, gfx_ptr1_lo,
-    gfx_ptr2_hi, gfx_ptr2_lo,
-    gfx_ptr3_hi, gfx_ptr3_lo;
+  unsigned int gfx_ptr /*, next_dlist */;
+  unsigned int dlist_idx;
+  unsigned char * dlist;
 
   screen_off();
 
-  scr_mem1 = (unsigned int) scr_mem;
-  scr_mem2 = (unsigned int) scr_mem + 8192;
-  scr_mem3 = (unsigned int) scr_mem + 16384;
-
   for (l = 0; l < 3; l++) {
-    dl_idx = (l * DLIST_SIZE);
+    dlist = (scr_mem + (l * SCR_BLOCK_SIZE)) + DLIST_OFFSET;
+    gfx_ptr = (unsigned int) (scr_mem + (l * SCR_BLOCK_SIZE)) + SCR_OFFSET;
 
-    dlist_mem[dl_idx++] = DL_BLK8;
-    dlist_mem[dl_idx++] = DL_BLK8;
-    dlist_mem[dl_idx++] = DL_DLI(DL_BLK8); /* start with colors after this line */
+    dlist_idx = 0;
 
-    if (l == 0) {
-      gfx_ptr1 = scr_mem1 + 0;
-      gfx_ptr2 = scr_mem2 + 40;
-      gfx_ptr3 = scr_mem3 + 80;
-    } else if (l == 1) {
-      gfx_ptr1 = scr_mem2 + 0;
-      gfx_ptr2 = scr_mem3 + 40;
-      gfx_ptr3 = scr_mem1 + 80;
+    dlist[dlist_idx++] = DL_BLK8;
+    dlist[dlist_idx++] = DL_BLK8;
+    dlist[dlist_idx++] = DL_DLI(DL_BLK8); /* start with colors after this line */
+
+    /* Row 0 */
+    dlist[dlist_idx++] = DL_LMS(DL_DLI(antic_mode));
+    dlist[dlist_idx++] = (gfx_ptr & 255);
+    dlist[dlist_idx++] = (gfx_ptr >> 8);
+
+    for (i = 1; i <= 101; i++) {
+      dlist[dlist_idx++] = DL_DLI(antic_mode);
+    }
+
+    /* Hitting 4K boundary! */
+    gfx_ptr += (i * 40);
+    dlist[dlist_idx++] = DL_LMS(DL_DLI(antic_mode));
+    dlist[dlist_idx++] = (gfx_ptr & 255);
+    dlist[dlist_idx++] = (gfx_ptr >> 8);
+    i++;
+
+    for (i = i; i <= 191; i++) {
+      dlist[dlist_idx++] = DL_DLI(antic_mode);
+    }
+
+    /*
+    if (l < 2) {
+      next_dlist = (unsigned int) (scr_mem + ((l + 1) * SCR_BLOCK_SIZE) + DLIST_OFFSET);
     } else {
-      gfx_ptr1 = scr_mem3 + 0;
-      gfx_ptr2 = scr_mem1 + 40;
-      gfx_ptr3 = scr_mem2 + 80;
+      next_dlist = (unsigned int) (scr_mem + DLIST_OFFSET);
     }
-
-    for (i = 0; i < 64 /* aka 192 / 3 */; i++) {
-      /* FIXME: Be more clever */
-      gfx_ptr1_hi = (gfx_ptr1 >> 8);
-      gfx_ptr1_lo = (gfx_ptr1 & 255);
-      gfx_ptr2_hi = (gfx_ptr2 >> 8);
-      gfx_ptr2_lo = (gfx_ptr2 & 255);
-      gfx_ptr3_hi = (gfx_ptr3 >> 8);
-      gfx_ptr3_lo = (gfx_ptr3 & 255);
-
-      dlist_mem[dl_idx++] = DL_LMS(antic_mode);
-      dlist_mem[dl_idx++] = gfx_ptr1_lo;
-      dlist_mem[dl_idx++] = gfx_ptr1_hi;
-      gfx_ptr1 += 120;
-
-      dlist_mem[dl_idx++] = DL_LMS(antic_mode);
-      dlist_mem[dl_idx++] = gfx_ptr2_lo;
-      dlist_mem[dl_idx++] = gfx_ptr2_hi;
-      gfx_ptr2 += 120;
-
-      dlist_mem[dl_idx++] = DL_LMS(antic_mode);
-      dlist_mem[dl_idx++] = gfx_ptr3_lo;
-      dlist_mem[dl_idx++] = gfx_ptr3_hi;
-      gfx_ptr3 += 120;
-    }
-
-    next_dlist = (unsigned int) dlist_mem + (DLIST_SIZE * l);
-
-    dlist_mem[(l * DLIST_SIZE) + (192 * 3) + 3] = DL_JVB;
-    dlist_mem[(l * DLIST_SIZE) + (192 * 3) + 4] = (next_dlist & 255);
-    dlist_mem[(l * DLIST_SIZE) + (192 * 3) + 5] = (next_dlist >> 8);
+    */
+    dlist[dlist_idx++] = DL_JVB;
+    dlist[dlist_idx++] = (/*next_*/((unsigned int) dlist) & 255);
+    dlist[dlist_idx++] = (/*next_*/((unsigned int) dlist) >> 8);
   }
 
   setup_rgb_table();
@@ -313,28 +336,30 @@ void dlist_setup_rgb(unsigned char antic_mode) {
   screen_on();
 }
 
-
+/**
+ * Set up display list for title/menu screen
+ */
 void dlist_setup_menu() {
   int dl_idx;
 
   screen_off();
 
-  dlist_mem[0] = DL_BLK1;
-  dlist_mem[1] = DL_BLK8;
-  dlist_mem[2] = DL_BLK8;
+  dlist1[0] = DL_BLK1;
+  dlist1[1] = DL_BLK8;
+  dlist1[2] = DL_BLK8;
 
-  dlist_mem[3] = DL_LMS(DL_GRAPHICS2);
-  dlist_mem[4] = ((unsigned int) scr_mem) & 255;
-  dlist_mem[5] = ((unsigned int) scr_mem) >> 8;
-  dlist_mem[6] = DL_GRAPHICS2;
+  dlist1[3] = DL_LMS(DL_GRAPHICS2);
+  dlist1[4] = ((unsigned int) scr_mem) & 255;
+  dlist1[5] = ((unsigned int) scr_mem) >> 8;
+  dlist1[6] = DL_GRAPHICS2;
 
   for (dl_idx = 7; dl_idx < 29; dl_idx++) {
-    dlist_mem[dl_idx] = DL_GRAPHICS1;
+    dlist1[dl_idx] = DL_GRAPHICS1;
   }
 
-  dlist_mem[30] = DL_JVB;
-  dlist_mem[31] = ((unsigned int) dlist_mem) & 255;
-  dlist_mem[32] = ((unsigned int) dlist_mem) >> 8;
+  dlist1[30] = DL_JVB;
+  dlist1[31] = ((unsigned int) dlist1) & 255;
+  dlist1[32] = ((unsigned int) dlist1) >> 8;
 
   OS.color4 = 0x40;
   OS.color0 = 0x0F;
@@ -447,6 +472,9 @@ void get_time() {
   } else {
     /* This shouldn't happen */
     cur_yr = 99;
+  }
+  if (cur_yr >= 99) {
+    cur_yr = 99;
     cur_mo = 12;
     cur_day = 31;
   }
@@ -455,6 +483,9 @@ void get_time() {
   pick_day = 0;
 }
 
+/**
+ * Display the chosen date (or "current") on the menu
+ */
 void show_chosen_date() {
   char str[20];
 
@@ -466,25 +497,31 @@ void show_chosen_date() {
   }
 }
 
+/**
+ * Pick the current date (as fetched from #FujiNet's APETIME)
+ */
 void pick_today() {
   pick_yr = cur_yr;
   pick_mo = cur_mo;
   pick_day = cur_day;
 }
 
-/* The program! */
+
+/* The program!  FIXME: Split into functions! */
 void main(void) {
   unsigned char keypress, choice;
   int i, size;
   unsigned short data_len, data_read;
-  unsigned char *scr_mem1, *scr_mem2, *scr_mem3;
   char tmp_str[2], str[20];
-  unsigned char sample = 0, done, k;
+  unsigned char sample = 0, done, k, date_chg;
   int grey;
 
-  scr_mem1 = scr_mem;
-  scr_mem2 = scr_mem + 8192;
-  scr_mem3 = scr_mem + 16384;
+  scr_mem1 = (unsigned char *) (scr_mem + SCR_OFFSET);
+  dlist1 = (unsigned char *) (scr_mem1 + DLIST_OFFSET);
+  scr_mem2 = (unsigned char *) (scr_mem + SCR_BLOCK_SIZE + SCR_OFFSET);
+  dlist2 = (unsigned char *) (scr_mem2 + DLIST_OFFSET);
+  scr_mem3 = (unsigned char *) (scr_mem + (SCR_BLOCK_SIZE * 2) + SCR_OFFSET);
+  dlist3 = (unsigned char *) (scr_mem3 + DLIST_OFFSET);
 
   /* Set the defaults for the RGB table */
   rgb_red = DEFAULT_RGB_RED;
@@ -554,7 +591,9 @@ void main(void) {
         }
       }
 
+      date_chg = 0;
       if (keypress == KEY_LESSTHAN) {
+        /* [<] - Prev day */
         if (pick_day == 0) {
           pick_today();
         }
@@ -569,8 +608,22 @@ void main(void) {
           }
           pick_day = last_day[pick_mo];
         }
-        show_chosen_date();
+        date_chg = 1;
+      } else if (keypress == (KEY_LESSTHAN | KEY_SHIFT)) {
+        /* [Shift]+[<] - Prev month */
+        if (pick_mo > 1) {
+          pick_mo--;
+        } else {
+          pick_yr--;
+          pick_mo = 12;
+        }
+        date_chg = 1;
+      } else if (keypress == (KEY_LESSTHAN | KEY_CTRL)) {
+        /* [Ctrl]+[<] - Prev year */
+        pick_yr--;
+        date_chg = 1;
       } else if (keypress == KEY_GREATERTHAN) {
+        /* [>] - Next day */
         if (pick_day == 0) {
           pick_today();
         }
@@ -585,14 +638,42 @@ void main(void) {
             pick_yr++;
           }
         }
+        date_chg = 1;
+      } else if (keypress == (KEY_GREATERTHAN | KEY_SHIFT)) {
+        /* [Shift]+[>] - Next month */
+        if (pick_mo < 12) {
+          pick_mo++;
+        } else {
+          pick_mo = 1;
+          pick_yr++;
+        }
+        date_chg = 1;
+      } else if (keypress == (KEY_GREATERTHAN | KEY_CTRL)) {
+        /* [Ctrl]+[>] - Next year */
+        pick_yr++;
+        date_chg = 1;
+      } else if (keypress == KEY_EQUALS) {
+        /* [=] - Choose current day (server-side) */
+        pick_day = 0;
+        date_chg = 1;
+      } else if (keypress == (KEY_T | KEY_CTRL)) {
+        /* [Ctrl]+[T] - Try to fetch time from #FujiNet APETIME again */
+        get_time();
+        pick_yr = cur_yr;
+        pick_mo = cur_mo;
+        pick_day = cur_day;
+        date_chg = 1;
+      }
+
+      if (date_chg) {
+        if (pick_day > last_day[pick_mo]) {
+          pick_day = last_day[pick_mo];
+        }
         if (pick_yr > cur_yr ||
             (pick_yr == cur_yr && pick_mo > cur_mo) ||
             (pick_yr == cur_yr && pick_mo == cur_mo && pick_day > cur_day)) {
           pick_today();
         }
-        show_chosen_date();
-      } else if (keypress == KEY_EQUALS) {
-        pick_day = 0;
         show_chosen_date();
       }
     } while (choice == CHOICE_NONE);
@@ -619,7 +700,7 @@ void main(void) {
       OS.color2 = 14; /* Light foreground */
     } else if (choice == CHOICE_LOWRES_RGB) {
       size = 7680 * 3;
-      dlist_setup_rgb(DL_DLI(DL_GRAPHICS8));
+      dlist_setup_rgb(DL_GRAPHICS8);
       OS.gprior = 64;
     }
 
@@ -627,6 +708,7 @@ void main(void) {
  
     /* Load the data! */
     if (sample == SAMPLE_COLORBARS) {
+      /* FIXME: Rewrite to work with new pre-interleaved ColorView 9 mode */
       for (i = 0; i < 40; i++) {
         scr_mem1[i] = (i >= 34 || i < 14) ? 0x55 : 0;
         scr_mem2[i] = (6 < i && i < 28) ? 0x55 : 0;
@@ -672,35 +754,59 @@ void main(void) {
   
       if (size == 7680) {
         /* Single screen image to load */
-        nread(1 , scr_mem, (unsigned short) size);
+        nread(1, scr_mem1, (unsigned short) size);
       } else {
         /* Multiple screen images to load... */
+
+        OS.color4 = rgb_table[0];
+        wait_for_vblank();
+
         for(data_read = 0; data_read < 7680; data_read += data_len)
         {
           nstatus(1);
-          data_len=(OS.dvstat[1]<<8)+OS.dvstat[0];
-          if (data_len==0) break;
-          if (data_read+data_len > 7680) data_len = 7680 - data_read;
-          nread(1 , scr_mem1 + data_read, data_len);
+          data_len=(OS.dvstat[1] << 8) + OS.dvstat[0];
+          if (data_len == 0) break;
+          if (data_read + data_len > 7680) data_len = 7680 - data_read;
+          nread(1, scr_mem1 + data_read, data_len);
         }
+
+        OS.sdmctl = 0;
+        wait_for_vblank();
+        OS.sdlst = dlist2;
+        OS.color4 = rgb_table[1];
+        wait_for_vblank();
+        OS.sdmctl = DMACTL_PLAYFIELD_NORMAL | DMACTL_DMA_FETCH;
+        wait_for_vblank();
+
         for(data_read = 0; data_read < 7680; data_read += data_len)
         {
           nstatus(1);
-          data_len=(OS.dvstat[1]<<8)+OS.dvstat[0];
-          if (data_len==0) break;
-          if (data_read+data_len > 7680) data_len = 7680 - data_read;
-          nread(1 , scr_mem2 + data_read, data_len);
+          data_len=(OS.dvstat[1] << 8) + OS.dvstat[0];
+          if (data_len == 0) break;
+          if (data_read + data_len > 7680) data_len = 7680 - data_read;
+          nread(1, scr_mem2 + data_read, data_len);
         }
+
+        OS.sdmctl = 0;
+        wait_for_vblank();
+        OS.sdlst = dlist3;
+        OS.color4 = rgb_table[2];
+        wait_for_vblank();
+        OS.sdmctl = DMACTL_PLAYFIELD_NORMAL | DMACTL_DMA_FETCH;
+        wait_for_vblank();
+
         for(data_read = 0; data_read < 7680; data_read += data_len)
         {
           nstatus(1);
-          data_len=(OS.dvstat[1]<<8)+OS.dvstat[0];
-          if (data_len==0) break;
-          if (data_read+data_len > 7680) data_len = 7680 - data_read;
-          nread(1 , scr_mem3 + data_read, data_len);
+          data_len=(OS.dvstat[1] << 8) + OS.dvstat[0];
+          if (data_len == 0) break;
+          if (data_read + data_len > 7680) data_len = 7680 - data_read;
+          nread(1, scr_mem3 + data_read, data_len);
         }
+
+        OS.sdlst = dlist1;
       }
-  
+
       nclose(1 /* unit 1 */);
     }
 

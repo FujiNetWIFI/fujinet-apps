@@ -4,7 +4,7 @@ apod (Astronomy Picture of the Day) Client for #FujiNet
 Bill Kendrick bill@newbreedsoftware.com
 with help from apc & others (see credits, below)
 
-2021-03-27 - 2021-04-02
+2021-03-27 - 2021-04-15
 
 ## Purpose
 Fetch and view [NASA's Astronomy Picture of the Day (APOD)](https://apod.nasa.gov/apod/),
@@ -25,6 +25,21 @@ an image in one of the following graphics modes:
 - `[D]` - Low resolution 4,096 color (via flickering; "ColorView" mode)
 
 Once the image appears, press `[Esc]` to return to the menu.
+
+### Picking different dates
+You can opt to view a different day's APOD by chosing the date.
+
+- `[<]`, `[>]` - Previous / next day
+- `[Shift]`+`[<]`, `[Shift]`+`[>]` - Previous / next month
+- `[Ctrl]`+`[<]`, `[Ctrl]`+`[>]` - Previous / next year
+- `[=]` - Fetch the current APOD
+- `[Ctrl]`+`[T]` - Try to fetch current date from #FujiNet again (in case of error, or you're running APOD for a long time)
+
+Note - The APOD photos (and hence the APOD server's idea of
+"what's the latest photo") is based on Eastern US time.
+Your #FujiNet is probably set to your current time zone.
+So if you want the latest image, get the "current" image
+(the default; or press `[=]`).
 
 When viewing a ColorView image, you can press `[R]`, `[G]`, or
 `[B]` to adjust the Atari color palette hue that's used for
