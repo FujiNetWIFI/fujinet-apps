@@ -91,7 +91,7 @@ void screen_off() {
 }
 
 /**
- * Point to display list & re-enable ANTIC
+ * Point to display list; re-enable ANTIC
  */
 void screen_on() {
   OS.sdlst = dlist1;
@@ -99,7 +99,7 @@ void screen_on() {
 }
 
 /**
- * wait a moment (so screen can come to life before
+ * Wait a moment (so screen can come to life before
  * #FujiNet takes over, if we're fetching from the network).
  */
 void wait_for_vblank() {
@@ -247,8 +247,9 @@ void dli_clear(void)
 #pragma optimize (pop)
 
 
-/* Set up a color table of repeating Red, Green, and Blue hues */
-
+/**
+ * Set up a color table of repeating Red, Green, and Blue hues
+ */
 void setup_rgb_table(void) {
   unsigned char *rgb_ptr;
   unsigned char i;
@@ -340,7 +341,9 @@ void dlist_setup_rgb(unsigned char antic_mode) {
   screen_on();
 }
 
-
+/**
+ * Set up display list for title/menu screen
+ */
 void dlist_setup_menu() {
   int dl_idx;
 
@@ -485,6 +488,9 @@ void get_time() {
   pick_day = 0;
 }
 
+/**
+ * Display the chosen date (or "current") on the menu
+ */
 void show_chosen_date() {
   char str[20];
 
@@ -496,13 +502,17 @@ void show_chosen_date() {
   }
 }
 
+/**
+ * Pick the current date (as fetched from #FujiNet's APETIME)
+ */
 void pick_today() {
   pick_yr = cur_yr;
   pick_mo = cur_mo;
   pick_day = cur_day;
 }
 
-/* The program! */
+
+/* The program!  FIXME: Split into functions! */
 void main(void) {
   unsigned char keypress, choice;
   int i, size;
@@ -689,6 +699,7 @@ void main(void) {
  
     /* Load the data! */
     if (sample == SAMPLE_COLORBARS) {
+      /* FIXME: Rewrite to work with new pre-interleaved ColorView 9 mode */
       for (i = 0; i < 40; i++) {
         scr_mem1[i] = (i >= 34 || i < 14) ? 0x55 : 0;
         scr_mem2[i] = (6 < i && i < 28) ? 0x55 : 0;
@@ -743,7 +754,7 @@ void main(void) {
           data_len=(OS.dvstat[1] << 8) + OS.dvstat[0];
           if (data_len == 0) break;
           if (data_read + data_len > 7680) data_len = 7680 - data_read;
-          nread(1 , scr_mem1 + data_read, data_len);
+          nread(1, scr_mem1 + data_read, data_len);
         }
         for(data_read = 0; data_read < 7680; data_read += data_len)
         {
