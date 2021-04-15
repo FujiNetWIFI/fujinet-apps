@@ -474,6 +474,9 @@ void get_time() {
   } else {
     /* This shouldn't happen */
     cur_yr = 99;
+  }
+  if (cur_yr >= 99) {
+    cur_yr = 99;
     cur_mo = 12;
     cur_day = 31;
   }
@@ -505,7 +508,7 @@ void main(void) {
   int i, size;
   unsigned short data_len, data_read;
   char tmp_str[2], str[20];
-  unsigned char sample = 0, done, k;
+  unsigned char sample = 0, done, k, date_chg;
   int grey;
 
   scr_mem1 = (unsigned char *) (scr_mem + SCR_OFFSET);
@@ -583,6 +586,7 @@ void main(void) {
         }
       }
 
+      date_chg = 0;
       if (keypress == KEY_LESSTHAN) {
         if (pick_day == 0) {
           pick_today();
@@ -598,7 +602,18 @@ void main(void) {
           }
           pick_day = last_day[pick_mo];
         }
-        show_chosen_date();
+        date_chg = 1;
+      } else if (keypress == (KEY_LESSTHAN | KEY_SHIFT)) {
+        if (pick_mo > 1) {
+          pick_mo--;
+        } else {
+          pick_yr--;
+          pick_mo = 12;
+        }
+        date_chg = 1;
+      } else if (keypress == (KEY_LESSTHAN | KEY_CTRL)) {
+        pick_yr--;
+        date_chg = 1;
       } else if (keypress == KEY_GREATERTHAN) {
         if (pick_day == 0) {
           pick_today();
@@ -614,14 +629,32 @@ void main(void) {
             pick_yr++;
           }
         }
+        date_chg = 1;
+      } else if (keypress == (KEY_GREATERTHAN | KEY_SHIFT)) {
+        if (pick_mo < 12) {
+          pick_mo++;
+        } else {
+          pick_mo = 1;
+          pick_yr++;
+        }
+        date_chg = 1;
+      } else if (keypress == (KEY_GREATERTHAN | KEY_CTRL)) {
+        pick_yr++;
+        date_chg = 1;
+      } else if (keypress == KEY_EQUALS) {
+        pick_day = 0;
+        date_chg = 1;
+      }
+
+      if (date_chg) {
+        if (pick_day > last_day[pick_mo]) {
+          pick_day = last_day[pick_mo];
+        }
         if (pick_yr > cur_yr ||
             (pick_yr == cur_yr && pick_mo > cur_mo) ||
             (pick_yr == cur_yr && pick_mo == cur_mo && pick_day > cur_day)) {
           pick_today();
         }
-        show_chosen_date();
-      } else if (keypress == KEY_EQUALS) {
-        pick_day = 0;
         show_chosen_date();
       }
     } while (choice == CHOICE_NONE);
@@ -701,32 +734,32 @@ void main(void) {
   
       if (size == 7680) {
         /* Single screen image to load */
-        nread(1 , scr_mem, (unsigned short) size);
+        nread(1, scr_mem1, (unsigned short) size);
       } else {
         /* Multiple screen images to load... */
         for(data_read = 0; data_read < 7680; data_read += data_len)
         {
           nstatus(1);
-          data_len=(OS.dvstat[1]<<8)+OS.dvstat[0];
-          if (data_len==0) break;
-          if (data_read+data_len > 7680) data_len = 7680 - data_read;
+          data_len=(OS.dvstat[1] << 8) + OS.dvstat[0];
+          if (data_len == 0) break;
+          if (data_read + data_len > 7680) data_len = 7680 - data_read;
           nread(1 , scr_mem1 + data_read, data_len);
         }
         for(data_read = 0; data_read < 7680; data_read += data_len)
         {
           nstatus(1);
-          data_len=(OS.dvstat[1]<<8)+OS.dvstat[0];
-          if (data_len==0) break;
-          if (data_read+data_len > 7680) data_len = 7680 - data_read;
-          nread(1 , scr_mem2 + data_read, data_len);
+          data_len=(OS.dvstat[1] << 8) + OS.dvstat[0];
+          if (data_len == 0) break;
+          if (data_read + data_len > 7680) data_len = 7680 - data_read;
+          nread(1, scr_mem2 + data_read, data_len);
         }
         for(data_read = 0; data_read < 7680; data_read += data_len)
         {
           nstatus(1);
-          data_len=(OS.dvstat[1]<<8)+OS.dvstat[0];
-          if (data_len==0) break;
-          if (data_read+data_len > 7680) data_len = 7680 - data_read;
-          nread(1 , scr_mem3 + data_read, data_len);
+          data_len=(OS.dvstat[1] << 8) + OS.dvstat[0];
+          if (data_len == 0) break;
+          if (data_read + data_len > 7680) data_len = 7680 - data_read;
+          nread(1, scr_mem3 + data_read, data_len);
         }
       }
   
