@@ -321,8 +321,8 @@ clean:
 	$(call RMFILES,$(DEPENDS))
 	$(call RMFILES,$(REMOVES))
 	$(call RMFILES,$(PROGRAM))
-	$(call RMFILES,vt100.map)
-	$(call RMFILES,vt100.atr)
+	$(call RMFILES,ADM3A.map)
+	$(call RMFILES,ADM3A.atr)
  
 else # $(words $(TARGETLIST)),1
  
