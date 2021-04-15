@@ -309,11 +309,11 @@ void dlist_setup_rgb(unsigned char antic_mode) {
     }
 
     /* Hitting 4K boundary! */
-    i++;
     gfx_ptr += (i * 40);
     dlist[dlist_idx++] = DL_LMS(DL_DLI(antic_mode));
     dlist[dlist_idx++] = (gfx_ptr & 255);
     dlist[dlist_idx++] = (gfx_ptr >> 8);
+    i++;
 
     for (i = i; i <= 191; i++) {
       dlist[dlist_idx++] = DL_DLI(antic_mode);
@@ -593,6 +593,7 @@ void main(void) {
 
       date_chg = 0;
       if (keypress == KEY_LESSTHAN) {
+        /* [<] - Prev day */
         if (pick_day == 0) {
           pick_today();
         }
@@ -609,6 +610,7 @@ void main(void) {
         }
         date_chg = 1;
       } else if (keypress == (KEY_LESSTHAN | KEY_SHIFT)) {
+        /* [Shift]+[<] - Prev month */
         if (pick_mo > 1) {
           pick_mo--;
         } else {
@@ -617,9 +619,11 @@ void main(void) {
         }
         date_chg = 1;
       } else if (keypress == (KEY_LESSTHAN | KEY_CTRL)) {
+        /* [Ctrl]+[<] - Prev year */
         pick_yr--;
         date_chg = 1;
       } else if (keypress == KEY_GREATERTHAN) {
+        /* [>] - Next day */
         if (pick_day == 0) {
           pick_today();
         }
@@ -636,6 +640,7 @@ void main(void) {
         }
         date_chg = 1;
       } else if (keypress == (KEY_GREATERTHAN | KEY_SHIFT)) {
+        /* [Shift]+[>] - Next month */
         if (pick_mo < 12) {
           pick_mo++;
         } else {
@@ -644,10 +649,19 @@ void main(void) {
         }
         date_chg = 1;
       } else if (keypress == (KEY_GREATERTHAN | KEY_CTRL)) {
+        /* [Ctrl]+[>] - Next year */
         pick_yr++;
         date_chg = 1;
       } else if (keypress == KEY_EQUALS) {
+        /* [=] - Choose current day (server-side) */
         pick_day = 0;
+        date_chg = 1;
+      } else if (keypress == (KEY_T | KEY_CTRL)) {
+        /* [Ctrl]+[T] - Try to fetch time from #FujiNet APETIME again */
+        get_time();
+        pick_yr = cur_yr;
+        pick_mo = cur_mo;
+        pick_day = cur_day;
         date_chg = 1;
       }
 
@@ -743,6 +757,10 @@ void main(void) {
         nread(1, scr_mem1, (unsigned short) size);
       } else {
         /* Multiple screen images to load... */
+
+        OS.color4 = rgb_table[0];
+        wait_for_vblank();
+
         for(data_read = 0; data_read < 7680; data_read += data_len)
         {
           nstatus(1);
@@ -751,6 +769,15 @@ void main(void) {
           if (data_read + data_len > 7680) data_len = 7680 - data_read;
           nread(1, scr_mem1 + data_read, data_len);
         }
+
+        OS.sdmctl = 0;
+        wait_for_vblank();
+        OS.sdlst = dlist2;
+        OS.color4 = rgb_table[1];
+        wait_for_vblank();
+        OS.sdmctl = DMACTL_PLAYFIELD_NORMAL | DMACTL_DMA_FETCH;
+        wait_for_vblank();
+
         for(data_read = 0; data_read < 7680; data_read += data_len)
         {
           nstatus(1);
@@ -759,6 +786,15 @@ void main(void) {
           if (data_read + data_len > 7680) data_len = 7680 - data_read;
           nread(1, scr_mem2 + data_read, data_len);
         }
+
+        OS.sdmctl = 0;
+        wait_for_vblank();
+        OS.sdlst = dlist3;
+        OS.color4 = rgb_table[2];
+        wait_for_vblank();
+        OS.sdmctl = DMACTL_PLAYFIELD_NORMAL | DMACTL_DMA_FETCH;
+        wait_for_vblank();
+
         for(data_read = 0; data_read < 7680; data_read += data_len)
         {
           nstatus(1);
@@ -767,6 +803,8 @@ void main(void) {
           if (data_read + data_len > 7680) data_len = 7680 - data_read;
           nread(1, scr_mem3 + data_read, data_len);
         }
+
+        OS.sdlst = dlist1;
       }
 
       nclose(1 /* unit 1 */);
