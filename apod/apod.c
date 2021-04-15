@@ -7,7 +7,7 @@
   See the APOD web app (server)
 
   By Bill Kendrick <bill@newbreedsoftware.com>
-  2021-03-27 - 2021-04-13
+  2021-03-27 - 2021-04-15
 */
 
 #include <stdio.h>
@@ -18,17 +18,32 @@
 #include "nsio.h"
 #include "dli.h"
 
-#define VERSION "VER. 2021-04-13"
+#define VERSION "VER. 2021-04-15"
 
 /* In ColorView mode, we will have 3 display lists that
    we cycle through, each interleaving between three
    versions of the image (red, green, blue) */
-#define DLIST_SIZE 1024
-extern unsigned char dlist_mem[];
 extern unsigned char rgb_table[];
 
-/* A block of space to store the graphics */
+/* A block of space to store the graphics & display lists */
 extern unsigned char scr_mem[];
+unsigned char * scr_mem1, * scr_mem2, * scr_mem3;
+unsigned char * dlist1, * dlist2, * dlist3;
+
+/* Screen block size is exactly 8KB; enough for
+   the screen data (40 x 192 = 7680 bytes),
+   a starting offset (see below; to help with 4K boundary limitation),
+   and a display list */
+#define SCR_BLOCK_SIZE 8192
+
+/* Start image 16 bytes into screen memory, so when we
+   hit the 102nd line, we've viewed exactly 4KB */
+#define SCR_OFFSET 16
+
+/* Tuck display list at the end of screen memory
+   (each screen + display list block has 8192 bytes;
+   so the display list gets the last 496 bytes of it) */
+#define DLIST_OFFSET (7680 + SCR_OFFSET)
 
 /* Storage for the current date/time */
 unsigned char time_buf[6];
@@ -68,18 +83,18 @@ void myprint(unsigned char x, unsigned char y, char * str) {
 }
 
 /**
- * Disable ANTIC; clear screen memory
+ * Disable ANTIC; clear screen & display list memory
  */
 void screen_off() {
   OS.sdmctl = 0;
-  memset(scr_mem, 0, 24576);
+  memset(scr_mem, 0, (SCR_BLOCK_SIZE * 3));
 }
 
 /**
  * Point to display list & re-enable ANTIC
  */
 void screen_on() {
-  OS.sdlst = dlist_mem;
+  OS.sdlst = dlist1;
   OS.sdmctl = DMACTL_PLAYFIELD_NORMAL | DMACTL_DMA_FETCH;
 }
 
@@ -104,23 +119,37 @@ void dlist_setup(unsigned char antic_mode) {
 
   screen_off();
 
+  gfx_ptr = (unsigned int) (scr_mem + SCR_OFFSET);
+
   dlist_idx = 0;
 
-  dlist_mem[dlist_idx++] = DL_BLK8;
-  dlist_mem[dlist_idx++] = DL_BLK8;
-  dlist_mem[dlist_idx++] = DL_BLK8;
+  dlist1[dlist_idx++] = DL_BLK8;
+  dlist1[dlist_idx++] = DL_BLK8;
+  dlist1[dlist_idx++] = DL_BLK8;
 
-  gfx_ptr = (unsigned int) scr_mem;
-  for (i = 0; i < 192; i++) {
-    dlist_mem[dlist_idx++] = DL_LMS(antic_mode);
-    dlist_mem[dlist_idx++] = (gfx_ptr & 255);
-    dlist_mem[dlist_idx++] = (gfx_ptr >> 8);
-    gfx_ptr += 40;
+  /* Row 0 */
+  dlist1[dlist_idx++] = DL_LMS(antic_mode);
+  dlist1[dlist_idx++] = (gfx_ptr & 255);
+  dlist1[dlist_idx++] = (gfx_ptr >> 8);
+
+  for (i = 1; i <= 101; i++) {
+    dlist1[dlist_idx++] = antic_mode;
   }
 
-  dlist_mem[dlist_idx++] = DL_JVB;
-  dlist_mem[dlist_idx++] = ((unsigned int) dlist_mem & 255);
-  dlist_mem[dlist_idx++] = ((unsigned int) dlist_mem >> 8);
+  /* Hitting 4K boundary! */
+  i++;
+  gfx_ptr = (unsigned int) (scr_mem + 4096);
+  dlist1[dlist_idx++] = DL_LMS(antic_mode);
+  dlist1[dlist_idx++] = (gfx_ptr & 255);
+  dlist1[dlist_idx++] = (gfx_ptr >> 8);
+
+  for (i = i; i <= 191; i++) {
+    dlist1[dlist_idx++] = antic_mode;
+  }
+
+  dlist1[dlist_idx++] = DL_JVB;
+  dlist1[dlist_idx++] = ((unsigned int) dlist1 & 255);
+  dlist1[dlist_idx++] = ((unsigned int) dlist1 >> 8);
 
   screen_on();
 }
@@ -186,7 +215,7 @@ __vbi_ctr_set:
 void mySETVBV(void * Addr)
 {
   rgb_ctr = 0;
-  dlist_hi = (unsigned char) (((unsigned int) dlist_mem) >> 8);
+  dlist_hi = (unsigned char) (((unsigned int) (scr_mem + DLIST_OFFSET)) >> 8);
 
   OS.critic = 1;
   OS.vvblkd = Addr;
@@ -248,15 +277,13 @@ void dlist_setup_rgb(unsigned char antic_mode) {
     gfx_ptr1_hi, gfx_ptr1_lo,
     gfx_ptr2_hi, gfx_ptr2_lo,
     gfx_ptr3_hi, gfx_ptr3_lo;
+  unsigned char * dlist_mem;
 
   screen_off();
 
-  scr_mem1 = (unsigned int) scr_mem;
-  scr_mem2 = (unsigned int) scr_mem + 8192;
-  scr_mem3 = (unsigned int) scr_mem + 16384;
-
   for (l = 0; l < 3; l++) {
-    dl_idx = (l * DLIST_SIZE);
+    dl_idx = 0;
+    dlist_mem = (scr_mem + (l * SCR_BLOCK_SIZE)) + DLIST_OFFSET;
 
     dlist_mem[dl_idx++] = DL_BLK8;
     dlist_mem[dl_idx++] = DL_BLK8;
@@ -301,11 +328,11 @@ void dlist_setup_rgb(unsigned char antic_mode) {
       gfx_ptr3 += 120;
     }
 
-    next_dlist = (unsigned int) dlist_mem + (DLIST_SIZE * l);
+    next_dlist = (unsigned int) (scr_mem + (l * SCR_BLOCK_SIZE) + DLIST_OFFSET);
 
-    dlist_mem[(l * DLIST_SIZE) + (192 * 3) + 3] = DL_JVB;
-    dlist_mem[(l * DLIST_SIZE) + (192 * 3) + 4] = (next_dlist & 255);
-    dlist_mem[(l * DLIST_SIZE) + (192 * 3) + 5] = (next_dlist >> 8);
+    dlist_mem[dl_idx++] = DL_JVB;
+    dlist_mem[dl_idx++] = (next_dlist & 255);
+    dlist_mem[dl_idx++] = (next_dlist >> 8);
   }
 
   setup_rgb_table();
@@ -319,22 +346,22 @@ void dlist_setup_menu() {
 
   screen_off();
 
-  dlist_mem[0] = DL_BLK1;
-  dlist_mem[1] = DL_BLK8;
-  dlist_mem[2] = DL_BLK8;
+  dlist1[0] = DL_BLK1;
+  dlist1[1] = DL_BLK8;
+  dlist1[2] = DL_BLK8;
 
-  dlist_mem[3] = DL_LMS(DL_GRAPHICS2);
-  dlist_mem[4] = ((unsigned int) scr_mem) & 255;
-  dlist_mem[5] = ((unsigned int) scr_mem) >> 8;
-  dlist_mem[6] = DL_GRAPHICS2;
+  dlist1[3] = DL_LMS(DL_GRAPHICS2);
+  dlist1[4] = ((unsigned int) scr_mem) & 255;
+  dlist1[5] = ((unsigned int) scr_mem) >> 8;
+  dlist1[6] = DL_GRAPHICS2;
 
   for (dl_idx = 7; dl_idx < 29; dl_idx++) {
-    dlist_mem[dl_idx] = DL_GRAPHICS1;
+    dlist1[dl_idx] = DL_GRAPHICS1;
   }
 
-  dlist_mem[30] = DL_JVB;
-  dlist_mem[31] = ((unsigned int) dlist_mem) & 255;
-  dlist_mem[32] = ((unsigned int) dlist_mem) >> 8;
+  dlist1[30] = DL_JVB;
+  dlist1[31] = ((unsigned int) dlist1) & 255;
+  dlist1[32] = ((unsigned int) dlist1) >> 8;
 
   OS.color4 = 0x40;
   OS.color0 = 0x0F;
@@ -477,14 +504,16 @@ void main(void) {
   unsigned char keypress, choice;
   int i, size;
   unsigned short data_len, data_read;
-  unsigned char *scr_mem1, *scr_mem2, *scr_mem3;
   char tmp_str[2], str[20];
   unsigned char sample = 0, done, k;
   int grey;
 
-  scr_mem1 = scr_mem;
-  scr_mem2 = scr_mem + 8192;
-  scr_mem3 = scr_mem + 16384;
+  scr_mem1 = (unsigned char *) (scr_mem + SCR_OFFSET);
+  dlist1 = (unsigned char *) (scr_mem1 + DLIST_OFFSET);
+  scr_mem2 = (unsigned char *) (scr_mem + SCR_BLOCK_SIZE + SCR_OFFSET);
+  dlist2 = (unsigned char *) (scr_mem2 + DLIST_OFFSET);
+  scr_mem3 = (unsigned char *) (scr_mem + (SCR_BLOCK_SIZE * 2) + SCR_OFFSET);
+  dlist3 = (unsigned char *) (scr_mem3 + DLIST_OFFSET);
 
   /* Set the defaults for the RGB table */
   rgb_red = DEFAULT_RGB_RED;
@@ -619,7 +648,7 @@ void main(void) {
       OS.color2 = 14; /* Light foreground */
     } else if (choice == CHOICE_LOWRES_RGB) {
       size = 7680 * 3;
-      dlist_setup_rgb(DL_DLI(DL_GRAPHICS8));
+      dlist_setup_rgb(DL_GRAPHICS8);
       OS.gprior = 64;
     }
 
