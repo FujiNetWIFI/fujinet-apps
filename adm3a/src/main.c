@@ -1,26 +1,18 @@
 /**
- * N: ADM-3A Terminal Emulator
- *
- * Author: Thom Cherryhomes
- *  <thom.cherryhomes@gmail.com>
- *
- * Licensed under the GPL v3.0
- * See LICENSE for details.
+ * ADM-3A Terminal Emulator derived from Netcat.
  */
 
-#include <conio.h>
-#include <stdbool.h>
-#include "adm3a.h"
-#include "conio.h"
 #include <atari.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+#include <conio.h> // for kbhit() and cgetc()
+#include "conio.h" // our local one.
 #include "nio.h"
-#include "term.h"
 
 char url[256];                  // URL
 bool running=true;              // Is program running?
-unsigned char trans=0;          // Translation value (0,1,2,3)
+unsigned char trans=3;          // Translation value (0,1,2,3)
 char tmp[8];                    // temporary # to string
 unsigned char err;              // error code of last operation.
 unsigned char trip=0;           // if trip=1, fujinet is asking us for attention.
@@ -37,36 +29,20 @@ char password[256];             // password for login
 
 extern void ih();               // defined in intr.s
 
-/**
- * Print error
- */
-void print_error(unsigned char err)
-{
-  itoa(err,tmp,10);
-  print(tmp);
-  print("\x9b");
-}
 
 /**
  * Get URL from user.
  */
 bool get_url(int argc, char* argv[])
-{  
-  OS.lmargn=2; // Set left margin to 2
+{
   OS.shflok=64; // turn on shift lock.
-  trans = 3;
-  echo = false;
 
-  if ((!_is_cmdline_dos()) || (argc < 2))
+  if (!_is_cmdline_dos())
     {
-      print("ADM3A TERMINAL--DEVICESPEC?\x9b");
+    interactive:
+      print("ADM-3A TERMINAL--DEVICESPEC?\x9b");
       get_line(url,255);
-
-      if (url[0]==0x9b)
-	{
-	  return false;
-	}
-      
+                  
       print("\x9bUSERNAME?--RETURN IF NONE\x9b");
       get_line(login,128);
 
@@ -78,15 +54,26 @@ bool get_url(int argc, char* argv[])
   else
     {
       strcpy(url,argv[1]);
+      if (argc<2)
+	goto interactive;
     }
   return true;
 }
 
+/**
+ * Print error
+ */
+void print_error(unsigned char err)
+{
+  itoa(err,tmp,10);
+  print(tmp);
+  print("\x9b");
+}
 
 /**
  * NetCat
  */
-void adm3a()
+void nc()
 {
   OS.lmargn=0; // Set left margin to 0
   OS.shflok=0; // turn off shift-lock.
@@ -97,7 +84,6 @@ void adm3a()
     {
       print("OPEN ERROR: ");
       print_error(err);
-      running=false;
       return;
     }
   
@@ -119,7 +105,11 @@ void adm3a()
     }
     
     if (txbuflen>0)
-      {	
+      {
+	if (echo==true)
+	  for (i=0;i<txbuflen;i++)
+	    printc(&tx_buf[i]);
+	
 	err=nwrite(url,tx_buf,txbuflen); // Send character.
 	
 	if (err!=1)
@@ -171,7 +161,7 @@ void adm3a()
         }
 
       // Print the buffer to screen.
-      term(rx_buf,bw);
+      printl(rx_buf,bw);
       
       trip=0;
       PIA.pactl |= 1; // Flag interrupt as serviced, ready for next one.
@@ -183,22 +173,26 @@ void adm3a()
   // Restore old PROCEED interrupt.
   PIA.pactl &= ~1; // disable interrupts
   OS.vprced=old_vprced; 
-  PIA.pactl |= old_enabled;   
+  PIA.pactl |= old_enabled; 
+    
 }
 
+/**
+ * Main entrypoint
+ */
 int main(int argc, char* argv[])
 {
-  OS.soundr=OS.crsinh=0;
-
+  OS.soundr=0; // Turn off SIO beeping sound
+  cursor(1);   // Keep cursor on
+  
   while (running==true)
     {
       if (get_url(argc, argv))
-	adm3a();
+	nc();
       else
 	running=false;
     }
   
-  OS.soundr=3;
-  
+  OS.soundr=3; // Restore SIO beeping sound
   return 0;
 }
