@@ -283,7 +283,7 @@ void setup_rgb_table(void) {
  */
 void dlist_setup_rgb(unsigned char antic_mode) {
   int l, i;
-  unsigned int gfx_ptr, next_dlist;
+  unsigned int gfx_ptr /*, next_dlist */;
   unsigned int dlist_idx;
   unsigned char * dlist;
 
@@ -319,15 +319,16 @@ void dlist_setup_rgb(unsigned char antic_mode) {
       dlist[dlist_idx++] = DL_DLI(antic_mode);
     }
 
+    /*
     if (l < 2) {
       next_dlist = (unsigned int) (scr_mem + ((l + 1) * SCR_BLOCK_SIZE) + DLIST_OFFSET);
     } else {
       next_dlist = (unsigned int) (scr_mem + DLIST_OFFSET);
     }
-
+    */
     dlist[dlist_idx++] = DL_JVB;
-    dlist[dlist_idx++] = (next_dlist & 255);
-    dlist[dlist_idx++] = (next_dlist >> 8);
+    dlist[dlist_idx++] = (/*next_*/((unsigned int) dlist) & 255);
+    dlist[dlist_idx++] = (/*next_*/((unsigned int) dlist) >> 8);
   }
 
   setup_rgb_table();
@@ -767,7 +768,7 @@ void main(void) {
           nread(1, scr_mem3 + data_read, data_len);
         }
       }
-  
+
       nclose(1 /* unit 1 */);
     }
 
