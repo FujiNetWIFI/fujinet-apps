@@ -12,6 +12,11 @@
 #include <stdbool.h>
 #include "adm3a.h"
 #include "conio.h"
+#include <atari.h>
+#include <stdlib.h>
+#include <string.h>
+#include "nio.h"
+#include "term.h"
 
 char url[256];                  // URL
 bool running=true;              // Is program running?
@@ -33,9 +38,55 @@ char password[256];             // password for login
 extern void ih();               // defined in intr.s
 
 /**
+ * Print error
+ */
+void print_error(unsigned char err)
+{
+  itoa(err,tmp,10);
+  print(tmp);
+  print("\x9b");
+}
+
+/**
+ * Get URL from user.
+ */
+bool get_url(int argc, char* argv[])
+{  
+  OS.lmargn=2; // Set left margin to 2
+  OS.shflok=64; // turn on shift lock.
+  trans = 3;
+  echo = false;
+
+  if ((!_is_cmdline_dos()) || (argc < 2))
+    {
+      print("ADM3A TERMINAL--DEVICESPEC?\x9b");
+      get_line(url,255);
+
+      if (url[0]==0x9b)
+	{
+	  return false;
+	}
+      
+      print("\x9bUSERNAME?--RETURN IF NONE\x9b");
+      get_line(login,128);
+
+      print("\x9bPASSWORD?--RETURN IF NONE\x9b");
+      get_line(password,128);
+
+      nlogin(url,login,password);
+    }
+  else
+    {
+      strcpy(url,argv[1]);
+    }
+  return true;
+}
+
+
+/**
  * NetCat
  */
-void nc()
+void adm3a()
 {
   OS.lmargn=0; // Set left margin to 0
   OS.shflok=0; // turn off shift-lock.
@@ -68,11 +119,7 @@ void nc()
     }
     
     if (txbuflen>0)
-      {
-	if (echo==true)
-	  for (i=0;i<txbuflen;i++)
-	    printc(&tx_buf[i]);
-	
+      {	
 	err=nwrite(url,tx_buf,txbuflen); // Send character.
 	
 	if (err!=1)
@@ -124,7 +171,7 @@ void nc()
         }
 
       // Print the buffer to screen.
-      printl(rx_buf,bw);
+      term(rx_buf,bw);
       
       trip=0;
       PIA.pactl |= 1; // Flag interrupt as serviced, ready for next one.
@@ -136,18 +183,17 @@ void nc()
   // Restore old PROCEED interrupt.
   PIA.pactl &= ~1; // disable interrupts
   OS.vprced=old_vprced; 
-  PIA.pactl |= old_enabled; 
-    
+  PIA.pactl |= old_enabled;   
 }
 
 int main(int argc, char* argv[])
 {
-  OS.soundr=0=OS.crsinh=0;
+  OS.soundr=OS.crsinh=0;
 
   while (running==true)
     {
       if (get_url(argc, argv))
-	nc();
+	adm3a();
       else
 	running=false;
     }
