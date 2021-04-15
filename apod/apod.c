@@ -156,7 +156,7 @@ void dlist_setup(unsigned char antic_mode) {
 
 
 /* Tracking which Display List is active */
-unsigned char dlist_hi;
+unsigned char dlist_hi, dlist_lo;
 
 /* Keep track of old VBI vector, so we can jump to it at
    the end of ours (see below), and restore it when we're done
@@ -172,10 +172,10 @@ unsigned char rgb_ctr;
    Display Lists in RGB image modes */
 #pragma optimize (push, off)
 void VBLANKD(void) {
-
+  /* grab the current rgb color counter */
   asm("ldx %v", rgb_ctr);
 
-
+  /* increment it; roll from 3 back to 0 */
   asm("inx");
   asm("cpx #3");
   asm("bcc %g", __vbi_ctr_set);
@@ -183,15 +183,25 @@ void VBLANKD(void) {
   asm("ldx #0");
 
 __vbi_ctr_set:
+  /* store the current rgb color counter back;
+     also store it as a reference to our next display list */
   asm("stx %v", dli_load_arg);
   asm("stx %v", rgb_ctr);
 
-  /* dlist = dlist_hi + 4 * rgb_ctr */
+  /* display lists are 8K away from each other
+     (tucked under screen memory); that's 32 (256 byte) pages,
+     so we can shift left 5 times to multiply the rgb color counter
+     by 32... then store it in the high byte of SDLST */
   asm("txa");
+  asm("asl a");
+  asm("asl a");
+  asm("asl a");
   asm("asl a");
   asm("asl a");
   asm("adc %v", dlist_hi);
   asm("sta $d403");
+  asm("lda %v", dlist_lo);
+  asm("sta $d402");
 
   /* adjust end of the screen colors - set the last one to black color */
   asm("lda %v+187,x", rgb_table);
@@ -203,7 +213,7 @@ __vbi_ctr_set:
 
   /* start next screen with black color at top */
   asm("sta $d01a");
-  
+
   asm("jmp (%v)", OLDVEC);
 }
 
@@ -216,6 +226,7 @@ void mySETVBV(void * Addr)
 {
   rgb_ctr = 0;
   dlist_hi = (unsigned char) (((unsigned int) (scr_mem + DLIST_OFFSET)) >> 8);
+  dlist_lo = (unsigned char) (((unsigned int) (scr_mem + DLIST_OFFSET)) & 255);
 
   OS.critic = 1;
   OS.vvblkd = Addr;
@@ -272,68 +283,51 @@ void setup_rgb_table(void) {
  */
 void dlist_setup_rgb(unsigned char antic_mode) {
   int l, i;
-  unsigned int gfx_ptr1, gfx_ptr2, gfx_ptr3, next_dlist;
-  unsigned int scr_mem1, scr_mem2, scr_mem3, dl_idx;
-  unsigned char
-    gfx_ptr1_hi, gfx_ptr1_lo,
-    gfx_ptr2_hi, gfx_ptr2_lo,
-    gfx_ptr3_hi, gfx_ptr3_lo;
-  unsigned char * dlist_mem;
+  unsigned int gfx_ptr, next_dlist;
+  unsigned int dlist_idx;
+  unsigned char * dlist;
 
   screen_off();
 
   for (l = 0; l < 3; l++) {
-    dl_idx = 0;
-    dlist_mem = (scr_mem + (l * SCR_BLOCK_SIZE)) + DLIST_OFFSET;
+    dlist = (scr_mem + (l * SCR_BLOCK_SIZE)) + DLIST_OFFSET;
+    gfx_ptr = (unsigned int) (scr_mem + (l * SCR_BLOCK_SIZE)) + SCR_OFFSET;
 
-    dlist_mem[dl_idx++] = DL_BLK8;
-    dlist_mem[dl_idx++] = DL_BLK8;
-    dlist_mem[dl_idx++] = DL_DLI(DL_BLK8); /* start with colors after this line */
+    dlist_idx = 0;
 
-    if (l == 0) {
-      gfx_ptr1 = scr_mem1 + 0;
-      gfx_ptr2 = scr_mem2 + 40;
-      gfx_ptr3 = scr_mem3 + 80;
-    } else if (l == 1) {
-      gfx_ptr1 = scr_mem2 + 0;
-      gfx_ptr2 = scr_mem3 + 40;
-      gfx_ptr3 = scr_mem1 + 80;
+    dlist[dlist_idx++] = DL_BLK8;
+    dlist[dlist_idx++] = DL_BLK8;
+    dlist[dlist_idx++] = DL_DLI(DL_BLK8); /* start with colors after this line */
+
+    /* Row 0 */
+    dlist[dlist_idx++] = DL_LMS(DL_DLI(antic_mode));
+    dlist[dlist_idx++] = (gfx_ptr & 255);
+    dlist[dlist_idx++] = (gfx_ptr >> 8);
+
+    for (i = 1; i <= 101; i++) {
+      dlist[dlist_idx++] = DL_DLI(antic_mode);
+    }
+
+    /* Hitting 4K boundary! */
+    i++;
+    gfx_ptr += (i * 40);
+    dlist[dlist_idx++] = DL_LMS(DL_DLI(antic_mode));
+    dlist[dlist_idx++] = (gfx_ptr & 255);
+    dlist[dlist_idx++] = (gfx_ptr >> 8);
+
+    for (i = i; i <= 191; i++) {
+      dlist[dlist_idx++] = DL_DLI(antic_mode);
+    }
+
+    if (l < 2) {
+      next_dlist = (unsigned int) (scr_mem + ((l + 1) * SCR_BLOCK_SIZE) + DLIST_OFFSET);
     } else {
-      gfx_ptr1 = scr_mem3 + 0;
-      gfx_ptr2 = scr_mem1 + 40;
-      gfx_ptr3 = scr_mem2 + 80;
+      next_dlist = (unsigned int) (scr_mem + DLIST_OFFSET);
     }
 
-    for (i = 0; i < 64 /* aka 192 / 3 */; i++) {
-      /* FIXME: Be more clever */
-      gfx_ptr1_hi = (gfx_ptr1 >> 8);
-      gfx_ptr1_lo = (gfx_ptr1 & 255);
-      gfx_ptr2_hi = (gfx_ptr2 >> 8);
-      gfx_ptr2_lo = (gfx_ptr2 & 255);
-      gfx_ptr3_hi = (gfx_ptr3 >> 8);
-      gfx_ptr3_lo = (gfx_ptr3 & 255);
-
-      dlist_mem[dl_idx++] = DL_LMS(antic_mode);
-      dlist_mem[dl_idx++] = gfx_ptr1_lo;
-      dlist_mem[dl_idx++] = gfx_ptr1_hi;
-      gfx_ptr1 += 120;
-
-      dlist_mem[dl_idx++] = DL_LMS(antic_mode);
-      dlist_mem[dl_idx++] = gfx_ptr2_lo;
-      dlist_mem[dl_idx++] = gfx_ptr2_hi;
-      gfx_ptr2 += 120;
-
-      dlist_mem[dl_idx++] = DL_LMS(antic_mode);
-      dlist_mem[dl_idx++] = gfx_ptr3_lo;
-      dlist_mem[dl_idx++] = gfx_ptr3_hi;
-      gfx_ptr3 += 120;
-    }
-
-    next_dlist = (unsigned int) (scr_mem + (l * SCR_BLOCK_SIZE) + DLIST_OFFSET);
-
-    dlist_mem[dl_idx++] = DL_JVB;
-    dlist_mem[dl_idx++] = (next_dlist & 255);
-    dlist_mem[dl_idx++] = (next_dlist >> 8);
+    dlist[dlist_idx++] = DL_JVB;
+    dlist[dlist_idx++] = (next_dlist & 255);
+    dlist[dlist_idx++] = (next_dlist >> 8);
   }
 
   setup_rgb_table();
