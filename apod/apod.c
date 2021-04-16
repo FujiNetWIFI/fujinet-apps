@@ -345,7 +345,7 @@ void dlist_setup_menu() {
   screen_off();
 
   dlist1[0] = DL_BLK1;
-  dlist1[1] = DL_BLK8;
+  dlist1[1] = DL_BLK1;
   dlist1[2] = DL_BLK8;
 
   dlist1[3] = DL_LMS(DL_GRAPHICS2);
@@ -353,18 +353,31 @@ void dlist_setup_menu() {
   dlist1[5] = ((unsigned int) scr_mem) >> 8;
   dlist1[6] = DL_GRAPHICS2;
 
-  for (dl_idx = 7; dl_idx < 29; dl_idx++) {
+  dlist1[7] = DL_BLK2;
+  dlist1[8] = DL_GRAPHICS1;
+  dlist1[9] = DL_GRAPHICS0;
+
+  dlist1[10] = DL_BLK2;
+  dlist1[11] = DL_GRAPHICS2;
+
+  for (dl_idx = 12; dl_idx < 35; dl_idx++) {
     dlist1[dl_idx] = DL_GRAPHICS1;
   }
 
-  dlist1[30] = DL_JVB;
-  dlist1[31] = ((unsigned int) dlist1) & 255;
-  dlist1[32] = ((unsigned int) dlist1) >> 8;
+  dlist1[18] = DL_BLK2;
+  dlist1[19] = DL_GRAPHICS2;
 
-  OS.color4 = 0x40;
-  OS.color0 = 0x0F;
-  OS.color1 = 0x08;
-  OS.color2 = 0x48;
+  dlist1[25] = DL_BLK2;
+  dlist1[26] = DL_GRAPHICS2;
+
+  dlist1[36] = DL_JVB;
+  dlist1[37] = ((unsigned int) dlist1) & 255;
+  dlist1[38] = ((unsigned int) dlist1) >> 8;
+
+  OS.color4 = 0x00;
+  OS.color0 = 0x8F;
+  OS.color1 = 0x0A;
+  OS.color2 = 0x80;
   OS.color3 = 0x88;
 
   screen_on();
@@ -489,15 +502,15 @@ void get_time() {
 void show_chosen_date() {
   char str[20];
 
-  myprint(2, 17, "                  ");
+  myprint(2, 15, "                  ");
   if (pick_day != 0) {
     sprintf(str, "20%02d-%02d-%02d", pick_yr, pick_mo, pick_day);
-    myprint(2, 17, str);
+    myprint(2, 15, str);
   } else {
     if (cur_yr == 99) {
-      myprint(2, 17, "[CTRL-T] get time");
+      myprint(2, 15, "[CTRL-T] get time");
     } else {
-      myprint(2, 17, "current");
+      myprint(2, 15, "current");
     }
   }
 }
@@ -517,9 +530,9 @@ void show_sample_choice(char sample) {
   if (sample) {
     tmp_str[0] = sample + '0';
     tmp_str[1] = '\0';
-    myprint(19, 19, tmp_str);
+    myprint(19, 17, tmp_str);
   } else {
-    myprint(19, 19, " ");
+    myprint(19, 17, " ");
   }
 }
 
@@ -556,32 +569,34 @@ void main(void) {
     myprint(1,  1, "Picture Of the Day");
 
                   /*--------------------*/
-    myprint(1,  3, "bill kendrick 2021");
-    myprint(0,  4, "with help from apc");
-    myprint(10 - strlen(VERSION) / 2, 5, VERSION);
+    myprint(1,  2, "bill kendrick 2021");
+    myprint(0,  3, "with help from apc");
+    myprint(10 - strlen(VERSION) / 2, 4, VERSION);
  
                   /*--------------------*/
-    myprint(5,  7, "-- HOW --"); 
-    myprint(0,  8, "[A] high res mono");
-    myprint(0,  9, "[B] med res 4 color");
-    myprint(0, 10, "[C] low res 16 shade");
-    myprint(0, 11, "[D]*low res 4K color");
-    myprint(0, 12, "[E]*med res 64 color");
+    myprint(0,  5, "________HOW_________"); 
+    myprint(0,  6, "[A] hi-res mono");
+    myprint(0,  7, "[B] med-res 4 color");
+    myprint(0,  8, "[C] lo-res 16 shade");
+    myprint(0,  9, "[D]*lo-res 4K color");
+    myprint(0, 10, "[E]*med-res 64 color");
+    myprint(0, 11, "[F]*lo-res 256 color");
 
                   /*--------------------*/
-    myprint(5, 14, "-- WHAT --"); 
-    myprint(0, 15, "[0] get apod");
-    myprint(0, 16, "[<=>] change date");
+    myprint(0, 12, "________WHAT________");
+    myprint(0, 13, "[0] get apod");
+    myprint(0, 14, "[<=>] change date");
     show_chosen_date();
-    myprint(0, 18, "[1-4] get samples");
-    myprint(0, 19, "[5] color bars");
+    myprint(0, 16, "[1-4] get samples");
+    myprint(0, 17, "[5] color bars");
     show_sample_choice(sample);
   
-    myprint(0, 21, "-- *WHILE VIEWING --");
+                  /*--------------------*/
+    myprint(0, 18, "___*WHILE_VIEWING___");
     sprintf(str, "[R]=%02d [G]=%02d [B]=%02d", rgb_red >> 4, rgb_grn >> 4, rgb_blu >> 4);
-    myprint(0, 22, str);
-    myprint(0, 23, "[X] rbg defaults");
-
+    myprint(0, 19, str);
+    myprint(0, 20, "[X] rbg defaults");
+    myprint(0, 21, "[ESC] return to menu");
 
     baseurl = default_baseurl;
   
