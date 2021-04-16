@@ -20,7 +20,7 @@ From the menu, press one of the follow keys to load and render
 an image in one of the following graphics modes:
 
 - `[A]` - High resolution mono (320x192 black and white)
-- `[B]` - Medium resolution greyscale (160x192 four shades of grey)
+- `[B]` - Medium resolution four-color (160x192 four best colors)
 - `[C]` - Low resolution greyscale (80x192 sixteen shades of grey)
 - `[D]` - Low resolution 4,096 color (via flickering; "ColorView" mode)
 

@@ -18,7 +18,7 @@
 #include "nsio.h"
 #include "dli.h"
 
-#define VERSION "VER. 2021-04-15"
+#define VERSION "VER. 2021-04-15B"
 
 /* In ColorView mode, we will have 3 display lists that
    we cycle through, each interleaving between three
@@ -377,7 +377,7 @@ void dlist_setup_menu() {
 enum {
   CHOICE_NONE,
   CHOICE_HIRES_MONO,
-  CHOICE_MEDRES_GREY,
+  CHOICE_MEDRES_COLOR,
   CHOICE_LOWRES_GREY,
   CHOICE_LOWRES_RGB,
   NUM_CHOICES
@@ -547,7 +547,7 @@ void main(void) {
   
                  /*--------------------*/
     myprint(0, 8, "[A] high res mono");
-    myprint(0, 9, "[B] med res 4 shade");
+    myprint(0, 9, "[B] med res 4 color");
     myprint(0, 10, "[C] low res 16 shade");
     myprint(0, 11, "[D] low res 4096 clr");
     sprintf(str, "R=%02d G=%02d B=%02d", rgb_red >> 4, rgb_grn >> 4, rgb_blu >> 4);
@@ -692,7 +692,7 @@ void main(void) {
       dlist_setup(DL_GRAPHICS8);
       OS.gprior = 64;
       OS.color4 = 0; /* Greyscale */
-    } else if (choice == CHOICE_MEDRES_GREY) {
+    } else if (choice == CHOICE_MEDRES_COLOR) {
       dlist_setup(DL_GRAPHICS15);
       OS.color4 = 0; /* Background (black) */
       OS.color0 = 4; /* Dark foreground */
@@ -805,6 +805,11 @@ void main(void) {
         }
 
         OS.sdlst = dlist1;
+      }
+
+      if (choice == CHOICE_MEDRES_COLOR) {
+        nread(1, (char *) 712, 1);
+        nread(1, (char *) 708, 3);
       }
 
       nclose(1 /* unit 1 */);
