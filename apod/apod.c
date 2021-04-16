@@ -489,11 +489,16 @@ void get_time() {
 void show_chosen_date() {
   char str[20];
 
+  myprint(2, 17, "                  ");
   if (pick_day != 0) {
     sprintf(str, "20%02d-%02d-%02d", pick_yr, pick_mo, pick_day);
     myprint(2, 17, str);
   } else {
-    myprint(2, 17, "current   ");
+    if (cur_yr == 99) {
+      myprint(2, 17, "[CTRL-T] get time");
+    } else {
+      myprint(2, 17, "current");
+    }
   }
 }
 
@@ -506,6 +511,17 @@ void pick_today() {
   pick_day = cur_day;
 }
 
+void show_sample_choice(char sample) {
+  char tmp_str[2];
+
+  if (sample) {
+    tmp_str[0] = sample + '0';
+    tmp_str[1] = '\0';
+    myprint(19, 19, tmp_str);
+  } else {
+    myprint(19, 19, " ");
+  }
+}
 
 /* The program!  FIXME: Split into functions! */
 void main(void) {
@@ -535,32 +551,38 @@ void main(void) {
     /* Prompt user for the preferred viewing mode */
     dlist_setup_menu();
 
-                 /*--------------------*/
-    myprint(0, 0, "Astronomy Picture Of");
-    myprint(3, 1, "the Day (APOD)");
-    myprint(4, 2, "via #FUJINET");
-
-                 /*--------------------*/
-    myprint(1, 4, "bill kendrick 2021");
-    myprint(0, 5, "with help from apc");
-    myprint(10 - strlen(VERSION) / 2, 6, VERSION);
-  
-                 /*--------------------*/
-    myprint(0, 8, "[A] high res mono");
-    myprint(0, 9, "[B] med res 4 color");
-    myprint(0, 10, "[C] low res 16 shade");
-    myprint(0, 11, "[D] low res 4096 clr");
-    sprintf(str, "R=%02d G=%02d B=%02d", rgb_red >> 4, rgb_grn >> 4, rgb_blu >> 4);
-    myprint(2, 12, str);
-    myprint(2, 13, "[X] rbg defaults");
+                  /*--------------------*/
+    myprint(1,  0, "#FUJINET Astronomy");
+    myprint(1,  1, "Picture Of the Day");
 
                   /*--------------------*/
+    myprint(1,  3, "bill kendrick 2021");
+    myprint(0,  4, "with help from apc");
+    myprint(10 - strlen(VERSION) / 2, 5, VERSION);
+ 
+                  /*--------------------*/
+    myprint(5,  7, "-- HOW --"); 
+    myprint(0,  8, "[A] high res mono");
+    myprint(0,  9, "[B] med res 4 color");
+    myprint(0, 10, "[C] low res 16 shade");
+    myprint(0, 11, "[D]*low res 4K color");
+    myprint(0, 12, "[E]*med res 64 color");
+
+                  /*--------------------*/
+    myprint(5, 14, "-- WHAT --"); 
     myprint(0, 15, "[0] get apod");
     myprint(0, 16, "[<=>] change date");
     show_chosen_date();
     myprint(0, 18, "[1-4] get samples");
     myprint(0, 19, "[5] color bars");
+    show_sample_choice(sample);
   
+    myprint(0, 21, "-- *WHILE VIEWING --");
+    sprintf(str, "[R]=%02d [G]=%02d [B]=%02d", rgb_red >> 4, rgb_grn >> 4, rgb_blu >> 4);
+    myprint(0, 22, str);
+    myprint(0, 23, "[X] rbg defaults");
+
+
     baseurl = default_baseurl;
   
     /* Accept a choice */
@@ -580,14 +602,7 @@ void main(void) {
       for (i = 0; i < NUM_SAMPLES; i++) {
         if (sample_keys[i] == keypress) {
           sample = i;
-
-          if (sample) {
-            tmp_str[0] = i + '0';
-            tmp_str[1] = '\0';
-            myprint(19, 23, tmp_str);
-          } else {
-            myprint(19, 23, " ");
-          }
+          show_sample_choice(sample);
         }
       }
 
