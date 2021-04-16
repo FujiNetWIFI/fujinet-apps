@@ -188,6 +188,17 @@ int main(int argc, char* argv[])
 {
   OS.soundr=0; // Turn off SIO beeping sound
   cursor(1);   // Keep cursor on
+
+  // The following code relies on cursor wrap to the right most extreme of the screen
+  // We then read the colcrs value to see how many columns are returned.
+  // For 80 column displays, this is 79.
+  
+  print("\x7D\x1E");
+  if (OS.colcrs!=79)
+    {
+      print("\x9b" "80 columns required." "\x9b");
+      return 1;
+    }
   
   while (running==true)
     {
