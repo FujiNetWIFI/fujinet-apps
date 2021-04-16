@@ -97,28 +97,48 @@ bool term(char* buf, unsigned short len)
 	      switch(c)              // c contains letter command
 		{
 		case 'A':            // Cursor UP (stop at top)
-		  if (OS.rowcrs>0)
-		    c=0x1C;          // ATASCII UP
-		  else
-		    c=0x00;
-		  break;
+		  do
+		    {
+		      if (OS.rowcrs>0)
+			c=0x1C;          // ATASCII UP
+		      else
+			c=0x00;
+		      if (p[0]>0)
+			p[0]--;
+		    } while (p[0]>0); 
+		      break;
 		case 'B':            // Cursor DOWN (stop at bottom)
-		  if (OS.rowcrs<23)
-		    c=0x1D;
-		  else
-		    c=0x00;
+		  do
+		    {
+		      if (OS.rowcrs<23)
+			c=0x1D;
+		      else
+			c=0x00;
+		      if (p[0]>0)
+			p[0]--;
+		    } while (p[0]>0);
 		  break;
 		case 'C':            // Cursor RIGHT (stop at right)
-		  if (OS.colcrs<79)
-		    c=0x1F;
-		  else
-		    c=0x00;
+		  do
+		    {
+		      if (OS.colcrs<79)
+			c=0x1F;
+		      else
+			c=0x00;
+		      if (p[0]>0)
+			p[0]--;
+		    } while (p[0]>0);
 		  break;
 		case 'D':            // Cursor LEFT (stop at left)
-		  if (OS.colcrs>0)
-		    c=0x1E;
-		  else
-		    c=0x00;
+		  do
+		    {
+		      if (OS.colcrs>0)
+			c=0x1E;
+		      else
+			c=0x00;
+		      if (p[0]>0)
+			p[0]--;
+		    } while (p[0]>0);
 		  break;
 		case 'H':            // Cursor position
 		  if ((p[0]==0) && (p[1]==0))
