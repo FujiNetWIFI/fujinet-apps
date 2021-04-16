@@ -9,6 +9,7 @@
 #include <conio.h> // for kbhit() and cgetc()
 #include "conio.h" // our local one.
 #include "nio.h"
+#include "term.h"
 
 char url[256];                  // URL
 bool running=true;              // Is program running?
@@ -94,6 +95,9 @@ void nc()
   OS.vprced   = ih;            // Set PROCEED interrupt vector to our interrupt handler.
   PIA.pactl  |= 1;             // Indicate to PIA we are ready for PROCEED interrupt.
 
+  // Clear screen
+  print("\x7D");
+  
   // MAIN LOOP ///////////////////////////////////////////////////////////
 
   while (running==true)
@@ -160,8 +164,8 @@ void nc()
           continue;
         }
 
-      // Print the buffer to screen.
-      printl(rx_buf,bw);
+      // send buffer to terminal emulator.
+      term(rx_buf,bw);
       
       trip=0;
       PIA.pactl |= 1; // Flag interrupt as serviced, ready for next one.

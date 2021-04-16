@@ -147,3 +147,37 @@ unsigned char nwrite(char* devicespec, unsigned char* buf, unsigned short len)
   }
   return OS.dcb.dstats; // Return SIO error or success.
 }
+
+unsigned char nlogin(char* devicespec, char *login, char *password)
+{
+  unsigned char unit=nunit(devicespec);
+  
+  OS.dcb.ddevic=0x71;
+  OS.dcb.dunit=unit;
+  OS.dcb.dcomnd=0xFD;
+  OS.dcb.dstats=0x80;
+  OS.dcb.dbuf=login;
+  OS.dcb.dtimlo=0x1f;
+  OS.dcb.dbyt=256;
+  OS.dcb.daux=0;
+  siov();
+
+  if (OS.dcb.dstats!=1)
+    {
+      nstatus(devicespec);
+      return OS.dvstat[DVSTAT_EXTENDED_ERROR]; // return ext err
+    }
+
+  OS.dcb.dcomnd=0xFE;
+  OS.dcb.dstats=0x80;
+  OS.dcb.dbuf=password;
+  siov();
+
+  if (OS.dcb.dstats!=1)
+    {
+      nstatus(devicespec);
+      return OS.dvstat[DVSTAT_EXTENDED_ERROR]; // return ext err
+    }
+  
+  return OS.dcb.dstats;
+}

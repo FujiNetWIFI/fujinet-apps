@@ -68,4 +68,12 @@ unsigned char nread(char* devicespec, unsigned char* buf, unsigned short len);
  */
 unsigned char nwrite(char* devicespec, unsigned char* buf, unsigned short len);
 
+/**
+ * Send username and password credentials
+ * @param devicespec - The devicespec.
+ * @param login - The username to send
+ * @param password - The password to send
+ */
+unsigned char nlogin(char* devicespec, char* login, char* password);
+
 #endif /* NIO_H */

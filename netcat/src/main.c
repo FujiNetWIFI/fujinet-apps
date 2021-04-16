@@ -24,6 +24,8 @@ unsigned char tx_buf[64];       // TX buffer.
 bool echo=false;                // local echo?
 unsigned char txbuflen;         // TX buffer length
 unsigned char i;
+char login[256];                // username for login
+char password[256];             // password for login
 
 extern void ih();               // defined in intr.s
 
@@ -57,6 +59,14 @@ bool get_url(int argc, char* argv[])
       print("\x9bLOCAL ECHO?--Y=YES, *N=NO? *=Default\x9b");
       get_line(tmp,7);
       echo=(tmp[0]=='Y' ? true : false);
+
+      print("\x9bUSERNAME?--RETURN IF NONE\x9b");
+      get_line(login,128);
+
+      print("\x9bPASSWORD?--RETURN IF NONE\x9b");
+      get_line(password,128);
+
+      nlogin(url,login,password);
     }
   else
     {
