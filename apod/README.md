@@ -4,29 +4,39 @@ apod (Astronomy Picture of the Day) Client for #FujiNet
 Bill Kendrick bill@newbreedsoftware.com
 with help from apc & others (see credits, below)
 
-2021-03-27 - 2021-04-15
+2021-03-27 - 2021-04-16
 
 ## Purpose
 Fetch and view [NASA's Astronomy Picture of the Day (APOD)](https://apod.nasa.gov/apod/),
 via the "apod" server (which converts it to a format suitable for quickly loading on
 an Atari, via HTTP for an Atari with a #FujiNet and its `N:` device.)
 
-The current image of the day (fetched by the server, if it hasn't
-already been during the current day (Pacific time zone)) will
-be loaded and displayed on your Atari!
+The current image of the day (fetched by the "apod" server from the
+official APOD website, if it hasn't already been during the current day)
+will be loaded and displayed on your Atari!
 
-## Controls
+## How to view things
+This client program, and the server that powers it, offers
+a variety of viewing options, using various Atari graphics modes,
+both standard "hardware" modes, as well as "software" modes
+that flicker between different images to provide the perception
+of additional colors.
+
 From the menu, press one of the follow keys to load and render
 an image in one of the following graphics modes:
 
-- `[A]` - High resolution mono (320x192 black and white)
-- `[B]` - Medium resolution four-color (160x192 four best colors)
-- `[C]` - Low resolution greyscale (80x192 sixteen shades of grey)
+- `[A]` - High resolution mono (320x192 black and white, aka "GRAPHICS 8")
+- `[B]` - Medium resolution four-color (160x192 four best colors, aka "GRAPHICS 15" aka "GRAPHICS 7+")
+- `[C]` - Low resolution greyscale (80x192 sixteen shades of grey, aka "GRAPHICS 9")
 - `[D]` - Low resolution 4,096 color (via flickering; "ColorView" mode)
+- `[E]` - Medium resolution 64-color (via flickering; "ColorView" mode)
+- `[F]` - Low resolution 256 color (via flickering; "Any Point, Any Color (APAC)" mode)
 
 Once the image appears, press `[Esc]` to return to the menu.
 
-### Picking different dates
+## What to view
+
+### Picking an photo-of-the-day date
 You can opt to view a different day's APOD by chosing the date.
 
 - `[<]`, `[>]` - Previous / next day
@@ -41,22 +51,7 @@ Your #FujiNet is probably set to your current time zone.
 So if you want the latest image, get the "current" image
 (the default; or press `[=]`).
 
-When viewing a ColorView image, you can press `[R]`, `[G]`, or
-`[B]` to adjust the Atari color palette hue that's used for
-the red, green, and blue components of the image, respectively.
-Press those keys with `[Shift]` held down to adjust the hue
-in the opposite direction.
-
-The default hues are as follows (decimal values shown):
-
-- Red: 3 ("red-orange")
-- Green: 12 ("green")
-- Blue: 10 ("turquoise")
-
-Press `[X]` to reset the hues to their defaults.
-The hue settings are shown (in decimal) on the menu.
-
-### Samples
+### Viewing samples
 Press keys `[1]` through `[4]` to fetch a static sample image
 from the webserver.  (A source JPEG or PNG image is loaded and
 converted with the same workflow as the APOD images, which allows
@@ -72,11 +67,47 @@ Currently, the images are:
 Press `[5]` to render a test pattern.  In 4,096 color mode,
 a colorbar battern will appear with 6 colors at the top
 (red, yellow, green, cyan, blue, and purple), and sets of
-16 and 8 shades of grey at the bottom.  This does not
-require a #FujiNet device.
+16 and 8 shades of grey at the bottom.  This is done locally
+(and does not even require a #FujiNet device).
 
-## Work in progress
-This project is a work in progress!
+Press `[0]` to choose to fetch an APOD photo (the default).
+
+## While Viewing
+Press `[Esc]` to return to the menu.
+
+### Color adjustments
+When viewing a ColorView image, you can press `[R]`, `[G]`, and
+`[B]` to adjust (increment) the Atari color palette hue that's
+used for the red, green, and blue components of the image,
+respectively.  Press those keys with `[Shift]` held down to adjust
+the hue in the opposite direction (decrement).
+
+Here are the Atari's hues (after trying to sort out various sources:
+Compute!'s First and Second Books of Atari Graphics, and
+Understanding Atari Graphics), along with which are used as the
+red, green, and blue defaults by this program's ColorView modes:
+
+- 0 - gray (no color)
+- 1 - light orange (gold)
+- 2 - orange -- RED
+- 3 - red orange
+- 4 - pink
+- 5 - purple / violet / lavender
+- 6 - blue-purple
+- 7 - blue / purple-blue
+- 8 - medium blue
+- 9 - light blue
+- 10 - turquoise
+- 11 - green-blue -- BLUE
+- 12 - green -- GREEN
+- 13 - yellow-green
+- 14 - orange-green
+- 15 - light orange
+
+Press `[X]` to reset the hues to these defaults.
+
+Note: The current hue settings are shown (in decimal)
+on the menu.
 
 ## Credits
 
