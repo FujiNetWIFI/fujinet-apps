@@ -41,7 +41,7 @@ bool get_url(int argc, char* argv[])
   if (!_is_cmdline_dos())
     {
     interactive:
-      print("ADM-3A TERMINAL--DEVICESPEC?\x9b");
+      print("VT100 TERMINAL--DEVICESPEC?\x9b");
       get_line(url,255);
                   
       print("\x9bUSERNAME?--RETURN IF NONE\x9b");
