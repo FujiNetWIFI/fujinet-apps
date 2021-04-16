@@ -7,7 +7,7 @@
   See the APOD web app (server)
 
   By Bill Kendrick <bill@newbreedsoftware.com>
-  2021-03-27 - 2021-04-15
+  2021-03-27 - 2021-04-16
 */
 
 #include <stdio.h>
@@ -18,7 +18,7 @@
 #include "nsio.h"
 #include "dli.h"
 
-#define VERSION "VER. 2021-04-15B"
+#define VERSION "VER. 2021-04-16"
 
 /* In ColorView mode, we will have 3 display lists that
    we cycle through, each interleaving between three
@@ -513,7 +513,7 @@ void main(void) {
   int i, size;
   unsigned short data_len, data_read;
   char tmp_str[2], str[20];
-  unsigned char sample = 0, done, k, date_chg;
+  unsigned char sample = 0, done, k, date_chg, r, g, b;
   int grey;
 
   scr_mem1 = (unsigned char *) (scr_mem + SCR_OFFSET);
@@ -708,16 +708,27 @@ void main(void) {
  
     /* Load the data! */
     if (sample == SAMPLE_COLORBARS) {
-      /* FIXME: Rewrite to work with new pre-interleaved ColorView 9 mode */
       for (i = 0; i < 40; i++) {
-        scr_mem1[i] = (i >= 34 || i < 14) ? 0x55 : 0;
-        scr_mem2[i] = (6 < i && i < 28) ? 0x55 : 0;
-        scr_mem3[i] = (20 < i) ? 0x55 : 0;
+        r = (i >= 34 || i < 14) ? 0x55 : 0;
+        g = (6 < i && i < 28) ? 0x55 : 0;
+        b = (20 < i) ? 0x55 : 0;
+
+        scr_mem1[i +  0] = r;
+        scr_mem1[i + 40] = g;
+        scr_mem1[i + 80] = b;
+
+        scr_mem2[i +  0] = g;
+        scr_mem2[i + 40] = b;
+        scr_mem2[i + 80] = r;
+
+        scr_mem3[i +  0] = b;
+        scr_mem3[i + 40] = r;
+        scr_mem3[i + 80] = g;
       }
-      for (i = 40; i < 5120; i += 40) {
-        memcpy(scr_mem1 + i, scr_mem1, 40);
-        memcpy(scr_mem2 + i, scr_mem2, 40);
-        memcpy(scr_mem3 + i, scr_mem3, 40);
+      for (i = 120; i < 5120; i += 120) {
+        memcpy(scr_mem1 + i, scr_mem1, 120);
+        memcpy(scr_mem2 + i, scr_mem2, 120);
+        memcpy(scr_mem3 + i, scr_mem3, 120);
       }
 
       /* 16 shades of grey */
