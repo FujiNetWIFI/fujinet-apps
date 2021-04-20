@@ -31,19 +31,20 @@ clean:
 	-rm dli9.o
 	-rm myprint.o
 	-rm get_time.o
+	-rm screen_helpers.o
 	-rm segments.o
 
-apod.xex:	apod.o dli9.o nsio.o sio.o myprint.o get_time.o segments.o atari.cfg
+apod.xex:	apod.o dli9.o nsio.o sio.o myprint.o get_time.o screen_helpers.o segments.o atari.cfg
 	${LD65} --lib-path "${CC65_LIB}" \
 		-o apod.xex \
 		-t atari \
 		-m apod.map \
-		apod.o dli9.o nsio.o sio.o myprint.o get_time.o segments.o atari.lib
+		apod.o dli9.o nsio.o sio.o myprint.o get_time.o screen_helpers.o segments.o atari.lib
 
 apod.o:	apod.s
 	${CA65} -I "${CC65_ASMINC}" -t atari apod.s -o apod.o
 
-apod.s:	apod.c nsio.h dli9.h myprint.h get_time.h version.h
+apod.s:	apod.c nsio.h dli9.h myprint.h get_time.h screen_helpers.h version.h
 	${CC65} -I "${CC65_INC}" \
 		-t atari \
 		apod.c \
@@ -66,6 +67,15 @@ get_time.s:	get_time.c get_time.h sio.h
 		-t atari \
 		get_time.c \
 		-o get_time.s
+
+screen_helpers.o:	screen_helpers.s
+	${CA65} -I "${CC65_ASMINC}" -t atari screen_helpers.s -o screen_helpers.o
+
+screen_helpers.s:	screen_helpers.c screen_helpers.h
+	${CC65} -I "${CC65_INC}" \
+		-t atari \
+		screen_helpers.c \
+		-o screen_helpers.s
 
 nsio.o:	nsio.s
 	${CA65} -I "${CC65_ASMINC}" -t atari nsio.s -o nsio.o

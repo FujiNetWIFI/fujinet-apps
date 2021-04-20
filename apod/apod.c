@@ -17,6 +17,7 @@
 #include "dli9.h"
 #include "myprint.h"
 #include "get_time.h"
+#include "screen_helpers.h"
 #include "version.h"
 
 /* In ColorView mode, we will have 3 display lists that
@@ -26,23 +27,7 @@ extern unsigned char rgb_table[];
 
 /* A block of space to store the graphics & display lists */
 extern unsigned char scr_mem[];
-unsigned char * scr_mem1, * scr_mem2, * scr_mem3;
-unsigned char * dlist1, * dlist2, * dlist3;
 
-/* Screen block size is exactly 8KB; enough for
-   the screen data (40 x 192 = 7680 bytes),
-   a starting offset (see below; to help with 4K boundary limitation),
-   and a display list */
-#define SCR_BLOCK_SIZE 8192
-
-/* Start image 16 bytes into screen memory, so when we
-   hit the 102nd line, we've viewed exactly 4KB */
-#define SCR_OFFSET 16
-
-/* Tuck display list at the end of screen memory
-   (each screen + display list block has 8192 bytes;
-   so the display list gets the last 496 bytes of it) */
-#define DLIST_OFFSET (7680 + SCR_OFFSET)
 
 /* Storage for the current date/time */
 unsigned char time_buf[6];
@@ -59,31 +44,6 @@ unsigned char rgb_red, rgb_grn, rgb_blu;
 #define DEFAULT_RGB_BLU 0xB0 /* 11 "blue green" */
 
 unsigned char last_day[13] = { 0, 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
-
-/**
- * Disable ANTIC; clear screen & display list memory
- */
-void screen_off() {
-  OS.sdmctl = 0;
-  memset(scr_mem, 0, (SCR_BLOCK_SIZE * 3));
-}
-
-/**
- * Point to display list; re-enable ANTIC
- */
-void screen_on() {
-  OS.sdlst = dlist1;
-  OS.sdmctl = DMACTL_PLAYFIELD_NORMAL | DMACTL_DMA_FETCH;
-}
-
-/**
- * Wait a moment (so screen can come to life before
- * #FujiNet takes over, if we're fetching from the network).
- */
-void wait_for_vblank() {
-  char frame = (OS.rtclok[2] + 2);
-  while ((OS.rtclok[2] + 2) == frame);
-}
 
 
 /**
@@ -556,12 +516,7 @@ void main(void) {
   unsigned char sample = 0, done, k, date_chg, r, g, b;
   int grey;
 
-  scr_mem1 = (unsigned char *) (scr_mem + SCR_OFFSET);
-  dlist1 = (unsigned char *) (scr_mem1 + DLIST_OFFSET);
-  scr_mem2 = (unsigned char *) (scr_mem + SCR_BLOCK_SIZE + SCR_OFFSET);
-  dlist2 = (unsigned char *) (scr_mem2 + DLIST_OFFSET);
-  scr_mem3 = (unsigned char *) (scr_mem + (SCR_BLOCK_SIZE * 2) + SCR_OFFSET);
-  dlist3 = (unsigned char *) (scr_mem3 + DLIST_OFFSET);
+  set_screen_and_dlist_pointers();
 
   /* Set the defaults for the RGB table */
   rgb_red = DEFAULT_RGB_RED;
