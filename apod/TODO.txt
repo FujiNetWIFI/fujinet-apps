@@ -1,10 +1,14 @@
 TODO for APOD #FujiNet client
-2021-04-16
+2021-04-20
 
  * In ColorView 9 mode, maybe add PGMs on the sides for solid black
    borders (don't use DMA, obviously).
 
- * ColorView 15 mode.
+ * APAC 256 color mode.  [Server needs to support]
+
+ * ColorView 15 mode.  [Server already supports!]
 
  * Graphics 15 (160x192) grey combined with Graphics 11 (80x192 hues)
-   hybrid APAC mode.
+   hybrid APAC mode.  ("Champions Interlace" style mode.)
+   [Server needs to support]
+
