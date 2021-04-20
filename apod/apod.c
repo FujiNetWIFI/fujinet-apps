@@ -18,8 +18,7 @@
 #include "nsio.h"
 #include "dli9.h"
 #include "myprint.h"
-
-#define VERSION "VER. 2021-04-20"
+#include "version.h"
 
 /* In ColorView mode, we will have 3 display lists that
    we cycle through, each interleaving between three
