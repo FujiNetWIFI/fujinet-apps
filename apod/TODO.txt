@@ -1,6 +1,11 @@
 TODO for APOD #FujiNet client
 2021-04-20
 
+ * Break more parts of the code out into modules:
+   * Display list setup
+   * Menu screen
+   * Viewer
+
  * In ColorView 9 mode, maybe add PGMs on the sides for solid black
    borders (don't use DMA, obviously).
 
