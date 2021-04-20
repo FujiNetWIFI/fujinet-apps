@@ -30,22 +30,32 @@ clean:
 	-rm sio.o
 	-rm dli9.o
 	-rm segments.o
+	-rm myprint.o
 
-apod.xex:	apod.o dli9.o nsio.o sio.o segments.o atari.cfg
+apod.xex:	apod.o dli9.o nsio.o sio.o segments.o myprint.o atari.cfg
 	${LD65} --lib-path "${CC65_LIB}" \
 		-o apod.xex \
 		-t atari \
 		-m apod.map \
-		apod.o dli9.o nsio.o sio.o segments.o atari.lib
+		apod.o dli9.o nsio.o sio.o segments.o myprint.o atari.lib
 
 apod.o:	apod.s
 	${CA65} -I "${CC65_ASMINC}" -t atari apod.s -o apod.o
 
-apod.s:	apod.c nsio.h
+apod.s:	apod.c sio.h nsio.h dli9.h myprint.h
 	${CC65} -I "${CC65_INC}" \
 		-t atari \
 		apod.c \
 		-o apod.s
+
+myprint.o:	myprint.s
+	${CA65} -I "${CC65_ASMINC}" -t atari myprint.s -o myprint.o
+
+myprint.s:	myprint.c myprint.h
+	${CC65} -I "${CC65_INC}" \
+		-t atari \
+		myprint.c \
+		-o myprint.s
 
 nsio.o:	nsio.s
 	${CA65} -I "${CC65_ASMINC}" -t atari nsio.s -o nsio.o
