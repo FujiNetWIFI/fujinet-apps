@@ -7,7 +7,7 @@
   See the APOD web app (server)
 
   By Bill Kendrick <bill@newbreedsoftware.com>
-  2021-03-27 - 2021-04-16
+  2021-03-27 - 2021-04-20
 */
 
 #include <stdio.h>
@@ -16,9 +16,9 @@
 #include <string.h>
 #include "sio.h"
 #include "nsio.h"
-#include "dli.h"
+#include "dli9.h"
 
-#define VERSION "VER. 2021-04-16"
+#define VERSION "VER. 2021-04-20"
 
 /* In ColorView mode, we will have 3 display lists that
    we cycle through, each interleaving between three
@@ -171,7 +171,7 @@ unsigned char rgb_ctr;
 /* VBI routine for flipping between our three
    Display Lists in RGB image modes */
 #pragma optimize (push, off)
-void VBLANKD(void) {
+void VBLANKD9(void) {
   /* grab the current rgb color counter */
   asm("ldx %v", rgb_ctr);
 
@@ -185,7 +185,7 @@ void VBLANKD(void) {
 __vbi_ctr_set:
   /* store the current rgb color counter back;
      also store it as a reference to our next display list */
-  asm("stx %v", dli_load_arg);
+  asm("stx %v", dli9_load_arg);
   asm("stx %v", rgb_ctr);
 
   /* display lists are 8K away from each other
@@ -217,6 +217,7 @@ __vbi_ctr_set:
   asm("jmp (%v)", OLDVEC);
 }
 
+
 /**
  * Set the deffered VBI vector
  *
@@ -238,12 +239,12 @@ void mySETVBV(void * Addr)
 /**
  * Activate our Display List Interrupt
  */
-void dli_init(void)
+void dli_init(void * dli_func)
 {
   rgb_ctr = 0;
   ANTIC.nmien = NMIEN_VBI;
   while (ANTIC.vcount < 124);
-  OS.vdslst = (void *) dli;
+  OS.vdslst = (void *) dli_func;
   ANTIC.nmien = NMIEN_VBI | NMIEN_DLI;
 }
 
@@ -276,12 +277,12 @@ void setup_rgb_table(void) {
 
 
 /**
- * Set up three Display Lists for RGB modes
+ * Set up three Display Lists for ColorView 9 RGB mode
  * (utilizes DLI and VBI to flicker; see above)
  *
  * @param byte antic_mode
  */
-void dlist_setup_rgb(unsigned char antic_mode) {
+void dlist_setup_rgb9(unsigned char antic_mode) {
   int l, i;
   unsigned int gfx_ptr /*, next_dlist */;
   unsigned int dlist_idx;
@@ -309,15 +310,16 @@ void dlist_setup_rgb(unsigned char antic_mode) {
     }
 
     /* Hitting 4K boundary! */
-    gfx_ptr += (i * 40);
+    gfx_ptr += (102 * 40);
     dlist[dlist_idx++] = DL_LMS(DL_DLI(antic_mode));
     dlist[dlist_idx++] = (gfx_ptr & 255);
     dlist[dlist_idx++] = (gfx_ptr >> 8);
-    i++;
 
-    for (i = i; i <= 191; i++) {
+    for (i = 103; i <= 191; i++) {
       dlist[dlist_idx++] = DL_DLI(antic_mode);
     }
+
+    dlist[dlist_idx++] = DL_DLI(DL_BLK1);
 
     /*
     if (l < 2) {
@@ -326,6 +328,69 @@ void dlist_setup_rgb(unsigned char antic_mode) {
       next_dlist = (unsigned int) (scr_mem + DLIST_OFFSET);
     }
     */
+    dlist[dlist_idx++] = DL_JVB;
+    dlist[dlist_idx++] = (/*next_*/((unsigned int) dlist) & 255);
+    dlist[dlist_idx++] = (/*next_*/((unsigned int) dlist) >> 8);
+  }
+
+  setup_rgb_table();
+
+  screen_on();
+}
+
+/**
+ * Set up three Display Lists for ColorView 15 RGB mode
+ * (utilizes DLI and VBI to flicker; see above)
+ *
+ * @param byte antic_mode
+ */
+void dlist_setup_rgb15(unsigned char antic_mode) {
+  int l, i;
+  unsigned int gfx_ptr /*, next_dlist */;
+  unsigned int dlist_idx;
+  unsigned char * dlist;
+
+  screen_off();
+
+  for (l = 0; l < 3; l++) {
+    dlist = (scr_mem + (l * SCR_BLOCK_SIZE)) + DLIST_OFFSET;
+    gfx_ptr = (unsigned int) (scr_mem + (l * SCR_BLOCK_SIZE)) + SCR_OFFSET;
+
+    dlist_idx = 0;
+
+    dlist[dlist_idx++] = DL_BLK8;
+    dlist[dlist_idx++] = DL_BLK8;
+    dlist[dlist_idx++] = DL_DLI(DL_BLK8); /* start with colors after this line */
+
+    /* Row 0 */
+    dlist[dlist_idx++] = DL_LMS(DL_DLI(antic_mode));
+    dlist[dlist_idx++] = (gfx_ptr & 255);
+    dlist[dlist_idx++] = (gfx_ptr >> 8);
+
+    for (i = 1; i <= 101; i++) {
+      if (i % 3 == 0) {
+        dlist[dlist_idx++] = DL_DLI(antic_mode);
+      } else {
+        dlist[dlist_idx++] = DL_DLI(antic_mode);
+      }
+    }
+
+    /* Hitting 4K boundary! */
+    gfx_ptr += (102 * 40);
+    dlist[dlist_idx++] = DL_LMS(DL_DLI(antic_mode));
+    dlist[dlist_idx++] = (gfx_ptr & 255);
+    dlist[dlist_idx++] = (gfx_ptr >> 8);
+
+    for (i = 103; i <= 191; i++) {
+      if (i % 3 == 0) {
+        dlist[dlist_idx++] = DL_DLI(antic_mode);
+      } else {
+        dlist[dlist_idx++] = DL_DLI(antic_mode);
+      }
+    }
+
+    dlist[dlist_idx++] = DL_DLI(DL_BLK1);
+
     dlist[dlist_idx++] = DL_JVB;
     dlist[dlist_idx++] = (/*next_*/((unsigned int) dlist) & 255);
     dlist[dlist_idx++] = (/*next_*/((unsigned int) dlist) >> 8);
@@ -393,6 +458,7 @@ enum {
   CHOICE_MEDRES_COLOR,
   CHOICE_LOWRES_GREY,
   CHOICE_LOWRES_RGB,
+  CHOICE_MEDRES_RGB,
   NUM_CHOICES
 };
 
@@ -401,7 +467,8 @@ unsigned char choice_keys[NUM_CHOICES] = {
   KEY_A,
   KEY_B,
   KEY_C,
-  KEY_D
+  KEY_D,
+  KEY_E
 };
 
 char * modes[NUM_CHOICES] = {
@@ -409,7 +476,8 @@ char * modes[NUM_CHOICES] = {
   "8",
   "15",
   "9",
-  "rgb9"
+  "rgb9",
+  "rgb15"
 };
 
 
@@ -541,7 +609,7 @@ void main(void) {
   unsigned char keypress, choice;
   int i, size;
   unsigned short data_len, data_read;
-  char tmp_str[2], str[20];
+  char str[20];
   unsigned char sample = 0, done, k, date_chg, r, g, b;
   int grey;
 
@@ -730,8 +798,11 @@ void main(void) {
       OS.color2 = 14; /* Light foreground */
     } else if (choice == CHOICE_LOWRES_RGB) {
       size = 7680 * 3;
-      dlist_setup_rgb(DL_GRAPHICS8);
+      dlist_setup_rgb9(DL_GRAPHICS8);
       OS.gprior = 64;
+    } else if (choice == CHOICE_MEDRES_RGB) {
+      size = 7680 * 3;
+      dlist_setup_rgb15(DL_GRAPHICS15);
     }
 
     wait_for_vblank();
@@ -857,8 +928,11 @@ void main(void) {
     }
 
     if (choice == CHOICE_LOWRES_RGB) {
-      mySETVBV((void *) VBLANKD);
-      dli_init();
+      mySETVBV((void *) VBLANKD9);
+      dli_init(dli9);
+    } else if (choice == CHOICE_MEDRES_RGB) {
+      // mySETVBV((void *) VBLANKD); /* FIXME */
+      // dli_init(dli); /* FIXME */
     }
 
 
@@ -878,7 +952,8 @@ void main(void) {
     } while (!done);
     OS.ch = KEY_NONE;
 
-    if (choice == CHOICE_LOWRES_RGB) {
+    if (choice == CHOICE_LOWRES_RGB ||
+        choice == CHOICE_MEDRES_RGB) {
       dli_clear();  
       mySETVBV((void *) OLDVEC);
     }
