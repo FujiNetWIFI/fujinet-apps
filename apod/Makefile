@@ -30,19 +30,20 @@ clean:
 	-rm sio.o
 	-rm dli9.o
 	-rm myprint.o
+	-rm get_time.o
 	-rm segments.o
 
-apod.xex:	apod.o dli9.o nsio.o sio.o myprint.o segments.o atari.cfg
+apod.xex:	apod.o dli9.o nsio.o sio.o myprint.o get_time.o segments.o atari.cfg
 	${LD65} --lib-path "${CC65_LIB}" \
 		-o apod.xex \
 		-t atari \
 		-m apod.map \
-		apod.o dli9.o nsio.o sio.o segments.o myprint.o atari.lib
+		apod.o dli9.o nsio.o sio.o myprint.o get_time.o segments.o atari.lib
 
 apod.o:	apod.s
 	${CA65} -I "${CC65_ASMINC}" -t atari apod.s -o apod.o
 
-apod.s:	apod.c sio.h nsio.h dli9.h myprint.h version.h
+apod.s:	apod.c nsio.h dli9.h myprint.h get_time.h version.h
 	${CC65} -I "${CC65_INC}" \
 		-t atari \
 		apod.c \
@@ -56,6 +57,15 @@ myprint.s:	myprint.c myprint.h
 		-t atari \
 		myprint.c \
 		-o myprint.s
+
+get_time.o:	get_time.s
+	${CA65} -I "${CC65_ASMINC}" -t atari get_time.s -o get_time.o
+
+get_time.s:	get_time.c get_time.h sio.h
+	${CC65} -I "${CC65_INC}" \
+		-t atari \
+		get_time.c \
+		-o get_time.s
 
 nsio.o:	nsio.s
 	${CA65} -I "${CC65_ASMINC}" -t atari nsio.s -o nsio.o

@@ -12,12 +12,11 @@
 
 #include <stdio.h>
 #include <atari.h>
-#include <peekpoke.h>
 #include <string.h>
-#include "sio.h"
 #include "nsio.h"
 #include "dli9.h"
 #include "myprint.h"
+#include "get_time.h"
 #include "version.h"
 
 /* In ColorView mode, we will have 3 display lists that
@@ -506,41 +505,6 @@ void handle_rgb_keypress(unsigned char k) {
     rgb_grn = DEFAULT_RGB_GRN;
     rgb_blu = DEFAULT_RGB_BLU;
   }
-}
-
-/**
- * Get time from #FujiNet via APETIME protocol
- * (see https://github.com/FujiNetWIFI/fujinet-platformio/wiki/Accessing-the-Real-Time-Clock)
- */
-void get_time() {
-  memset(time_buf, 0, 6);
-  OS.dcb.ddevic = 0x45; /* APETIME protocol */
-  OS.dcb.dunit = 0x01; /* unit 1 */
-  OS.dcb.dcomnd = 0x93; /* GETTIME request */
-  OS.dcb.dstats = 0x40; /* receive */
-  OS.dcb.dbuf = (void *) time_buf;
-  OS.dcb.dtimlo = 15; /* timeout (seconds) */
-  OS.dcb.dunuse = 0;
-  OS.dcb.dbyt = (unsigned int) 6; /* reading 6 characters */
-  OS.dcb.daux1 = 0xee;
-  OS.dcb.daux2 = 0xa0;
-  siov();
-  if (time_buf[0] != 0) {
-    cur_yr = time_buf[2];
-    cur_mo = time_buf[1];
-    cur_day = time_buf[0];
-  } else {
-    /* This shouldn't happen */
-    cur_yr = 99;
-  }
-  if (cur_yr >= 99) {
-    cur_yr = 99;
-    cur_mo = 12;
-    cur_day = 31;
-  }
-  pick_yr = 0;
-  pick_mo = 0;
-  pick_day = 0;
 }
 
 /**
