@@ -5,4 +5,5 @@ get_time.s
 myprint.s
 menu.s
 nsio.s
+rgb.s
 screen_helpers.s
