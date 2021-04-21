@@ -135,8 +135,8 @@ void draw_menu(char sample, unsigned char y, unsigned char m, unsigned char d, u
   myprint(scr_mem, 0,  7, "[B] med-res 4 color");
   myprint(scr_mem, 0,  8, "[C] lo-res 16 shade");
   myprint(scr_mem, 0,  9, "[D]*lo-res 4K color");
-  myprint(scr_mem, 0, 10, "[E]*med-res 64 color");
-  myprint(scr_mem, 0, 11, "[F]*lo-res 256 color");
+//  myprint(scr_mem, 0, 10, "[E]*med-res 64 color");
+//  myprint(scr_mem, 0, 11, "[F] lo-res 256 color");
 
                 /*--------------------*/
   myprint(scr_mem, 0, 12, "________WHAT________");
