@@ -31,6 +31,17 @@ extern unsigned char rgb_table[];
 /* A block of space to store the graphics & display lists */
 extern unsigned char scr_mem[];
 
+/* The URL arguments to send to the web app via "?mode="
+   for the various viewing mode choices: */
+char * modes[NUM_CHOICES] = {
+  "",
+  "8",
+  "15",
+  "9",
+  "rgb9",
+  "rgb15"
+};
+
 
 /* Defaults that look good on my NTSC Atari 1200XL connected
    to a Commodore 1902 monitor with Tint knob at its default,
@@ -326,58 +337,6 @@ void dlist_setup_rgb15(unsigned char antic_mode) {
   screen_on();
 }
 
-/* The various graphics modes, the keypresses to
-   choose them, and the argument to send to the
-   web app via "?mode=". */
-enum {
-  CHOICE_NONE,
-  CHOICE_HIRES_MONO,
-  CHOICE_MEDRES_COLOR,
-  CHOICE_LOWRES_GREY,
-  CHOICE_LOWRES_RGB,
-  CHOICE_MEDRES_RGB,
-  NUM_CHOICES
-};
-
-unsigned char choice_keys[NUM_CHOICES] = {
-  KEY_NONE,
-  KEY_A,
-  KEY_B,
-  KEY_C,
-  KEY_D,
-  KEY_E
-};
-
-char * modes[NUM_CHOICES] = {
-  "",
-  "8",
-  "15",
-  "9",
-  "rgb9",
-  "rgb15"
-};
-
-
-/* The various sample options, and keys to select them */
-enum {
-  SAMPLE_NONE,
-  SAMPLE_1,
-  SAMPLE_2,
-  SAMPLE_3,
-  SAMPLE_4,
-  SAMPLE_COLORBARS,
-  NUM_SAMPLES
-};
-
-unsigned char sample_keys[NUM_SAMPLES] = {
-  KEY_0,
-  KEY_1,
-  KEY_2,
-  KEY_3,
-  KEY_4,
-  KEY_5
-};
-
 
 /* The base URL for the web app */
 char * default_baseurl = "N:HTTP://billsgames.com/fujinet/apod/index.php";
@@ -420,7 +379,6 @@ void main(void) {
   unsigned char keypress, choice;
   int i, size;
   unsigned short data_len, data_read;
-  char str[20];
   unsigned char sample = 0, done, k, date_chg;
 
   set_screen_and_dlist_pointers();
