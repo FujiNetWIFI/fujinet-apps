@@ -300,7 +300,7 @@ char url[255];
  * Fetch or render the image, and view it!
  */
 void view(unsigned char choice, char sample, unsigned char pick_yr, unsigned pick_mo, unsigned pick_day) {
-  int i, size;
+  int size;
   unsigned short data_len, data_read;
   unsigned char done, k;
 

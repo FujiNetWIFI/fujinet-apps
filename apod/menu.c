@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "version.h"
+#include "get_time.h"
 #include "menu.h"
 #include "screen_helpers.h"
 #include "myprint.h"
@@ -145,7 +146,7 @@ void draw_menu(char sample, unsigned char y, unsigned char m, unsigned char d, u
   myprint(scr_mem, 0, 16, "[1-4] get samples");
   myprint(scr_mem, 0, 17, "[5] color bars");
   show_sample_choice(sample);
- 
+
                 /*--------------------*/
   myprint(scr_mem, 0, 18, "___*WHILE_VIEWING___");
   sprintf(str, "[R]=%02d [G]=%02d [B]=%02d", rgb_red >> 4, rgb_grn >> 4, rgb_blu >> 4);
@@ -154,3 +155,125 @@ void draw_menu(char sample, unsigned char y, unsigned char m, unsigned char d, u
   myprint(scr_mem, 0, 21, "[ESC] return to menu");
 }
 
+/**
+ * Pick the current date (as fetched from #FujiNet's APETIME)
+ */
+void pick_today() {
+  pick_yr = cur_yr;
+  pick_mo = cur_mo;
+  pick_day = cur_day;
+}
+
+
+void handle_menu(unsigned char * choice, char * sample) {
+  unsigned char keypress, date_chg;
+  int i;
+
+  /* Accept a choice */
+  *choice = CHOICE_NONE;
+  OS.ch = KEY_NONE;
+  do {
+    while (OS.ch == KEY_NONE) { }
+    keypress = OS.ch;
+    OS.ch = KEY_NONE;
+
+    for (i = 0; i < NUM_CHOICES; i++) {
+      if (choice_keys[i] == keypress) {
+        *choice = i;
+      }
+    }
+
+    for (i = 0; i < NUM_SAMPLES; i++) {
+      if (sample_keys[i] == keypress) {
+        *sample = i;
+        show_sample_choice(*sample);
+      }
+    }
+
+    date_chg = 0;
+    if (keypress == KEY_LESSTHAN) {
+      /* [<] - Prev day */
+      if (pick_day == 0) {
+        pick_today();
+      }
+      if (pick_day > 1) {
+        pick_day--;
+      } else {
+        if (pick_mo > 1) {
+          pick_mo--;
+        } else {
+          pick_yr--;
+          pick_mo = 12;
+        }
+        pick_day = last_day[pick_mo];
+      }
+      date_chg = 1;
+    } else if (keypress == (KEY_LESSTHAN | KEY_SHIFT)) {
+      /* [Shift]+[<] - Prev month */
+      if (pick_mo > 1) {
+        pick_mo--;
+      } else {
+        pick_yr--;
+        pick_mo = 12;
+      }
+      date_chg = 1;
+    } else if (keypress == (KEY_LESSTHAN | KEY_CTRL)) {
+      /* [Ctrl]+[<] - Prev year */
+      pick_yr--;
+      date_chg = 1;
+    } else if (keypress == KEY_GREATERTHAN) {
+      /* [>] - Next day */
+      if (pick_day == 0) {
+        pick_today();
+      }
+      if (pick_day < last_day[pick_mo]) {
+        pick_day++;
+      } else {
+        pick_day = 1;
+        if (pick_mo < 12) {
+          pick_mo++;
+        } else {
+          pick_mo = 1;
+          pick_yr++;
+        }
+      }
+      date_chg = 1;
+    } else if (keypress == (KEY_GREATERTHAN | KEY_SHIFT)) {
+      /* [Shift]+[>] - Next month */
+      if (pick_mo < 12) {
+        pick_mo++;
+      } else {
+        pick_mo = 1;
+        pick_yr++;
+      }
+      date_chg = 1;
+    } else if (keypress == (KEY_GREATERTHAN | KEY_CTRL)) {
+      /* [Ctrl]+[>] - Next year */
+      pick_yr++;
+      date_chg = 1;
+    } else if (keypress == KEY_EQUALS) {
+      /* [=] - Choose current day (server-side) */
+      pick_day = 0;
+      date_chg = 1;
+    } else if (keypress == (KEY_T | KEY_CTRL)) {
+      /* [Ctrl]+[T] - Try to fetch time from #FujiNet APETIME again */
+      get_time();
+      pick_yr = cur_yr;
+      pick_mo = cur_mo;
+      pick_day = cur_day;
+      date_chg = 1;
+    }
+
+    if (date_chg) {
+      if (pick_day > last_day[pick_mo]) {
+        pick_day = last_day[pick_mo];
+      }
+      if (pick_yr > cur_yr ||
+          (pick_yr == cur_yr && pick_mo > cur_mo) ||
+          (pick_yr == cur_yr && pick_mo == cur_mo && pick_day > cur_day)) {
+        pick_today();
+      }
+      show_chosen_date(pick_yr, pick_mo, pick_day, (cur_yr != 99));
+    }
+  } while (*choice == CHOICE_NONE);
+}

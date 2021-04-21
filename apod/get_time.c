@@ -10,10 +10,8 @@
 #include "get_time.h"
 #include "sio.h"
 
+unsigned char last_day[13] = { 0, 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 
-/* declared in apod.c */
-extern unsigned char time_buf[6];
-extern unsigned char cur_yr, cur_mo, cur_day, pick_yr, pick_mo, pick_day;
 
 /**
  * Get time from #FujiNet via APETIME protocol
