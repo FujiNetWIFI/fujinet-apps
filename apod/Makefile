@@ -3,7 +3,7 @@
 # images, as converted by the 'apod' web app.
 #
 # Bill Kendrick <bill@newbreedsoftware.com>
-# 2021-03-27 - 2021-04-20
+# 2021-03-27 - 2021-04-21
 
 CC65BIN=/usr/bin
 CC65=${CC65BIN}/cc65
@@ -23,28 +23,35 @@ run:	apod.xex
 clean:
 	-rm apod.xex
 	-rm apod.map
+	# O files from S source
+	-rm dli9.o
+	-rm segments.o
+	-rm sio.o
+	# S assembly from C source, and corresponding O files
 	-rm apod.o
 	-rm apod.s
+	-rm colorbars.o
+	-rm colorbars.s
+	-rm get_time.o
+	-rm get_time.s
+	-rm myprint.o
+	-rm myprint.s
 	-rm nsio.o
 	-rm nsio.s
-	-rm sio.o
-	-rm dli9.o
-	-rm myprint.o
-	-rm get_time.o
 	-rm screen_helpers.o
-	-rm segments.o
+	-rm screen_helpers.s
 
-apod.xex:	apod.o dli9.o nsio.o sio.o myprint.o get_time.o screen_helpers.o segments.o atari.cfg
+apod.xex:	apod.o dli9.o nsio.o sio.o myprint.o get_time.o screen_helpers.o colorbars.o segments.o atari.cfg
 	${LD65} --lib-path "${CC65_LIB}" \
 		-o apod.xex \
 		-t atari \
 		-m apod.map \
-		apod.o dli9.o nsio.o sio.o myprint.o get_time.o screen_helpers.o segments.o atari.lib
+		apod.o dli9.o nsio.o sio.o myprint.o get_time.o screen_helpers.o colorbars.o segments.o atari.lib
 
 apod.o:	apod.s
 	${CA65} -I "${CC65_ASMINC}" -t atari apod.s -o apod.o
 
-apod.s:	apod.c nsio.h dli9.h myprint.h get_time.h screen_helpers.h version.h
+apod.s:	apod.c nsio.h dli9.h myprint.h get_time.h screen_helpers.h colorbars.h globals.h version.h
 	${CC65} -I "${CC65_INC}" \
 		-t atari \
 		apod.c \
@@ -76,6 +83,15 @@ screen_helpers.s:	screen_helpers.c screen_helpers.h
 		-t atari \
 		screen_helpers.c \
 		-o screen_helpers.s
+
+colorbars.o:	colorbars.s
+	${CA65} -I "${CC65_ASMINC}" -t atari colorbars.s -o colorbars.o
+
+colorbars.s:	colorbars.c colorbars.h screen_helpers.h
+	${CC65} -I "${CC65_INC}" \
+		-t atari \
+		colorbars.c \
+		-o colorbars.s
 
 nsio.o:	nsio.s
 	${CA65} -I "${CC65_ASMINC}" -t atari nsio.s -o nsio.o

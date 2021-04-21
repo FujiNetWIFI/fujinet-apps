@@ -13,12 +13,14 @@
 #include <stdio.h>
 #include <atari.h>
 #include <string.h>
+#include "version.h"
+#include "globals.h"
 #include "nsio.h"
 #include "dli9.h"
 #include "myprint.h"
 #include "get_time.h"
 #include "screen_helpers.h"
-#include "version.h"
+#include "colorbars.h"
 
 /* In ColorView mode, we will have 3 display lists that
    we cycle through, each interleaving between three
@@ -28,13 +30,6 @@ extern unsigned char rgb_table[];
 /* A block of space to store the graphics & display lists */
 extern unsigned char scr_mem[];
 
-
-/* Storage for the current date/time */
-unsigned char time_buf[6];
-unsigned char cur_yr, cur_mo, cur_day, pick_yr, pick_mo, pick_day;
-
-/* Values for Red, Green, and Blue, to allow hue adjustment */
-unsigned char rgb_red, rgb_grn, rgb_blu;
 
 /* Defaults that look good on my NTSC Atari 1200XL connected
    to a Commodore 1902 monitor with Tint knob at its default,
@@ -504,8 +499,7 @@ void main(void) {
   int i, size;
   unsigned short data_len, data_read;
   char str[20];
-  unsigned char sample = 0, done, k, date_chg, r, g, b;
-  int grey;
+  unsigned char sample = 0, done, k, date_chg;
 
   set_screen_and_dlist_pointers();
 
@@ -698,51 +692,7 @@ void main(void) {
  
     /* Load the data! */
     if (sample == SAMPLE_COLORBARS) {
-      for (i = 0; i < 40; i++) {
-        r = (i >= 34 || i < 14) ? 0x55 : 0;
-        g = (6 < i && i < 28) ? 0x55 : 0;
-        b = (20 < i) ? 0x55 : 0;
-
-        scr_mem1[i +  0] = r;
-        scr_mem1[i + 40] = g;
-        scr_mem1[i + 80] = b;
-
-        scr_mem2[i +  0] = g;
-        scr_mem2[i + 40] = b;
-        scr_mem2[i + 80] = r;
-
-        scr_mem3[i +  0] = b;
-        scr_mem3[i + 40] = r;
-        scr_mem3[i + 80] = g;
-      }
-      for (i = 120; i < 5120; i += 120) {
-        memcpy(scr_mem1 + i, scr_mem1, 120);
-        memcpy(scr_mem2 + i, scr_mem2, 120);
-        memcpy(scr_mem3 + i, scr_mem3, 120);
-      }
-
-      /* 16 shades of grey */
-      for (i = 5120; i < 5160; i++) {
-        grey = ((i % 40) << 1) / 5;
-        grey = grey * 17;
-        scr_mem1[i] = grey;
-      }
-      for (i = 5160; i < 6400; i += 40) {
-        memcpy(scr_mem1 + i, scr_mem1 + 5120, 40);
-      }
-
-      /* 8 shades of grey */
-      for (i = 6400; i < 6440; i++) {
-        grey = ((i % 40) / 5) << 1;
-        grey = grey * 17;
-        scr_mem1[i] = grey;
-      }
-      for (i = 6440; i < 7680; i += 40) {
-        memcpy(scr_mem1 + i, scr_mem1 + 6400, 40);
-      }
-
-      memcpy(scr_mem2 + 5120, scr_mem1 + 5120, 2560);
-      memcpy(scr_mem3 + 5120, scr_mem1 + 5120, 2560);
+      render_colorbars();
     } else {
       if (pick_day == 0) {
         snprintf(url, sizeof(url), "%s?mode=%s&sample=%d", baseurl, modes[choice], sample);
