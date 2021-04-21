@@ -7,7 +7,7 @@
   See the APOD web app (server)
 
   By Bill Kendrick <bill@newbreedsoftware.com>
-  2021-03-27 - 2021-04-20
+  2021-03-27 - 2021-04-21
 */
 
 #include <stdio.h>
@@ -257,18 +257,9 @@ void dlist_setup_rgb9(unsigned char antic_mode) {
       dlist[dlist_idx++] = DL_DLI(antic_mode);
     }
 
-    dlist[dlist_idx++] = DL_DLI(DL_BLK1);
-
-    /*
-    if (l < 2) {
-      next_dlist = (unsigned int) (scr_mem + ((l + 1) * SCR_BLOCK_SIZE) + DLIST_OFFSET);
-    } else {
-      next_dlist = (unsigned int) (scr_mem + DLIST_OFFSET);
-    }
-    */
     dlist[dlist_idx++] = DL_JVB;
-    dlist[dlist_idx++] = (/*next_*/((unsigned int) dlist) & 255);
-    dlist[dlist_idx++] = (/*next_*/((unsigned int) dlist) >> 8);
+    dlist[dlist_idx++] = (((unsigned int) dlist) & 255);
+    dlist[dlist_idx++] = (((unsigned int) dlist) >> 8);
   }
 
   setup_rgb_table();
