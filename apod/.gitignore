@@ -3,5 +3,6 @@ apod.s
 colorbars.s
 get_time.s
 myprint.s
+menu.s
 nsio.s
 screen_helpers.s

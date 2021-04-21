@@ -13,14 +13,15 @@
 #include <stdio.h>
 #include <atari.h>
 #include <string.h>
-#include "version.h"
+
 #include "globals.h"
-#include "nsio.h"
-#include "dli9.h"
-#include "myprint.h"
-#include "get_time.h"
-#include "screen_helpers.h"
+
 #include "colorbars.h"
+#include "dli9.h"
+#include "get_time.h"
+#include "menu.h"
+#include "nsio.h"
+#include "screen_helpers.h"
 
 /* In ColorView mode, we will have 3 display lists that
    we cycle through, each interleaving between three
@@ -325,54 +326,6 @@ void dlist_setup_rgb15(unsigned char antic_mode) {
   screen_on();
 }
 
-/**
- * Set up display list for title/menu screen
- */
-void dlist_setup_menu() {
-  int dl_idx;
-
-  screen_off();
-
-  dlist1[0] = DL_BLK1;
-  dlist1[1] = DL_BLK1;
-  dlist1[2] = DL_BLK8;
-
-  dlist1[3] = DL_LMS(DL_GRAPHICS2);
-  dlist1[4] = ((unsigned int) scr_mem) & 255;
-  dlist1[5] = ((unsigned int) scr_mem) >> 8;
-  dlist1[6] = DL_GRAPHICS2;
-
-  dlist1[7] = DL_BLK2;
-  dlist1[8] = DL_GRAPHICS1;
-  dlist1[9] = DL_GRAPHICS0;
-
-  dlist1[10] = DL_BLK2;
-  dlist1[11] = DL_GRAPHICS2;
-
-  for (dl_idx = 12; dl_idx < 35; dl_idx++) {
-    dlist1[dl_idx] = DL_GRAPHICS1;
-  }
-
-  dlist1[18] = DL_BLK2;
-  dlist1[19] = DL_GRAPHICS2;
-
-  dlist1[25] = DL_BLK2;
-  dlist1[26] = DL_GRAPHICS2;
-
-  dlist1[36] = DL_JVB;
-  dlist1[37] = ((unsigned int) dlist1) & 255;
-  dlist1[38] = ((unsigned int) dlist1) >> 8;
-
-  OS.color4 = 0x00;
-  OS.color0 = 0x8F;
-  OS.color1 = 0x0A;
-  OS.color2 = 0x80;
-  OS.color3 = 0x88;
-
-  screen_on();
-}
-
-
 /* The various graphics modes, the keypresses to
    choose them, and the argument to send to the
    web app via "?mode=". */
@@ -454,43 +407,12 @@ void handle_rgb_keypress(unsigned char k) {
 }
 
 /**
- * Display the chosen date (or "current") on the menu
- */
-void show_chosen_date() {
-  char str[20];
-
-  myprint(scr_mem, 2, 15, "                  ");
-  if (pick_day != 0) {
-    sprintf(str, "20%02d-%02d-%02d", pick_yr, pick_mo, pick_day);
-    myprint(scr_mem, 2, 15, str);
-  } else {
-    if (cur_yr == 99) {
-      myprint(scr_mem, 2, 15, "[CTRL-T] get time");
-    } else {
-      myprint(scr_mem, 2, 15, "current");
-    }
-  }
-}
-
-/**
  * Pick the current date (as fetched from #FujiNet's APETIME)
  */
 void pick_today() {
   pick_yr = cur_yr;
   pick_mo = cur_mo;
   pick_day = cur_day;
-}
-
-void show_sample_choice(char sample) {
-  char tmp_str[2];
-
-  if (sample) {
-    tmp_str[0] = sample + '0';
-    tmp_str[1] = '\0';
-    myprint(scr_mem, 19, 17, tmp_str);
-  } else {
-    myprint(scr_mem, 19, 17, " ");
-  }
 }
 
 /* The program!  FIXME: Split into functions! */
@@ -513,44 +435,11 @@ void main(void) {
 
   do {
     /* Prompt user for the preferred viewing mode */
-    dlist_setup_menu();
+    draw_menu(sample, pick_yr, pick_mo, pick_day, (cur_yr != 99), rgb_red, rgb_grn, rgb_blu);
 
-                  /*--------------------*/
-    myprint(scr_mem, 1,  0, "#FUJINET Astronomy");
-    myprint(scr_mem, 1,  1, "Picture Of the Day");
-
-                  /*--------------------*/
-    myprint(scr_mem, 1,  2, "bill kendrick 2021");
-    myprint(scr_mem, 0,  3, "with help from apc");
-    myprint(scr_mem, 10 - strlen(VERSION) / 2, 4, VERSION);
- 
-                  /*--------------------*/
-    myprint(scr_mem, 0,  5, "________HOW_________"); 
-    myprint(scr_mem, 0,  6, "[A] hi-res mono");
-    myprint(scr_mem, 0,  7, "[B] med-res 4 color");
-    myprint(scr_mem, 0,  8, "[C] lo-res 16 shade");
-    myprint(scr_mem, 0,  9, "[D]*lo-res 4K color");
-    myprint(scr_mem, 0, 10, "[E]*med-res 64 color");
-    myprint(scr_mem, 0, 11, "[F]*lo-res 256 color");
-
-                  /*--------------------*/
-    myprint(scr_mem, 0, 12, "________WHAT________");
-    myprint(scr_mem, 0, 13, "[0] get apod");
-    myprint(scr_mem, 0, 14, "[<=>] change date");
-    show_chosen_date();
-    myprint(scr_mem, 0, 16, "[1-4] get samples");
-    myprint(scr_mem, 0, 17, "[5] color bars");
-    show_sample_choice(sample);
-  
-                  /*--------------------*/
-    myprint(scr_mem, 0, 18, "___*WHILE_VIEWING___");
-    sprintf(str, "[R]=%02d [G]=%02d [B]=%02d", rgb_red >> 4, rgb_grn >> 4, rgb_blu >> 4);
-    myprint(scr_mem, 0, 19, str);
-    myprint(scr_mem, 0, 20, "[X] rbg defaults");
-    myprint(scr_mem, 0, 21, "[ESC] return to menu");
 
     baseurl = default_baseurl;
-  
+
     /* Accept a choice */
     choice = CHOICE_NONE;
     OS.ch = KEY_NONE;
@@ -558,7 +447,7 @@ void main(void) {
       while (OS.ch == KEY_NONE) { }
       keypress = OS.ch;
       OS.ch = KEY_NONE;
-  
+
       for (i = 0; i < NUM_CHOICES; i++) {
         if (choice_keys[i] == keypress) {
           choice = i;
@@ -655,7 +544,7 @@ void main(void) {
             (pick_yr == cur_yr && pick_mo == cur_mo && pick_day > cur_day)) {
           pick_today();
         }
-        show_chosen_date();
+        show_chosen_date(pick_yr, pick_mo, pick_day, (cur_yr != 99));
       }
     } while (choice == CHOICE_NONE);
 
@@ -689,7 +578,7 @@ void main(void) {
     }
 
     wait_for_vblank();
- 
+
     /* Load the data! */
     if (sample == SAMPLE_COLORBARS) {
       render_colorbars();
@@ -699,10 +588,10 @@ void main(void) {
       } else {
         snprintf(url, sizeof(url), "%s?mode=%s&sample=%d&date=%02d%02d%02d", baseurl, modes[choice], sample, pick_yr, pick_mo, pick_day);
       }
-   
+
       nopen(1 /* unit 1 */, url, 4 /* read */);
       /* FIXME: Check for error */
-  
+
       if (size == 7680) {
         /* Single screen image to load */
         nread(1, scr_mem1, (unsigned short) size);
@@ -793,7 +682,7 @@ void main(void) {
 
     if (choice == CHOICE_LOWRES_RGB ||
         choice == CHOICE_MEDRES_RGB) {
-      dli_clear();  
+      dli_clear();
       mySETVBV((void *) OLDVEC);
     }
     OS.gprior = 0;
