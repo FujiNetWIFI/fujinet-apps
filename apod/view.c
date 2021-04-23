@@ -285,11 +285,6 @@ void dlist_setup_rgb15(unsigned char antic_mode) {
 }
 
 
-unsigned char APAC_DLIST_MODES[2] = {
-  DL_GRAPHICS8,
-  DL_GRAPHICS15
-};
-
 /**
  * Set up three Display Lists for APAC 256 color mode
  * (utilizes DLI and VBI to flicker; see above)
@@ -304,7 +299,7 @@ void dlist_setup_apac(void) {
   screen_off();
 
   dlist1 = scr_mem + DLIST_OFFSET;
-  dlist2 = dlist2 + SCR_BLOCK_SIZE;
+  dlist2 = dlist1 + SCR_BLOCK_SIZE;
   gfx_ptr1 = (unsigned int) (scr_mem + SCR_OFFSET);
   gfx_ptr2 = (unsigned int) (gfx_ptr1 + SCR_BLOCK_SIZE);
 
@@ -337,29 +332,29 @@ void dlist_setup_apac(void) {
   gfx_ptr1 += (102 * 40);
   gfx_ptr2 += (102 * 40);
 
-  dlist1[107] = DL_LMS(DL_DLI(DL_GRAPHICS15));
+  dlist1[107] = DL_LMS(DL_DLI(DL_GRAPHICS8));
   dlist1[108] = (gfx_ptr1 & 255);
   dlist1[109] = (gfx_ptr1 >> 8);
 
-  dlist2[107] = DL_LMS(DL_DLI(DL_GRAPHICS8));
+  dlist2[107] = DL_LMS(DL_DLI(DL_GRAPHICS15));
   dlist2[108] = (gfx_ptr2 & 255);
   dlist2[109] = (gfx_ptr2 >> 8);
 
-  for (i = 110; i <= 198; i++) {
-    dlist1[i] = DL_DLI(DL_GRAPHICS8);
-    dlist1[i + 1] = DL_DLI(DL_GRAPHICS15);
+  for (i = 110; i <= 198; i+=2) {
+    dlist1[i] = DL_DLI(DL_GRAPHICS15);
+    dlist1[i + 1] = DL_DLI(DL_GRAPHICS8);
 
-    dlist2[i] = DL_DLI(DL_GRAPHICS15);
-    dlist2[i + 1] = DL_DLI(DL_GRAPHICS8);
+    dlist2[i] = DL_DLI(DL_GRAPHICS8);
+    dlist2[i + 1] = DL_DLI(DL_GRAPHICS15);
   }
 
   dlist1[199] = DL_JVB;
-  dlist1[200] = (((unsigned int) dlist2) & 255);
-  dlist1[201] = (((unsigned int) dlist2) >> 8);
+  dlist1[200] = (((unsigned int) dlist1) & 255);
+  dlist1[201] = (((unsigned int) dlist1) >> 8);
 
   dlist2[199] = DL_JVB;
-  dlist2[200] = (((unsigned int) dlist1) & 255);
-  dlist2[201] = (((unsigned int) dlist1) >> 8);
+  dlist2[200] = (((unsigned int) dlist2) & 255);
+  dlist2[201] = (((unsigned int) dlist2) >> 8);
 
   screen_on();
 }
@@ -415,12 +410,12 @@ void view(unsigned char choice, char sample, unsigned char pick_yr, unsigned pic
     fetch_image(choice, sample, size, pick_yr, pick_mo, pick_day);
   }
 
+  dlist_hi = (unsigned char) (((unsigned int) (scr_mem + DLIST_OFFSET)) >> 8);
+  dlist_lo = (unsigned char) (((unsigned int) (scr_mem + DLIST_OFFSET)) & 255);
 
   /* Enable interrupt-driven graphics mode, if applicable */
   if (choice == CHOICE_LOWRES_RGB) {
     rgb_ctr = 0;
-    dlist_hi = (unsigned char) (((unsigned int) (scr_mem + DLIST_OFFSET)) >> 8);
-    dlist_lo = (unsigned char) (((unsigned int) (scr_mem + DLIST_OFFSET)) & 255);
     mySETVBV((void *) VBLANKD9);
     dli_init(dli9);
     interrupts_used = 1;
