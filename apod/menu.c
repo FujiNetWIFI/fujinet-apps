@@ -30,7 +30,8 @@ unsigned char sample_keys[NUM_SAMPLES] = {
   KEY_2,
   KEY_3,
   KEY_4,
-  KEY_5
+  KEY_5,
+  KEY_9
 };
 
 extern unsigned char scr_mem[];
@@ -92,6 +93,7 @@ void show_chosen_date(unsigned char y, unsigned char m, unsigned char d, unsigne
   if (d != 0) {
     sprintf(str, "20%02d-%02d-%02d", y, m, d);
     myprint(scr_mem, 2, 15, str);
+    myprint(scr_mem, 13, 15, "[CT/SH]");
   } else {
     if (!loaded_properly) {
       myprint(scr_mem, 2, 15, "[CTRL-T] get time");
@@ -107,12 +109,13 @@ void show_chosen_date(unsigned char y, unsigned char m, unsigned char d, unsigne
 void show_sample_choice(char sample) {
   char tmp_str[2];
 
-  if (sample) {
+  myprint(scr_mem, 18, 17, "  ");
+  if (sample == SAMPLE_COLORBARS) {
+    myprint(scr_mem, 18, 17, "CB");
+  } else if (sample) {
     tmp_str[0] = sample + '0';
     tmp_str[1] = '\0';
     myprint(scr_mem, 19, 17, tmp_str);
-  } else {
-    myprint(scr_mem, 19, 17, " ");
   }
 }
 
@@ -144,8 +147,8 @@ void draw_menu(char sample, unsigned char y, unsigned char m, unsigned char d, u
   myprint(scr_mem, 0, 13, "[0] get apod");
   myprint(scr_mem, 0, 14, "[<=>] change date");
   show_chosen_date(y, m, d, loaded_properly);
-  myprint(scr_mem, 0, 16, "[1-4] get samples");
-  myprint(scr_mem, 0, 17, "[5] color bars");
+  myprint(scr_mem, 0, 16, "[1-5] get samples");
+  myprint(scr_mem, 0, 17, "[9] color bars");
   show_sample_choice(sample);
 
                 /*--------------------*/

@@ -4,7 +4,7 @@ apod (Astronomy Picture of the Day) Client for #FujiNet
 Bill Kendrick bill@newbreedsoftware.com
 with help from apc & others (see credits, below)
 
-2021-03-27 - 2021-04-16
+2021-03-27 - 2021-04-23
 
 ## Purpose
 Fetch and view [NASA's Astronomy Picture of the Day (APOD)](https://apod.nasa.gov/apod/),
@@ -99,8 +99,8 @@ red, green, and blue defaults by this program's ColorView modes:
 - 9 - light blue
 - 10 - turquoise
 - 11 - green-blue -- BLUE
-- 12 - green -- GREEN
-- 13 - yellow-green
+- 12 - green
+- 13 - yellow-green -- GREEN
 - 14 - orange-green
 - 15 - light orange
 

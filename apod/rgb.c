@@ -2,7 +2,7 @@
   rgb.c
 
   By Bill Kendrick <bill@newbreedsoftware.com>
-  2021-03-27 - 2021-04-21
+  2021-03-27 - 2021-04-23
 */
 
 #include <atari.h>
@@ -13,13 +13,6 @@
    versions of the image (red, green, blue) */
 extern unsigned char rgb_table[];
 
-
-/* Defaults that look good on my NTSC Atari 1200XL connected
-   to a Commodore 1902 monitor with Tint knob at its default,
-   and Color knob just below its default: */
-#define DEFAULT_RGB_RED 0x20 /* 2 "orange" */
-#define DEFAULT_RGB_GRN 0xC0 /* 12 "green" */
-#define DEFAULT_RGB_BLU 0xB0 /* 11 "blue green" */
 
 /**
  * Set up a color table of repeating Red, Green, and Blue hues
