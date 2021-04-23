@@ -25,8 +25,8 @@ void setup_rgb_table(void) {
   for(i = 0; i < 64; i++)
   {
     *rgb_ptr++ = rgb_red;
-    *rgb_ptr++ = rgb_blu;
     *rgb_ptr++ = rgb_grn;
+    *rgb_ptr++ = rgb_blu;
   }
 }
 
