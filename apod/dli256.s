@@ -1,14 +1,13 @@
-	.export _dli256, _dli256_load_arg
-        .import _rgb_table
+	.export _dli256
+        .import _rgb_ctr, _apac_scanline
 
 _dli256:
         pha
-_dli256_load:
-        lda _rgb_table
-        inc _dli256_load+1
+	lda #64
         sta $D40A ; WSYNC
-        sta $D01A ; COLOR4
+        sta $D01B ; PRIOR
+	lda #192
+        sta $D40A ; WSYNC
+        sta $D01B ; PRIOR
         pla
         rti
-
-_dli256_load_arg = _dli256_load + 1

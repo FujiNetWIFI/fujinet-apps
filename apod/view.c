@@ -74,8 +74,9 @@ void dlist_setup(unsigned char antic_mode) {
 unsigned char dlist_hi, dlist_lo;
 
 /* Keeping track of which RGB color we're showing
-   (for fetching from the look-up table) */
-unsigned char rgb_ctr;
+   (for fetching from the look-up table),
+   and APAC frame */
+unsigned char rgb_ctr, apac_scanline;
 
 
 #pragma optimize (push, off)
@@ -144,7 +145,6 @@ void VBLANKD_APAC(void) {
 __vbi256_ctr_set:
   /* store the current counter back;
      also store it as a reference to our next display list */
-  asm("stx %v", dli256_load_arg);
   asm("stx %v", rgb_ctr);
 
   /* display lists are 8K away from each other
@@ -309,43 +309,43 @@ void dlist_setup_apac(void) {
 
   dlist2[0] = DL_BLK8;
   dlist2[1] = DL_BLK8;
-  dlist2[2] = DL_DLI(DL_BLK8); /* start with colors after this line */
+  dlist2[2] = DL_BLK8;
 
   /* Row 0 */
-  dlist1[3] = DL_LMS(DL_DLI(DL_GRAPHICS8));
+  dlist1[3] = DL_LMS(DL_GRAPHICS8);
   dlist1[4] = (gfx_ptr1 & 255);
   dlist1[5] = (gfx_ptr1 >> 8);
 
-  dlist2[3] = DL_LMS(DL_DLI(DL_GRAPHICS15));
+  dlist2[3] = DL_LMS(DL_DLI(DL_GRAPHICS8));
   dlist2[4] = (gfx_ptr2 & 255);
   dlist2[5] = (gfx_ptr2 >> 8);
 
   for (i = 6; i <= 106; i+=2) {
-    dlist1[i] = DL_DLI(DL_GRAPHICS15);
-    dlist1[i + 1] = DL_DLI(DL_GRAPHICS8);
+    dlist1[i] = DL_DLI(DL_GRAPHICS8);
+    dlist1[i + 1] = DL_GRAPHICS8;
 
-    dlist2[i] = DL_DLI(DL_GRAPHICS8);
-    dlist2[i + 1] = DL_DLI(DL_GRAPHICS15);
+    dlist2[i] = DL_GRAPHICS8;
+    dlist2[i + 1] = DL_DLI(DL_GRAPHICS8);
   }
 
   /* Hitting 4K boundary! */
   gfx_ptr1 += (102 * 40);
   gfx_ptr2 += (102 * 40);
 
-  dlist1[107] = DL_LMS(DL_DLI(DL_GRAPHICS8));
+  dlist1[107] = DL_LMS(DL_GRAPHICS8);
   dlist1[108] = (gfx_ptr1 & 255);
   dlist1[109] = (gfx_ptr1 >> 8);
 
-  dlist2[107] = DL_LMS(DL_DLI(DL_GRAPHICS15));
+  dlist2[107] = DL_LMS(DL_DLI(DL_GRAPHICS8));
   dlist2[108] = (gfx_ptr2 & 255);
   dlist2[109] = (gfx_ptr2 >> 8);
 
   for (i = 110; i <= 198; i+=2) {
-    dlist1[i] = DL_DLI(DL_GRAPHICS15);
-    dlist1[i + 1] = DL_DLI(DL_GRAPHICS8);
+    dlist1[i] = DL_DLI(DL_GRAPHICS8);
+    dlist1[i + 1] = DL_GRAPHICS8;
 
-    dlist2[i] = DL_DLI(DL_GRAPHICS8);
-    dlist2[i + 1] = DL_DLI(DL_GRAPHICS15);
+    dlist2[i] = DL_GRAPHICS8;
+    dlist2[i + 1] = DL_DLI(DL_GRAPHICS8);
   }
 
   dlist1[199] = DL_JVB;
