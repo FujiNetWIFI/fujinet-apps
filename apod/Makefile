@@ -32,6 +32,8 @@ clean:
 	-rm apod.s
 	-rm colorbars.o
 	-rm colorbars.s
+	-rm fetch.o
+	-rm fetch.s
 	-rm get_time.o
 	-rm get_time.s
 	-rm interrupt_helpers.o
@@ -49,12 +51,12 @@ clean:
 	-rm view.o
 	-rm view.s
 
-apod.xex:	apod.o dli9.o nsio.o sio.o myprint.o get_time.o interrupt_helpers.o screen_helpers.o colorbars.o menu.o rgb.o view.o segments.o atari.cfg
+apod.xex:	apod.o dli9.o nsio.o sio.o myprint.o get_time.o interrupt_helpers.o screen_helpers.o colorbars.o menu.o rgb.o view.o fetch.o segments.o atari.cfg
 	${LD65} --lib-path "${CC65_LIB}" \
 		-o apod.xex \
 		-t atari \
 		-m apod.map \
-		apod.o dli9.o nsio.o sio.o myprint.o get_time.o interrupt_helpers.o screen_helpers.o colorbars.o menu.o rgb.o view.o segments.o atari.lib
+		apod.o dli9.o nsio.o sio.o myprint.o get_time.o interrupt_helpers.o screen_helpers.o colorbars.o menu.o rgb.o view.o fetch.o segments.o atari.lib
 
 apod.o:	apod.s
 	${CA65} -I "${CC65_ASMINC}" -t atari apod.s -o apod.o
@@ -131,11 +133,20 @@ rgb.s:	rgb.c rgb.h
 view.o:	view.s
 	${CA65} -I "${CC65_ASMINC}" -t atari view.s -o view.o
 
-view.s:	view.c view.h nsio.h interrupt_helpers.h screen_helpers.h rgb.h dli9.h colorbars.h menu.h
+view.s:	view.c view.h interrupt_helpers.h screen_helpers.h rgb.h dli9.h colorbars.h menu.h
 	${CC65} -I "${CC65_INC}" \
 		-t atari \
 		view.c \
 		-o view.s
+
+fetch.o:	fetch.s
+	${CA65} -I "${CC65_ASMINC}" -t atari fetch.s -o fetch.o
+
+fetch.s:	fetch.c fetch.h nsio.h menu.h
+	${CC65} -I "${CC65_INC}" \
+		-t atari \
+		fetch.c \
+		-o fetch.s
 
 nsio.o:	nsio.s
 	${CA65} -I "${CC65_ASMINC}" -t atari nsio.s -o nsio.o
