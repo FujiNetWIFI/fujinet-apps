@@ -3,9 +3,17 @@
 
 /* Defaults that look good on my NTSC Atari 1200XL connected
    to a Commodore 1902 monitor with Tint knob at its default,
-   and Color knob just below its default: */
+   and Color knob just below its default.
+
+   + A good rainbow:
+     https://apod.nasa.gov/apod/ap060423.html
+
+   + Has solid blue, green, and red dots:
+     https://apod.nasa.gov/apod/ap060426.html
+*/
+
 #define DEFAULT_RGB_RED 0x20 /* 2 "orange" */
-#define DEFAULT_RGB_GRN 0xC0 /* 12 "green" */
+#define DEFAULT_RGB_GRN 0xD0 /* 13 "yellow green" */
 #define DEFAULT_RGB_BLU 0xB0 /* 11 "blue green" */
 
 extern unsigned char rgb_table[];
