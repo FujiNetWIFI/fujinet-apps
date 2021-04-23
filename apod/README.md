@@ -52,7 +52,7 @@ So if you want the latest image, get the "current" image
 (the default; or press `[=]`).
 
 ### Viewing samples
-Press keys `[1]` through `[4]` to fetch a static sample image
+Press keys `[1]` through `[5]` to fetch a static sample image
 from the webserver.  (A source JPEG or PNG image is loaded and
 converted with the same workflow as the APOD images, which allows
 us developers to tweak and test the process using known images.)
@@ -63,8 +63,9 @@ Currently, the images are:
 - 2 - Nebula NGC 2818
 - 3 - A parrot
 - 4 - An astronaut spacewalking above earth
+- 5 - Rainbow gradients
 
-Press `[5]` to render a test pattern.  In 4,096 color mode,
+Press `[9]` to render a test pattern.  In 4,096 color mode,
 a colorbar battern will appear with 6 colors at the top
 (red, yellow, green, cyan, blue, and purple), and sets of
 16 and 8 shades of grey at the bottom.  This is done locally
