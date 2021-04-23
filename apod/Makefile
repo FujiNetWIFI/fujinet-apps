@@ -3,7 +3,7 @@
 # images, as converted by the 'apod' web app.
 #
 # Bill Kendrick <bill@newbreedsoftware.com>
-# 2021-03-27 - 2021-04-21
+# 2021-03-27 - 2021-04-22
 
 CC65BIN=/usr/bin
 CC65=${CC65BIN}/cc65
@@ -34,6 +34,8 @@ clean:
 	-rm colorbars.s
 	-rm get_time.o
 	-rm get_time.s
+	-rm interrupt_helpers.o
+	-rm interrupt_helpers.s
 	-rm myprint.o
 	-rm myprint.s
 	-rm menu.o
@@ -47,12 +49,12 @@ clean:
 	-rm view.o
 	-rm view.s
 
-apod.xex:	apod.o dli9.o nsio.o sio.o myprint.o get_time.o screen_helpers.o colorbars.o menu.o rgb.o view.o segments.o atari.cfg
+apod.xex:	apod.o dli9.o nsio.o sio.o myprint.o get_time.o interrupt_helpers.o screen_helpers.o colorbars.o menu.o rgb.o view.o segments.o atari.cfg
 	${LD65} --lib-path "${CC65_LIB}" \
 		-o apod.xex \
 		-t atari \
 		-m apod.map \
-		apod.o dli9.o nsio.o sio.o myprint.o get_time.o screen_helpers.o colorbars.o menu.o rgb.o view.o segments.o atari.lib
+		apod.o dli9.o nsio.o sio.o myprint.o get_time.o interrupt_helpers.o screen_helpers.o colorbars.o menu.o rgb.o view.o segments.o atari.lib
 
 apod.o:	apod.s
 	${CA65} -I "${CC65_ASMINC}" -t atari apod.s -o apod.o
@@ -90,6 +92,15 @@ screen_helpers.s:	screen_helpers.c screen_helpers.h
 		screen_helpers.c \
 		-o screen_helpers.s
 
+interrupt_helpers.o:	interrupt_helpers.s
+	${CA65} -I "${CC65_ASMINC}" -t atari interrupt_helpers.s -o interrupt_helpers.o
+
+interrupt_helpers.s:	interrupt_helpers.c interrupt_helpers.h
+	${CC65} -I "${CC65_INC}" \
+		-t atari \
+		interrupt_helpers.c \
+		-o interrupt_helpers.s
+
 colorbars.o:	colorbars.s
 	${CA65} -I "${CC65_ASMINC}" -t atari colorbars.s -o colorbars.o
 
@@ -120,7 +131,7 @@ rgb.s:	rgb.c rgb.h
 view.o:	view.s
 	${CA65} -I "${CC65_ASMINC}" -t atari view.s -o view.o
 
-view.s:	view.c view.h nsio.h screen_helpers.h rgb.h dli9.h colorbars.h menu.h
+view.s:	view.c view.h nsio.h interrupt_helpers.h screen_helpers.h rgb.h dli9.h colorbars.h menu.h
 	${CC65} -I "${CC65_INC}" \
 		-t atari \
 		view.c \

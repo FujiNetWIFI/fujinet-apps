@@ -2,13 +2,14 @@
   view.c
 
   By Bill Kendrick <bill@newbreedsoftware.com>
-  2021-03-27 - 2021-04-21
+  2021-03-27 - 2021-04-22
 */
 
 #include <stdio.h>
 #include <atari.h>
 #include "colorbars.h"
 #include "dli9.h"
+#include "interrupt_helpers.h"
 #include "menu.h"
 #include "nsio.h"
 #include "rgb.h"
@@ -71,11 +72,6 @@ void dlist_setup(unsigned char antic_mode) {
 /* Tracking which Display List is active */
 unsigned char dlist_hi, dlist_lo;
 
-/* Keep track of old VBI vector, so we can jump to it at
-   the end of ours (see below), and restore it when we're done
-   needing our VBI */
-void * OLDVEC;
-
 /* Keeping track of which RGB color we're showing
    (for fetching from the look-up table) */
 unsigned char rgb_ctr;
@@ -128,45 +124,6 @@ __vbi_ctr_set:
   asm("sta $d01a");
 
   asm("jmp (%v)", OLDVEC);
-}
-
-
-/**
- * Set the deffered VBI vector
- *
- * @param void * Addr the VBI routine's location
- */
-void mySETVBV(void * Addr)
-{
-  rgb_ctr = 0;
-  dlist_hi = (unsigned char) (((unsigned int) (scr_mem + DLIST_OFFSET)) >> 8);
-  dlist_lo = (unsigned char) (((unsigned int) (scr_mem + DLIST_OFFSET)) & 255);
-
-  OS.critic = 1;
-  OS.vvblkd = Addr;
-  OS.critic = 0;
-
-  ANTIC.nmien = NMIEN_VBI;
-}
-
-/**
- * Activate our Display List Interrupt
- */
-void dli_init(void * dli_func)
-{
-  rgb_ctr = 0;
-  ANTIC.nmien = NMIEN_VBI;
-  while (ANTIC.vcount < 124);
-  OS.vdslst = (void *) dli_func;
-  ANTIC.nmien = NMIEN_VBI | NMIEN_DLI;
-}
-
-/**
- * Deactivate our Display List Interrupt
- */
-void dli_clear(void)
-{
-  ANTIC.nmien = NMIEN_VBI;
 }
 
 #pragma optimize (pop)
@@ -412,6 +369,9 @@ void view(unsigned char choice, char sample, unsigned char pick_yr, unsigned pic
   }
 
   if (choice == CHOICE_LOWRES_RGB) {
+    rgb_ctr = 0;
+    dlist_hi = (unsigned char) (((unsigned int) (scr_mem + DLIST_OFFSET)) >> 8);
+    dlist_lo = (unsigned char) (((unsigned int) (scr_mem + DLIST_OFFSET)) & 255);
     mySETVBV((void *) VBLANKD9);
     dli_init(dli9);
   } else if (choice == CHOICE_MEDRES_RGB) {

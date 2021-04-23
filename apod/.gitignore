@@ -2,6 +2,7 @@ apod.xex
 apod.s
 colorbars.s
 get_time.s
+interrupt_helpers.s
 myprint.s
 menu.s
 nsio.s
