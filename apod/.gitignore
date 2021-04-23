@@ -10,3 +10,4 @@ nsio.s
 rgb.s
 screen_helpers.s
 view.s
+*.lst

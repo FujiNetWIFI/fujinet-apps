@@ -46,4 +46,3 @@ void set_screen_and_dlist_pointers(void) {
   scr_mem3 = (unsigned char *) (scr_mem + (SCR_BLOCK_SIZE * 2) + SCR_OFFSET);
   dlist3 = (unsigned char *) (scr_mem3 + DLIST_OFFSET);
 }
-

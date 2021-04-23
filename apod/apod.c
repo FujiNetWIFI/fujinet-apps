@@ -7,7 +7,7 @@
   See the APOD web app (server)
 
   By Bill Kendrick <bill@newbreedsoftware.com>
-  2021-03-27 - 2021-04-21
+  2021-03-27 - 2021-04-22
 */
 
 #include <stdio.h>
@@ -31,7 +31,8 @@ char * modes[NUM_CHOICES] = {
   "15",
   "9",
   "rgb9",
-  "rgb15"
+  "rgb15",
+  "apac"
 };
 
 unsigned char time_buf[6];
@@ -58,3 +59,4 @@ void main(void) {
     view(choice, sample, pick_yr, pick_mo, pick_day);
   } while(1);
 }
+
