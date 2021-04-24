@@ -2,7 +2,7 @@
   view.c
 
   By Bill Kendrick <bill@newbreedsoftware.com>
-  2021-03-27 - 2021-04-23
+  2021-03-27 - 2021-04-24
 */
 
 #include <stdio.h>
@@ -405,7 +405,7 @@ void view(unsigned char choice, char sample, unsigned char pick_yr, unsigned pic
   /* Load or render the image! */
   wait_for_vblank();
   if (sample == SAMPLE_COLORBARS) {
-    render_colorbars();
+    render_colorbars(choice);
   } else {
     fetch_image(choice, sample, size, pick_yr, pick_mo, pick_day);
   }
