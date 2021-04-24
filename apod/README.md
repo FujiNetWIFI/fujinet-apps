@@ -52,6 +52,7 @@ So if you want the latest image, get the "current" image
 (the default; or press `[=]`).
 
 ### Viewing samples
+#### Server samples
 Press keys `[1]` through `[5]` to fetch a static sample image
 from the webserver.  (A source JPEG or PNG image is loaded and
 converted with the same workflow as the APOD images, which allows
@@ -65,11 +66,14 @@ Currently, the images are:
 - 4 - An astronaut spacewalking above earth
 - 5 - Rainbow gradients
 
-Press `[9]` to render a test pattern.  In 4,096 color mode,
-a colorbar battern will appear with 6 colors at the top
-(red, yellow, green, cyan, blue, and purple), and sets of
-16 and 8 shades of grey at the bottom.  This is done locally
-(and does not even require a #FujiNet device).
+#### Local samples
+Press `[9]` to render a test pattern.  This is done locally (and in fact
+does not require a #FujiNet device).
+
+- In high resolution mono mode, a set of bars will appear, dithered to simulate shading.
+- In medium resolution four-color mode and low resolution greyscale mode, grey bars will appear.
+- In low resoluton 4,096 color mode, a colorbar battern will appear with 6 colors at the top (red, yellow, green, cyan, blue, and purple), and sets of 16 and 8 shades of grey at the bottom.
+- In low resolution 256 color mode, a grid of 256 colors (16 shades across, 16 hues down) appears.
 
 Press `[0]` to choose to fetch an APOD photo (the default).
 

@@ -1,13 +1,11 @@
 TODO for APOD #FujiNet client
-2021-04-21
+2021-04-24
 
  * Break more parts of the code out into modules:
    * Display list setup
 
  * In ColorView 9 mode, maybe add PGMs on the sides for solid black
    borders (don't use DMA, obviously).
-
- * APAC 256 color mode.  [Server needs to support]
 
  * ColorView 15 mode.  [Server already supports!]
 
