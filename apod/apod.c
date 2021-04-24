@@ -7,7 +7,7 @@
   See the APOD web app (server)
 
   By Bill Kendrick <bill@newbreedsoftware.com>
-  2021-03-27 - 2021-04-22
+  2021-03-27 - 2021-04-24
 */
 
 #include <stdio.h>

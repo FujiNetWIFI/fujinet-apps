@@ -75,8 +75,8 @@ unsigned char dlist_hi, dlist_lo;
 
 /* Keeping track of which RGB color we're showing
    (for fetching from the look-up table),
-   and APAC frame */
-unsigned char rgb_ctr, apac_scanline;
+   and APAC frame, and luminence */
+unsigned char rgb_ctr, apac_scanline, apac_lum;
 
 
 #pragma optimize (push, off)
@@ -443,6 +443,16 @@ void view(unsigned char choice, char sample, unsigned char pick_yr, unsigned pic
       /* [R], [G], or [B] key, with our without [Shift] */
       handle_rgb_keypress(k);
       setup_rgb_table();
+      OS.ch = KEY_NONE;
+    } else if (k == KEY_L) {
+      apac_lum = (apac_lum + 2) % 16;
+      OS.ch = KEY_NONE;
+    } else if (k == (KEY_L | KEY_SHIFT)) {
+      if (apac_lum == 0) {
+        apac_lum = 14;
+      } else {
+        apac_lum -= 2;
+      }
       OS.ch = KEY_NONE;
     }
   } while (!done);

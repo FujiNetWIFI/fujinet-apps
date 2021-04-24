@@ -1,5 +1,5 @@
 	.export _dli256
-        .import _rgb_ctr, _apac_scanline
+        .import _rgb_ctr, _apac_scanline, _apac_lum
 
 _dli256:
         pha
@@ -11,7 +11,7 @@ _dli256:
 	lda #192
         sta $D40A ; WSYNC
         sta $D01B ; PRIOR
-        lda #8 ; FIXME: Could add a brightness control variable
+        lda _apac_lum
         sta $D01A ; COLOR4
         pla
         rti

@@ -2,7 +2,7 @@
   menu.c
 
   By Bill Kendrick <bill@newbreedsoftware.com>
-  2021-03-27 - 2021-04-21
+  2021-03-27 - 2021-04-24
 */
 
 #include <atari.h>
@@ -13,6 +13,7 @@
 #include "menu.h"
 #include "screen_helpers.h"
 #include "myprint.h"
+#include "rgb.h"
 
 unsigned char choice_keys[NUM_CHOICES] = {
   KEY_NONE,
@@ -140,7 +141,7 @@ void draw_menu(char sample, unsigned char y, unsigned char m, unsigned char d, u
   myprint(scr_mem, 0,  8, "[C] lo-res 16 shade");
   myprint(scr_mem, 0,  9, "[D]*lo-res 4K color");
 //  myprint(scr_mem, 0, 10, "[E]*med-res 64 color");
-  myprint(scr_mem, 0, 11, "[F] lo-res 256 color");
+  myprint(scr_mem, 0, 11, "[F]*lo-res 256 color");
 
                 /*--------------------*/
   myprint(scr_mem, 0, 12, "________WHAT________");
@@ -155,7 +156,8 @@ void draw_menu(char sample, unsigned char y, unsigned char m, unsigned char d, u
   myprint(scr_mem, 0, 18, "___*WHILE_VIEWING___");
   sprintf(str, "[R]=%02d [G]=%02d [B]=%02d", rgb_red >> 4, rgb_grn >> 4, rgb_blu >> 4);
   myprint(scr_mem, 0, 19, str);
-  myprint(scr_mem, 0, 20, "[X] rbg defaults");
+  sprintf(str, "[L]=%02d  [X] defaults", apac_lum);
+  myprint(scr_mem, 0, 20, str);
   myprint(scr_mem, 0, 21, "[ESC] return to menu");
 }
 

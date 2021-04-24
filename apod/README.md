@@ -4,7 +4,7 @@ apod (Astronomy Picture of the Day) Client for #FujiNet
 Bill Kendrick bill@newbreedsoftware.com
 with help from apc & others (see credits, below)
 
-2021-03-27 - 2021-04-23
+2021-03-27 - 2021-04-24
 
 ## Purpose
 Fetch and view [NASA's Astronomy Picture of the Day (APOD)](https://apod.nasa.gov/apod/),
@@ -29,7 +29,7 @@ an image in one of the following graphics modes:
 - `[B]` - Medium resolution four-color (160x192 four best colors, aka "GRAPHICS 15" aka "GRAPHICS 7+")
 - `[C]` - Low resolution greyscale (80x192 sixteen shades of grey, aka "GRAPHICS 9")
 - `[D]` - Low resolution 4,096 color (via flickering; "ColorView" mode)
-- `[E]` - Medium resolution 64-color (via flickering; "ColorView" mode)
+<!-- - `[E]` - Medium resolution 64-color (via flickering; "ColorView" mode) -->
 - `[F]` - Low resolution 256 color (via flickering; "Any Point, Any Color (APAC)" mode)
 
 Once the image appears, press `[Esc]` to return to the menu.
@@ -77,6 +77,7 @@ Press `[0]` to choose to fetch an APOD photo (the default).
 Press `[Esc]` to return to the menu.
 
 ### Color adjustments
+#### ColorView
 When viewing a ColorView image, you can press `[R]`, `[G]`, and
 `[B]` to adjust (increment) the Atari color palette hue that's
 used for the red, green, and blue components of the image,
@@ -108,6 +109,19 @@ red, green, and blue defaults by this program's ColorView modes:
 Press `[X]` to reset the hues to these defaults.
 
 Note: The current hue settings are shown (in decimal)
+on the menu.
+
+#### APAC (256 color)
+When viewing in this mode, press `[L]` to increase the
+luminence (brightness) of the hue component of the image.
+Press `[Shift]`+`[L]` to decrease it.  There are 8 levels,
+from 0 to 14 (stepping by 2s).
+
+The default luminence is 2 (the second-to-lowest brightness).
+
+Pressing `[X]` will reset this setting, as well.
+
+Note: The current luminence setting is shown (in decimal)
 on the menu.
 
 ## Credits

@@ -2,7 +2,7 @@
   rgb.c
 
   By Bill Kendrick <bill@newbreedsoftware.com>
-  2021-03-27 - 2021-04-23
+  2021-03-27 - 2021-04-24
 */
 
 #include <atari.h>
@@ -45,9 +45,7 @@ void handle_rgb_keypress(unsigned char k) {
   } else if (k == (KEY_B | KEY_SHIFT)) {
     rgb_blu -= 16;
   } else if (k == KEY_X) {
-    rgb_red = DEFAULT_RGB_RED;
-    rgb_grn = DEFAULT_RGB_GRN;
-    rgb_blu = DEFAULT_RGB_BLU;
+    set_rgb_defaults();
   }
 }
 
@@ -58,4 +56,5 @@ void set_rgb_defaults(void) {
   rgb_red = DEFAULT_RGB_RED;
   rgb_grn = DEFAULT_RGB_GRN;
   rgb_blu = DEFAULT_RGB_BLU;
+  apac_lum = DEFAULT_APAC_LUM;
 }

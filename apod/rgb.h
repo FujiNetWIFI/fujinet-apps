@@ -16,9 +16,11 @@
 #define DEFAULT_RGB_GRN 0xD0 /* 13 "yellow green" */
 #define DEFAULT_RGB_BLU 0xB0 /* 11 "blue green" */
 
+#define DEFAULT_APAC_LUM 2
+
 extern unsigned char rgb_table[];
 
-extern unsigned char rgb_red, rgb_grn, rgb_blu;
+extern unsigned char rgb_red, rgb_grn, rgb_blu, apac_lum;
 
 void setup_rgb_table(void);
 void handle_rgb_keypress(unsigned char k);
