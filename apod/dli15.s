@@ -1,70 +1,101 @@
-	.export _dli15, _dli15_load_arg
+	.export _dli15
         .import _rgb_table, _rgb_ctr
 
 _dli15:
 	; Push registers onto stack
 	pha
+	txa
+	pha
 
 _dli15_load:
-        lda _rgb_table
-        inc _dli15_load+1
+	ldx _rgb_ctr
 
-	; Scanline 0
+	; Scanline 1 (e.g., Reds)
         sta $D40A ; WSYNC
+
+        lda _rgb_table+0,x
         sta $D016 ; COLPF0
-	lda _rgb_table+1
+	lda _rgb_table+1,x
         sta $D017 ; COLPF1
-	lda _rgb_table+2
+	lda _rgb_table+2,x
         sta $D018 ; COLPF2
 
-	; Scanline 1
+	; Scanline 2 (e.g., Greens)
         sta $D40A ; WSYNC
-	lda _rgb_table+3
+	lda _rgb_table+3,x
         sta $D016 ; COLPF0
-	lda _rgb_table+4
+	lda _rgb_table+4,x
         sta $D017 ; COLPF1
-	lda _rgb_table+5
+	lda _rgb_table+5,x
         sta $D018 ; COLPF2
 
-	; Scanline 2
+	; Scanline 3 (e.g., Blues)
         sta $D40A ; WSYNC
-	lda _rgb_table+6
+	lda _rgb_table+6,x
         sta $D016 ; COLPF0
-	lda _rgb_table+7
+	lda _rgb_table+7,x
         sta $D017 ; COLPF1
-	lda _rgb_table+8
+	lda _rgb_table+8,x
         sta $D018 ; COLPF2
 
-	; Scanline 3
+	; Scanline 4 (e.g., Reds again)
         sta $D40A ; WSYNC
-	lda _rgb_table+9
+	lda _rgb_table+0,x
         sta $D016 ; COLPF0
-	lda _rgb_table+10
+	lda _rgb_table+1,x
         sta $D017 ; COLPF1
-	lda _rgb_table+11
+	lda _rgb_table+2,x
         sta $D018 ; COLPF2
 
-	; Scanline 4
+	; Scanline 5 (...and so forth)
         sta $D40A ; WSYNC
-	lda _rgb_table+12
+	lda _rgb_table+3,x
         sta $D016 ; COLPF0
-	lda _rgb_table+13
+	lda _rgb_table+4,x
         sta $D017 ; COLPF1
-	lda _rgb_table+14
+	lda _rgb_table+5,x
         sta $D018 ; COLPF2
 
-	; Scanline 5
+	; Scanline 6
         sta $D40A ; WSYNC
-	lda _rgb_table+15
+	lda _rgb_table+6,x
         sta $D016 ; COLPF0
-	lda _rgb_table+16
+	lda _rgb_table+7,x
         sta $D017 ; COLPF1
-	lda _rgb_table+17
+	lda _rgb_table+8,x
         sta $D018 ; COLPF2
+
+	; Scanline 7
+        sta $D40A ; WSYNC
+	lda _rgb_table+0,x
+        sta $D016 ; COLPF0
+	lda _rgb_table+1,x
+        sta $D017 ; COLPF1
+	lda _rgb_table+2,x
+        sta $D018 ; COLPF2
+
+	; Scanline 8
+        sta $D40A ; WSYNC
+	lda _rgb_table+3,x
+        sta $D016 ; COLPF0
+	lda _rgb_table+4,x
+        sta $D017 ; COLPF1
+	lda _rgb_table+5,x
+        sta $D018 ; COLPF2
+
+	; Scanline 9
+        sta $D40A ; WSYNC
+	lda _rgb_table+6,x
+        sta $D016 ; COLPF0
+	lda _rgb_table+7,x
+        sta $D017 ; COLPF1
+	lda _rgb_table+8,x
+        sta $D018 ; COLPF2
+
+        ; The DLI is invoked every 9th scanline
 
 	; Pull registers from stack, and return
 	pla
+	tax
+	pla
         rti
-
-_dli15_load_arg = _dli15_load + 1
-

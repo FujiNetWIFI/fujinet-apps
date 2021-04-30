@@ -2,7 +2,7 @@
   view.c
 
   By Bill Kendrick <bill@newbreedsoftware.com>
-  2021-03-27 - 2021-04-29
+  2021-03-27 - 2021-04-30
 */
 
 #include <stdio.h>
@@ -141,9 +141,7 @@ void VBLANKD15(void) {
   asm("ldx #0");
 
 __vbi15_ctr_set:
-  /* store the current rgb color counter back;
-     also store it as a reference to our next display list */
-  asm("stx %v", dli15_load_arg);
+  /* store the current rgb color counter back */
   asm("stx %v", rgb_ctr);
 
   /* display lists are 8K away from each other
@@ -257,8 +255,6 @@ void dlist_setup_rgb(unsigned char antic_mode, unsigned char occasional_dli) {
     dlist[201] = (((unsigned int) dlist) >> 8);
   }
 
-  setup_rgb_table();
-
   screen_on();
 }
 
@@ -369,10 +365,12 @@ void view(unsigned char choice, char sample, unsigned char pick_yr, unsigned pic
     OS.color2 = 14; /* Light foreground */
   } else if (choice == CHOICE_LOWRES_RGB) {
     size = 7680 * 3;
+    setup_rgb_table9();
     dlist_setup_rgb(DL_DLI(DL_GRAPHICS8), 0); /* Every line a DLI */
     OS.gprior = 64;
   } else if (choice == CHOICE_MEDRES_RGB) {
     size = 7680 * 3;
+    setup_rgb_table15();
     dlist_setup_rgb(DL_GRAPHICS15, 1); /* Occasional DLI */
   } else if (choice == CHOICE_LOWRES_256) {
     size = 7680 * 2;
@@ -420,7 +418,11 @@ void view(unsigned char choice, char sample, unsigned char pick_yr, unsigned pic
     } else if ((k & 0x3F) == KEY_R || (k & 0x3F) == KEY_G || (k & 0x3F) == KEY_B || k == KEY_X) {
       /* [R], [G], or [B] key, with our without [Shift] */
       handle_rgb_keypress(k);
-      setup_rgb_table();
+      if (choice == CHOICE_LOWRES_RGB) {
+        setup_rgb_table9();
+      } else {
+        setup_rgb_table15();
+      }
       OS.ch = KEY_NONE;
     } else if (k == KEY_L) {
       apac_lum = (apac_lum + 2) % 16;

@@ -2,7 +2,7 @@
   rgb.c
 
   By Bill Kendrick <bill@newbreedsoftware.com>
-  2021-03-27 - 2021-04-24
+  2021-03-27 - 2021-04-30
 */
 
 #include <atari.h>
@@ -16,17 +16,39 @@ extern unsigned char rgb_table[];
 
 /**
  * Set up a color table of repeating Red, Green, and Blue hues
+ * for ColorView 9
  */
-void setup_rgb_table(void) {
+void setup_rgb_table9(void) {
   unsigned char *rgb_ptr;
   unsigned char i;
 
   rgb_ptr = rgb_table;
-  for(i = 0; i < 64; i++)
-  {
+  for(i = 0; i < 64; i++) {
     *rgb_ptr++ = rgb_red;
     *rgb_ptr++ = rgb_grn;
     *rgb_ptr++ = rgb_blu;
+  }
+}
+
+/**
+ * Set up a color table of repeating shades of Red, Green, and Blue hues
+ * for ColorView 15
+ */
+void setup_rgb_table15(void) {
+  unsigned char *rgb_ptr;
+  unsigned char i;
+
+  rgb_ptr = rgb_table;
+  for(i = 0; i < 3; i++) {
+    *rgb_ptr++ = rgb_red + 4;
+    *rgb_ptr++ = rgb_red + 8;
+    *rgb_ptr++ = rgb_red + 14;
+    *rgb_ptr++ = rgb_grn + 4;
+    *rgb_ptr++ = rgb_grn + 8;
+    *rgb_ptr++ = rgb_grn + 14;
+    *rgb_ptr++ = rgb_blu + 4;
+    *rgb_ptr++ = rgb_blu + 8;
+    *rgb_ptr++ = rgb_blu + 14;
   }
 }
 

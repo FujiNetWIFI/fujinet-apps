@@ -22,7 +22,8 @@ extern unsigned char rgb_table[];
 
 extern unsigned char rgb_red, rgb_grn, rgb_blu, apac_lum;
 
-void setup_rgb_table(void);
+void setup_rgb_table9(void);
+void setup_rgb_table15(void);
 void handle_rgb_keypress(unsigned char k);
 void set_rgb_defaults(void);
 
