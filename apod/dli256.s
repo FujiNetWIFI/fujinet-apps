@@ -7,11 +7,11 @@ _dli256:
         sta $D40A ; WSYNC
         sta $D01B ; PRIOR
         lda #0
-        sta $D01A ; COLOR4
+        sta $D01A ; COLBK
 	lda #192
         sta $D40A ; WSYNC
         sta $D01B ; PRIOR
         lda _apac_lum
-        sta $D01A ; COLOR4
+        sta $D01A ; COLBK
         pla
         rti

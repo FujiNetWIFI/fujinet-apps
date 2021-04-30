@@ -161,17 +161,6 @@ __vbi15_ctr_set:
   asm("lda %v", dlist_lo);
   asm("sta $d402");
 
-  /* adjust end of the screen colors - set the last one to black color */
-  asm("lda %v+187,x", rgb_table);
-  asm("sta %v+190,x", rgb_table);
-  asm("lda %v+188,x", rgb_table);
-  asm("sta %v+191,x", rgb_table);
-  asm("lda #0");
-  asm("sta %v+192,x", rgb_table);
-
-  /* start next screen with black color at top */
-  asm("sta $d01a");
-
   asm("jmp (%v)", OLDVEC);
 }
 
@@ -220,7 +209,7 @@ __vbi256_ctr_set:
  *
  * @param byte antic_mode
  */
-void dlist_setup_rgb(unsigned char antic_mode) {
+void dlist_setup_rgb(unsigned char antic_mode, unsigned char occasional_dli) {
   int l, i;
   unsigned int gfx_ptr /*, next_dlist */;
   unsigned char * dlist;
@@ -241,7 +230,11 @@ void dlist_setup_rgb(unsigned char antic_mode) {
     dlist[5] = (gfx_ptr >> 8);
 
     for (i = 6; i <= 106; i++) {
-      dlist[i] = antic_mode;
+      if (occasional_dli && i % 9 == 4) {
+        dlist[i] = DL_DLI(antic_mode);
+      } else {
+        dlist[i] = antic_mode;
+      }
     }
 
     /* Hitting 4K boundary! */
@@ -250,9 +243,14 @@ void dlist_setup_rgb(unsigned char antic_mode) {
     dlist[108] = (gfx_ptr & 255);
     dlist[109] = (gfx_ptr >> 8);
 
-    for (i = 110; i <= 198; i++) {
-      dlist[i] = antic_mode;
+    for (i = 110; i <= 197; i++) {
+      if (occasional_dli && i % 9 == 6) {
+        dlist[i] = DL_DLI(antic_mode);
+      } else {
+        dlist[i] = antic_mode;
+      }
     }
+    dlist[198] = antic_mode;
 
     dlist[199] = DL_JVB;
     dlist[200] = (((unsigned int) dlist) & 255);
@@ -371,11 +369,11 @@ void view(unsigned char choice, char sample, unsigned char pick_yr, unsigned pic
     OS.color2 = 14; /* Light foreground */
   } else if (choice == CHOICE_LOWRES_RGB) {
     size = 7680 * 3;
-    dlist_setup_rgb(DL_DLI(DL_GRAPHICS8)); /* DLI on every line */
+    dlist_setup_rgb(DL_DLI(DL_GRAPHICS8), 0); /* Every line a DLI */
     OS.gprior = 64;
   } else if (choice == CHOICE_MEDRES_RGB) {
     size = 7680 * 3;
-    dlist_setup_rgb(DL_GRAPHICS15); /* only 1 DLI at the top */
+    dlist_setup_rgb(DL_GRAPHICS15, 1); /* Occasional DLI */
   } else if (choice == CHOICE_LOWRES_256) {
     size = 7680 * 2;
     dlist_setup_apac();

@@ -7,7 +7,7 @@ _dli9_load:
         lda _rgb_table
         inc _dli9_load+1
         sta $D40A ; WSYNC
-        sta $D01A ; COLOR4
+        sta $D01A ; COLBK
         pla
         rti
 
