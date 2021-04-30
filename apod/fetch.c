@@ -2,7 +2,7 @@
   fetch.c
 
   By Bill Kendrick <bill@newbreedsoftware.com>
-  2021-03-27 - 2021-04-22
+  2021-03-27 - 2021-04-30
 */
 
 #include <stdio.h>
@@ -92,6 +92,8 @@ void fetch_image(unsigned char choice, char sample, int size, unsigned char pick
     }
 
     OS.sdlst = dlist1;
+
+    OS.color4 = 0;
   }
 
   if (choice == CHOICE_MEDRES_COLOR) {

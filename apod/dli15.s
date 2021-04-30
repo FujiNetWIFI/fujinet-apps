@@ -8,7 +8,10 @@ _dli15:
 	pha
 
 _dli15_load:
-	ldx _rgb_ctr
+	lda _rgb_ctr
+	adc _rgb_ctr
+	adc _rgb_ctr
+	tax
 
 	; Scanline 1 (e.g., Reds)
         sta $D40A ; WSYNC
@@ -57,33 +60,6 @@ _dli15_load:
         sta $D018 ; COLPF2
 
 	; Scanline 6
-        sta $D40A ; WSYNC
-	lda _rgb_table+6,x
-        sta $D016 ; COLPF0
-	lda _rgb_table+7,x
-        sta $D017 ; COLPF1
-	lda _rgb_table+8,x
-        sta $D018 ; COLPF2
-
-	; Scanline 7
-        sta $D40A ; WSYNC
-	lda _rgb_table+0,x
-        sta $D016 ; COLPF0
-	lda _rgb_table+1,x
-        sta $D017 ; COLPF1
-	lda _rgb_table+2,x
-        sta $D018 ; COLPF2
-
-	; Scanline 8
-        sta $D40A ; WSYNC
-	lda _rgb_table+3,x
-        sta $D016 ; COLPF0
-	lda _rgb_table+4,x
-        sta $D017 ; COLPF1
-	lda _rgb_table+5,x
-        sta $D018 ; COLPF2
-
-	; Scanline 9
         sta $D40A ; WSYNC
 	lda _rgb_table+6,x
         sta $D016 ; COLPF0

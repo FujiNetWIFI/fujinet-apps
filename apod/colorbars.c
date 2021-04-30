@@ -2,7 +2,7 @@
   colorbars.c
 
   By Bill Kendrick <bill@newbreedsoftware.com>
-  2021-03-27 - 2021-04-29
+  2021-03-27 - 2021-04-30
 */
 
 #include <string.h> /* for memset() */
@@ -86,8 +86,8 @@ void render_colorbars(unsigned char mode) {
     memcpy(scr_mem2 + 5120, scr_mem1 + 5120, 2560);
     memcpy(scr_mem3 + 5120, scr_mem1 + 5120, 2560);
   } else if (mode == CHOICE_MEDRES_RGB) {
-    /* FIXME */
     /* Color bars */
+
     for (i = 0; i < 40; i++) {
       r = (i >= 34 || i < 14) ? 0x55 : 0;
       g = (6 < i && i < 28) ? 0x55 : 0;
@@ -113,8 +113,7 @@ void render_colorbars(unsigned char mode) {
 
     /* 4 shades of grey */
     for (i = 5120; i < 5160; i++) {
-      grey = (i % 40) / 10;
-      grey = grey * 85;
+      grey = (i < 5130 ? 0 : (i < 5140 ? 85 : (i < 5150 ? 170 : 255)));
       scr_mem1[i] = grey;
     }
     for (i = 5160; i < 7680; i += 40) {

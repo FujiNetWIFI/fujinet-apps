@@ -39,16 +39,18 @@ void setup_rgb_table15(void) {
   unsigned char i;
 
   rgb_ptr = rgb_table;
-  for(i = 0; i < 3; i++) {
-    *rgb_ptr++ = rgb_red + 4;
-    *rgb_ptr++ = rgb_red + 8;
-    *rgb_ptr++ = rgb_red + 14;
-    *rgb_ptr++ = rgb_grn + 4;
-    *rgb_ptr++ = rgb_grn + 8;
-    *rgb_ptr++ = rgb_grn + 14;
-    *rgb_ptr++ = rgb_blu + 4;
-    *rgb_ptr++ = rgb_blu + 8;
-    *rgb_ptr++ = rgb_blu + 14;
+  for(i = 0; i < 28; i++) {
+    *rgb_ptr++ = (rgb_red + 4);
+    *rgb_ptr++ = (rgb_red + 8);
+    *rgb_ptr++ = (rgb_red + 14);
+
+    *rgb_ptr++ = (rgb_grn + 4);
+    *rgb_ptr++ = (rgb_grn + 8);
+    *rgb_ptr++ = (rgb_grn + 14);
+
+    *rgb_ptr++ = (rgb_blu + 4);
+    *rgb_ptr++ = (rgb_blu + 8);
+    *rgb_ptr++ = (rgb_blu + 14);
   }
 }
 

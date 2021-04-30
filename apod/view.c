@@ -228,7 +228,7 @@ void dlist_setup_rgb(unsigned char antic_mode, unsigned char occasional_dli) {
     dlist[5] = (gfx_ptr >> 8);
 
     for (i = 6; i <= 106; i++) {
-      if (occasional_dli && i % 9 == 4) {
+      if (occasional_dli && (i % 6) == 4) {
         dlist[i] = DL_DLI(antic_mode);
       } else {
         dlist[i] = antic_mode;
@@ -242,7 +242,7 @@ void dlist_setup_rgb(unsigned char antic_mode, unsigned char occasional_dli) {
     dlist[109] = (gfx_ptr >> 8);
 
     for (i = 110; i <= 197; i++) {
-      if (occasional_dli && i % 9 == 6) {
+      if (occasional_dli && i % 6 == 0) {
         dlist[i] = DL_DLI(antic_mode);
       } else {
         dlist[i] = antic_mode;
@@ -390,8 +390,8 @@ void view(unsigned char choice, char sample, unsigned char pick_yr, unsigned pic
   dlist_lo = (unsigned char) (((unsigned int) (scr_mem + DLIST_OFFSET)) & 255);
 
   /* Enable interrupt-driven graphics mode, if applicable */
+  rgb_ctr = 0;
   if (choice == CHOICE_LOWRES_RGB) {
-    rgb_ctr = 0;
     mySETVBV((void *) VBLANKD9);
     dli_init(dli9);
     interrupts_used = 1;
