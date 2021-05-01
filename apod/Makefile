@@ -3,7 +3,7 @@
 # images, as converted by the 'apod' web app.
 #
 # Bill Kendrick <bill@newbreedsoftware.com>
-# 2021-03-27 - 2021-04-23
+# 2021-03-27 - 2021-05-01
 
 CC65BIN=/usr/bin
 CC65=${CC65BIN}/cc65
@@ -25,6 +25,7 @@ clean:
 	-rm apod.xex
 	-rm apod.map
 	# O files from S source
+	-rm dlists.o
 	-rm dli15.o
 	-rm dli256.o
 	-rm dli9.o
@@ -54,12 +55,12 @@ clean:
 	-rm view.o
 	-rm view.s
 
-apod.xex:	apod.o dli15.o dli256.o dli9.o nsio.o sio.o myprint.o get_time.o interrupt_helpers.o screen_helpers.o colorbars.o menu.o rgb.o view.o fetch.o segments.o atari.cfg
+apod.xex:	apod.o dlists.o dli15.o dli256.o dli9.o nsio.o sio.o myprint.o get_time.o interrupt_helpers.o screen_helpers.o colorbars.o menu.o rgb.o view.o fetch.o segments.o atari.cfg
 	${LD65} --lib-path "${CC65_LIB}" \
 		-o apod.xex \
 		-t atari \
 		-m apod.map \
-		apod.o dli15.o dli256.o dli9.o nsio.o sio.o myprint.o get_time.o interrupt_helpers.o screen_helpers.o colorbars.o menu.o rgb.o view.o fetch.o segments.o atari.lib
+		apod.o dlists.o dli15.o dli256.o dli9.o nsio.o sio.o myprint.o get_time.o interrupt_helpers.o screen_helpers.o colorbars.o menu.o rgb.o view.o fetch.o segments.o atari.lib
 
 apod.o:	apod.s
 	${CA65} -I "${CC65_ASMINC}" -t atari apod.s -o apod.o
@@ -132,6 +133,15 @@ rgb.s:	rgb.c rgb.h
 		-t atari \
 		rgb.c \
 		-o rgb.s
+
+dlists.o:	dlists.s
+	${CA65} -I "${CC65_ASMINC}" -t atari dlists.s -o dlists.o
+
+dlists.s:	dlists.c dlists.h
+	${CC65} ${CC65_FLAGS} -I "${CC65_INC}" \
+		-t atari \
+		dlists.c \
+		-o dlists.s
 
 view.o:	view.s
 	${CA65} -I "${CC65_ASMINC}" -t atari view.s -o view.o

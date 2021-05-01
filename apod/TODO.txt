@@ -1,13 +1,13 @@
 TODO for APOD #FujiNet client
-2021-04-24
+2021-05-01
+
+ * Finish ColorView 15 mode (buggy).
 
  * Break more parts of the code out into modules:
-   * Display list setup
+   * Vertical Blank Interrupt setup
 
  * In ColorView 9 mode, maybe add PGMs on the sides for solid black
    borders (don't use DMA, obviously).
-
- * ColorView 15 mode.  [Server already supports!]
 
  * Graphics 15 (160x192) grey combined with Graphics 11 (80x192 hues)
    hybrid APAC mode.  ("Champions Interlace" style mode.)
