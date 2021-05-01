@@ -1,8 +1,14 @@
 /*
   colorbars.c
 
+  Astronomy Picture of the Day (APOD) viewer client
+  for Ataris using #Fujinet.
+
+  This module renders a test pattern ("color bars").
+  Different screen modes get different patterns.
+
   By Bill Kendrick <bill@newbreedsoftware.com>
-  2021-03-27 - 2021-04-30
+  2021-03-27 - 2021-05-01
 */
 
 #include <string.h> /* for memset() */
@@ -10,11 +16,18 @@
 #include "colorbars.h"
 #include "menu.h"
 
+/**
+ * Render the appropriate test pattern ("color bars")
+ * for the given mode.
+ *
+ * @param byte mode -- one of the viewing modes described in "menu.h"
+ */
 void render_colorbars(unsigned char mode) {
   int i, j;
   unsigned char r, g, b, grey, hue;
 
   if (mode == CHOICE_HIRES_MONO) {
+    /* Monochrome dither pattern simulating shades */
     for (i = 0; i < 40; i++) {
       scr_mem1[i] = (i < 8) ? 0 : (i < 16) ? 0x88 : (i < 32) ? 0x55 : 0xff;
       scr_mem1[i + 40] = (i < 16) ? 0 : (i < 24) ? 0xaa : 0xff;
@@ -23,6 +36,7 @@ void render_colorbars(unsigned char mode) {
       memcpy(scr_mem1 + i, scr_mem1, 80);
     }
   } else if (mode == CHOICE_MEDRES_COLOR) {
+    /* Four grey scale shades */
     for (i = 0; i < 40; i++) {
       scr_mem1[i] = (i < 10) ? 0 : (i < 20) ? 0x55 : (i < 30) ? 0xaa : 0xff;
     }
@@ -30,6 +44,7 @@ void render_colorbars(unsigned char mode) {
       memcpy(scr_mem1 + i, scr_mem1, 40);
     }
   } else if (mode == CHOICE_LOWRES_GREY) {
+    /* Sixteen grey scale shades */
     for (i = 0; i < 40; i++) {
       grey = (i << 1) / 5;
       grey = grey * 17;
@@ -39,7 +54,9 @@ void render_colorbars(unsigned char mode) {
       memcpy(scr_mem1 + i, scr_mem1, 40);
     }
   } else if (mode == CHOICE_LOWRES_RGB) {
-    /* Color bars */
+    /* TV-style color bars (for 4096 color mode) */
+
+    /* 6 colors at the top: Red, R+G=Yellow, Green, G+B=Cyan, Blue, and B+R=Purple */
     for (i = 0; i < 40; i++) {
       r = (i >= 34 || i < 14) ? 0x55 : 0;
       g = (6 < i && i < 28) ? 0x55 : 0;
@@ -63,7 +80,7 @@ void render_colorbars(unsigned char mode) {
       memcpy(scr_mem3 + i, scr_mem3, 120);
     }
 
-    /* 16 shades of grey */
+    /* 16 shades of grey at the bottom */
     for (i = 5120; i < 5160; i++) {
       grey = ((i % 40) << 1) / 5;
       grey = grey * 17;
@@ -73,7 +90,7 @@ void render_colorbars(unsigned char mode) {
       memcpy(scr_mem1 + i, scr_mem1 + 5120, 40);
     }
 
-    /* 8 shades of grey */
+    /* 8 shades of grey as well */
     for (i = 6400; i < 6440; i++) {
       grey = ((i % 40) / 5) << 1;
       grey = grey * 17;
@@ -86,8 +103,9 @@ void render_colorbars(unsigned char mode) {
     memcpy(scr_mem2 + 5120, scr_mem1 + 5120, 2560);
     memcpy(scr_mem3 + 5120, scr_mem1 + 5120, 2560);
   } else if (mode == CHOICE_MEDRES_RGB) {
-    /* Color bars */
+    /* TV-style color bars (for 64 color mode) */
 
+    /* 6 colors at the top: Red, R+G=Yellow, Green, G+B=Cyan, Blue, and B+R=Purple */
     for (i = 0; i < 40; i++) {
       r = (i >= 34 || i < 14) ? 0x55 : 0;
       g = (6 < i && i < 28) ? 0x55 : 0;
@@ -111,7 +129,7 @@ void render_colorbars(unsigned char mode) {
       memcpy(scr_mem3 + i, scr_mem3, 120);
     }
 
-    /* 4 shades of grey */
+    /* 4 shades of grey at the bottom */
     for (i = 5120; i < 5160; i++) {
       grey = (i < 5130 ? 0 : (i < 5140 ? 85 : (i < 5150 ? 170 : 255)));
       scr_mem1[i] = grey;
@@ -123,6 +141,10 @@ void render_colorbars(unsigned char mode) {
     memcpy(scr_mem2 + 5120, scr_mem1 + 5120, 2560);
     memcpy(scr_mem3 + 5120, scr_mem1 + 5120, 2560);
   } else if (mode == CHOICE_LOWRES_256) {
+    /* 256-color grid
+       (simulates the well-known "16-shade mode with 16 hues applied via
+       Display List Interrupt" effect, but rendered as Any Point Any Color
+       (APAC) interlaced flickering mode) */
     for (i = 0; i < 40; i++) {
       grey = (i << 1) / 5;
       grey = grey * 17;

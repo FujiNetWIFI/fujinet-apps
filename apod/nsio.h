@@ -1,7 +1,5 @@
 /**
- * Network Testing tools
- *
- * ncopy - copy files to/from N:
+ * From #FujiNet Network Testing tools
  *
  * Author: Thomas Cherryhomes
  *  <thom.cherryhomes@gmail.com>

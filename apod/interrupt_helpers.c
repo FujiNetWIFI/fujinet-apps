@@ -1,8 +1,15 @@
 /*
   interrupt_helpers.c
 
+  Astronomy Picture of the Day (APOD) viewer client
+  for Ataris using #Fujinet.
+
+  This module provides a few helper functions used for
+  setting a Vertical Blank Interrupt, and setting and
+  enabling, or disabling, a Display List Interrupt.
+
   By Bill Kendrick <bill@newbreedsoftware.com>
-  2021-03-27 - 2021-04-22
+  2021-03-27 - 2021-05-01
 */
 
 #include <atari.h>

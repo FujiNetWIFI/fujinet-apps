@@ -1,6 +1,14 @@
 /*
   vblanks.c
 
+  Astronomy Picture of the Day (APOD) viewer client
+  for Ataris using #Fujinet.
+
+  This module includes the Vertical Blank Interrupt
+  routines used by the two RGB ("ColorView") viewing modes
+  ("Lo-Res 4096 color" and "Med-Res 64 color")
+  and the "Lo-Res 256-color" ("APAC") viewing mode.
+
   By Bill Kendrick <bill@newbreedsoftware.com>
   2021-03-27 - 2021-05-01
 */

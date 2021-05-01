@@ -1,8 +1,15 @@
 /*
   fetch.c
 
+  Astronomy Picture of the Day (APOD) viewer client
+  for Ataris using #Fujinet.
+
+  This module fetches an APOD photo (or sample image)
+  from the APOD server via the FujiNet "N:" device,
+  using the HTTP transport.
+
   By Bill Kendrick <bill@newbreedsoftware.com>
-  2021-03-27 - 2021-04-30
+  2021-03-27 - 2021-05-01
 */
 
 #include <stdio.h>
@@ -26,6 +33,14 @@ char url[255];
 
 /**
  * Fetch the image
+ *
+ * @param byte choice -- which viewing mode we're using, and hence which image
+ *   conversion to do / fetch (see "menus.h")
+ * @param byte sample -- which static sample image to fetch, if doing so
+ *   (versus downloading a particular APOD photo)
+ * @param byte pick_yr, pick_mo, pick_day -- the date (year 0 = 2000),
+ *   month, and day we want to fetch from the APOD site
+ *   (if pick_day is 0, we're grabbing a sample)
  */
 void fetch_image(unsigned char choice, char sample, int size, unsigned char pick_yr, unsigned pick_mo, unsigned pick_day) {
   unsigned short data_len, data_read;

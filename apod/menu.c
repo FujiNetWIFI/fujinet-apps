@@ -1,8 +1,24 @@
 /*
   menu.c
 
+  Astronomy Picture of the Day (APOD) viewer client
+  for Ataris using #Fujinet.
+
+  This module draws the main menu, and handles the
+  input from the main menu.
+
+  If the user has chosen to view an image, we'll return
+  to the main loop, where the "view" module will take
+  over (fetch/render and display the image, and handle
+  input during the viewing process).
+
+  Options which do not leave the main menu (changing the
+  APOD photo date, picking a sample, re-requesting the
+  current time from the #FujiNet, etc.), are all handled
+  here.
+
   By Bill Kendrick <bill@newbreedsoftware.com>
-  2021-03-27 - 2021-04-28
+  2021-03-27 - 2021-05-01
 */
 
 #include <atari.h>
@@ -15,6 +31,11 @@
 #include "myprint.h"
 #include "rgb.h"
 
+/* Which keypresses correspond to viewing mode
+ * choices (see "menu.h").  Once pressed, we'll
+ * leave the main menu, and let the "view" module
+ * do its work!
+ */
 unsigned char choice_keys[NUM_CHOICES] = {
   KEY_NONE,
   KEY_A,
@@ -25,6 +46,11 @@ unsigned char choice_keys[NUM_CHOICES] = {
   KEY_F
 };
 
+/* Which keypresses correspond to sample choices
+ * (see "menu.h").  When pressed, we'll update the
+ * choice, show it on the screen, and remain on the
+ * main menu
+ */
 unsigned char sample_keys[NUM_SAMPLES] = {
   KEY_0,
   KEY_1,
@@ -35,10 +61,16 @@ unsigned char sample_keys[NUM_SAMPLES] = {
   KEY_9
 };
 
+/* Note: Other key presses and key combinations
+ * ("KEY_x" values) are utilized by our "handle_menu()"
+ * function; see them there.
+ */
+
 extern unsigned char scr_mem[];
 
 /**
  * Set up display list for title/menu screen
+ * FIXME: Move to dlists.c/.h? -bjk 2021.05.01
  */
 void dlist_setup_menu(void) {
   int dl_idx;
@@ -120,6 +152,10 @@ void show_sample_choice(char sample) {
   }
 }
 
+/**
+ * Draw the full menu, with the current settings
+ * already displayed.
+ */
 void draw_menu(char sample, unsigned char y, unsigned char m, unsigned char d, unsigned char loaded_properly, unsigned char rgb_red, unsigned char rgb_grn, unsigned char rgb_blu) {
   char str[20];
 
@@ -171,6 +207,16 @@ void pick_today() {
 }
 
 
+/**
+ * Handle main menu keyboard input from the user
+ *
+ * @param byte* choice -- the display choice (returned to the main()
+ *   loop, so it can be passed along to the "view" module")
+ * @param byte* sample -- the sample choice (returned, as above)
+ *
+ * NOTE: Some other settings (the APOD date to fetch) are
+ * handled via globals.
+ */
 void handle_menu(unsigned char * choice, char * sample) {
   unsigned char keypress, date_chg;
   int i;

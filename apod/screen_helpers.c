@@ -1,8 +1,18 @@
 /*
   screen_helpers.c
 
+  Astronomy Picture of the Day (APOD) viewer client
+  for Ataris using #Fujinet.
+
+  This module provides some helpers for managing the
+  screen, including blanking ANTIC and clearing screen memory,
+  enabling ANTIC (DMA), waiting for the next VBLANK
+  (to reduce flicker/tearing while doing things),
+  and setting up pointers to the various screen and Display List
+  memory blocks.
+
   By Bill Kendrick <bill@newbreedsoftware.com>
-  2021-03-27 - 2021-04-20
+  2021-03-27 - 2021-05-01
 */
 
 #include <string.h> /* for memset() */

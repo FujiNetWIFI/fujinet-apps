@@ -1,8 +1,19 @@
 /*
   rgb.c
 
+  Astronomy Picture of the Day (APOD) viewer client
+  for Ataris using #Fujinet.
+
+  This module manages the RGB color tables used by
+  the "Lo-Res 4096 color" and "Med-Res 64 color"
+  ("ColorView") viewing modes.
+
+  It also handles keypresses ([R], [G], [B], [X])
+  for adjusting the hues of each component
+  (and updates the table accordingly).
+
   By Bill Kendrick <bill@newbreedsoftware.com>
-  2021-03-27 - 2021-04-30
+  2021-03-27 - 2021-05-01
 */
 
 #include <atari.h>

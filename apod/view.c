@@ -1,6 +1,22 @@
 /*
   view.c
 
+  Astronomy Picture of the Day (APOD) viewer client
+  for Ataris using #Fujinet.
+
+  This module sets up an image viewing screen (see "dlists" module),
+  fetches an image from the APOD server (see "fetch" module)
+  or renders a test pattern (see "colorbars" module),
+  displays it (invoking VBI and DLI routines, as necessary;
+  see "dli*" and "vblanks" modules), and finally handles
+  input from the user, returning to the main() loop when they
+  are done looking at the picture.
+
+  Keyboard input during viewing is handled here
+  (directly, e.g. [L] luminance controls for "Lo-res 256 color" ("APAC")
+  mode, or indirectly, e.g. [R]/[G]/[B] hues for "ColorView" modes;
+  see "rgb" module).
+
   By Bill Kendrick <bill@newbreedsoftware.com>
   2021-03-27 - 2021-05-01
 */
@@ -104,9 +120,11 @@ void view(unsigned char choice, char sample, unsigned char pick_yr, unsigned pic
   do {
     k = OS.ch;
     if (k == KEY_ESC) {
+      /* [Esc] Done viewing; return to main menu */
       done = 1;
     } else if ((k & 0x3F) == KEY_R || (k & 0x3F) == KEY_G || (k & 0x3F) == KEY_B || k == KEY_X) {
-      /* [R], [G], or [B] key, with our without [Shift] */
+      /* [R], [G], or [B] key, with/without [Shift]: adjust hues for RGB modes
+         [X]: reset RGB mode hues and APAC luminence */
       handle_rgb_keypress(k);
       if (choice == CHOICE_LOWRES_RGB) {
         setup_rgb_table9();
@@ -115,9 +133,11 @@ void view(unsigned char choice, char sample, unsigned char pick_yr, unsigned pic
       }
       OS.ch = KEY_NONE;
     } else if (k == KEY_L) {
+      /* [L]: Increase APAC luminence */
       apac_lum = (apac_lum + 2) % 16;
       OS.ch = KEY_NONE;
     } else if (k == (KEY_L | KEY_SHIFT)) {
+      /* [Shift]+[L]: Decrease APAC luminence */
       if (apac_lum == 0) {
         apac_lum = 14;
       } else {

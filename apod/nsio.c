@@ -1,14 +1,14 @@
-/**
- * Network Testing tools
- *
- * ncopy - copy files to/from N:
- *
- * Author: Thomas Cherryhomes
- *  <thom.cherryhomes@gmail.com>
- *
- * Released under GPL 3.0
- * See COPYING for details.
- */
+/*
+  Astronomy Picture of the Day (APOD) viewer client
+  for Ataris using #Fujinet.
+
+  This module provides "nXXXX()" functions for
+  talking to the #FujiNet N: device via direct SIO Calls.
+
+  From "Network Testing tools"
+  by Thomas Cherryhomes <thom.cherryhomes@gmail.com>
+  (Released under GPL 3.0)
+*/
 
 #include <atari.h>
 #include <string.h>

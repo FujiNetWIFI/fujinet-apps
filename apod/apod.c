@@ -4,10 +4,17 @@
   Astronomy Picture of the Day (APOD) viewer client
   for Ataris using #Fujinet.
 
-  See the APOD web app (server)
+  See the APOD web app (server) for additional details
+  (https://github.com/FujiNetWIFI/servers/tree/main/apod).
+
+  This is the core program ("main()"), which is repeats this loop forever:
+   1. displays the menu
+   2. handles the choice (downloads an image or renders a built-in (offline) 
+      test pattern)
+   3. displays the image
 
   By Bill Kendrick <bill@newbreedsoftware.com>
-  2021-03-27 - 2021-04-24
+  2021-03-27 - 2021-05-01
 */
 
 #include <stdio.h>
@@ -39,7 +46,7 @@ unsigned char time_buf[6];
 unsigned char cur_yr, cur_mo, cur_day, pick_yr, pick_mo, pick_day;
 
 
-/* The program!  FIXME: Split into functions! */
+/* The program! */
 void main(void) {
   unsigned char choice, sample;
 

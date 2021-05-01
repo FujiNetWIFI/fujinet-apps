@@ -1,7 +1,13 @@
 /*
   myprint.c
 
-  2021-03-27 - 2021-04-20
+  Astronomy Picture of the Day (APOD) viewer client
+  for Ataris using #Fujinet.
+
+  This module draws strings onto a text mode display
+  (e.g., the main menu)
+
+  2021-03-27 - 2021-05-01
 */
 
 #include "myprint.h"

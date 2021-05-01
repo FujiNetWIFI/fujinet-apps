@@ -1,6 +1,21 @@
 /*
   get_time.c
 
+  Astronomy Picture of the Day (APOD) viewer client
+  for Ataris using #Fujinet.
+
+  This module fetches the current date and time (we only
+  care about date) from the #FujiNet device.
+
+  If it's unable to, the date "2099-12-31" is set.
+  (The user can retry, via the [Ctrl]+[T] option on the
+  APOD viewer's main menu.)
+
+  It sets the user's choice of APOD photo date to
+  "current" (Y=0, M=0, D=0), which causes the server to
+  fetch the photo from the main APOD page, rather than
+  a date-stamped archive page.
+
   By Bill Kendrick <bill@newbreedsoftware.com>
   2021-03-27 - 2021-04-20
 */
@@ -47,4 +62,3 @@ void get_time(void) {
   pick_mo = 0;
   pick_day = 0;
 }
-

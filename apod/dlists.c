@@ -1,6 +1,12 @@
 /*
   dlists.c
 
+  Astronomy Picture of the Day (APOD) viewer client
+  for Ataris using #Fujinet.
+
+  This module constructs various Display Lists
+  used by the program.
+
   By Bill Kendrick <bill@newbreedsoftware.com>
   2021-03-27 - 2021-05-01
 */
@@ -14,7 +20,13 @@ extern unsigned char scr_mem[];
 
 
 /**
- * Set up a basic Display List
+ * Set up a basic Display List for displaying
+ * a bitmapped image in a single (non-flicker-effect) frame.
+ *
+ * (Used by "Hi-Res Mono" (GRAPHICS 8),
+ * "Med-Res 4 color" (GRAPHICS 15 aka GRAPHICS 7+),
+ * and "Low-res 16 shade" (GRAPHICS 9) modes; it's up to the
+ * caller to set the GPRIOR bit to enable the 16 shades GTIA mode.)
  *
  * @param byte antic_mode
  */
@@ -59,9 +71,16 @@ void dlist_setup(unsigned char antic_mode) {
 
 /**
  * Set up three Display Lists for ColorView 9 & 15 RGB modes
- * (utilizes DLI and VBI to flicker; see above)
+ * (they utilize DLI and VBI to flicker, which are invoked by
+ * the caller; see the "dli*" and "vblanks" modules)
  *
  * @param byte antic_mode
+ * @param byte occasional_dli -- whether DLI should be invoked
+ *   every 6th scanline (used by "Med-res 64 colors" mode,
+ *   since we need spare time because we're setting 3 color
+ *   registers per scanline!), or if it's safe to invoke DLIs
+ *   EVERY scanline (used by "Low-res 4096 colors" mode),
+ *   since it's only changing one color register.
  */
 void dlist_setup_rgb(unsigned char antic_mode, unsigned char occasional_dli) {
   int l, i;
@@ -117,9 +136,8 @@ void dlist_setup_rgb(unsigned char antic_mode, unsigned char occasional_dli) {
 
 /**
  * Set up two Display Lists for APAC 256 color mode
- * (utilizes DLI and VBI to flicker; see above)
- *
- * @param byte antic_mode
+ * (utilizes DLI and VBI to flicker, which are invoked by
+ * the caller; see the "dli*" and "vblanks" modules)
  */
 void dlist_setup_apac(void) {
   int i;
