@@ -4,7 +4,10 @@ apod (Astronomy Picture of the Day) Client for #FujiNet
 Bill Kendrick bill@newbreedsoftware.com
 with help from apc & others (see credits, below)
 
-2021-03-27 - 2021-04-24
+Released under the GNU General Public License 3 (GPL-3);
+see COPYING
+
+2021-03-27 - 2021-05-01
 
 ## Purpose
 Fetch and view [NASA's Astronomy Picture of the Day (APOD)](https://apod.nasa.gov/apod/),
@@ -29,7 +32,7 @@ an image in one of the following graphics modes:
 - `[B]` - Medium resolution four-color (160x192 four best colors, aka "GRAPHICS 15" aka "GRAPHICS 7+")
 - `[C]` - Low resolution greyscale (80x192 sixteen shades of grey, aka "GRAPHICS 9")
 - `[D]` - Low resolution 4,096 color (via flickering; "ColorView" mode)
-<!-- - `[E]` - Medium resolution 64-color (via flickering; "ColorView" mode) -->
+- `[E]` - Medium resolution 64-color (via flickering; "ColorView" mode)
 - `[F]` - Low resolution 256 color (via flickering; "Any Point, Any Color (APAC)" mode)
 
 Once the image appears, press `[Esc]` to return to the menu.
@@ -73,6 +76,7 @@ does not require a #FujiNet device).
 - In high resolution mono mode, a set of bars will appear, dithered to simulate shading.
 - In medium resolution four-color mode and low resolution greyscale mode, grey bars will appear.
 - In low resoluton 4,096 color mode, a colorbar battern will appear with 6 colors at the top (red, yellow, green, cyan, blue, and purple), and sets of 16 and 8 shades of grey at the bottom.
+- In medium resoluton 64 color mode, a colorbar battern will appear with 6 colors at the top (red, yellow, green, cyan, blue, and purple), and 4 shades of grey at the bottom.
 - In low resolution 256 color mode, a grid of 256 colors (16 shades across, 16 hues down) appears.
 
 Press `[0]` to choose to fetch an APOD photo (the default).
