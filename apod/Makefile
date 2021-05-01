@@ -52,15 +52,17 @@ clean:
 	-rm rgb.s
 	-rm screen_helpers.o
 	-rm screen_helpers.s
+	-rm vblanks.o
+	-rm vblanks.s
 	-rm view.o
 	-rm view.s
 
-apod.xex:	apod.o dlists.o dli15.o dli256.o dli9.o nsio.o sio.o myprint.o get_time.o interrupt_helpers.o screen_helpers.o colorbars.o menu.o rgb.o view.o fetch.o segments.o atari.cfg
+apod.xex:	apod.o dlists.o dli15.o dli256.o dli9.o nsio.o sio.o myprint.o get_time.o interrupt_helpers.o screen_helpers.o colorbars.o menu.o rgb.o view.o vblanks.o fetch.o segments.o atari.cfg
 	${LD65} --lib-path "${CC65_LIB}" \
 		-o apod.xex \
 		-t atari \
 		-m apod.map \
-		apod.o dlists.o dli15.o dli256.o dli9.o nsio.o sio.o myprint.o get_time.o interrupt_helpers.o screen_helpers.o colorbars.o menu.o rgb.o view.o fetch.o segments.o atari.lib
+		apod.o dlists.o dli15.o dli256.o dli9.o nsio.o sio.o myprint.o get_time.o interrupt_helpers.o screen_helpers.o colorbars.o menu.o rgb.o view.o vblanks.o fetch.o segments.o atari.lib
 
 apod.o:	apod.s
 	${CA65} -I "${CC65_ASMINC}" -t atari apod.s -o apod.o
@@ -143,10 +145,19 @@ dlists.s:	dlists.c dlists.h
 		dlists.c \
 		-o dlists.s
 
+vblanks.o:	vblanks.s
+	${CA65} -I "${CC65_ASMINC}" -t atari vblanks.s -o vblanks.o
+
+vblanks.s:	vblanks.c vblanks.h dli15.h dli256.h dli9.h rgb.h interrupt_helpers.h
+	${CC65} ${CC65_FLAGS} -I "${CC65_INC}" \
+		-t atari \
+		vblanks.c \
+		-o vblanks.s
+
 view.o:	view.s
 	${CA65} -I "${CC65_ASMINC}" -t atari view.s -o view.o
 
-view.s:	view.c view.h interrupt_helpers.h screen_helpers.h rgb.h dli15.h dli9.h dli256.h colorbars.h menu.h
+view.s:	view.c view.h interrupt_helpers.h screen_helpers.h rgb.h dlists.h dli15.h dli9.h dli256.h colorbars.h menu.h vblanks.h
 	${CC65} ${CC65_FLAGS} -I "${CC65_INC}" \
 		-t atari \
 		view.c \

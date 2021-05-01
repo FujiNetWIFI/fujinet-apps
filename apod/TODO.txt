@@ -3,9 +3,6 @@ TODO for APOD #FujiNet client
 
  * Finish ColorView 15 mode (buggy).
 
- * Break more parts of the code out into modules:
-   * Vertical Blank Interrupt setup
-
  * In ColorView 9 mode, maybe add PGMs on the sides for solid black
    borders (don't use DMA, obviously).
 
