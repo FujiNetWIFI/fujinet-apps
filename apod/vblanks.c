@@ -13,6 +13,10 @@
 #include "rgb.h"
 #include "interrupt_helpers.h"
 
+/* FIXME: This module is 100% assembly language,
+   so should be converted from a .c file to a .s source.
+   In the meantime, it works, so not gonna bother yet.
+   -bjk 2021.05.01 */
 
 /* Tracking which Display List is active */
 unsigned char dlist_hi, dlist_lo;
