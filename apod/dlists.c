@@ -75,14 +75,8 @@ void dlist_setup(unsigned char antic_mode) {
  * the caller; see the "dli*" and "vblanks" modules)
  *
  * @param byte antic_mode
- * @param byte occasional_dli -- whether DLI should be invoked
- *   every 6th scanline (used by "Med-res 64 colors" mode,
- *   since we need spare time because we're setting 3 color
- *   registers per scanline!), or if it's safe to invoke DLIs
- *   EVERY scanline (used by "Low-res 4096 colors" mode),
- *   since it's only changing one color register.
  */
-void dlist_setup_rgb(unsigned char antic_mode, unsigned char occasional_dli) {
+void dlist_setup_rgb(unsigned char antic_mode) {
   int l, i;
   unsigned int gfx_ptr /*, next_dlist */;
   unsigned char * dlist;
@@ -103,11 +97,7 @@ void dlist_setup_rgb(unsigned char antic_mode, unsigned char occasional_dli) {
     dlist[5] = (gfx_ptr >> 8);
 
     for (i = 6; i <= 106; i++) {
-      if (occasional_dli && (i % 6) == 4) {
-        dlist[i] = DL_DLI(antic_mode);
-      } else {
-        dlist[i] = antic_mode;
-      }
+      dlist[i] = antic_mode;
     }
 
     /* Hitting 4K boundary! */
@@ -116,14 +106,9 @@ void dlist_setup_rgb(unsigned char antic_mode, unsigned char occasional_dli) {
     dlist[108] = (gfx_ptr & 255);
     dlist[109] = (gfx_ptr >> 8);
 
-    for (i = 110; i <= 197; i++) {
-      if (occasional_dli && i % 6 == 0) {
-        dlist[i] = DL_DLI(antic_mode);
-      } else {
-        dlist[i] = antic_mode;
-      }
+    for (i = 110; i <= 198; i++) {
+      dlist[i] = antic_mode;
     }
-    dlist[198] = antic_mode;
 
     dlist[199] = DL_JVB;
     dlist[200] = (((unsigned int) dlist) & 255);

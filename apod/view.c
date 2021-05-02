@@ -72,12 +72,12 @@ void view(unsigned char choice, char sample, unsigned char pick_yr, unsigned pic
   } else if (choice == CHOICE_LOWRES_RGB) {
     size = 7680 * 3;
     setup_rgb_table9();
-    dlist_setup_rgb(DL_DLI(DL_GRAPHICS8), 0); /* Every line a DLI */
+    dlist_setup_rgb(DL_DLI(DL_GRAPHICS8)); /* DLI every scanline */
     OS.gprior = 64;
   } else if (choice == CHOICE_MEDRES_RGB) {
     size = 7680 * 3;
     setup_rgb_table15();
-    dlist_setup_rgb(DL_GRAPHICS15, 1); /* Occasional DLI */
+    dlist_setup_rgb(DL_GRAPHICS15); /* DLI at the top only */
   } else if (choice == CHOICE_LOWRES_256) {
     size = 7680 * 2;
     dlist_setup_apac();
