@@ -49,15 +49,35 @@ void get_time(void) {
     cur_yr = time_buf[2];
     cur_mo = time_buf[1];
     cur_day = time_buf[0];
+
+    if (cur_mo < 1 || cur_mo > 12 || cur_day < 1 || cur_day > 31) {
+      /* Sometimes we get a result, but
+         it's nonsense (e.g. a date that came
+         out "2000-00-15" or "2000-120-15" when running "apod.xex"
+         under MyDOS on an ATR booted via SIO2SD using high speed I/O;
+         oddly, fetching images over HTTP via N: still worked fine
+         -bjk 2021.05.01) */
+      cur_yr = 99;
+    }
   } else {
-    /* This shouldn't happen */
+    /* No result; could be that FujiNet hasn't fully
+       booted yet, or hasn't gotten the time yet
+       (I see this a lot when I run "apod.xex" via
+       a The Ultimate Cart SD cartridge; it loads so fast
+       that we try to get the time before FujiNet is ready
+       to give it to us) */
     cur_yr = 99;
   }
+
+  /* If we had a problem, allow the max date to be as
+     high as it goes (2099-12-31) */
   if (cur_yr >= 99) {
     cur_yr = 99;
     cur_mo = 12;
     cur_day = 31;
   }
+
+  /* Set chosen date to "Current" (no specific date chosen) */
   pick_yr = 0;
   pick_mo = 0;
   pick_day = 0;

@@ -6,5 +6,8 @@ TODO for APOD #FujiNet client
 
  * Graphics 15 (160x192) grey combined with Graphics 11 (80x192 hues)
    hybrid APAC mode.  ("Champions Interlace" style mode.)
-   [Server needs to support]
+   [Server needs to support this]
+
+ * A way to view titles and maybe also descriptions?
+   [Server has very basic support for this]
 
