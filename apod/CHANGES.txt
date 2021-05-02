@@ -1,0 +1,14 @@
+apod (Astronomy Picture of the Day) Client for #FujiNet
+Change Log
+
+ * 2021-05-01
+   + First official release:
+     - Options to view in: high-res mono, med-res 4-color,
+       low-res 16-shade, low-res 4096-color, med-res 64-color,
+       and low-res 256-color
+     - Pick a date and fetch and view an APOD image
+     - Pick a static sample image and fetch and view it
+     - Locally (offline) render a test pattern / colorbars
+     - Adjust Red, Green, Blue components' hues in 64- & 4096-color modes
+     - Adjust Luminence in 256-color mode
+
