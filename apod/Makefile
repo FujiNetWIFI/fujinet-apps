@@ -3,7 +3,7 @@
 # images, as converted by the 'apod' web app.
 #
 # Bill Kendrick <bill@newbreedsoftware.com>
-# 2021-03-27 - 2021-05-03
+# 2021-03-27 - 2021-05-04
 
 CC65BIN=/usr/bin
 CC65=${CC65BIN}/cc65
@@ -69,7 +69,7 @@ apod.xex:	apod.o app_key.o dlists.o dli15.o dli256.o dli9.o nsio.o sio.o myprint
 apod.o:	apod.s
 	${CA65} -I "${CC65_ASMINC}" -t atari apod.s -o apod.o
 
-apod.s:	apod.c app_key.h get_time.h screen_helpers.h menu.h rgb.h view.h globals.h
+apod.s:	apod.c app_key.h get_time.h globals.h menu.h rgb.h screen_helpers.h view.h
 	${CC65} ${CC65_FLAGS} -I "${CC65_INC}" \
 		-t atari \
 		apod.c \
@@ -96,7 +96,7 @@ get_time.s:	get_time.c get_time.h sio.h
 app_key.o:	app_key.s
 	${CA65} -I "${CC65_ASMINC}" -t atari app_key.s -o app_key.o
 
-app_key.s:	app_key.c app_key.h sio.h
+app_key.s:	app_key.c app_key.h sio.h rgb.h
 	${CC65} ${CC65_FLAGS} -I "${CC65_INC}" \
 		-t atari \
 		app_key.c \
@@ -123,7 +123,7 @@ interrupt_helpers.s:	interrupt_helpers.c interrupt_helpers.h
 colorbars.o:	colorbars.s
 	${CA65} -I "${CC65_ASMINC}" -t atari colorbars.s -o colorbars.o
 
-colorbars.s:	colorbars.c colorbars.h screen_helpers.h
+colorbars.s:	colorbars.c colorbars.h screen_helpers.h menu.h
 	${CC65} ${CC65_FLAGS} -I "${CC65_INC}" \
 		-t atari \
 		colorbars.c \
@@ -132,7 +132,7 @@ colorbars.s:	colorbars.c colorbars.h screen_helpers.h
 menu.o:	menu.s
 	${CA65} -I "${CC65_ASMINC}" -t atari menu.s -o menu.o
 
-menu.s:	menu.c menu.h screen_helpers.h myprint.h version.h
+menu.s:	menu.c menu.h app_key.h get_time.h rgb.h screen_helpers.h myprint.h version.h
 	${CC65} ${CC65_FLAGS} -I "${CC65_INC}" \
 		-t atari \
 		menu.c \
@@ -150,7 +150,7 @@ rgb.s:	rgb.c rgb.h
 dlists.o:	dlists.s
 	${CA65} -I "${CC65_ASMINC}" -t atari dlists.s -o dlists.o
 
-dlists.s:	dlists.c dlists.h
+dlists.s:	dlists.c dlists.h screen_helpers.h
 	${CC65} ${CC65_FLAGS} -I "${CC65_INC}" \
 		-t atari \
 		dlists.c \
@@ -168,7 +168,7 @@ vblanks.s:	vblanks.c vblanks.h dli15.h dli256.h dli9.h rgb.h interrupt_helpers.h
 view.o:	view.s
 	${CA65} -I "${CC65_ASMINC}" -t atari view.s -o view.o
 
-view.s:	view.c view.h interrupt_helpers.h screen_helpers.h rgb.h dlists.h dli15.h dli9.h dli256.h colorbars.h menu.h vblanks.h
+view.s:	view.c view.h fetch.h interrupt_helpers.h screen_helpers.h rgb.h dlists.h dli15.h dli9.h dli256.h colorbars.h menu.h vblanks.h
 	${CC65} ${CC65_FLAGS} -I "${CC65_INC}" \
 		-t atari \
 		view.c \
@@ -177,7 +177,7 @@ view.s:	view.c view.h interrupt_helpers.h screen_helpers.h rgb.h dlists.h dli15.
 fetch.o:	fetch.s
 	${CA65} -I "${CC65_ASMINC}" -t atari fetch.s -o fetch.o
 
-fetch.s:	fetch.c fetch.h nsio.h menu.h
+fetch.s:	fetch.c fetch.h nsio.h menu.h rgb.h screen_helpers.h
 	${CC65} ${CC65_FLAGS} -I "${CC65_INC}" \
 		-t atari \
 		fetch.c \

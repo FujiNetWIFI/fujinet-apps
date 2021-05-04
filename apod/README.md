@@ -7,7 +7,7 @@ with help from apc & others (see credits, below)
 Released under the GNU General Public License 3 (GPL-3);
 see COPYING
 
-2021-03-27 - 2021-05-01
+2021-03-27 - 2021-05-04
 
 ## Purpose
 Fetch and view [NASA's Astronomy Picture of the Day (APOD)](https://apod.nasa.gov/apod/),
@@ -28,12 +28,12 @@ of additional colors.
 From the menu, press one of the follow keys to load and render
 an image in one of the following graphics modes:
 
-- `[A]` - High resolution mono (320x192 black and white, aka "GRAPHICS 8")
-- `[B]` - Medium resolution four-color (160x192 four best colors, aka "GRAPHICS 15" aka "GRAPHICS 7+")
-- `[C]` - Low resolution greyscale (80x192 sixteen shades of grey, aka "GRAPHICS 9")
-- `[D]` - Low resolution 4,096 color (via flickering; "ColorView" mode)
-- `[E]` - Medium resolution 64-color (via flickering; "ColorView" mode)
-- `[F]` - Low resolution 256 color (via flickering; "Any Point, Any Color (APAC)" mode)
+- `[H]` - High resolution mono (320x192 black and white, aka "GRAPHICS 8")
+- `[M]` - Medium resolution four-color (160x192 four best colors, aka "GRAPHICS 15" aka "GRAPHICS 7+")
+- `[C]` - Medium resolution 64-color (via flickering; "ColorView" mode)
+- `[G]` - Low resolution greyscale (80x192 sixteen shades of grey, aka "GRAPHICS 9")
+- `[F]` - Low resolution 4,096 color (via flickering; "ColorView" mode)
+- `[A]` - Low resolution 256 color (via flickering; "Any Point, Any Color (APAC)" mode)
 
 Once the image appears, press `[Esc]` to return to the menu.
 
@@ -53,6 +53,15 @@ Note - The APOD photos (and hence the APOD server's idea of
 Your #FujiNet is probably set to your current time zone.
 So if you want the latest image, get the "current" image
 (the default; or press `[=]`).
+
+### Adjusting and saving color settings
+Noted below, in the "While Viewing" section, you can adjust
+some color settings in some modes.  You can also change the
+settings from the main menu.
+
+You can also press the `[S]` key to save the settings
+to your FujiNet (via an "app key"), and the settings will
+be loaded the next time you launch APOD Viewer.
 
 ### Viewing samples
 #### Server samples

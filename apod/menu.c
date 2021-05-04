@@ -39,12 +39,18 @@
  */
 unsigned char choice_keys[NUM_CHOICES] = {
   KEY_NONE,
-  KEY_A,
-  KEY_B,
-  KEY_C,
-  KEY_D,
-  KEY_E,
-  KEY_F
+  KEY_H, /* High-res */
+  KEY_M, /* Med-res */
+  KEY_C, /* Colorful/ColorView */
+  KEY_G, /* Greyscale */
+  KEY_F, /* Four-thousand ninety-six */
+  KEY_A  /* APAC */
+  /* Other keys used here:
+  0,1,2,3,5,9
+  <,=,>
+  R,G,B,L,X
+  S
+  */
 };
 
 /* Which keypresses correspond to sample choices
@@ -143,13 +149,15 @@ void show_chosen_date(unsigned char y, unsigned char m, unsigned char d, unsigne
 void show_sample_choice(char sample) {
   char tmp_str[2];
 
-  myprint(scr_mem, 18, 17, "  ");
+  myprint(scr_mem, 16, 12, "____");
   if (sample == SAMPLE_COLORBARS) {
-    myprint(scr_mem, 18, 17, "CB");
+    myprint(scr_mem, 18, 12, "CB");
   } else if (sample) {
     tmp_str[0] = sample + '0';
     tmp_str[1] = '\0';
-    myprint(scr_mem, 19, 17, tmp_str);
+    myprint(scr_mem, 19, 12, tmp_str);
+  } else {
+    myprint(scr_mem, 16, 12, "APOD");
   }
 }
 
@@ -189,12 +197,12 @@ void draw_menu(char sample, unsigned char y, unsigned char m, unsigned char d, u
 
                 /*--------------------*/
   myprint(scr_mem, 0,  5, "________HOW_________");
-  myprint(scr_mem, 0,  6, "[A] hi-res mono");
-  myprint(scr_mem, 0,  7, "[B] med-res 4 color");
-  myprint(scr_mem, 0,  8, "[C] lo-res 16 shade");
-  myprint(scr_mem, 0,  9, "[D]*lo-res 4K color");
-  myprint(scr_mem, 0, 10, "[E]*med-res 64 color");
-  myprint(scr_mem, 0, 11, "[F]*lo-res 256 color");
+  myprint(scr_mem, 0,  6, "[H] hi-res mono");
+  myprint(scr_mem, 0,  7, "[M] med-res 4 color");
+  myprint(scr_mem, 0,  8, "[C]*med-res 64 color");
+  myprint(scr_mem, 0,  9, "[G] lo-res 16 shade");
+  myprint(scr_mem, 0, 10, "[F]*lo-res 4K color");
+  myprint(scr_mem, 0, 11, "[A]*lo-res 256 color");
 
                 /*--------------------*/
   myprint(scr_mem, 0, 12, "________WHAT________");
@@ -206,9 +214,9 @@ void draw_menu(char sample, unsigned char y, unsigned char m, unsigned char d, u
   show_sample_choice(sample);
 
                 /*--------------------*/
-  myprint(scr_mem, 0, 18, "___*WHILE_VIEWING___");
+  myprint(scr_mem, 0, 18, "__*ADJUST_SETTINGS__");
   show_settings();
-  myprint(scr_mem, 0, 21, "[ESC] return to menu");
+  myprint(scr_mem, 0, 21, "[S] save settings");
 }
 
 /**
@@ -347,9 +355,12 @@ void handle_menu(unsigned char * choice, char * sample) {
         handle_rgb_keypress(keypress);
       }
       show_settings();
+    } else if (keypress == KEY_S) {
+      /* [S] Save settings */
       write_settings();
     }
 
+    /* Date changed! Keep it sane, and display it */
     if (date_chg) {
       if (pick_day > last_day[pick_mo]) {
         pick_day = last_day[pick_mo];

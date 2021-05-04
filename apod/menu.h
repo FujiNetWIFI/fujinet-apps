@@ -12,14 +12,14 @@ enum {
   /* Med-Res 4 color (160x192 4 color (chosen by server); GRAPHICS 15 aka GRAPHICS 7+) */
   CHOICE_MEDRES_COLOR,
 
+  /* Med-Res 64 color (160x192 64 color via Red/Green/Blue; ColorView15) */
+  CHOICE_MEDRES_RGB,
+
   /* Lo-Res 16 shade (80x192 greyscale; GRAPHICS 9) */
   CHOICE_LOWRES_GREY,
 
   /* Lo-Res 4096 color (80x192 4096 color via Red/Green/Blue; ColorView9) */
   CHOICE_LOWRES_RGB,
-
-  /* Med-Res 64 color (160x192 64 color via Red/Green/Blue; ColorView15) */
-  CHOICE_MEDRES_RGB,
 
   /* Lo-Res 256 color (80x192 256 color via Hue/Lum; APAC) */
   CHOICE_LOWRES_256,
