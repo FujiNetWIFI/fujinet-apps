@@ -65,7 +65,7 @@ void main(void) {
   sample = SAMPLE_NONE;
 
   do {
-    draw_menu(sample, pick_yr, pick_mo, pick_day, (cur_yr != 99), rgb_red, rgb_grn, rgb_blu);
+    draw_menu(sample, pick_yr, pick_mo, pick_day, (cur_yr != 99));
     handle_menu(&choice, &sample);
     view(choice, sample, pick_yr, pick_mo, pick_day);
   } while(1);

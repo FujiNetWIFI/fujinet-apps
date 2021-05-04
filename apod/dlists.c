@@ -32,7 +32,6 @@ extern unsigned char scr_mem[];
  * @param byte antic_mode
  */
 void dlist_setup(unsigned char antic_mode) {
-  unsigned char i;
   unsigned int gfx_ptr;
 
   screen_off();
@@ -50,19 +49,11 @@ void dlist_setup(unsigned char antic_mode) {
   dlist1[4] = (gfx_ptr & 255);
   dlist1[5] = (gfx_ptr >> 8);
 
-//  for (i = 6; i <= 106; i++) {
-//    dlist1[i] = antic_mode;
-//  }
-
   /* Hitting 4K boundary! */
   gfx_ptr = (unsigned int) (scr_mem + 4096);
   dlist1[107] = DL_LMS(antic_mode);
   dlist1[108] = (gfx_ptr & 255);
   dlist1[109] = (gfx_ptr >> 8);
-
-//  for (i = 110; i <= 198; i++) {
-//    dlist1[i] = antic_mode;
-//  }
 
   dlist1[199] = DL_JVB;
   dlist1[200] = ((unsigned int) dlist1 & 255);
@@ -80,7 +71,7 @@ void dlist_setup(unsigned char antic_mode) {
  * @param byte antic_mode
  */
 void dlist_setup_rgb(unsigned char antic_mode) {
-  int l, i;
+  unsigned char l;
   unsigned int gfx_ptr /*, next_dlist */;
   unsigned char * dlist;
 
@@ -101,19 +92,11 @@ void dlist_setup_rgb(unsigned char antic_mode) {
     dlist[4] = (gfx_ptr & 255);
     dlist[5] = (gfx_ptr >> 8);
 
-//    for (i = 6; i <= 106; i++) {
-//      dlist[i] = antic_mode;
-//    }
-
     /* Hitting 4K boundary! */
     gfx_ptr += (102 * 40);
     dlist[107] = DL_LMS(antic_mode);
     dlist[108] = (gfx_ptr & 255);
     dlist[109] = (gfx_ptr >> 8);
-
-//    for (i = 110; i <= 198; i++) {
-//      dlist[i] = antic_mode;
-//    }
 
     dlist[199] = DL_JVB;
     dlist[200] = (((unsigned int) dlist) & 255);
@@ -130,7 +113,7 @@ void dlist_setup_rgb(unsigned char antic_mode) {
  * the caller; see the "dli*" and "vblanks" modules)
  */
 void dlist_setup_apac(void) {
-  int i;
+  unsigned char i;
   unsigned char * dlist1, * dlist2;
   unsigned int gfx_ptr1, gfx_ptr2;
 
@@ -196,3 +179,4 @@ void dlist_setup_apac(void) {
 
   screen_on();
 }
+

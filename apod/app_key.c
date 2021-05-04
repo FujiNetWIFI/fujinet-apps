@@ -20,7 +20,8 @@
 
 #define APP_KEY_SIO_DEVICEID 0x70 /* FujiNet App Key */
 #define APP_KEY_SIO_UNIT 1
-#define APP_KEY_SIO_TIMEOUT 15
+#define APP_KEY_SIO_TIMEOUT 1 /* very quick, because we want to move on with our lives */
+
 #define APP_KEY_SIO_CMD_OPEN 0xDC
 #define APP_KEY_SIO_CMD_APPKEY_READ 0xDD
 #define APP_KEY_SIO_CMD_APPKEY_WRITE 0xDE
@@ -57,6 +58,7 @@ static datablock app_key_data;
  * @return byte SIO status
  */
 unsigned char open_appkey(unsigned char mode) {
+  PIA.pactl = PIA.pactl | 1; /* Seen in FN_Open() in bocianu's fn_sio.pas */
   app_key_data.open.creator = CREATOR_ID;
   app_key_data.open.app = APP_ID;
   app_key_data.open.key = KEY_ID;
@@ -91,20 +93,27 @@ void read_settings(void) {
     OS.dcb.ddevic = APP_KEY_SIO_DEVICEID;
     OS.dcb.dunit = APP_KEY_SIO_UNIT;
     OS.dcb.dtimlo = APP_KEY_SIO_TIMEOUT;
-  
+
     OS.dcb.dcomnd = APP_KEY_SIO_CMD_APPKEY_READ;
     OS.dcb.dstats = SIO_READ;
     OS.dcb.dbuf = &app_key_data;
     OS.dcb.dbyt = sizeof(app_key_data.read);
     OS.dcb.daux = 0;
-  
+
     siov();
 
     if (OS.dcb.dstats == 1 /* operation complete (no errors) */) {
-      rgb_red = app_key_data.write.value[0]; 
-      rgb_grn = app_key_data.write.value[1]; 
-      rgb_blu = app_key_data.write.value[2]; 
-      apac_lum = app_key_data.write.value[3];
+      rgb_red = app_key_data.read.value[0];
+      rgb_grn = app_key_data.read.value[1];
+      rgb_blu = app_key_data.read.value[2];
+      apac_lum = app_key_data.read.value[3];
+
+      /* Per https://github.com/FujiNetWIFI/fujinet-platformio/wiki/SIO-Command-$DB-Close-App-Key,
+         "[The "Close App Key"] command is currently not needed, but
+         exists for possible future use. Both the Write App Key and
+         Read App Key will immediately close the key after the command
+         is executed."
+      */
     }
   }
 }
@@ -123,24 +132,31 @@ unsigned char write_settings(void) {
     app_key_data.write.value[1] = rgb_grn;
     app_key_data.write.value[2] = rgb_blu;
     app_key_data.write.value[3] = apac_lum;
+    /* (4 bytes of data, therefore, daux gets set to 4, below) */
 
     OS.dcb.ddevic = APP_KEY_SIO_DEVICEID;
     OS.dcb.dunit = APP_KEY_SIO_UNIT;
     OS.dcb.dtimlo = APP_KEY_SIO_TIMEOUT;
-  
+
     OS.dcb.dcomnd = APP_KEY_SIO_CMD_APPKEY_WRITE;
     OS.dcb.dstats = SIO_WRITE;
     OS.dcb.dbuf = &app_key_data.write;
     OS.dcb.dbyt = sizeof(app_key_data.write);
-    OS.dcb.daux = 0;
-  
+    OS.dcb.daux = 4;
+
     siov();
+
+    /* Per https://github.com/FujiNetWIFI/fujinet-platformio/wiki/SIO-Command-$DB-Close-App-Key,
+       "[The "Close App Key"] command is currently not needed, but
+       exists for possible future use. Both the Write App Key and
+       Read App Key will immediately close the key after the command
+       is executed."
+    */
 
     if (OS.dcb.dstats == 1 /* operation complete (no errors) */) {
       return 1;
     }
   }
+  /* Failed to open, or failed to write */
   return 0;
 }
-
-

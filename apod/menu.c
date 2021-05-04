@@ -18,13 +18,14 @@
   here.
 
   By Bill Kendrick <bill@newbreedsoftware.com>
-  2021-03-27 - 2021-05-01
+  2021-03-27 - 2021-05-03
 */
 
 #include <atari.h>
 #include <stdio.h>
 #include <string.h>
 #include "version.h"
+#include "app_key.h"
 #include "get_time.h"
 #include "menu.h"
 #include "screen_helpers.h"
@@ -152,13 +153,20 @@ void show_sample_choice(char sample) {
   }
 }
 
+void show_settings(void) {
+  char str[20];
+
+  sprintf(str, "[R]=%02d [G]=%02d [B]=%02d", rgb_red >> 4, rgb_grn >> 4, rgb_blu >> 4);
+  myprint(scr_mem, 0, 19, str);
+  sprintf(str, "[L]=%02d  [X] defaults", apac_lum);
+  myprint(scr_mem, 0, 20, str);
+}
+
 /**
  * Draw the full menu, with the current settings
  * already displayed.
  */
-void draw_menu(char sample, unsigned char y, unsigned char m, unsigned char d, unsigned char loaded_properly, unsigned char rgb_red, unsigned char rgb_grn, unsigned char rgb_blu) {
-  char str[20];
-
+void draw_menu(char sample, unsigned char y, unsigned char m, unsigned char d, unsigned char loaded_properly) {
   dlist_setup_menu();
 
                 /*--------------------*/
@@ -190,10 +198,7 @@ void draw_menu(char sample, unsigned char y, unsigned char m, unsigned char d, u
 
                 /*--------------------*/
   myprint(scr_mem, 0, 18, "___*WHILE_VIEWING___");
-  sprintf(str, "[R]=%02d [G]=%02d [B]=%02d", rgb_red >> 4, rgb_grn >> 4, rgb_blu >> 4);
-  myprint(scr_mem, 0, 19, str);
-  sprintf(str, "[L]=%02d  [X] defaults", apac_lum);
-  myprint(scr_mem, 0, 20, str);
+  show_settings();
   myprint(scr_mem, 0, 21, "[ESC] return to menu");
 }
 
@@ -314,6 +319,22 @@ void handle_menu(unsigned char * choice, char * sample) {
       pick_mo = cur_mo;
       pick_day = cur_day;
       date_chg = 1;
+    } else if (keypress == KEY_X ||
+      (keypress & 0x3F) == KEY_R || (keypress & 0x3F) == KEY_G || (keypress & 0x3F) == KEY_B ||
+      (keypress & 0x3F) == KEY_L
+    ) {
+      /* ([Shift]) [R], [G], [B] adjust ColorView hue,
+         ([Shift]) [L] adjust APAC luminence,
+         [X] reset settings */
+      if (keypress == KEY_L) {
+        apac_lum = (apac_lum + 2) % 16;
+      } else if (keypress == (KEY_SHIFT | KEY_L)) {
+        apac_lum = (apac_lum - 2) % 16;
+      } else {
+        handle_rgb_keypress(keypress);
+      }
+      show_settings();
+      write_settings();
     }
 
     if (date_chg) {
