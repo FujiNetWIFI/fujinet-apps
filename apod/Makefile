@@ -3,7 +3,7 @@
 # images, as converted by the 'apod' web app.
 #
 # Bill Kendrick <bill@newbreedsoftware.com>
-# 2021-03-27 - 2021-05-01
+# 2021-03-27 - 2021-05-03
 
 CC65BIN=/usr/bin
 CC65=${CC65BIN}/cc65
@@ -34,6 +34,8 @@ clean:
 	# S assembly from C source, and corresponding O files
 	-rm apod.o
 	-rm apod.s
+	-rm app_key.o
+	-rm app_key.s
 	-rm colorbars.o
 	-rm colorbars.s
 	-rm fetch.o
@@ -57,17 +59,17 @@ clean:
 	-rm view.o
 	-rm view.s
 
-apod.xex:	apod.o dlists.o dli15.o dli256.o dli9.o nsio.o sio.o myprint.o get_time.o interrupt_helpers.o screen_helpers.o colorbars.o menu.o rgb.o view.o vblanks.o fetch.o segments.o atari.cfg
+apod.xex:	apod.o app_key.o dlists.o dli15.o dli256.o dli9.o nsio.o sio.o myprint.o get_time.o interrupt_helpers.o screen_helpers.o colorbars.o menu.o rgb.o view.o vblanks.o fetch.o segments.o atari.cfg
 	${LD65} --lib-path "${CC65_LIB}" \
 		-o apod.xex \
 		-t atari \
 		-m apod.map \
-		apod.o dlists.o dli15.o dli256.o dli9.o nsio.o sio.o myprint.o get_time.o interrupt_helpers.o screen_helpers.o colorbars.o menu.o rgb.o view.o vblanks.o fetch.o segments.o atari.lib
+		apod.o app_key.o dlists.o dli15.o dli256.o dli9.o nsio.o sio.o myprint.o get_time.o interrupt_helpers.o screen_helpers.o colorbars.o menu.o rgb.o view.o vblanks.o fetch.o segments.o atari.lib
 
 apod.o:	apod.s
 	${CA65} -I "${CC65_ASMINC}" -t atari apod.s -o apod.o
 
-apod.s:	apod.c get_time.h screen_helpers.h menu.h rgb.h view.h globals.h
+apod.s:	apod.c app_key.h get_time.h screen_helpers.h menu.h rgb.h view.h globals.h
 	${CC65} ${CC65_FLAGS} -I "${CC65_INC}" \
 		-t atari \
 		apod.c \
@@ -90,6 +92,15 @@ get_time.s:	get_time.c get_time.h sio.h
 		-t atari \
 		get_time.c \
 		-o get_time.s
+
+app_key.o:	app_key.s
+	${CA65} -I "${CC65_ASMINC}" -t atari app_key.s -o app_key.o
+
+app_key.s:	app_key.c app_key.h sio.h
+	${CC65} ${CC65_FLAGS} -I "${CC65_INC}" \
+		-t atari \
+		app_key.c \
+		-o app_key.s
 
 screen_helpers.o:	screen_helpers.s
 	${CA65} -I "${CC65_ASMINC}" -t atari screen_helpers.s -o screen_helpers.o

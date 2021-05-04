@@ -18,11 +18,12 @@
   see "rgb" module).
 
   By Bill Kendrick <bill@newbreedsoftware.com>
-  2021-03-27 - 2021-05-01
+  2021-03-27 - 2021-05-03
 */
 
 #include <stdio.h>
 #include <atari.h>
+#include "app_key.h"
 #include "colorbars.h"
 #include "dlists.h"
 #include "dli15.h"
@@ -45,7 +46,7 @@ extern unsigned char scr_mem[];
  */
 void view(unsigned char choice, char sample, unsigned char pick_yr, unsigned pick_mo, unsigned pick_day) {
   int size;
-  unsigned char done, k, interrupts_used;
+  unsigned char done, k, interrupts_used, settings_changed;
 
   /* Set up the display, based on the choice */
   size = 7680;
@@ -115,8 +116,9 @@ void view(unsigned char choice, char sample, unsigned char pick_yr, unsigned pic
 
 
   /* Accept keypresses while viewing */
-  OS.ch = KEY_NONE;
+  settings_changed = 0;
   done = 0;
+  OS.ch = KEY_NONE;
   do {
     k = OS.ch;
     if (k == KEY_ESC) {
@@ -131,10 +133,12 @@ void view(unsigned char choice, char sample, unsigned char pick_yr, unsigned pic
       } else {
         setup_rgb_table15();
       }
+      settings_changed = 1;
       OS.ch = KEY_NONE;
     } else if (k == KEY_L) {
       /* [L]: Increase APAC luminence */
       apac_lum = (apac_lum + 2) % 16;
+      settings_changed = 1;
       OS.ch = KEY_NONE;
     } else if (k == (KEY_L | KEY_SHIFT)) {
       /* [Shift]+[L]: Decrease APAC luminence */
@@ -143,15 +147,21 @@ void view(unsigned char choice, char sample, unsigned char pick_yr, unsigned pic
       } else {
         apac_lum -= 2;
       }
+      settings_changed = 1;
       OS.ch = KEY_NONE;
     }
   } while (!done);
   OS.ch = KEY_NONE;
 
-  /* Reset things, and return to main loop */
+  /* Clear interrupt and drop GTIA mode, if set */
   if (interrupts_used) {
     dli_clear();
     mySETVBV((void *) OLDVEC);
   }
   OS.gprior = 0;
+
+  /* Save out the settings, if they changed */
+  if (settings_changed) {
+    write_settings();
+  }
 }

@@ -14,7 +14,7 @@
    3. displays the image
 
   By Bill Kendrick <bill@newbreedsoftware.com>
-  2021-03-27 - 2021-05-01
+  2021-03-27 - 2021-05-03
 */
 
 #include <stdio.h>
@@ -23,6 +23,7 @@
 
 #include "globals.h"
 
+#include "app_key.h"
 #include "get_time.h"
 #include "menu.h"
 #include "rgb.h"
@@ -57,6 +58,9 @@ void main(void) {
 
   /* Get the current date/time, if we can */
   get_time();
+
+  /* Try to get our settings */
+  read_settings();
 
   sample = SAMPLE_NONE;
 

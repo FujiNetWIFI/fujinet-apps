@@ -1,6 +1,10 @@
 apod (Astronomy Picture of the Day) Client for #FujiNet
 Change Log
 
+ * 2021-05-03
+   + Saves and loads settings (Red, Green, Blue hues,
+     and APAC luminence) to/from the FujiNet via an App Key
+
  * 2021-05-01
    + First official release:
      - Options to view in: high-res mono, med-res 4-color,

@@ -8,11 +8,12 @@
   used by the program.
 
   By Bill Kendrick <bill@newbreedsoftware.com>
-  2021-03-27 - 2021-05-01
+  2021-03-27 - 2021-05-03
 */
 
 #include <stdio.h>
 #include <atari.h>
+#include <string.h>
 #include "screen_helpers.h"
 
 /* A block of space to store the graphics & display lists */
@@ -38,6 +39,8 @@ void dlist_setup(unsigned char antic_mode) {
 
   gfx_ptr = (unsigned int) (scr_mem + SCR_OFFSET);
 
+  memset(dlist1, antic_mode, 199);
+
   dlist1[0] = DL_BLK8;
   dlist1[1] = DL_BLK8;
   dlist1[2] = DL_BLK8;
@@ -47,9 +50,9 @@ void dlist_setup(unsigned char antic_mode) {
   dlist1[4] = (gfx_ptr & 255);
   dlist1[5] = (gfx_ptr >> 8);
 
-  for (i = 6; i <= 106; i++) {
-    dlist1[i] = antic_mode;
-  }
+//  for (i = 6; i <= 106; i++) {
+//    dlist1[i] = antic_mode;
+//  }
 
   /* Hitting 4K boundary! */
   gfx_ptr = (unsigned int) (scr_mem + 4096);
@@ -57,9 +60,9 @@ void dlist_setup(unsigned char antic_mode) {
   dlist1[108] = (gfx_ptr & 255);
   dlist1[109] = (gfx_ptr >> 8);
 
-  for (i = 110; i <= 198; i++) {
-    dlist1[i] = antic_mode;
-  }
+//  for (i = 110; i <= 198; i++) {
+//    dlist1[i] = antic_mode;
+//  }
 
   dlist1[199] = DL_JVB;
   dlist1[200] = ((unsigned int) dlist1 & 255);
@@ -87,6 +90,8 @@ void dlist_setup_rgb(unsigned char antic_mode) {
     dlist = (scr_mem + (l * SCR_BLOCK_SIZE)) + DLIST_OFFSET;
     gfx_ptr = (unsigned int) (scr_mem + (l * SCR_BLOCK_SIZE)) + SCR_OFFSET;
 
+    memset(dlist, antic_mode, 199);
+
     dlist[0] = DL_BLK8;
     dlist[1] = DL_BLK8;
     dlist[2] = DL_DLI(DL_BLK8); /* start with colors after this line */
@@ -96,9 +101,9 @@ void dlist_setup_rgb(unsigned char antic_mode) {
     dlist[4] = (gfx_ptr & 255);
     dlist[5] = (gfx_ptr >> 8);
 
-    for (i = 6; i <= 106; i++) {
-      dlist[i] = antic_mode;
-    }
+//    for (i = 6; i <= 106; i++) {
+//      dlist[i] = antic_mode;
+//    }
 
     /* Hitting 4K boundary! */
     gfx_ptr += (102 * 40);
@@ -106,9 +111,9 @@ void dlist_setup_rgb(unsigned char antic_mode) {
     dlist[108] = (gfx_ptr & 255);
     dlist[109] = (gfx_ptr >> 8);
 
-    for (i = 110; i <= 198; i++) {
-      dlist[i] = antic_mode;
-    }
+//    for (i = 110; i <= 198; i++) {
+//      dlist[i] = antic_mode;
+//    }
 
     dlist[199] = DL_JVB;
     dlist[200] = (((unsigned int) dlist) & 255);
