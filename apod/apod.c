@@ -37,9 +37,9 @@ char * modes[NUM_CHOICES] = {
   "",
   "8",
   "15",
+  "rgb15",
   "9",
   "rgb9",
-  "rgb15",
   "apac"
 };
 

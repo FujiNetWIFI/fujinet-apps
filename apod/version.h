@@ -1,7 +1,7 @@
 #ifndef VERSION_H
 #define VERSION_H
 
-#define VERSION "VER. 2021-05-04"
+#define VERSION "VER. 2021-05-04B"
 #define VERSION_NICKNAME "KESSEL RUN"
 
 #endif // VERSION_H
