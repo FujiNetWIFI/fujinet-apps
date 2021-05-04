@@ -18,7 +18,7 @@
   here.
 
   By Bill Kendrick <bill@newbreedsoftware.com>
-  2021-03-27 - 2021-05-03
+  2021-03-27 - 2021-05-04
 */
 
 #include <atari.h>
@@ -162,6 +162,15 @@ void show_settings(void) {
   myprint(scr_mem, 0, 20, str);
 }
 
+void show_version(unsigned char nickname) {
+  memset(scr_mem + 80, 0, 20);
+  if (nickname) {
+    myprint(scr_mem, 10 - strlen(VERSION_NICKNAME) / 2, 4, VERSION_NICKNAME);
+  } else {
+    myprint(scr_mem, 10 - strlen(VERSION) / 2, 4, VERSION);
+  }
+}
+
 /**
  * Draw the full menu, with the current settings
  * already displayed.
@@ -176,7 +185,7 @@ void draw_menu(char sample, unsigned char y, unsigned char m, unsigned char d, u
                 /*--------------------*/
   myprint(scr_mem, 1,  2, "bill kendrick 2021");
   myprint(scr_mem, 0,  3, "with help from apc");
-  myprint(scr_mem, 10 - strlen(VERSION) / 2, 4, VERSION);
+  show_version(0);
 
                 /*--------------------*/
   myprint(scr_mem, 0,  5, "________HOW_________");
@@ -224,13 +233,17 @@ void pick_today() {
  */
 void handle_menu(unsigned char * choice, char * sample) {
   unsigned char keypress, date_chg;
-  int i;
+  unsigned char i;
 
   /* Accept a choice */
   *choice = CHOICE_NONE;
   OS.ch = KEY_NONE;
   do {
-    while (OS.ch == KEY_NONE) { }
+    while (OS.ch == KEY_NONE) {
+      if (OS.rtclok[2] == 0) {
+        show_version((OS.rtclok[1] & 1));
+      }
+    }
     keypress = OS.ch;
     OS.ch = KEY_NONE;
 
