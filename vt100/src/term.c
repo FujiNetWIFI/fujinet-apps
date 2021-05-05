@@ -153,9 +153,29 @@ bool term(char* buf, unsigned short len)
 		  c=0;               // consume char
 		  switch(p[0])       // 1st parameter gives clear type
 		    {
-		    case 0:          // clear from current pos to bottom 
+		    case 0:          // clear from current pos to bottom
+		      print("\x9c\x9c\x9c\x9c\x9c\x9c\x9c\x9c\x9c\x9c\x9c\x9c\x9c\x9c\x9c\x9c\x9c\x9c\x9c\x9c\x9c\x9c\x9c\x9c"); //HAAAAAAAAAAAAAAAAACK!
 		      break;
 		    case 1:          // clear from top to current pos
+		      or=OS.rowcrs;
+		      oc=OS.colcrs;
+		      for (c=0;c<=or;c++)
+			{
+			  OS.rowcrs=c;
+			  OS.colcrs=0;
+			  if (c==or)
+			    {
+			      while (oc>0)
+				{
+				  print(" ");
+				  oc--;
+				}
+			    }
+			  else
+			    {
+			      print("\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE");
+			    }
+			}
 		      break;
 		    case 2:          // CLEAR WHOLE SCREEN
 		      or=OS.rowcrs;
