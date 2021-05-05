@@ -24,4 +24,10 @@ void screen_on(void);
 void wait_for_vblank(void);
 void set_screen_and_dlist_pointers(void);
 
+/* A block of space to store the graphics & display lists */
+extern unsigned char scr_mem[];
+
+/* A block of space to store descriptive text */
+extern unsigned char txt_mem[];
+
 #endif // SCREEN_HELPERS_H

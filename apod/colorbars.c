@@ -166,4 +166,9 @@ void render_colorbars(unsigned char mode) {
       }
     }
   }
+
+#include <atari_screen_charmap.h>
+#define COLORBARS_TXT "COLORBARS"
+
+  memcpy(txt_mem, COLORBARS_TXT, strlen(COLORBARS_TXT));
 }

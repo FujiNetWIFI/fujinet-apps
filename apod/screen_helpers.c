@@ -12,7 +12,7 @@
   memory blocks.
 
   By Bill Kendrick <bill@newbreedsoftware.com>
-  2021-03-27 - 2021-05-01
+  2021-03-27 - 2021-05-04;
 */
 
 #include <string.h> /* for memset() */
@@ -25,6 +25,8 @@ unsigned char * dlist1, * dlist2, * dlist3;
 
 /**
  * Disable ANTIC; clear screen & display list memory
+ * (Note: `txt_mem` buffer resides at the end of the
+ * 24K block that `scr_mem` starts at)
  */
 void screen_off(void) {
   OS.sdmctl = 0;

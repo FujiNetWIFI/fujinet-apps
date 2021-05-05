@@ -73,8 +73,6 @@ unsigned char sample_keys[NUM_SAMPLES] = {
  * function; see them there.
  */
 
-extern unsigned char scr_mem[];
-
 /**
  * Set up display list for title/menu screen
  * FIXME: Move to dlists.c/.h? -bjk 2021.05.01

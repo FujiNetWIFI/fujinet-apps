@@ -9,7 +9,7 @@
   using the HTTP transport.
 
   By Bill Kendrick <bill@newbreedsoftware.com>
-  2021-03-27 - 2021-05-01
+  2021-03-27 - 2021-05-04
 */
 
 #include <stdio.h>
@@ -19,9 +19,6 @@
 #include "nsio.h"
 #include "rgb.h"
 #include "screen_helpers.h"
-
-/* A block of space to store the graphics & display lists */
-extern unsigned char scr_mem[];
 
 
 /* The base URL for the web app */
@@ -115,6 +112,8 @@ void fetch_image(unsigned char choice, char sample, int size, unsigned char pick
     nread(1, (char *) 712, 1);
     nread(1, (char *) 708, 3);
   }
+
+  nread(1, txt_mem, 256);
 
   nclose(1 /* unit 1 */);
 }

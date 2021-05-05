@@ -36,10 +36,6 @@
 #include "vblanks.h"
 #include "view.h"
 
-/* A block of space to store the graphics & display lists */
-extern unsigned char scr_mem[];
-
-
 /**
  * Fetch or render the image, and view it!
  */
@@ -53,6 +49,7 @@ void view(unsigned char choice, char sample, unsigned char pick_yr, unsigned pic
   OLDVEC = OS.vvblkd;
 
   /* Prepare display for loading image... */
+  screen_off();
   if (choice == CHOICE_HIRES_MONO) {
     dlist_setup(DL_GRAPHICS8);
     OS.color4 = 128; /* Border (no reason) */
@@ -82,6 +79,7 @@ void view(unsigned char choice, char sample, unsigned char pick_yr, unsigned pic
     size = 7680 * 2;
     dlist_setup_apac();
   }
+  screen_on();
 
 
   /* Load or render the image! */
