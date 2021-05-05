@@ -7,15 +7,16 @@
   This module draws strings onto a text mode display
   (e.g., the main menu)
 
-  2021-03-27 - 2021-05-01
+  2021-03-27 - 2021-05-05
 */
 
 #include "myprint.h"
+#include "screen_helpers.h"
 
 /**
  * Simple text rendering onto screen memory
  */
-void myprint(unsigned char scr_mem[], unsigned char x, unsigned char y, char * str) {
+void myprint(unsigned char x, unsigned char y, char * str) {
   int pos, i;
   unsigned char c;
 

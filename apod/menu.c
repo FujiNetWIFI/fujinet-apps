@@ -130,13 +130,13 @@ void show_chosen_date(unsigned char y, unsigned char m, unsigned char d, unsigne
   memset(scr_mem + (15 * 20), 0, 20);
   if (d != 0) {
     sprintf(str, "20%02d-%02d-%02d", y, m, d);
-    myprint(scr_mem, 2, 15, str);
-    myprint(scr_mem, 13, 15, "[CT/SH]");
+    myprint(2, 15, str);
+    myprint(13, 15, "[CT/SH]");
   } else {
     if (!loaded_properly) {
-      myprint(scr_mem, 2, 15, "[CTRL-T] get time");
+      myprint(2, 15, "[CTRL-T] get time");
     } else {
-      myprint(scr_mem, 2, 15, "current");
+      myprint(2, 15, "current");
     }
   }
 }
@@ -147,11 +147,11 @@ void show_chosen_date(unsigned char y, unsigned char m, unsigned char d, unsigne
 void show_sample_choice(char sample) {
   memset(scr_mem + 12 * 20 + 16, 0, 4);
   if (sample == SAMPLE_COLORBARS) {
-    myprint(scr_mem, 18, 12, "CB");
+    myprint(18, 12, "CB");
   } else if (sample) {
     scr_mem[12 * 20 + 19] = sample + 16;
   } else {
-    myprint(scr_mem, 16, 12, "APOD");
+    myprint(16, 12, "APOD");
   }
 }
 
@@ -159,17 +159,17 @@ void show_settings(void) {
   char str[20];
 
   sprintf(str, "[R]=%02d [G]=%02d [B]=%02d", rgb_red >> 4, rgb_grn >> 4, rgb_blu >> 4);
-  myprint(scr_mem, 0, 19, str);
+  myprint(0, 19, str);
   sprintf(str, "[L]=%02d  [X] defaults", apac_lum);
-  myprint(scr_mem, 0, 20, str);
+  myprint(0, 20, str);
 }
 
 void show_version(unsigned char nickname) {
   memset(scr_mem + 80, 0, 20);
   if (nickname) {
-    myprint(scr_mem, 10 - strlen(VERSION_NICKNAME) / 2, 4, VERSION_NICKNAME);
+    myprint(10 - strlen(VERSION_NICKNAME) / 2, 4, VERSION_NICKNAME);
   } else {
-    myprint(scr_mem, 10 - strlen(VERSION) / 2, 4, VERSION);
+    myprint(10 - strlen(VERSION) / 2, 4, VERSION);
   }
 }
 
@@ -180,32 +180,32 @@ void show_version(unsigned char nickname) {
 void draw_menu(char sample, unsigned char y, unsigned char m, unsigned char d, unsigned char loaded_properly) {
   dlist_setup_menu();
 
-  myprint(scr_mem, 1,  0, "#FUJINET Astronomy");
-  myprint(scr_mem, 1,  1, "Picture Of the Day");
+  myprint(1,  0, "#FUJINET Astronomy");
+  myprint(1,  1, "Picture Of the Day");
 
-  myprint(scr_mem, 2,  2, "by bill kendrick");
-  myprint(scr_mem, 0,  3, "with help from apc");
+  myprint(2,  2, "by bill kendrick");
+  myprint(0,  3, "with help from apc");
   show_version(0);
 
-  myprint(scr_mem, 8,  5, "HOW");
-  myprint(scr_mem, 0,  6, "[H] hi-res mono");
-  myprint(scr_mem, 0,  7, "[M] med-res 4 color");
-  myprint(scr_mem, 0,  8, "[C]*med-res 64 color");
-  myprint(scr_mem, 0,  9, "[G] lo-res 16 shade");
-  myprint(scr_mem, 0, 10, "[F]*lo-res 4K color");
-  myprint(scr_mem, 0, 11, "[A]*lo-res 256 color");
+  myprint(8,  5, "HOW");
+  myprint(0,  6, "[H] hi-res mono");
+  myprint(0,  7, "[M] med-res 4 color");
+  myprint(0,  8, "[C]*med-res 64 color");
+  myprint(0,  9, "[G] lo-res 16 shade");
+  myprint(0, 10, "[F]*lo-res 4K color");
+  myprint(0, 11, "[A]*lo-res 256 color");
 
-  myprint(scr_mem, 8, 12, "WHAT");
-  myprint(scr_mem, 0, 13, "[0] get apod");
-  myprint(scr_mem, 0, 14, "[<=>] change date");
+  myprint(8, 12, "WHAT");
+  myprint(0, 13, "[0] get apod");
+  myprint(0, 14, "[<=>] change date");
   show_chosen_date(y, m, d, loaded_properly);
-  myprint(scr_mem, 0, 16, "[1-5] get samples");
-  myprint(scr_mem, 0, 17, "[9] color bars");
+  myprint(0, 16, "[1-5] get samples");
+  myprint(0, 17, "[9] color bars");
   show_sample_choice(sample);
 
-  myprint(scr_mem, 2, 18, "*ADJUST_SETTINGS");
+  myprint(2, 18, "*ADJUST_SETTINGS");
   show_settings();
-  myprint(scr_mem, 0, 21, "[S] save settings");
+  myprint(0, 21, "[S] save settings");
 }
 
 /**
@@ -346,11 +346,11 @@ void handle_menu(unsigned char * choice, char * sample) {
       show_settings();
     } else if (keypress == KEY_S) {
       /* [S] Save settings */
-      myprint(scr_mem, 18, 21, "..");
+      myprint(18, 21, "..");
       if (write_settings()) {
-        myprint(scr_mem, 18, 21, "OK");
+        myprint(18, 21, "OK");
       } else {
-        myprint(scr_mem, 18, 21, ":(");
+        myprint(18, 21, ":(");
       }
     }
 

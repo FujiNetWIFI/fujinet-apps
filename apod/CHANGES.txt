@@ -4,6 +4,7 @@ Change Log
  * 2021-05-05
    + Display of image titles at the bottom while viewing
      (only on some viewin gmodes)
+   + Show whether saving settings succeeded or failed
    + Slight optimizations here & there, to save a few bytes
 
  * 2021-05-04
