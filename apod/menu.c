@@ -18,7 +18,7 @@
   here.
 
   By Bill Kendrick <bill@newbreedsoftware.com>
-  2021-03-27 - 2021-05-04
+  2021-03-27 - 2021-05-05
 */
 
 #include <atari.h>
@@ -127,7 +127,7 @@ void dlist_setup_menu(void) {
 void show_chosen_date(unsigned char y, unsigned char m, unsigned char d, unsigned char loaded_properly) {
   char str[20];
 
-  myprint(scr_mem, 2, 15, "                  ");
+  memset(scr_mem + (15 * 20), 0, 20);
   if (d != 0) {
     sprintf(str, "20%02d-%02d-%02d", y, m, d);
     myprint(scr_mem, 2, 15, str);
@@ -145,15 +145,11 @@ void show_chosen_date(unsigned char y, unsigned char m, unsigned char d, unsigne
  * Display sample choice, if any, on the menu
  */
 void show_sample_choice(char sample) {
-  char tmp_str[2];
-
-  myprint(scr_mem, 16, 12, "____");
+  memset(scr_mem + 12 * 20 + 16, 0, 4);
   if (sample == SAMPLE_COLORBARS) {
     myprint(scr_mem, 18, 12, "CB");
   } else if (sample) {
-    tmp_str[0] = sample + '0';
-    tmp_str[1] = '\0';
-    myprint(scr_mem, 19, 12, tmp_str);
+    scr_mem[12 * 20 + 19] = sample + 16;
   } else {
     myprint(scr_mem, 16, 12, "APOD");
   }
@@ -184,17 +180,14 @@ void show_version(unsigned char nickname) {
 void draw_menu(char sample, unsigned char y, unsigned char m, unsigned char d, unsigned char loaded_properly) {
   dlist_setup_menu();
 
-                /*--------------------*/
   myprint(scr_mem, 1,  0, "#FUJINET Astronomy");
   myprint(scr_mem, 1,  1, "Picture Of the Day");
 
-                /*--------------------*/
-  myprint(scr_mem, 1,  2, "bill kendrick 2021");
+  myprint(scr_mem, 2,  2, "by bill kendrick");
   myprint(scr_mem, 0,  3, "with help from apc");
   show_version(0);
 
-                /*--------------------*/
-  myprint(scr_mem, 0,  5, "________HOW_________");
+  myprint(scr_mem, 8,  5, "HOW");
   myprint(scr_mem, 0,  6, "[H] hi-res mono");
   myprint(scr_mem, 0,  7, "[M] med-res 4 color");
   myprint(scr_mem, 0,  8, "[C]*med-res 64 color");
@@ -202,8 +195,7 @@ void draw_menu(char sample, unsigned char y, unsigned char m, unsigned char d, u
   myprint(scr_mem, 0, 10, "[F]*lo-res 4K color");
   myprint(scr_mem, 0, 11, "[A]*lo-res 256 color");
 
-                /*--------------------*/
-  myprint(scr_mem, 0, 12, "________WHAT________");
+  myprint(scr_mem, 8, 12, "WHAT");
   myprint(scr_mem, 0, 13, "[0] get apod");
   myprint(scr_mem, 0, 14, "[<=>] change date");
   show_chosen_date(y, m, d, loaded_properly);
@@ -211,8 +203,7 @@ void draw_menu(char sample, unsigned char y, unsigned char m, unsigned char d, u
   myprint(scr_mem, 0, 17, "[9] color bars");
   show_sample_choice(sample);
 
-                /*--------------------*/
-  myprint(scr_mem, 0, 18, "__*ADJUST_SETTINGS__");
+  myprint(scr_mem, 2, 18, "*ADJUST_SETTINGS");
   show_settings();
   myprint(scr_mem, 0, 21, "[S] save settings");
 }
@@ -355,7 +346,12 @@ void handle_menu(unsigned char * choice, char * sample) {
       show_settings();
     } else if (keypress == KEY_S) {
       /* [S] Save settings */
-      write_settings();
+      myprint(scr_mem, 18, 21, "..");
+      if (write_settings()) {
+        myprint(scr_mem, 18, 21, "OK");
+      } else {
+        myprint(scr_mem, 18, 21, ":(");
+      }
     }
 
     /* Date changed! Keep it sane, and display it */
