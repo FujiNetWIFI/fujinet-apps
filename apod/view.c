@@ -41,7 +41,7 @@
  */
 void view(unsigned char choice, char sample, unsigned char pick_yr, unsigned pick_mo, unsigned pick_day) {
   int size;
-  unsigned char done, k, interrupts_used;
+  unsigned char k, interrupts_used;
 
   /* Set up the display, based on the choice */
   size = 7680;
@@ -95,32 +95,26 @@ void view(unsigned char choice, char sample, unsigned char pick_yr, unsigned pic
 
   /* Enable interrupt-driven graphics mode, if applicable */
   rgb_ctr = 0;
+  interrupts_used = 1;
   if (choice == CHOICE_LOWRES_RGB) {
     mySETVBV((void *) VBLANKD9);
     dli_init(dli9);
-    interrupts_used = 1;
   } else if (choice == CHOICE_MEDRES_RGB) {
     mySETVBV((void *) VBLANKD15);
     dli_init(dli15);
-    interrupts_used = 1;
   } else if (choice == CHOICE_LOWRES_256) {
     mySETVBV((void *) VBLANKD_APAC);
     dli_init(dli256);
-    interrupts_used = 1;
   } else {
     interrupts_used = 0;
   }
 
 
   /* Accept keypresses while viewing */
-  done = 0;
   OS.ch = KEY_NONE;
   do {
     k = OS.ch;
-    if (k == KEY_ESC) {
-      /* [Esc] Done viewing; return to main menu */
-      done = 1;
-    } else if ((k & 0x3F) == KEY_R || (k & 0x3F) == KEY_G || (k & 0x3F) == KEY_B || k == KEY_X) {
+    if ((k & 0x3F) == KEY_R || (k & 0x3F) == KEY_G || (k & 0x3F) == KEY_B || k == KEY_X) {
       /* [R], [G], or [B] key, with/without [Shift]: adjust hues for RGB modes
          [X]: reset RGB mode hues and APAC luminence */
       handle_rgb_keypress(k);
@@ -143,7 +137,7 @@ void view(unsigned char choice, char sample, unsigned char pick_yr, unsigned pic
       }
       OS.ch = KEY_NONE;
     }
-  } while (!done);
+  } while (k != KEY_ESC); /* [Esc] Done viewing; return to main menu */
   OS.ch = KEY_NONE;
 
   /* Clear interrupt and drop GTIA mode, if set */
