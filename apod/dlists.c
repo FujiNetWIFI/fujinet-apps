@@ -8,7 +8,7 @@
   used by the program.
 
   By Bill Kendrick <bill@newbreedsoftware.com>
-  2021-03-27 - 2021-05-04
+  2021-03-27 - 2021-05-05
 */
 
 #include <stdio.h>
@@ -26,8 +26,9 @@
  * caller to set the GPRIOR bit to enable the 16 shades GTIA mode.)
  *
  * @param byte antic_mode
+ * @param bool text_line FIXME
  */
-void dlist_setup(unsigned char antic_mode) {
+void dlist_setup(unsigned char antic_mode, unsigned char text_line) {
   unsigned int gfx_ptr;
 
   gfx_ptr = (unsigned int) (scr_mem + SCR_OFFSET);
@@ -49,13 +50,19 @@ void dlist_setup(unsigned char antic_mode) {
   dlist1[108] = (gfx_ptr & 255);
   dlist1[109] = (gfx_ptr >> 8);
 
-  dlist1[199] = DL_LMS(DL_GRAPHICS0);
-  dlist1[200] = (((unsigned int) txt_mem) & 255);
-  dlist1[201] = (((unsigned int) txt_mem) >> 8);
-
-  dlist1[202] = DL_JVB;
-  dlist1[203] = ((unsigned int) dlist1 & 255);
-  dlist1[204] = ((unsigned int) dlist1 >> 8);
+  if (text_line) {
+    dlist1[199] = DL_LMS(DL_GRAPHICS0);
+    dlist1[200] = (((unsigned int) txt_mem) & 255);
+    dlist1[201] = (((unsigned int) txt_mem) >> 8);
+  
+    dlist1[202] = DL_JVB;
+    dlist1[203] = ((unsigned int) dlist1 & 255);
+    dlist1[204] = ((unsigned int) dlist1 >> 8);
+  } else {
+    dlist1[199] = DL_JVB;
+    dlist1[200] = ((unsigned int) dlist1 & 255);
+    dlist1[201] = ((unsigned int) dlist1 >> 8);
+  }
 }
 
 
@@ -65,8 +72,9 @@ void dlist_setup(unsigned char antic_mode) {
  * the caller; see the "dli*" and "vblanks" modules)
  *
  * @param byte antic_mode
+ * @param bool text_line FIXME
  */
-void dlist_setup_rgb(unsigned char antic_mode) {
+void dlist_setup_rgb(unsigned char antic_mode, unsigned char text_line) {
   unsigned char l;
   unsigned int gfx_ptr;
   unsigned char * dlist;
@@ -77,7 +85,7 @@ void dlist_setup_rgb(unsigned char antic_mode) {
 
     memset(dlist, antic_mode, 199);
 
-    dlist[0] = DL_BLK1;
+    dlist[0] = DL_BLK8; /* FIXME: DL_BLK1; */
     dlist[1] = DL_BLK8;
     dlist[2] = DL_DLI(DL_BLK8); /* start with colors after this line */
 
@@ -92,13 +100,19 @@ void dlist_setup_rgb(unsigned char antic_mode) {
     dlist[108] = (gfx_ptr & 255);
     dlist[109] = (gfx_ptr >> 8);
 
-    dlist[199] = DL_LMS(DL_GRAPHICS0);
-    dlist[200] = (((unsigned int) txt_mem) & 255);
-    dlist[201] = (((unsigned int) txt_mem) >> 8);
-
-    dlist[202] = DL_JVB;
-    dlist[203] = (((unsigned int) dlist) & 255);
-    dlist[204] = (((unsigned int) dlist) >> 8);
+    if (text_line) {
+      dlist[199] = DL_LMS(DL_GRAPHICS0);
+      dlist[200] = (((unsigned int) txt_mem) & 255);
+      dlist[201] = (((unsigned int) txt_mem) >> 8);
+  
+      dlist[202] = DL_JVB;
+      dlist[203] = (((unsigned int) dlist) & 255);
+      dlist[204] = (((unsigned int) dlist) >> 8);
+    } else {
+      dlist[199] = DL_JVB;
+      dlist[200] = (((unsigned int) dlist) & 255);
+      dlist[201] = (((unsigned int) dlist) >> 8);
+    }
   }
 }
 
@@ -118,11 +132,11 @@ void dlist_setup_apac(void) {
   gfx_ptr1 = (unsigned int) (scr_mem + SCR_OFFSET);
   gfx_ptr2 = (unsigned int) (gfx_ptr1 + SCR_BLOCK_SIZE);
 
-  dlist1[0] = DL_BLK1;
+  dlist1[0] = DL_BLK8; /* FIXME: DL_BLK1; */
   dlist1[1] = DL_BLK8;
   dlist1[2] = DL_DLI(DL_BLK8); /* start with colors after this line */
 
-  dlist2[0] = DL_BLK1;
+  dlist2[0] = DL_BLK8; /* FIXME: DL_BLK1; */
   dlist2[1] = DL_BLK8;
   dlist2[2] = DL_BLK8;
 
@@ -163,6 +177,7 @@ void dlist_setup_apac(void) {
     dlist2[i + 1] = DL_DLI(DL_GRAPHICS8);
   }
 
+/* FIXME: 
   dlist1[199] = DL_LMS(DL_GRAPHICS0);
   dlist1[200] = (((unsigned int) txt_mem) & 255);
   dlist1[201] = (((unsigned int) txt_mem) >> 8);
@@ -178,4 +193,15 @@ void dlist_setup_apac(void) {
   dlist2[202] = DL_JVB;
   dlist2[203] = (((unsigned int) dlist2) & 255);
   dlist2[204] = (((unsigned int) dlist2) >> 8);
+*/
+
+/* FIXME */
+  dlist1[199] = DL_JVB;
+  dlist1[200] = (((unsigned int) dlist1) & 255);
+  dlist1[201] = (((unsigned int) dlist1) >> 8);
+
+  dlist2[199] = DL_JVB;
+  dlist2[200] = (((unsigned int) dlist2) & 255);
+  dlist2[201] = (((unsigned int) dlist2) >> 8);
+
 }

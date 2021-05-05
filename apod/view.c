@@ -18,7 +18,7 @@
   see "rgb" module).
 
   By Bill Kendrick <bill@newbreedsoftware.com>
-  2021-03-27 - 2021-05-04
+  2021-03-27 - 2021-05-05
 */
 
 #include <stdio.h>
@@ -51,16 +51,16 @@ void view(unsigned char choice, char sample, unsigned char pick_yr, unsigned pic
   /* Prepare display for loading image... */
   screen_off();
   if (choice == CHOICE_HIRES_MONO) {
-    dlist_setup(DL_GRAPHICS8);
+    dlist_setup(DL_GRAPHICS8, 1);
     OS.color4 = 128; /* Border (no reason) */
     OS.color2 = 0; /* Background */
     OS.color1 = 15; /* Foreground */
   } else if (choice == CHOICE_LOWRES_GREY) {
-    dlist_setup(DL_GRAPHICS8);
+    dlist_setup(DL_GRAPHICS8, 0);
     OS.gprior = 64;
     OS.color4 = 0; /* Greyscale */
   } else if (choice == CHOICE_MEDRES_COLOR) {
-    dlist_setup(DL_GRAPHICS15);
+    dlist_setup(DL_GRAPHICS15, 1);
     /* (Colors will be replaced by palette fetched from server) */
     OS.color4 = 0; /* Background (black) */
     OS.color0 = 4; /* Dark foreground */
@@ -69,12 +69,12 @@ void view(unsigned char choice, char sample, unsigned char pick_yr, unsigned pic
   } else if (choice == CHOICE_LOWRES_RGB) {
     size = 7680 * 3;
     setup_rgb_table9();
-    dlist_setup_rgb(DL_DLI(DL_GRAPHICS8)); /* DLI every scanline */
+    dlist_setup_rgb(DL_DLI(DL_GRAPHICS8), 0); /* DLI every scanline */
     OS.gprior = 64;
   } else if (choice == CHOICE_MEDRES_RGB) {
     size = 7680 * 3;
     setup_rgb_table15();
-    dlist_setup_rgb(DL_GRAPHICS15); /* DLI at the top only */
+    dlist_setup_rgb(DL_GRAPHICS15, 1); /* DLI at the top only */
   } else if (choice == CHOICE_LOWRES_256) {
     size = 7680 * 2;
     dlist_setup_apac();
