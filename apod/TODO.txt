@@ -1,13 +1,11 @@
 TODO for APOD #FujiNet client
-2021-05-01
+2021-05-05
 
- * In ColorView 9 mode, maybe add PGMs on the sides for solid black
-   borders (don't use DMA, obviously).
+ * Correctly view titles in modes that utilize GTIA.
+
+ * Allow scrolling titles, for when they're > 40 characters.
 
  * Graphics 15 (160x192) grey combined with Graphics 11 (80x192 hues)
    hybrid APAC mode.  ("Champions Interlace" style mode.)
    [Server needs to support this]
-
- * A way to view titles and maybe also descriptions?
-   [Server has very basic support for this]
 

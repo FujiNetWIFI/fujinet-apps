@@ -16,6 +16,9 @@
 #include "colorbars.h"
 #include "menu.h"
 
+#include <atari_screen_charmap.h>
+#define COLORBARS_TXT "COLORBARS"
+
 /**
  * Render the appropriate test pattern ("color bars")
  * for the given mode.
@@ -166,9 +169,6 @@ void render_colorbars(unsigned char mode) {
       }
     }
   }
-
-#include <atari_screen_charmap.h>
-#define COLORBARS_TXT "COLORBARS"
 
   memcpy(txt_mem, COLORBARS_TXT, strlen(COLORBARS_TXT));
 }

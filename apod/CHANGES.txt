@@ -1,7 +1,8 @@
 apod (Astronomy Picture of the Day) Client for #FujiNet
 Change Log
 
- * 2021-05-04C
+ * 2021-05-05
+   + Display of image titles at the bottom while viewing (WIP)
    + Slight optimization to colorbar generator code.
 
  * 2021-05-04

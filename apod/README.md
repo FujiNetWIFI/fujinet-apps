@@ -7,7 +7,7 @@ with help from apc & others (see credits, below)
 Released under the GNU General Public License 3 (GPL-3);
 see COPYING
 
-2021-03-27 - 2021-05-04
+2021-03-27 - 2021-05-05
 
 ## Purpose
 Fetch and view [NASA's Astronomy Picture of the Day (APOD)](https://apod.nasa.gov/apod/),
@@ -34,6 +34,8 @@ an image in one of the following graphics modes:
 - `[G]` - Low resolution greyscale (80x192 sixteen shades of grey, aka "GRAPHICS 9")
 - `[F]` - Low resolution 4,096 color (via flickering; "ColorView" mode)
 - `[A]` - Low resolution 256 color (via flickering; "Any Point, Any Color (APAC)" mode)
+
+Along with the image, the title of the picture will appear at the bottom of the screen.
 
 Once the image appears, press `[Esc]` to return to the menu.
 

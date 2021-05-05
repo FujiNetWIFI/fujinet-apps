@@ -41,6 +41,7 @@ char url[255];
  */
 void fetch_image(unsigned char choice, char sample, int size, unsigned char pick_yr, unsigned pick_mo, unsigned pick_day) {
   unsigned short data_len, data_read;
+  int i;
 
   if (pick_day == 0) {
     snprintf(url, sizeof(url), "%s?mode=%s&sample=%d", baseurl, modes[choice], sample);
@@ -114,6 +115,13 @@ void fetch_image(unsigned char choice, char sample, int size, unsigned char pick
   }
 
   nread(1, txt_mem, 256);
+  for (i = 0; i < 256; i++) {
+    if (txt_mem[i] < 32) {
+      txt_mem[i] += 64;
+    } else if (txt_mem[i] < 96) {
+      txt_mem[i] -= 32;
+    }
+  }
 
   nclose(1 /* unit 1 */);
 }
