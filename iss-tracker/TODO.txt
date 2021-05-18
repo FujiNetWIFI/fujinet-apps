@@ -1,8 +1,8 @@
 TODO for ISS Tracker for #FujiNet
 
- * Fetch ISS location
+Other ideas:
 
- * Fetch # of humans in space and display it
+ * Show night/day
 
- * List humans in space
+ * Show tracker lines (where ISS was, and will be soon)
 

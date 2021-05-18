@@ -2,11 +2,12 @@
 #include <peekpoke.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include "nsio.h"
 #include "faux_json.h"
 
 #define VERSION "2021-05-18 \"OVERCAST\""
-
+// #define DEBUG
 
 /* A chunk of memory for the screen
    (bitmapped graphics, text window, and display list),
@@ -168,6 +169,8 @@ void fetch_json(char * url) {
   nclose(1);
 }
 
+unsigned char txt[80];
+
 void main(void) {
   int i, lat, lon;
   unsigned char n, x, y, key;
@@ -226,7 +229,13 @@ void main(void) {
     clear_message();
     message(8, 1, "Fetching ISS position...");
 
+#ifdef DEBUG
+  strcpy(json,
+    "{\"timestamp\": 1621328742, \"iss_position\": {\"longitude\": \"-49.9018\", \"latitude\": \"-15.4486\"}, \"message\": \"success\"}"
+  );
+#else
     fetch_json("N:HTTP://api.open-notify.org/iss-now.json");
+#endif
 
     clear_message();
 
@@ -278,7 +287,7 @@ void main(void) {
       /* Left of screen is at PMG horizontal position 48 */
       GTIA_WRITE.hposp0 = 48 - (SPRITE_WIDTH / 2) + x;
 
-// FIXME     message(3, 2, "Press [P] to see who is in space!");
+      message(3, 2, "Press [P] to see who is in space!");
       message(3, 3, "Press any other key to refresh...");
 
       OS.ch = KEY_NONE;
@@ -290,9 +299,75 @@ void main(void) {
 
       if (key == KEY_P) {
         /* FIXME */
+
+        /* Fetch list of who is in space */
+        clear_message();
+        message(2, 1, "Fetching who is in space position...");
+
+#ifdef DEBUG
+        strcpy(json,
+          "{\"number\": 7, \"message\": \"success\", \"people\": [{\"name\": \"Mark Vande Hei\", \"craft\": \"ISS\"}, {\"name\": \"Oleg Novitskiy\", \"craft\": \"ISS\"}, {\"name\": \"Pyotr Dubrov\", \"craft\": \"ISS\"}, {\"name\": \"Thomas Pesquet\", \"craft\": \"ISS\"}, {\"name\": \"Megan McArthur\", \"craft\": \"ISS\"}, {\"name\": \"Shane Kimbrough\", \"craft\": \"ISS\"}, {\"name\": \"Akihiko Hoshide\", \"craft\": \"ISS\"}]}"
+        );
+#else
+        fetch_json("N:HTTP://api.open-notify.org/astros.json");
+#endif
+
+        clear_message();
+
+        if (json[0] == '\0') {
+          /* ERROR */
+          message(6, 0, "Cannot read from open-notify!");
+          message(7, 1, "Press a key to continue...");
+    
+          OS.ch = KEY_NONE;
+          do {
+          } while (OS.ch == KEY_NONE);
+          OS.ch = KEY_NONE;
+        } else {
+          /* SUCCESS */
+
+          faux_parse_json("number\": ", 0);
+          
+          blit_text(0, 3, "There are    people");
+          blit_text(10, 3, json_part);
+          blit_text(0, 4, "in space right now!");
+
+          n = atoi(json_part);
+
+          key = KEY_NONE;
+          for (i = 0; i < n && key != KEY_ESC; i++) {
+            faux_parse_json("\"name\": ", i);
+            blit_text(0, 6, "                    ");
+            blit_text(10 - strlen(json_part) / 2, 6, json_part);
+
+            clear_message();
+            snprintf(txt, 80, "#%d: %s", i + 1, json_part);
+            message(0, 0, txt);
+
+            faux_parse_json("\"craft\": ", i);
+            snprintf(txt, 80, "is on %s", json_part);
+            message(0, 1, txt);
+
+            message(7, 2, "Press a key to continue...");
+            if (i < n - 1) {
+              message(5, 3, "(or [Esc] to return to the map)");
+            }
+
+            OS.ch = KEY_NONE;
+            do {
+              key = OS.ch;
+            } while (key == KEY_NONE);
+            OS.ch = KEY_NONE;
+            clear_message();
+          }
+
+          /* Put map back: */
+          memcpy((unsigned char *) scr_mem, (unsigned char *) map_data, 3200);
+
+          key = KEY_NONE; /* Don't let [Esc] here fall thru to the main loop! */
+        }
       }
     }
-
   } while (key != KEY_ESC);
 
   asm("jmp $E477"); /* Cold start */
