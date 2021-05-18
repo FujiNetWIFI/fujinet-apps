@@ -60,12 +60,19 @@ void setup(void) {
   OS.sdmctl = DMACTL_PLAYFIELD_NORMAL | DMACTL_DMA_FETCH;
 }
 
+#define X_CENTER 79
+#define Y_CENTER 39
+
 void main(void) {
   int i;
   unsigned char n;
+  int lat, lon;
+  unsigned char x, y;
 
+  /* Set up the screen */
   setup();
 
+  /* Display the map (simple animation effect) */
   OS.color4 = 2;//scr_mem[3200];
   OS.color0 = 4;//scr_mem[3201];
   OS.color1 = 6;//scr_mem[3202];
@@ -83,6 +90,34 @@ void main(void) {
   OS.color1 = map_data[3202];
   OS.color2 = map_data[3203];
 
-  do { } while(1);
+  /* Draw the ISS in its position */
+  lon = 114;
+  lat = -40;
+
+  /* Map longitude (-180 -> 180 degrees east) to screen X position (0 left -> 159 right) */
+  x = X_CENTER + (unsigned char) ((lon << 2) / 9);
+
+  /* Map latitude (-90 -> 90 degrees north) to screen Y position (0 top -> 79 bottom) */
+  y = Y_CENTER - (unsigned char) ((lat << 2) / 9);
+
+  /* Note: Both calculations are (N / 2.25):
+     * -180 -> 180 is 360 degrees, mapped to 160 horizontal positions,
+     * -90 -> 90 is 180 degress, mapped to 80 vertical positions
+     This is being done in integer math as ((N * 4) / 9)
+  */
+
+  do {
+    POKE(scr_mem + y * 40 + (x / 4), 0);
+    POKE(scr_mem + y * 40 + (x / 4) + 40, 0);
+    POKE(scr_mem + y * 40 + (x / 4) - 40, 0);
+    n = OS.rtclok[2] + 1;
+    do { } while (OS.rtclok[2] != n);
+
+    POKE(scr_mem + y * 40 + (x / 4), 255);
+    POKE(scr_mem + y * 40 + (x / 4) + 40, 255);
+    POKE(scr_mem + y * 40 + (x / 4) - 40, 255);
+    n = OS.rtclok[2] + 1;
+    do { } while (OS.rtclok[2] != n);
+  } while(1);
   return;
 }
