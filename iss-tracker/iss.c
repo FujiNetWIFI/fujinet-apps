@@ -216,54 +216,86 @@ void main(void) {
   do {
   } while (OS.ch == KEY_NONE);
 
-  clear_message(); 
+  clear_message();
   memcpy((unsigned char *) scr_mem, (unsigned char *) map_data, 3200);
 
   /* MAIN LOOP */
   OS.ch = KEY_NONE;
   do {
     /* Fetch the ISS's current position */
+    clear_message();
+    message(8, 1, "Fetching ISS position...");
+
     fetch_json("N:HTTP://api.open-notify.org/iss-now.json");
 
+    clear_message();
+
     if (json[0] == '\0') {
-      message(0, 0, "Cannot read from open-notify!");
-      GTIA_WRITE.hposp0 = 0; /* move PMG off the screen */ 
+      /* ERROR */
+      message(6, 0, "Cannot read from open-notify!");
+      message(8, 1, "Press a key to retry...");
+      GTIA_WRITE.hposp0 = 0; /* move PMG off the screen */
+
+      OS.ch = KEY_NONE;
+      do {
+      } while (OS.ch == KEY_NONE);
+      OS.ch = KEY_NONE;
     } else {
-      faux_parse_json("longitude\": \"", 0);
-      lon = atoi(json_part);
+      /* SUCCESS */
+
+      /* Parse and display position */
       faux_parse_json("latitude\": \"", 0);
       lat = atoi(json_part);
-  
-      /* Draw the ISS in its position */
-    
+
+      message(0, 0, "Latitude: ");
+      message(10, 0, json_part);
+
+      faux_parse_json("longitude\": \"", 0);
+      lon = atoi(json_part);
+
+      message(20, 0, "Longitude: ");
+      message(31, 0, json_part);
+
+      /* Draw the ISS in its position over the map */
+
       /* Map longitude (-180 -> 180 degrees east) to screen X position (0 left -> 159 right) */
       x = X_CENTER + (unsigned char) ((lon << 2) / 9);
-    
+
       /* Map latitude (-90 -> 90 degrees north) to screen Y position (0 top -> 79 bottom) */
       y = Y_CENTER - (unsigned char) ((lat << 2) / 9);
-    
+
       /* Note: Both calculations are (N / 2.25):
          * -180 -> 180 is 360 degrees, mapped to 160 horizontal positions,
          * -90 -> 90 is 180 degress, mapped to 80 vertical positions
          This is being done in integer math as ((N * 4) / 9)
       */
-    
+
       /* Top of screen is at PMG vertical position 16,
          so we want that to be the /center/ of where we draw the sprite */
       bzero(pmg_mem + 512, 128);
       memcpy(pmg_mem + 512 + 16 - (SPRITE_HEIGHT / 2) + y, sprite, SPRITE_HEIGHT);
-    
+
       /* Left of screen is at PMG horizontal position 48 */
       GTIA_WRITE.hposp0 = 48 - (SPRITE_WIDTH / 2) + x;
+
+// FIXME     message(3, 2, "Press [P] to see who is in space!");
+      message(3, 3, "Press any other key to refresh...");
+
+      OS.ch = KEY_NONE;
+      do {
+        OS.pcolr0 = ((OS.rtclok[2] >> 1) & 0x0F) + 16;
+        key = OS.ch;
+      } while (key == KEY_NONE);
+      OS.ch = KEY_NONE;
+
+      if (key == KEY_P) {
+        /* FIXME */
+      }
     }
 
-    OS.ch = KEY_NONE; 
-    do {
-      OS.pcolr0 = ((OS.rtclok[2] >> 1) & 0x0F) + 16;
-      key = OS.ch;
-    } while (key == KEY_NONE);
-    OS.ch = KEY_NONE;
-
   } while (key != KEY_ESC);
+
+  asm("jmp $E477"); /* Cold start */
+
   return;
 }
