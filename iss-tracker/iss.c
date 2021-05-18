@@ -92,6 +92,68 @@ unsigned char sprite[SPRITE_HEIGHT] = {
   0x04, /* ....|.X.. */
 };
 
+#define CHARSET 0xE000
+
+void blit_text(unsigned char x, unsigned char y, char * txt) {
+  int i;
+  unsigned int ybase;
+  unsigned char yy, ch, pixels;
+  unsigned char px1, px2, px3, px4, px5, px6, px7, px8;
+
+  ybase = (unsigned int) (scr_mem + (y * 8 * 40));
+
+  for (i = 0; txt[i] != '\0'; i++) {
+    for (yy = 0; yy < 8; yy++) {
+      ch = txt[i];
+
+      if (ch < 32) {
+        ch = ch + 64;
+      } else if (ch < 96) {
+        ch = ch - 32;
+      }
+
+      pixels = PEEK(CHARSET + (ch * 8) + yy);
+      px1 = ((pixels & 0x80) >> 7) * 3;
+      px2 = ((pixels & 0x40) >> 6) * 3;
+      px3 = ((pixels & 0x20) >> 5) * 3;
+      px4 = ((pixels & 0x10) >> 4) * 3;
+      px5 = ((pixels & 0x08) >> 3) * 3;
+      px6 = ((pixels & 0x04) >> 2) * 3;
+      px7 = ((pixels & 0x02) >> 1) * 3;
+      px8 = (pixels & 0x01) * 3;
+
+      POKE(ybase + (yy * 40) + (x + i) * 2,
+           (px1 << 6) | (px2 << 4) | (px3 << 2) | px4);
+      POKE(ybase + (yy * 40) + (x + i) * 2 + 1,
+           (px5 << 6) | (px6 << 4) | (px7 << 2) | px8);
+    }
+  }
+}
+
+void clear_message(void) {
+  bzero(txt_mem, 160);
+}
+
+void message(int x, int y, char * txt) {
+  int i;
+  unsigned char ch;
+  unsigned int ybase;
+
+  ybase = (unsigned int) (txt_mem + (y * 40));
+
+  for (i = 0; txt[i] != '\0'; i++) {
+    ch = txt[i];
+
+    if (ch < 32) {
+      ch = ch + 64;
+    } else if (ch < 96) {
+      ch = ch - 32;
+    }
+
+    POKE(ybase + x + i, ch);
+  }
+}
+
 void main(void) {
   int i, lat, lon;
   unsigned char n, x, y, key;
@@ -100,10 +162,10 @@ void main(void) {
   setup();
 
   /* Display the map (simple animation effect) */
-  OS.color4 = 2;//scr_mem[3200];
-  OS.color0 = 4;//scr_mem[3201];
-  OS.color1 = 6;//scr_mem[3202];
-  OS.color2 = 8;//scr_mem[3203];
+  OS.color4 = 2;
+  OS.color0 = 4;
+  OS.color1 = 6;
+  OS.color2 = 8;
 
   for (i = 0; i < 40; i++) {
     memcpy((unsigned char *) scr_mem + (39 - i) * 40, (unsigned char *) map_data + (39 - i) * 40, 40);
@@ -112,14 +174,35 @@ void main(void) {
     do { } while (OS.rtclok[2] != n);
   }
 
+  /* Set the proper map colors (from the image file) */
   OS.color4 = map_data[3200];
   OS.color0 = map_data[3201];
   OS.color1 = map_data[3202];
   OS.color2 = map_data[3203];
 
 
-  /* MAIN LOOP */
+  /* Draw title and credits */
+  blit_text(0, 0, "International Space");
+  blit_text(0, 1, "Station Tracker for");
+  blit_text(6, 2, "#FujiNet");
 
+  blit_text(1, 4, "Bill Kendrick, 2021");
+
+  blit_text(2, 6, "Using data from");
+  blit_text(2, 7, "Nathan Bergey's");
+  blit_text(1, 8, "\"Open Notify\" APIs");
+
+  message(6, 1, "Press any key to continue...");
+
+  OS.ch = KEY_NONE;
+  do {
+  } while (OS.ch == KEY_NONE);
+
+  clear_message(); 
+  memcpy((unsigned char *) scr_mem, (unsigned char *) map_data, 3200);
+
+  /* MAIN LOOP */
+  OS.ch = KEY_NONE;
   do {
     /* Fetch the ISS's current position */
     /* http://api.open-notify.org/iss-now.json */
