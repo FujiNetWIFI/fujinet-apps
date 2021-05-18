@@ -5,6 +5,9 @@
 #include "nsio.h"
 #include "faux_json.h"
 
+#define VERSION "2021-05-18 \"OVERCAST\""
+
+
 /* A chunk of memory for the screen
    (bitmapped graphics, text window, and display list),
    as described in `atari.cfg`, and found in `segments.s` */
@@ -192,7 +195,11 @@ void main(void) {
   blit_text(2, 7, "Nathan Bergey's");
   blit_text(1, 8, "\"Open Notify\" APIs");
 
-  message(6, 1, "Press any key to continue...");
+  x = 16 - strlen(VERSION) / 2;
+  message(x, 1, "Version ");
+  message(x + 8, 1, VERSION);
+
+  message(6, 3, "Press any key to continue...");
 
   OS.ch = KEY_NONE;
   do {
