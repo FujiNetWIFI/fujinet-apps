@@ -1,4 +1,9 @@
 TODO for ISS Tracker for #FujiNet
+2021-05-18
+
+ * Ensure astronaut names word-wrap if needed (> 20 chars).
+
+ * May need to deal with Unicode characters :-/
 
 Other ideas:
 
