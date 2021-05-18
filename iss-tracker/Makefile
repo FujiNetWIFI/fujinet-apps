@@ -65,6 +65,6 @@ nsio.s:	nsio.c nsio.h sio.h
 sio.o:	sio.s
 	${CA65} -I "${CC65_ASMINC}" -t atari sio.s -o sio.o
 
-segments.o:     segments.s
+segments.o:     segments.s img/map.gr7
 	${CA65} -I "${CC65_ASMINC}" -t atari segments.s -o segments.o
 

@@ -12,6 +12,8 @@ extern unsigned char scr_mem[];
 unsigned char * dlist;
 unsigned char * txt_mem;
 
+/* The map bitmap */
+extern unsigned char map_data[];
 
 /* Set up the screen */
 void setup(void) {
@@ -59,7 +61,27 @@ void setup(void) {
 }
 
 void main(void) {
+  int i;
+  unsigned char n;
+
   setup();
+
+  OS.color4 = 2;//scr_mem[3200];
+  OS.color0 = 4;//scr_mem[3201];
+  OS.color1 = 6;//scr_mem[3202];
+  OS.color2 = 8;//scr_mem[3203];
+
+  for (i = 0; i < 40; i++) {
+    memcpy((unsigned char *) scr_mem + (39 - i) * 40, (unsigned char *) map_data + (39 - i) * 40, 40);
+    memcpy((unsigned char *) scr_mem + (i + 40) * 40, (unsigned char *) map_data + (i + 40) * 40, 40);
+    n = OS.rtclok[2] + 1;
+    do { } while (OS.rtclok[2] != n);
+  }
+
+  OS.color4 = map_data[3200];
+  OS.color0 = map_data[3201];
+  OS.color1 = map_data[3202];
+  OS.color2 = map_data[3203];
 
   do { } while(1);
   return;
