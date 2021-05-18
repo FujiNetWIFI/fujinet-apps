@@ -12,10 +12,13 @@ extern unsigned char scr_mem[];
 unsigned char * dlist;
 unsigned char * txt_mem;
 
-/* The map bitmap */
+/* A chunk of memory for the Player/Missile Graphics */
+extern unsigned char pmg_mem[];
+
+/* The world map bitmap */
 extern unsigned char map_data[];
 
-/* Set up the screen */
+/* Set up the screen & PMG */
 void setup(void) {
   unsigned char i;
 
@@ -28,6 +31,7 @@ void setup(void) {
 
   /* Clear everything */
   bzero(scr_mem, (dlist - scr_mem + 1));
+  bzero(pmg_mem, 1024);
 
   /* Generate a display list... */
 
@@ -55,13 +59,36 @@ void setup(void) {
   POKE(dlist + 91, DL_JVB);
   POKEW(dlist + 92, (unsigned int) dlist);
 
+  /* Config PMGs */
+
+  OS.gprior = PRIOR_P03_PF03;
+  GTIA_WRITE.sizep0 = PMG_SIZE_NORMAL;
+  GTIA_WRITE.hposp0 = 0;
+  OS.pcolr0 = 0x00;
+  ANTIC.pmbase = ((unsigned int) pmg_mem) >> 8;
+
   /* Use our display list & enable the screen */
   OS.sdlst = dlist;
-  OS.sdmctl = DMACTL_PLAYFIELD_NORMAL | DMACTL_DMA_FETCH;
+  OS.sdmctl = DMACTL_PLAYFIELD_NORMAL | DMACTL_DMA_FETCH | DMACTL_DMA_PLAYERS;
+  GTIA_WRITE.gractl = GRACTL_PLAYERS;
 }
 
 #define X_CENTER 79
 #define Y_CENTER 39
+
+#define SPRITE_HEIGHT 8
+#define SPRITE_WIDTH 8 /* Players are 8 pixels wide! */
+
+unsigned char sprite[SPRITE_HEIGHT] = {
+  0x20, /* ..X.|.... */
+  0x50, /* .X.X|.... */
+  0xA4, /* X.X.|.X.. */
+  0x58, /* .X.X|X... */
+  0x1A, /* ...X|X.X. */
+  0x05, /* ....|.X.X */
+  0x0A, /* ....|X.X. */
+  0x04, /* ....|.X.. */
+};
 
 void main(void) {
   int i;
@@ -106,18 +133,15 @@ void main(void) {
      This is being done in integer math as ((N * 4) / 9)
   */
 
-  do {
-    POKE(scr_mem + y * 40 + (x / 4), 0);
-    POKE(scr_mem + y * 40 + (x / 4) + 40, 0);
-    POKE(scr_mem + y * 40 + (x / 4) - 40, 0);
-    n = OS.rtclok[2] + 1;
-    do { } while (OS.rtclok[2] != n);
+  /* Top of screen is at PMG vertical position 16,
+     so we want that to be the /center/ of where we draw the sprite */
+  memcpy(pmg_mem + 512 + 16 - (SPRITE_HEIGHT / 2) + y, sprite, SPRITE_HEIGHT);
 
-    POKE(scr_mem + y * 40 + (x / 4), 255);
-    POKE(scr_mem + y * 40 + (x / 4) + 40, 255);
-    POKE(scr_mem + y * 40 + (x / 4) - 40, 255);
-    n = OS.rtclok[2] + 1;
-    do { } while (OS.rtclok[2] != n);
+  /* Left of screen is at PMG horizontal position 48 */
+  GTIA_WRITE.hposp0 = 48 - (SPRITE_WIDTH / 2) + x;
+
+  do {
+    OS.pcolr0 = OS.rtclok[2] & 0x0F;
   } while(1);
   return;
 }
