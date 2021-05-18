@@ -157,6 +157,17 @@ void message(int x, int y, char * txt) {
   }
 }
 
+void fetch_json(char * url) {
+  int data_len;
+
+  nopen(1, url, 4 /* read */);
+  nstatus(1);
+  data_len = (OS.dvstat[1] << 8) + OS.dvstat[0];
+
+  nread(1, json, data_len);
+  nclose(1);
+}
+
 void main(void) {
   int i, lat, lon;
   unsigned char n, x, y, key;
@@ -212,36 +223,40 @@ void main(void) {
   OS.ch = KEY_NONE;
   do {
     /* Fetch the ISS's current position */
-    /* http://api.open-notify.org/iss-now.json */
-    strcpy(json,
-      "{\"timestamp\": 1621322818, \"iss_position\": {\"longitude\": \"-39.1409\", \"latitude\": \"2.1292\"}, \"message\": \"success\"}"
-    );
-    faux_parse_json("longitude\": \"", 0);
-    lon = atoi(json_part);
-    faux_parse_json("latitude\": \"", 0);
-    lat = atoi(json_part);
+    fetch_json("N:HTTP://api.open-notify.org/iss-now.json");
 
-    /* Draw the ISS in its position */
+    if (json[0] == '\0') {
+      message(0, 0, "Cannot read from open-notify!");
+      GTIA_WRITE.hposp0 = 0; /* move PMG off the screen */ 
+    } else {
+      faux_parse_json("longitude\": \"", 0);
+      lon = atoi(json_part);
+      faux_parse_json("latitude\": \"", 0);
+      lat = atoi(json_part);
   
-    /* Map longitude (-180 -> 180 degrees east) to screen X position (0 left -> 159 right) */
-    x = X_CENTER + (unsigned char) ((lon << 2) / 9);
-  
-    /* Map latitude (-90 -> 90 degrees north) to screen Y position (0 top -> 79 bottom) */
-    y = Y_CENTER - (unsigned char) ((lat << 2) / 9);
-  
-    /* Note: Both calculations are (N / 2.25):
-       * -180 -> 180 is 360 degrees, mapped to 160 horizontal positions,
-       * -90 -> 90 is 180 degress, mapped to 80 vertical positions
-       This is being done in integer math as ((N * 4) / 9)
-    */
-  
-    /* Top of screen is at PMG vertical position 16,
-       so we want that to be the /center/ of where we draw the sprite */
-    memcpy(pmg_mem + 512 + 16 - (SPRITE_HEIGHT / 2) + y, sprite, SPRITE_HEIGHT);
-  
-    /* Left of screen is at PMG horizontal position 48 */
-    GTIA_WRITE.hposp0 = 48 - (SPRITE_WIDTH / 2) + x;
- 
+      /* Draw the ISS in its position */
+    
+      /* Map longitude (-180 -> 180 degrees east) to screen X position (0 left -> 159 right) */
+      x = X_CENTER + (unsigned char) ((lon << 2) / 9);
+    
+      /* Map latitude (-90 -> 90 degrees north) to screen Y position (0 top -> 79 bottom) */
+      y = Y_CENTER - (unsigned char) ((lat << 2) / 9);
+    
+      /* Note: Both calculations are (N / 2.25):
+         * -180 -> 180 is 360 degrees, mapped to 160 horizontal positions,
+         * -90 -> 90 is 180 degress, mapped to 80 vertical positions
+         This is being done in integer math as ((N * 4) / 9)
+      */
+    
+      /* Top of screen is at PMG vertical position 16,
+         so we want that to be the /center/ of where we draw the sprite */
+      bzero(pmg_mem + 512, 128);
+      memcpy(pmg_mem + 512 + 16 - (SPRITE_HEIGHT / 2) + y, sprite, SPRITE_HEIGHT);
+    
+      /* Left of screen is at PMG horizontal position 48 */
+      GTIA_WRITE.hposp0 = 48 - (SPRITE_WIDTH / 2) + x;
+    }
+
     OS.ch = KEY_NONE; 
     do {
       OS.pcolr0 = ((OS.rtclok[2] >> 1) & 0x0F) + 16;
