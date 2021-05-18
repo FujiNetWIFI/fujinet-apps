@@ -7,7 +7,7 @@
 # some of NASA's awesome data)
 #
 # Bill Kendrick <bill@newbreedsoftware.com>
-# 2021-05-17 - 2021-05-17
+# 2021-05-17 - 2021-05-18
 
 CC65BIN=/usr/bin
 CC65=${CC65BIN}/cc65
@@ -36,18 +36,20 @@ clean:
 	-rm iss.s
 	-rm nsio.o
 	-rm nsio.s
+	-rm faux_json.o
+	-rm faux_json.s
 
-iss.xex:	iss.o nsio.o sio.o segments.o atari.cfg
+iss.xex:	iss.o nsio.o sio.o faux_json.o segments.o atari.cfg
 	${LD65} --lib-path "${CC65_LIB}" \
 		-o iss.xex \
 		-t atari \
 		-m iss.map \
-		iss.o nsio.o sio.o segments.o atari.lib
+		iss.o nsio.o sio.o faux_json.o segments.o atari.lib
 
 iss.o:	iss.s
 	${CA65} -I "${CC65_ASMINC}" -t atari iss.s -o iss.o
 
-iss.s:	iss.c nsio.h
+iss.s:	iss.c nsio.h faux_json.h
 	${CC65} ${CC65_FLAGS} -I "${CC65_INC}" \
 		-t atari \
 		iss.c \
@@ -61,6 +63,15 @@ nsio.s:	nsio.c nsio.h sio.h
 		-t atari \
 		nsio.c \
 		-o nsio.s
+
+faux_json.o:	faux_json.s
+	${CA65} -I "${CC65_ASMINC}" -t atari faux_json.s -o faux_json.o
+
+faux_json.s:	faux_json.c faux_json.h
+	${CC65} ${CC65_FLAGS} -I "${CC65_INC}" \
+		-t atari \
+		faux_json.c \
+		-o faux_json.s
 
 sio.o:	sio.s
 	${CA65} -I "${CC65_ASMINC}" -t atari sio.s -o sio.o

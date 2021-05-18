@@ -1,7 +1,9 @@
 #include <atari.h>
 #include <peekpoke.h>
 #include <string.h>
+#include <stdlib.h>
 #include "nsio.h"
+#include "faux_json.h"
 
 /* A chunk of memory for the screen
    (bitmapped graphics, text window, and display list),
@@ -91,10 +93,8 @@ unsigned char sprite[SPRITE_HEIGHT] = {
 };
 
 void main(void) {
-  int i;
-  unsigned char n;
-  int lat, lon;
-  unsigned char x, y;
+  int i, lat, lon;
+  unsigned char n, x, y, key;
 
   /* Set up the screen */
   setup();
@@ -117,31 +117,48 @@ void main(void) {
   OS.color1 = map_data[3202];
   OS.color2 = map_data[3203];
 
-  /* Draw the ISS in its position */
-  lon = 114;
-  lat = -40;
 
-  /* Map longitude (-180 -> 180 degrees east) to screen X position (0 left -> 159 right) */
-  x = X_CENTER + (unsigned char) ((lon << 2) / 9);
-
-  /* Map latitude (-90 -> 90 degrees north) to screen Y position (0 top -> 79 bottom) */
-  y = Y_CENTER - (unsigned char) ((lat << 2) / 9);
-
-  /* Note: Both calculations are (N / 2.25):
-     * -180 -> 180 is 360 degrees, mapped to 160 horizontal positions,
-     * -90 -> 90 is 180 degress, mapped to 80 vertical positions
-     This is being done in integer math as ((N * 4) / 9)
-  */
-
-  /* Top of screen is at PMG vertical position 16,
-     so we want that to be the /center/ of where we draw the sprite */
-  memcpy(pmg_mem + 512 + 16 - (SPRITE_HEIGHT / 2) + y, sprite, SPRITE_HEIGHT);
-
-  /* Left of screen is at PMG horizontal position 48 */
-  GTIA_WRITE.hposp0 = 48 - (SPRITE_WIDTH / 2) + x;
+  /* MAIN LOOP */
 
   do {
-    OS.pcolr0 = OS.rtclok[2] & 0x0F;
-  } while(1);
+    /* Fetch the ISS's current position */
+    /* http://api.open-notify.org/iss-now.json */
+    strcpy(json,
+      "{\"timestamp\": 1621322818, \"iss_position\": {\"longitude\": \"-39.1409\", \"latitude\": \"2.1292\"}, \"message\": \"success\"}"
+    );
+    faux_parse_json("longitude\": \"", 0);
+    lon = atoi(json_part);
+    faux_parse_json("latitude\": \"", 0);
+    lat = atoi(json_part);
+
+    /* Draw the ISS in its position */
+  
+    /* Map longitude (-180 -> 180 degrees east) to screen X position (0 left -> 159 right) */
+    x = X_CENTER + (unsigned char) ((lon << 2) / 9);
+  
+    /* Map latitude (-90 -> 90 degrees north) to screen Y position (0 top -> 79 bottom) */
+    y = Y_CENTER - (unsigned char) ((lat << 2) / 9);
+  
+    /* Note: Both calculations are (N / 2.25):
+       * -180 -> 180 is 360 degrees, mapped to 160 horizontal positions,
+       * -90 -> 90 is 180 degress, mapped to 80 vertical positions
+       This is being done in integer math as ((N * 4) / 9)
+    */
+  
+    /* Top of screen is at PMG vertical position 16,
+       so we want that to be the /center/ of where we draw the sprite */
+    memcpy(pmg_mem + 512 + 16 - (SPRITE_HEIGHT / 2) + y, sprite, SPRITE_HEIGHT);
+  
+    /* Left of screen is at PMG horizontal position 48 */
+    GTIA_WRITE.hposp0 = 48 - (SPRITE_WIDTH / 2) + x;
+ 
+    OS.ch = KEY_NONE; 
+    do {
+      OS.pcolr0 = ((OS.rtclok[2] >> 1) & 0x0F) + 16;
+      key = OS.ch;
+    } while (key == KEY_NONE);
+    OS.ch = KEY_NONE;
+
+  } while (key != KEY_ESC);
   return;
 }
