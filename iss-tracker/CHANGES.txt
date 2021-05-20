@@ -4,6 +4,7 @@
      positions on the map. (Press [T])
    * Auto-refresh ISS's position (now press [R] to refresh manually)
    * Previous ISS positions leave a trail (of sprites)
+   * Audible feedback when interacting with the program
  * Visual improvements:
    * Improved default map colors; removed grid from continents
    * Faster and nicer looking text blitting over the map

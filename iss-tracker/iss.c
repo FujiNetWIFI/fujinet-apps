@@ -35,9 +35,35 @@ extern unsigned char map_data[];
 
 unsigned char old_x[4], old_y[4];
 
+#define BELL_ABORT 0
+#define BELL_GOOD 1
+
+void bell(unsigned char bell_type) {
+  unsigned char i;
+
+  POKEY_WRITE.audf2 = 100 - (50 * bell_type);
+  for (i = 0; i < 255; i++) {
+    POKEY_WRITE.audc2 = 0xAF - (i >> 4);
+  }
+}
+
+
 /* Set up the screen & PMG */
 void setup(void) {
   unsigned char i;
+
+  POKEY_WRITE.audctl = 0;
+
+  POKEY_WRITE.audf1 = 0;
+  POKEY_WRITE.audc1 = 0;
+  POKEY_WRITE.audf2 = 0;
+  POKEY_WRITE.audc2 = 0;
+  POKEY_WRITE.audf3 = 0;
+  POKEY_WRITE.audc3 = 0;
+  POKEY_WRITE.audf4 = 0;
+  POKEY_WRITE.audc4 = 0;
+
+  POKEY_WRITE.skctl = SKCTL_KEYBOARD_DEBOUNCE | SKCTL_KEYBOARD_SCANNING;
 
   /* Turn off the screen (ANTIC DMA) */
   OS.sdmctl = 0;
@@ -263,6 +289,8 @@ void main(void) {
   do {
   } while (OS.ch == KEY_NONE);
 
+  bell(BELL_GOOD);
+
   clear_message();
   memcpy((unsigned char *) scr_mem, (unsigned char *) map_data, 3200);
 
@@ -376,7 +404,7 @@ void main(void) {
       OS.ch = KEY_NONE;
 
       if (key == KEY_P) {
-        /* FIXME */
+        bell(BELL_GOOD);
 
         /* Fetch list of who is in space */
         clear_message();
@@ -437,6 +465,12 @@ void main(void) {
             } while (key == KEY_NONE);
             OS.ch = KEY_NONE;
             clear_message();
+
+            if (key != KEY_ESC) {
+              bell(BELL_GOOD);
+            } else {
+              bell(BELL_ABORT);
+            }
           }
 
           /* Clear map: */
@@ -445,14 +479,17 @@ void main(void) {
           key = KEY_NONE; /* Don't let [Esc] here fall thru to the main loop! */
         }
       } else if (key == KEY_T) {
+        bell(BELL_GOOD);
+
         /* Clear map: */
         memcpy((unsigned char *) scr_mem, (unsigned char *) map_data, 3200);
 
         /* Fetch some upcoming ISS positions based (via timestamps) */
         clear_message();
         message(MSG_CENTER, 1, "Fetching upcoming ISS positions...");
+        message(MSG_CENTER, 3, "(Press [Esc] to abort)");
 
-        for (i = 0; i < 10; i++) {
+        for (i = 0; i < 10 && OS.ch != KEY_ESC; i++) {
           sprintf(txt, "%d..", i + 1);
           message(i * 4, 2, txt);
 #ifdef DEBUG
@@ -488,10 +525,16 @@ void main(void) {
           /* Pause 1 second (API rate-limit requirement!) */
           OS.rtclok[2] = 0;
           do {
-          } while (OS.rtclok[2] < 60);
+          } while (OS.rtclok[2] < 60 && OS.ch != KEY_ESC);
         }
+        if (OS.ch == KEY_ESC) {
+          bell(BELL_ABORT);
+        }
+        OS.ch = KEY_NONE;
 
         key = KEY_NONE; /* Don't let [Esc] here fall thru to the main loop! */
+      } else if (key == KEY_R) {
+        bell(BELL_GOOD);
       }
     }
   } while (key != KEY_ESC);
