@@ -4,6 +4,8 @@
  * Auto-refresh ISS's position (now press [R] to refresh manually)
  * Nicer color-cycling of ISS sprite
  * ISS positions leave a trail (of sprites)
+ * New STARTADDRESS (so folks who forget to disable BASIC can still
+   run it)
 
 2021-05-18 "OVERCAST"
  * Initial release
