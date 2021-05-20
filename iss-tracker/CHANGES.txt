@@ -1,13 +1,16 @@
 2021-05-19 "VIVID"
- * Improved default map colors
+ * Can pull data from "Where the ISS?" to track upcoming
+   positions on the map.
+ * Previous ISS positions leave a trail (of sprites)
+ * Improved default map colors; removed grid from continents
  * Faster and nicer looking text blitting over the map
  * Auto-refresh ISS's position (now press [R] to refresh manually)
  * Nicer color-cycling of ISS sprite
- * ISS positions leave a trail (of sprites)
  * New STARTADDRESS (so folks who forget to disable BASIC can still
    run it)
 
 2021-05-18 "OVERCAST"
  * Initial release
-   + Displays map, fetches ISS position, can show who's in space
+   + Displays map, fetches ISS position and can show who's in space
+     (both via data from "Open-Notify")
 

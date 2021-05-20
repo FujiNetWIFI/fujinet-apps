@@ -7,11 +7,16 @@
 #include "faux_json.h"
 #include "colors.h"
 
-#define VERSION "2021-05-19 \"VIVID\""
+#define VERSION "2021-05-20 \"VIVID\""
 //#define DEBUG
 
 /* How long to wait before auto-refresh */
 #define RTCLOK1_WAIT ((3 /* minutes */ * 60 /* seconds per minute */ * 60 /* 'jiffies' per second */) / 256 /* RTCLOK2 cycles per RTCLOK1 increment */)
+
+/* We fetch 10 x 2 positions per request = 20 positions.
+   At 5 minutes, we get 20 * 5 = 100 minutes, or approx. 1.5 hrs
+   of future positions (approx. one orbit!) */
+#define TRACK_TIMESKIP (5 /* minutes */ * 60 /* seconds per minute */)
 
 /* A chunk of memory for the screen
    (bitmapped graphics, text window, and display list),
@@ -197,7 +202,7 @@ void fetch_json(char * url) {
   nclose(1);
 }
 
-unsigned char txt[80];
+unsigned char txt[80], url[128];
 
 unsigned char flash_colors[16] = {
   0x00, 0x02, 0x04, 0x06, 0x08, 0x0A, 0x0C, 0x0E,
@@ -205,8 +210,9 @@ unsigned char flash_colors[16] = {
 };
 
 void main(void) {
-  int i, lat, lon;
+  int i, j, lat, lon;
   unsigned char n, x, y, key;
+  long timestamp;
 #ifdef DEBUG
   unsigned char refresh = 0;
 #endif
@@ -239,11 +245,13 @@ void main(void) {
   blit_text(0, 1, "Station Tracker for");
   blit_text(6, 2, "#FujiNet");
 
-  blit_text(1, 4, "Bill Kendrick, 2021");
+  blit_text(1, 3, "Bill Kendrick, 2021");
 
-  blit_text(2, 6, "Using data from");
-  blit_text(2, 7, "Nathan Bergey's");
-  blit_text(1, 8, "\"Open Notify\" APIs");
+  blit_text(2, 5, "Using data from");
+  blit_text(2, 6, "Nathan Bergey's");
+  blit_text(3, 7, "\"Open Notify\"");
+  blit_text(2, 8, "and Bill Shupp's");
+  blit_text(1, 9, "\"Where The ISS At?\"");
 
   x = 16 - strlen(VERSION) / 2;
   message(x, 1, "Version ");
@@ -306,6 +314,12 @@ void main(void) {
       message(20, 0, "Longitude: ");
       message(31, 0, json_part);
 
+      faux_parse_json("timestamp\": ", 0);
+      timestamp = atol(json_part);
+
+      sprintf(txt, "Timestamp: %ld", timestamp);
+      message(0, 3, txt);
+
       /* Draw the ISS in its position over the map */
 
       /* Map longitude (-180 -> 180 degrees east) to screen X position (0 left -> 159 right) */
@@ -341,7 +355,7 @@ void main(void) {
       }
 
       message(MSG_CENTER, 1, "Press [P] to see who is in space!");
-      message(MSG_CENTER, 2, "Press [R] to refresh.");
+      message(MSG_CENTER, 2, "Press [R] to refresh, [T] to track.");
       // message(MSG_CENTER, 3, "Press [C] to change colors");
 
       OS.rtclok[1] = 0;
@@ -351,7 +365,13 @@ void main(void) {
       do {
         OS.pcolr0 = flash_colors[(OS.rtclok[2] >> 2) & 0x0F];
         key = OS.ch;
-      } while (key != KEY_P && key != KEY_R && key != KEY_ESC && OS.rtclok[1] < RTCLOK1_WAIT);
+      } while (
+        key != KEY_P &&
+        key != KEY_R &&
+        key != KEY_T &&
+        key != KEY_ESC &&
+        OS.rtclok[1] < RTCLOK1_WAIT
+      );
       OS.ch = KEY_NONE;
 
       if (key == KEY_P) {
@@ -418,11 +438,59 @@ void main(void) {
             clear_message();
           }
 
-          /* Put map back: */
+          /* Clear map: */
           memcpy((unsigned char *) scr_mem, (unsigned char *) map_data, 3200);
 
           key = KEY_NONE; /* Don't let [Esc] here fall thru to the main loop! */
         }
+      } else if (key == KEY_T) {
+        /* Clear map: */
+        memcpy((unsigned char *) scr_mem, (unsigned char *) map_data, 3200);
+
+        /* Fetch some upcoming ISS positions based (via timestamps) */
+        clear_message();
+        message(MSG_CENTER, 1, "Fetching upcoming ISS positions...");
+
+        for (i = 0; i < 10; i++) {
+          sprintf(txt, "%d..", i + 1);
+          message(i * 4, 2, txt);
+#ifdef DEBUG
+          sprintf(json,
+            "[{\"name\":\"iss\",\"id\":25544,\"latitude\":32.036525830247,\"longitude\":%d,\"altitude\":422.36725160286,\"velocity\":27582.150654623,\"visibility\":\"eclipsed\",\"footprint\":4519.4874190988,\"timestamp\":1621495000,\"daynum\":2459354.8032407,\"solar_lat\":20.045025016205,\"solar_lon\":69.974234072544,\"units\":\"kilometers\"},{\"name\":\"iss\",\"id\":25544,\"latitude\":4.1463745318446,\"longitude\":-28.796510074692,\"altitude\":421.79118839539,\"velocity\":27571.454760273,\"visibility\":\"eclipsed\",\"footprint\":4516.5650199427,\"timestamp\":1621490000,\"daynum\":2459354.7453704,\"solar_lat\":20.03305188388,\"solar_lon\":90.806707066059,\"units\":\"kilometers\"}]",
+            -76 + ((i * 2) * 5), -76 + (((i * 2) + 1) * 5),
+          );
+#else
+          /* 25544 is the NORAD catalog id for ISS */
+          sprintf(url, "N:HTTP://api.wheretheiss.at/v1/satellites/25544/positions?timestamps=%ld,%ld",
+                  timestamp + TRACK_TIMESKIP * (i * 2),
+                  timestamp + TRACK_TIMESKIP * ((i * 2) + 1));
+          fetch_json(url);
+#endif
+
+          for (j = 0; j < 2; j++) {
+            faux_parse_json("latitude\":", j);
+            lat = atoi(json_part);
+  
+            faux_parse_json("longitude\":", j);
+            lon = atoi(json_part);
+  
+            /* Map longitude (-180 -> 180 degrees east) to screen X position (0 left -> 159 right) */
+            x = X_CENTER + (unsigned char) ((lon << 2) / 9);
+  
+            /* Map latitude (-90 -> 90 degrees north) to screen Y position (0 top -> 79 bottom) */
+            y = Y_CENTER - (unsigned char) ((lat << 2) / 9);
+  
+            /* FIXME: A better plot routine would be good here! */
+            scr_mem[y * 40 + (x >> 2)] = 0xFF;
+          }
+
+          /* Pause 1 second (API rate-limit requirement!) */
+          OS.rtclok[2] = 0;
+          do {
+          } while (OS.rtclok[2] < 60);
+        }
+
+        key = KEY_NONE; /* Don't let [Esc] here fall thru to the main loop! */
       }
     }
   } while (key != KEY_ESC);
