@@ -1,6 +1,5 @@
 /*
-  Astronomy Picture of the Day (APOD) viewer client
-  for Ataris using #Fujinet.
+  ISS Tracker for Ataris using #Fujinet.
 
   This module provides "nXXXX()" functions for
   talking to the #FujiNet N: device via direct SIO Calls.

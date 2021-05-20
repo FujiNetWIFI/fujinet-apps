@@ -6,3 +6,7 @@ nsio.s
 nsio.o
 faux_json.s
 faux_json.o
+app_key.s
+app_key.o
+colors.s
+colors.o

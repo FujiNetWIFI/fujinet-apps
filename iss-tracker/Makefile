@@ -7,7 +7,7 @@
 # some of NASA's awesome data)
 #
 # Bill Kendrick <bill@newbreedsoftware.com>
-# 2021-05-17 - 2021-05-18
+# 2021-05-17 - 2021-05-19
 
 CC65BIN=/usr/bin
 CC65=${CC65BIN}/cc65
@@ -38,18 +38,22 @@ clean:
 	-rm nsio.s
 	-rm faux_json.o
 	-rm faux_json.s
+	-rm app_key.o
+	-rm app_key.s
+	-rm colors.o
+	-rm colors.s
 
-iss.xex:	iss.o nsio.o sio.o faux_json.o segments.o atari.cfg
+iss.xex:	iss.o nsio.o sio.o faux_json.o app_key.o colors.o segments.o atari.cfg
 	${LD65} --lib-path "${CC65_LIB}" \
 		-o iss.xex \
 		-t atari \
 		-m iss.map \
-		iss.o nsio.o sio.o faux_json.o segments.o atari.lib
+		iss.o nsio.o sio.o faux_json.o app_key.o colors.o segments.o atari.lib
 
 iss.o:	iss.s
 	${CA65} -I "${CC65_ASMINC}" -t atari iss.s -o iss.o
 
-iss.s:	iss.c nsio.h faux_json.h
+iss.s:	iss.c nsio.h faux_json.h app_key.h colors.h
 	${CC65} ${CC65_FLAGS} -I "${CC65_INC}" \
 		-t atari \
 		iss.c \
@@ -72,6 +76,24 @@ faux_json.s:	faux_json.c faux_json.h
 		-t atari \
 		faux_json.c \
 		-o faux_json.s
+
+app_key.o:	app_key.s
+	${CA65} -I "${CC65_ASMINC}" -t atari app_key.s -o app_key.o
+
+app_key.s:	app_key.c app_key.h colors.h
+	${CC65} ${CC65_FLAGS} -I "${CC65_INC}" \
+		-t atari \
+		app_key.c \
+		-o app_key.s
+
+colors.o:	colors.s
+	${CA65} -I "${CC65_ASMINC}" -t atari colors.s -o colors.o
+
+colors.s:	colors.c colors.h
+	${CC65} ${CC65_FLAGS} -I "${CC65_INC}" \
+		-t atari \
+		colors.c \
+		-o colors.s
 
 sio.o:	sio.s
 	${CA65} -I "${CC65_ASMINC}" -t atari sio.s -o sio.o

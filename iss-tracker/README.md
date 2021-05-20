@@ -6,7 +6,7 @@ Bill Kendrick bill@newbreedsoftware.com
 Released under the GNU General Public License 3 (GPL-3);
 see COPYING
 
-2021-05-17 - 2021-05-18
+2021-05-17 - 2021-05-19
 
 ## Purpose
 View the current position of the International Space Station
@@ -32,8 +32,8 @@ Longitude is degrees east of prime meridian.  (Positive is east, towards
 the right side of the map (toward Asia, Australia, etc.), and negative
 is west (toward the Americas).)
 
-Press a key to fetch update coordinates and refresh the ISS's
-position on the map.
+Press the `[R]` key to fetch updated coordinates, and refresh the ISS's
+position on the map.  (Or wait a while, and it will refresh automatically.)
 
 Press the `[P]` key to see
 [how many people are in space right now](https://www.howmanypeopleareinspacerightnow.com/).

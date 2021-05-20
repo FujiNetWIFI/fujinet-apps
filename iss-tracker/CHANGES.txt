@@ -1,0 +1,11 @@
+2021-05-19 "VIVID"
+ * Improved default map colors
+ * Faster and nicer looking text blitting over the map
+ * Auto-refresh ISS's position (now press [R] to refresh manually)
+ * Nicer color-cycling of ISS sprite
+ * ISS positions leave a trail (of sprites)
+
+2021-05-18 "OVERCAST"
+ * Initial release
+   + Displays map, fetches ISS position, can show who's in space
+

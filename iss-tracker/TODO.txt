@@ -1,5 +1,11 @@
 TODO for ISS Tracker for #FujiNet
-2021-05-18
+2021-05-19
+
+ * Show previous ISS positions on the map (additional PMGs).
+
+ * Allow adjusting colors.
+
+ * Save colors to FujiNet (app key); reload on start-up.
 
  * Ensure astronaut names word-wrap if needed (> 20 chars).
 
