@@ -192,10 +192,10 @@ void main(void) {
   }
 
   /* Set the proper map colors (from the image file) */
-  OS.color4 = map_data[3200];
-  OS.color0 = map_data[3201];
-  OS.color1 = map_data[3202];
-  OS.color2 = map_data[3203];
+  OS.color4 = 0x00;
+  OS.color0 = 0x42;
+  OS.color1 = 0x9F;
+  OS.color2 = 0x92;
 
 
   /* Draw title and credits */
