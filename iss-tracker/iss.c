@@ -10,6 +10,9 @@
 #define VERSION "2021-05-19 \"VIVID\""
 //#define DEBUG
 
+/* How long to wait before auto-refresh */
+#define RTCLOK1_WAIT ((3 /* minutes */ * 60 /* seconds per minute */ * 60 /* 'jiffies' per second */) / 256 /* RTCLOK2 cycles per RTCLOK1 increment */)
+
 /* A chunk of memory for the screen
    (bitmapped graphics, text window, and display list),
    as described in `atari.cfg`, and found in `segments.s` */
@@ -348,7 +351,7 @@ void main(void) {
       do {
         OS.pcolr0 = flash_colors[(OS.rtclok[2] >> 2) & 0x0F];
         key = OS.ch;
-      } while (key != KEY_P && key != KEY_R && key != KEY_ESC && OS.rtclok[1] < 8);
+      } while (key != KEY_P && key != KEY_R && key != KEY_ESC && OS.rtclok[1] < RTCLOK1_WAIT);
       OS.ch = KEY_NONE;
 
       if (key == KEY_P) {
