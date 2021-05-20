@@ -205,8 +205,8 @@ void fetch_json(char * url) {
 unsigned char txt[80], url[128];
 
 unsigned char flash_colors[16] = {
-  0x00, 0x02, 0x04, 0x06, 0x08, 0x0A, 0x0C, 0x0E,
-  0x0C, 0x0A, 0x08, 0x06, 0x04, 0x02, 0x00, 0x00
+  0x10, 0x12, 0x24, 0x26, 0x38, 0x3A, 0x3C, 0x4E,
+  0x3C, 0x3A, 0x38, 0x26, 0x84, 0x12, 0x10, 0x00
 };
 
 void main(void) {
@@ -306,19 +306,20 @@ void main(void) {
       lat = atoi(json_part);
 
       message(0, 0, "Latitude: ");
+      json_part[7] = '\0';
       message(10, 0, json_part);
+      message(10 + strlen(json_part), 0, "N");
 
       faux_parse_json("longitude\": \"", 0);
       lon = atoi(json_part);
 
       message(20, 0, "Longitude: ");
+      json_part[7] = '\0';
       message(31, 0, json_part);
+      message(31 + strlen(json_part), 0, "E");
 
       faux_parse_json("timestamp\": ", 0);
       timestamp = atol(json_part);
-
-      sprintf(txt, "Timestamp: %ld", timestamp);
-      message(0, 3, txt);
 
       /* Draw the ISS in its position over the map */
 
@@ -356,7 +357,7 @@ void main(void) {
 
       message(MSG_CENTER, 1, "Press [P] to see who is in space!");
       message(MSG_CENTER, 2, "Press [R] to refresh, [T] to track.");
-      // message(MSG_CENTER, 3, "Press [C] to change colors");
+      // message(MSG_CENTER, 3, "Press [C] to change colors.");
 
       OS.rtclok[1] = 0;
       OS.rtclok[2] = 0;

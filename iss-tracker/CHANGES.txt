@@ -1,13 +1,17 @@
 2021-05-19 "VIVID"
- * Can pull data from "Where the ISS?" to track upcoming
-   positions on the map.
- * Previous ISS positions leave a trail (of sprites)
- * Improved default map colors; removed grid from continents
- * Faster and nicer looking text blitting over the map
- * Auto-refresh ISS's position (now press [R] to refresh manually)
- * Nicer color-cycling of ISS sprite
- * New STARTADDRESS (so folks who forget to disable BASIC can still
-   run it)
+ * New features:
+   * Can pull data from "Where the ISS?" to track upcoming
+     positions on the map. (Press [T])
+   * Auto-refresh ISS's position (now press [R] to refresh manually)
+   * Previous ISS positions leave a trail (of sprites)
+ * Visual improvements:
+   * Improved default map colors; removed grid from continents
+   * Faster and nicer looking text blitting over the map
+   * Nicer color-cycling of ISS sprite
+   * Label latitude (N/North) & longitude (E/East)
+ * Build changes:
+   * New STARTADDRESS (so folks who forget to disable BASIC can
+     run it)
 
 2021-05-18 "OVERCAST"
  * Initial release
