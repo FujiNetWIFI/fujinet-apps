@@ -1,6 +1,7 @@
 2021-05-21 "BORDERS"
  * Visual improvements:
    * Black (rather than ocean blue) screen borders
+   * Different color for text window at the bottom (better contrast)
    * Astronaut names will word-wrap if necessary
 
 2021-05-19 "VIVID"

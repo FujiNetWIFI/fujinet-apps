@@ -47,6 +47,17 @@ void bell(unsigned char bell_type) {
   }
 }
 
+void dli(void) {
+  asm("pha");
+
+  asm("lda #$90");
+  asm("sta $D40A"); // WSYNC
+  asm("sta $D018"); // COLPF2
+
+  asm("pla");
+  asm("rti");
+}
+
 
 /* Set up the screen & PMG */
 void setup(void) {
@@ -88,9 +99,10 @@ void setup(void) {
   POKEW(dlist + 4, (unsigned int) scr_mem);
 
   /* 79 more lines of graphics */
-  for (i = 0; i < 79; i++) {
+  for (i = 0; i < 78; i++) {
     POKE(dlist + 6 + i, DL_GRAPHICS7);
   }
+  POKE(dlist + 6 + 78, DL_DLI(DL_GRAPHICS7));
 
   /* First line of text window, with LMS */
   POKE(dlist + 85, DL_LMS(DL_GRAPHICS0));
@@ -126,6 +138,11 @@ void setup(void) {
   OS.sdlst = dlist;
   OS.sdmctl = DMACTL_PLAYFIELD_NORMAL | DMACTL_DMA_FETCH | DMACTL_DMA_PLAYERS;
   GTIA_WRITE.gractl = GRACTL_PLAYERS;
+
+  ANTIC.nmien = NMIEN_VBI;
+  while (ANTIC.vcount < 124);
+  OS.vdslst = (void *) dli;
+  ANTIC.nmien = NMIEN_VBI | NMIEN_DLI;
 
   /* Set default colors, then try to load from an app key */
   set_default_colors();

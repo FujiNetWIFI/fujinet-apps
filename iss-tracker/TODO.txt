@@ -1,8 +1,6 @@
 TODO for ISS Tracker for #FujiNet
 2021-05-21
 
- * DLI for separate colors for the text window.
-
  * May need to deal with Unicode characters in astronaut names!
 
  * Allow adjusting colors.
