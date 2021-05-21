@@ -1,10 +1,9 @@
 TODO for ISS Tracker for #FujiNet
-2021-05-20
+2021-05-21
 
  * DLI for separate colors for the text window.
 
- * Ensure astronaut names word-wrap if needed (> 20 chars).
-   * May need to deal with Unicode characters :-/
+ * May need to deal with Unicode characters in astronaut names!
 
  * Allow adjusting colors.
    * Save colors to FujiNet (app key); reload on start-up.

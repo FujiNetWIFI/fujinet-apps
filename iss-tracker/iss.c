@@ -236,12 +236,13 @@ unsigned char flash_colors[16] = {
 };
 
 void main(void) {
-  int i, j, lat, lon;
-  unsigned char n, x, y, key;
+  int i, j, lat, lon, last_space;
+  unsigned char n, x, y, key, done;
   long timestamp;
 #ifdef DEBUG
   unsigned char refresh = 0;
 #endif
+  char * ptr;
 
   /* Set up the screen */
   setup();
@@ -432,32 +433,86 @@ void main(void) {
         } else {
           /* SUCCESS */
 
+          GTIA_WRITE.hposp0 = 0;
+          GTIA_WRITE.hposp1 = 0;
+          GTIA_WRITE.hposp2 = 0;
+          GTIA_WRITE.hposp3 = 0;
+
           faux_parse_json("number\": ", 0);
           
-          blit_text(0, 3, "There are    people");
-          blit_text(10, 3, json_part);
-          blit_text(0, 4, "in space right now!");
+          blit_text(0, 0, "There are    people");
+          blit_text(10, 0, json_part);
+          blit_text(0, 1, "in space right now!");
 
           n = atoi(json_part);
 
           key = KEY_NONE;
           for (i = 0; i < n && key != KEY_ESC; i++) {
             faux_parse_json("\"name\": ", i);
-            blit_text(0, 6, "                    ");
-            blit_text(10 - strlen(json_part) / 2, 6, json_part);
+
+            y = 6 - (strlen(json_part) / 40);
+            ptr = json_part;
+            done = 0;
+            while (!done) {
+              strcpy(txt, ptr);
+              if (strlen(txt) < 20) {
+                done = 1;
+              } else {
+                last_space = 0;
+                for (j = 0; j < 20 && j < strlen(txt); j++) {
+                  if (txt[j] == ' ') {
+                    last_space = j;
+                  }
+                }
+                if (last_space == 0) {
+                  last_space = 20;
+                }
+                txt[last_space] = '\0';
+                ptr += last_space;
+              }
+              memset(scr_mem + (y * 8) * 40, pxcolor[0] << 6 | pxcolor[0] << 4 | pxcolor[0] << 2 | pxcolor[0], 8 * 40);
+              blit_text(10 - strlen(txt) / 2, y, txt);
+              y++;
+            }
 
             clear_message();
-            snprintf(txt, 80, "#%d: %s", i + 1, json_part);
-            message(0, 0, txt);
+            snprintf(txt, 80, "%s is on ", json_part);
 
             faux_parse_json("\"craft\": ", i);
-            snprintf(txt, 80, "is on %s", json_part);
-            message(0, 1, txt);
+            strcat(txt, json_part);
 
-            message(MSG_CENTER, 2, "Press a key to continue...");
-            if (i < n - 1) {
-              message(MSG_CENTER, 3, "(or [Esc] to return to the map)");
+            strcpy(json_part, txt);
+
+            y = 0;
+            ptr = json_part;
+            done = 0;
+            while (!done) {
+              strcpy(txt, ptr);
+              if (strlen(txt) < 40) {
+                done = 1;
+              } else {
+                last_space = 0;
+                for (j = 0; j < 40 && j < strlen(txt); j++) {
+                  if (txt[j] == ' ') {
+                    last_space = j;
+                  }
+                }
+                if (last_space == 0) {
+                  last_space = 40;
+                }
+                txt[last_space] = '\0';
+                ptr += last_space;
+              }
+              message(MSG_CENTER, y, txt);
+              y++;
             }
+
+            if (i < n - 1) {
+              sprintf(txt, "(%d) Press a key for more ([Esc] = stop)", i + 1);
+            } else {
+              sprintf(txt, "(%d) Press a key", i + 1);
+            }
+            message(MSG_CENTER, 3, txt);
 
             OS.ch = KEY_NONE;
             do {
@@ -468,6 +523,7 @@ void main(void) {
 
             if (key != KEY_ESC) {
               bell(BELL_GOOD);
+              memcpy(scr_mem + 640, map_data + 640, 2560);
             } else {
               bell(BELL_ABORT);
             }

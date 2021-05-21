@@ -6,7 +6,7 @@ Bill Kendrick bill@newbreedsoftware.com
 Released under the GNU General Public License 3 (GPL-3);
 see COPYING
 
-2021-05-17 - 2021-05-20
+2021-05-17 - 2021-05-21
 
 ## Purpose
 View the current position of the International Space Station
