@@ -6,9 +6,6 @@ TODO for ISS Tracker for #FujiNet
 
  * DLI for separate colors for the text window.
 
- * Consider changing background/border to black, and
-   making blue ocean a foreground color
-
  * Ensure astronaut names word-wrap if needed (> 20 chars).
    * May need to deal with Unicode characters :-/
 

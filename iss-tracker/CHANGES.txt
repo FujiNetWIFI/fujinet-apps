@@ -1,3 +1,7 @@
+2021-05-20 "BORDERS"
+ * Visual improvements:
+   * Black (rather than ocean blue) screen borders
+
 2021-05-19 "VIVID"
  * New features:
    * Can pull data from "Where the ISS?" to track upcoming

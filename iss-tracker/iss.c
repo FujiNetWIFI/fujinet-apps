@@ -7,8 +7,8 @@
 #include "faux_json.h"
 #include "colors.h"
 
-#define VERSION "2021-05-20 \"VIVID\""
-//#define DEBUG
+#define VERSION "2021-05-21 \"BORDERS\""
+#define DEBUG
 
 /* How long to wait before auto-refresh */
 #define RTCLOK1_WAIT ((3 /* minutes */ * 60 /* seconds per minute */ * 60 /* 'jiffies' per second */) / 256 /* RTCLOK2 cycles per RTCLOK1 increment */)
@@ -150,7 +150,7 @@ unsigned char sprite[SPRITE_HEIGHT] = {
 
 #define CHARSET 0xE000
 
-unsigned char pxcolor[2] = { 1, 3 };
+unsigned char pxcolor[2] = { 2, 0 };
 
 void blit_text(unsigned char x, unsigned char y, char * txt) {
   int i;
@@ -519,7 +519,7 @@ void main(void) {
             y = Y_CENTER - (unsigned char) ((lat << 2) / 9);
   
             /* FIXME: A better plot routine would be good here! */
-            scr_mem[y * 40 + (x >> 2)] = 0xFF;
+            scr_mem[y * 40 + (x >> 2)] = 0x00;
           }
 
           /* Pause 1 second (API rate-limit requirement!) */
