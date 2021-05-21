@@ -8,7 +8,7 @@
 #include "colors.h"
 
 #define VERSION "2021-05-21 \"BORDERS\""
-#define DEBUG
+//#define DEBUG
 
 /* How long to wait before auto-refresh */
 #define RTCLOK1_WAIT ((3 /* minutes */ * 60 /* seconds per minute */ * 60 /* 'jiffies' per second */) / 256 /* RTCLOK2 cycles per RTCLOK1 increment */)
@@ -412,7 +412,7 @@ void main(void) {
 
 #ifdef DEBUG
         strcpy(json,
-          "{\"number\": 7, \"message\": \"success\", \"people\": [{\"name\": \"Mark Vande Hei\", \"craft\": \"ISS\"}, {\"name\": \"Oleg Novitskiy\", \"craft\": \"ISS\"}, {\"name\": \"Pyotr Dubrov\", \"craft\": \"ISS\"}, {\"name\": \"Thomas Pesquet\", \"craft\": \"ISS\"}, {\"name\": \"Megan McArthur\", \"craft\": \"ISS\"}, {\"name\": \"Shane Kimbrough\", \"craft\": \"ISS\"}, {\"name\": \"Akihiko Hoshide\", \"craft\": \"ISS\"}]}"
+          "{\"number\": 7, \"message\": \"success\", \"people\": [{\"name\": \"Mark Vande Hei\", \"craft\": \"ISS\"}, {\"name\": \"Oleg Novitskiy But With A Really Long Name\", \"craft\": \"ISS\"}, {\"name\": \"Pyotr Dubrov\", \"craft\": \"ISS\"}, {\"name\": \"Thomas Pesquet\", \"craft\": \"ISS\"}, {\"name\": \"Megan McArthur\", \"craft\": \"ISS\"}, {\"name\": \"Shane Kimbrough\", \"craft\": \"ISS\"}, {\"name\": \"Akihiko Hoshide\", \"craft\": \"ISS\"}]}"
         );
 #else
         fetch_json("N:HTTP://api.open-notify.org/astros.json");
