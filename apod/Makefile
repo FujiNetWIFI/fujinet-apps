@@ -3,7 +3,7 @@
 # images, as converted by the 'apod' web app.
 #
 # Bill Kendrick <bill@newbreedsoftware.com>
-# 2021-03-27 - 2021-05-04
+# 2021-03-27 - 2021-05-26
 
 CC65BIN=/usr/bin
 CC65=${CC65BIN}/cc65
@@ -54,17 +54,19 @@ clean:
 	-rm rgb.s
 	-rm screen_helpers.o
 	-rm screen_helpers.s
+	-rm speak.o
+	-rm speak.s
 	-rm vblanks.o
 	-rm vblanks.s
 	-rm view.o
 	-rm view.s
 
-apod.xex:	apod.o app_key.o dlists.o dli15.o dli256.o dli9.o nsio.o sio.o myprint.o get_time.o interrupt_helpers.o screen_helpers.o colorbars.o menu.o rgb.o view.o vblanks.o fetch.o segments.o atari.cfg
+apod.xex:	apod.o app_key.o dlists.o dli15.o dli256.o dli9.o nsio.o sio.o myprint.o get_time.o interrupt_helpers.o screen_helpers.o colorbars.o menu.o rgb.o view.o vblanks.o speak.o fetch.o segments.o atari.cfg
 	${LD65} --lib-path "${CC65_LIB}" \
 		-o apod.xex \
 		-t atari \
 		-m apod.map \
-		apod.o app_key.o dlists.o dli15.o dli256.o dli9.o nsio.o sio.o myprint.o get_time.o interrupt_helpers.o screen_helpers.o colorbars.o menu.o rgb.o view.o vblanks.o fetch.o segments.o atari.lib
+		apod.o app_key.o dlists.o dli15.o dli256.o dli9.o nsio.o sio.o myprint.o get_time.o interrupt_helpers.o screen_helpers.o colorbars.o menu.o rgb.o view.o vblanks.o speak.o fetch.o segments.o atari.lib
 
 apod.o:	apod.s
 	${CA65} -I "${CC65_ASMINC}" -t atari apod.s -o apod.o
@@ -165,10 +167,19 @@ vblanks.s:	vblanks.c vblanks.h dli15.h dli256.h dli9.h rgb.h interrupt_helpers.h
 		vblanks.c \
 		-o vblanks.s
 
+speak.o:	speak.s
+	${CA65} -I "${CC65_ASMINC}" -t atari speak.s -o speak.o
+
+speak.s:	speak.c speak.h sio.h
+	${CC65} ${CC65_FLAGS} -I "${CC65_INC}" \
+		-t atari \
+		speak.c \
+		-o speak.s
+
 view.o:	view.s
 	${CA65} -I "${CC65_ASMINC}" -t atari view.s -o view.o
 
-view.s:	view.c view.h fetch.h interrupt_helpers.h screen_helpers.h rgb.h dlists.h dli15.h dli9.h dli256.h colorbars.h menu.h vblanks.h
+view.s:	view.c view.h fetch.h interrupt_helpers.h screen_helpers.h rgb.h dlists.h dli15.h dli9.h dli256.h colorbars.h menu.h vblanks.h speak.h
 	${CC65} ${CC65_FLAGS} -I "${CC65_INC}" \
 		-t atari \
 		view.c \

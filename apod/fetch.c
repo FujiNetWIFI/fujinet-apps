@@ -9,7 +9,7 @@
   using the HTTP transport.
 
   By Bill Kendrick <bill@newbreedsoftware.com>
-  2021-03-27 - 2021-05-04
+  2021-03-27 - 2021-05-27
 */
 
 #include <stdio.h>
@@ -41,7 +41,9 @@ char url[255];
  */
 void fetch_image(unsigned char choice, char sample, int size, unsigned char pick_yr, unsigned pick_mo, unsigned pick_day) {
   unsigned short data_len, data_read;
-  int i;
+  char * txt_buf;
+
+  txt_buf = (unsigned char *) (txt_mem + 40);
 
   if (pick_day == 0) {
     snprintf(url, sizeof(url), "%s?mode=%s&sample=%d", baseurl, modes[choice], sample);
@@ -114,14 +116,7 @@ void fetch_image(unsigned char choice, char sample, int size, unsigned char pick
     nread(1, (char *) 708, 3);
   }
 
-  nread(1, txt_mem, 256);
-  for (i = 0; i < 256; i++) {
-    if (txt_mem[i] < 32) {
-      txt_mem[i] += 64;
-    } else if (txt_mem[i] < 96) {
-      txt_mem[i] -= 32;
-    }
-  }
+  nread(1, txt_buf, 40);
 
   nclose(1 /* unit 1 */);
 }

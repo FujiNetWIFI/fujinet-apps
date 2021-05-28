@@ -8,7 +8,7 @@
   Different screen modes get different patterns.
 
   By Bill Kendrick <bill@newbreedsoftware.com>
-  2021-03-27 - 2021-05-04
+  2021-03-27 - 2021-05-27
 */
 
 #include <string.h> /* for memset() */
@@ -16,8 +16,7 @@
 #include "colorbars.h"
 #include "menu.h"
 
-#include <atari_screen_charmap.h>
-#define COLORBARS_TXT "COLORBARS"
+#define COLORBARS_TXT "Colorbars!"
 
 /**
  * Render the appropriate test pattern ("color bars")
@@ -28,6 +27,9 @@
 void render_colorbars(unsigned char mode) {
   int i, i2, i3, j;
   unsigned char r, g, b, grey, hue;
+  char * txt_buf;
+
+  txt_buf = (unsigned char *) (txt_mem + 40);
 
   if (mode == CHOICE_HIRES_MONO) {
     /* Monochrome dither pattern simulating shades */
@@ -170,5 +172,6 @@ void render_colorbars(unsigned char mode) {
     }
   }
 
-  memcpy(txt_mem, COLORBARS_TXT, strlen(COLORBARS_TXT));
+  memset(txt_buf, 32, 40);
+  memcpy(txt_buf, COLORBARS_TXT, strlen(COLORBARS_TXT));
 }

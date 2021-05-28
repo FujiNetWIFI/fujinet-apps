@@ -18,7 +18,7 @@
   see "rgb" module).
 
   By Bill Kendrick <bill@newbreedsoftware.com>
-  2021-03-27 - 2021-05-05
+  2021-03-27 - 2021-05-27
 */
 
 #include <stdio.h>
@@ -33,6 +33,7 @@
 #include "menu.h"
 #include "rgb.h"
 #include "screen_helpers.h"
+#include "speak.h"
 #include "vblanks.h"
 #include "view.h"
 
@@ -40,8 +41,11 @@
  * Fetch or render the image, and view it!
  */
 void view(unsigned char choice, char sample, unsigned char pick_yr, unsigned pick_mo, unsigned pick_day) {
-  int size;
+  int size, i;
   unsigned char k, interrupts_used;
+  unsigned char * txt_buf;
+
+  txt_buf = (char *) (txt_mem + 40);
 
   /* Set up the display, based on the choice */
   size = 7680;
@@ -90,6 +94,17 @@ void view(unsigned char choice, char sample, unsigned char pick_yr, unsigned pic
     fetch_image(choice, sample, size, pick_yr, pick_mo, pick_day);
   }
 
+  /* Screen-mem-ify the description text */
+  for (i = 0; i < 40; i++) {
+    if (txt_buf[i] < 32) {
+      txt_mem[i] = txt_buf[i] + 64;
+    } else if (txt_buf[i] < 96) {
+      txt_mem[i] = txt_buf[i] - 32;
+    } else {
+      txt_mem[i] = txt_buf[i];
+    }
+  }
+
   dlist_hi = (unsigned char) (((unsigned int) (scr_mem + DLIST_OFFSET)) >> 8);
   dlist_lo = (unsigned char) (((unsigned int) (scr_mem + DLIST_OFFSET)) & 255);
 
@@ -135,6 +150,10 @@ void view(unsigned char choice, char sample, unsigned char pick_yr, unsigned pic
       } else {
         apac_lum -= 2;
       }
+      OS.ch = KEY_NONE;
+    } else if (k == KEY_V) {
+      /* [V]: Speak the title */
+      speak();
       OS.ch = KEY_NONE;
     }
   } while (k != KEY_ESC); /* [Esc] Done viewing; return to main menu */
