@@ -14,3 +14,4 @@ screen_helpers.s
 vblanks.s
 view.s
 *.lst
+speak.s
