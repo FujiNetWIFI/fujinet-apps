@@ -31,6 +31,6 @@ void speak(void)
   OS.dcb.dbuf = (txt_mem + 40); /* ASCII version of the text */
   OS.dcb.dtimlo = 0x1f;
   OS.dcb.dbyt = 40; /* 40 bytes */
-  OS.dcb.daux = 40;
+  OS.dcb.daux = 0;
   siov();
 }

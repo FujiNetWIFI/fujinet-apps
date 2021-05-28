@@ -118,5 +118,7 @@ void fetch_image(unsigned char choice, char sample, int size, unsigned char pick
 
   nread(1, txt_buf, 40);
 
+  txt_buf[39] = 0x9B;
+
   nclose(1 /* unit 1 */);
 }
