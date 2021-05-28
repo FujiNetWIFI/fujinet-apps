@@ -1,8 +1,8 @@
 #ifndef VERSION_H
 #define VERSION_H
 
-#define VERSION "VER. 2021-05-04C"
-#define VERSION_NICKNAME "TXTMSG"
+#define VERSION "VER. 2021-05-27"
+#define VERSION_NICKNAME "TALKIE TOASTER"
 
 #endif // VERSION_H
 
