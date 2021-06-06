@@ -41,8 +41,8 @@ char url[255];
  */
 void fetch_image(unsigned char choice, char sample, int size, unsigned char pick_yr, unsigned pick_mo, unsigned pick_day) {
   unsigned short data_len, data_read;
+  unsigned char retries = 0;
   char * txt_buf;
-  int i;
 
   txt_buf = (unsigned char *) (txt_mem + 40);
 
@@ -60,8 +60,47 @@ void fetch_image(unsigned char choice, char sample, int size, unsigned char pick
     nread(1, scr_mem1, (unsigned short) size);
   } else if (size == (40 + 4) * 192) {
     /* Single screen with color palette for every scanline */
-    nread(1, scr_mem1, 7680);
-    nread(1, rgb_table, 768);
+    for(data_read = 0; data_read < 7680; data_read += data_len)
+    {
+      nstatus(1);
+      data_len = (OS.dvstat[1] << 8) + OS.dvstat[0];
+      if (data_len == 0) {
+        data_len = OS.rtclok[1];
+        do {
+          OS.color4 = OS.rtclok[2];
+        } while (OS.rtclok[1] < data_len + 2);
+        retries++;
+        if (retries > 3) {
+          break;
+        }
+      } else {
+        if (data_read + data_len > 7680) {
+          data_len = 7680 - data_read;
+        }
+        nread(1, scr_mem1 + data_read, data_len);
+      }
+    }
+
+    for(data_read = 0; data_read < 768; data_read += data_len)
+    {
+      nstatus(1);
+      data_len = (OS.dvstat[1] << 8) + OS.dvstat[0];
+      if (data_len == 0) {
+        data_len = OS.rtclok[1];
+        do {
+          OS.color4 = OS.rtclok[2];
+        } while (OS.rtclok[1] < data_len + 2);
+        retries++;
+        if (retries > 3) {
+          break;
+        }
+      } else {
+        if (data_read + data_len > 768) {
+          data_len = 768 - data_read;
+        }
+        nread(1, rgb_table + data_read, data_len);
+      }
+    }
   } else {
     /* Multiple screen images to load... */
 

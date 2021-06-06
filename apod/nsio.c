@@ -56,7 +56,7 @@ unsigned char nread(unsigned char unit, char* buf, unsigned short len)
   OS.dcb.dcomnd = 'R';
   OS.dcb.dstats = 0x40;
   OS.dcb.dbuf = buf;
-  OS.dcb.dtimlo = 0xff;
+  OS.dcb.dtimlo = 0x1f;
   OS.dcb.dbyt = len;
   OS.dcb.daux = len;
   return siov();

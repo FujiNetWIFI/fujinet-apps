@@ -1,7 +1,7 @@
 #ifndef VERSION_H
 #define VERSION_H
 
-#define VERSION "VER. 2021-06-04"
+#define VERSION "VER. 2021-06-06"
 #define VERSION_NICKNAME "SCANLINES"
 
 #endif // VERSION_H
