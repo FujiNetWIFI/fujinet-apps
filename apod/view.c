@@ -18,7 +18,7 @@
   see "rgb" module).
 
   By Bill Kendrick <bill@newbreedsoftware.com>
-  2021-03-27 - 2021-06-04
+  2021-03-27 - 2021-06-05
 */
 
 #include <stdio.h>
@@ -32,6 +32,7 @@
 
 #include "dlists.h"
 #include "dli15.h"
+#include "dli15b.h"
 #include "dli256.h"
 #include "dli9.h"
 #include "interrupt_helpers.h"
@@ -60,16 +61,16 @@ void view(unsigned char choice, char sample, unsigned char pick_yr, unsigned pic
   /* Prepare display for loading image... */
   screen_off();
   if (choice == CHOICE_HIRES_MONO) {
-    dlist_setup(DL_GRAPHICS8, 1);
+    dlist_setup(DL_GRAPHICS8, 1, 0);
     OS.color4 = 128; /* Border (no reason) */
     OS.color2 = 0; /* Background */
     OS.color1 = 15; /* Foreground */
   } else if (choice == CHOICE_LOWRES_GREY) {
-    dlist_setup(DL_GRAPHICS8, 0);
+    dlist_setup(DL_GRAPHICS8, 0, 0);
     OS.gprior = 64;
     OS.color4 = 0; /* Greyscale */
   } else if (choice == CHOICE_MEDRES_COLOR) {
-    dlist_setup(DL_GRAPHICS15, 1);
+    dlist_setup(DL_GRAPHICS15, 1, 0);
     /* (Colors will be replaced by palette fetched from server) */
     OS.color4 = 0; /* Background (black) */
     OS.color0 = 4; /* Dark foreground */
@@ -87,6 +88,10 @@ void view(unsigned char choice, char sample, unsigned char pick_yr, unsigned pic
   } else if (choice == CHOICE_LOWRES_256) {
     size = 7680 * 2;
     dlist_setup_apac();
+  } else if (choice == CHOICE_MEDRES_DLICOLOR) {
+    size = (40 + 4) * 192; /* each _scanline_ gets 4 colors */
+    dlist_setup(DL_GRAPHICS15, 1, 1);
+    /* N.B.: rgb_table[] will be populated by fetched data */
   }
   screen_on();
 
@@ -122,6 +127,8 @@ void view(unsigned char choice, char sample, unsigned char pick_yr, unsigned pic
   } else if (choice == CHOICE_MEDRES_RGB) {
     mySETVBV((void *) VBLANKD15);
     dli_init(dli15);
+  } else if (choice == CHOICE_MEDRES_DLICOLOR) {
+    dli_init(dli15b);
   } else if (choice == CHOICE_LOWRES_256) {
     mySETVBV((void *) VBLANKD_APAC);
     dli_init(dli256);

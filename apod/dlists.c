@@ -8,7 +8,7 @@
   used by the program.
 
   By Bill Kendrick <bill@newbreedsoftware.com>
-  2021-03-27 - 2021-05-05
+  2021-03-27 - 2021-06-05
 */
 
 #include <stdio.h>
@@ -26,9 +26,10 @@
  * caller to set the GPRIOR bit to enable the 16 shades GTIA mode.)
  *
  * @param byte antic_mode
- * @param bool text_line FIXME
+ * @param bool text_line - whether to include a line of text at the bottom
+ * @param bool text_line - whether entire screen gets one DLI at the top
  */
-void dlist_setup(unsigned char antic_mode, unsigned char text_line) {
+void dlist_setup(unsigned char antic_mode, unsigned char text_line, unsigned char top_scanline_dli) {
   unsigned int gfx_ptr;
 
   gfx_ptr = (unsigned int) (scr_mem + SCR_OFFSET);
@@ -37,7 +38,11 @@ void dlist_setup(unsigned char antic_mode, unsigned char text_line) {
 
   dlist1[0] = DL_BLK1;
   dlist1[1] = DL_BLK8;
-  dlist1[2] = DL_BLK8;
+  if (top_scanline_dli) {
+    dlist1[2] = DL_DLI(DL_BLK8);
+  } else {
+    dlist1[2] = DL_BLK8;
+  }
 
   /* Row 0 */
   dlist1[3] = DL_LMS(antic_mode);

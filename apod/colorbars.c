@@ -8,12 +8,13 @@
   Different screen modes get different patterns.
 
   By Bill Kendrick <bill@newbreedsoftware.com>
-  2021-03-27 - 2021-05-27
+  2021-03-27 - 2021-06-05
 */
 
 #include <string.h> /* for memset() */
 #include "screen_helpers.h"
 #include "colorbars.h"
+#include "rgb.h"
 #include "menu.h"
 
 #define COLORBARS_TXT "Colorbars!"
@@ -40,13 +41,22 @@ void render_colorbars(unsigned char mode) {
     for (i = 80; i < 7680; i += 80) {
       memcpy(scr_mem1 + i, scr_mem1, 80);
     }
-  } else if (mode == CHOICE_MEDRES_COLOR) {
+  } else if (mode == CHOICE_MEDRES_COLOR ||
+             mode == CHOICE_MEDRES_DLICOLOR) {
     /* Four grey scale shades */
     for (i = 10; i < 40; i++) {
       scr_mem1[i] = (i < 20) ? 0x55 : (i < 30) ? 0xaa : 0xff;
     }
     for (i = 40; i < 7680; i += 40) {
       memcpy(scr_mem1 + i, scr_mem1, 40);
+    }
+    if (mode == CHOICE_MEDRES_DLICOLOR) {
+      for (i = 0; i < 192; i++) {
+        rgb_table[i * 4] = (i / 12);
+        rgb_table[i * 4 + 1] = (i / 12) + 6;
+        rgb_table[i * 4 + 2] = (i / 12) + 10;
+        rgb_table[i * 4 + 3] = (i / 12) + 14;
+      }
     }
   } else if (mode == CHOICE_LOWRES_GREY) {
     /* Sixteen grey scale shades */

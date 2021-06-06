@@ -14,7 +14,7 @@
    3. displays the image
 
   By Bill Kendrick <bill@newbreedsoftware.com>
-  2021-03-27 - 2021-05-03
+  2021-03-27 - 2021-06-05
 */
 
 #include <stdio.h>
@@ -37,6 +37,7 @@ char * modes[NUM_CHOICES] = {
   "",
   "8",
   "15",
+  "15dli",
   "rgb15",
   "9",
   "rgb9",

@@ -9,7 +9,7 @@
   by Thomas Cherryhomes <thom.cherryhomes@gmail.com>
   (Released under GPL 3.0)
 
-  Last modified: 2021-05-03
+  Last modified: 2021-06-05
 */
 
 #include <atari.h>
@@ -56,7 +56,7 @@ unsigned char nread(unsigned char unit, char* buf, unsigned short len)
   OS.dcb.dcomnd = 'R';
   OS.dcb.dstats = 0x40;
   OS.dcb.dbuf = buf;
-  OS.dcb.dtimlo = 0x1f;
+  OS.dcb.dtimlo = 0xff;
   OS.dcb.dbyt = len;
   OS.dcb.daux = len;
   return siov();
@@ -82,7 +82,7 @@ unsigned char nstatus(unsigned char unit)
   OS.dcb.dcomnd = 'S';
   OS.dcb.dstats = 0x40;
   OS.dcb.dbuf = OS.dvstat;
-  OS.dcb.dtimlo = 0x1f;
+  OS.dcb.dtimlo = 0xff;
   OS.dcb.dbyt = 4;
   OS.dcb.daux1 = 0;
   OS.dcb.daux2 = 0;

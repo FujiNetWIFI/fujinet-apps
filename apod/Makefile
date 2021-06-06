@@ -32,6 +32,7 @@ clean:
 	# O files from S source
 	-rm dlists.o
 	-rm dli15.o
+	-rm dli15b.o
 	-rm dli256.o
 	-rm dli9.o
 	-rm segments.o
@@ -70,12 +71,12 @@ clean:
 	-rm viewtest.o
 	-rm viewtest.s
 
-apod.xex:	apod.o app_key.o dlists.o dli15.o dli256.o dli9.o nsio.o sio.o myprint.o get_time.o interrupt_helpers.o screen_helpers.o menu.o rgb.o view.o vblanks.o speak.o fetch.o segments.o atari.cfg
+apod.xex:	apod.o app_key.o dlists.o dli15.o dli15b.o dli256.o dli9.o nsio.o sio.o myprint.o get_time.o interrupt_helpers.o screen_helpers.o menu.o rgb.o view.o vblanks.o speak.o fetch.o segments.o atari.cfg
 	${LD65} --lib-path "${CC65_LIB}" \
 		-o apod.xex \
 		-t atari \
 		-m apod.map \
-		apod.o app_key.o dlists.o dli15.o dli256.o dli9.o nsio.o sio.o myprint.o get_time.o interrupt_helpers.o screen_helpers.o menu.o rgb.o view.o vblanks.o speak.o fetch.o segments.o atari.lib
+		apod.o app_key.o dlists.o dli15.o dli15b.o dli256.o dli9.o nsio.o sio.o myprint.o get_time.o interrupt_helpers.o screen_helpers.o menu.o rgb.o view.o vblanks.o speak.o fetch.o segments.o atari.lib
 
 apod.o:	apod.s
 	${CA65} -I "${CC65_ASMINC}" -t atari apod.s -o apod.o
@@ -86,12 +87,12 @@ apod.s:	apod.c app_key.h get_time.h globals.h menu.h rgb.h screen_helpers.h view
 		apod.c \
 		-o apod.s
 
-apodtest.xex:	apod.o app_key.o dlists.o dli15.o dli256.o dli9.o nsio.o sio.o myprint.o colorbars.o get_time.o interrupt_helpers.o screen_helpers.o menutest.o rgb.o viewtest.o vblanks.o speak.o fetch.o segments.o atari.cfg
+apodtest.xex:	apod.o app_key.o dlists.o dli15.o dli15b.o dli256.o dli9.o nsio.o sio.o myprint.o colorbars.o get_time.o interrupt_helpers.o screen_helpers.o menutest.o rgb.o viewtest.o vblanks.o speak.o fetch.o segments.o atari.cfg
 	${LD65} --lib-path "${CC65_LIB}" \
 		-o apodtest.xex \
 		-t atari \
 		-m apod.map \
-		apod.o app_key.o dlists.o dli15.o dli256.o dli9.o nsio.o sio.o myprint.o colorbars.o get_time.o interrupt_helpers.o screen_helpers.o menutest.o rgb.o viewtest.o vblanks.o speak.o fetch.o segments.o atari.lib
+		apod.o app_key.o dlists.o dli15.o dli15b.o dli256.o dli9.o nsio.o sio.o myprint.o colorbars.o get_time.o interrupt_helpers.o screen_helpers.o menutest.o rgb.o viewtest.o vblanks.o speak.o fetch.o segments.o atari.lib
 
 myprint.o:	myprint.s
 	${CA65} -I "${CC65_ASMINC}" -t atari myprint.s -o myprint.o
@@ -187,7 +188,7 @@ dlists.s:	dlists.c dlists.h screen_helpers.h
 vblanks.o:	vblanks.s
 	${CA65} -I "${CC65_ASMINC}" -t atari vblanks.s -o vblanks.o
 
-vblanks.s:	vblanks.c vblanks.h dli15.h dli256.h dli9.h rgb.h interrupt_helpers.h
+vblanks.s:	vblanks.c vblanks.h dli15.h dli15b.h dli256.h dli9.h rgb.h interrupt_helpers.h
 	${CC65} ${CC65_FLAGS} -I "${CC65_INC}" \
 		-t atari \
 		vblanks.c \
@@ -205,7 +206,7 @@ speak.s:	speak.c speak.h sio.h
 view.o:	view.s
 	${CA65} -I "${CC65_ASMINC}" -t atari view.s -o view.o
 
-view.s:	view.c view.h fetch.h interrupt_helpers.h screen_helpers.h rgb.h dlists.h dli15.h dli9.h dli256.h colorbars.h menu.h vblanks.h speak.h
+view.s:	view.c view.h fetch.h interrupt_helpers.h screen_helpers.h rgb.h dlists.h dli15.h dli15b.h dli9.h dli256.h colorbars.h menu.h vblanks.h speak.h
 	${CC65} ${CC65_FLAGS} -I "${CC65_INC}" \
 		-t atari \
 		view.c \
@@ -214,7 +215,7 @@ view.s:	view.c view.h fetch.h interrupt_helpers.h screen_helpers.h rgb.h dlists.
 viewtest.o:	viewtest.s
 	${CA65} -I "${CC65_ASMINC}" -t atari viewtest.s -o viewtest.o
 
-viewtest.s:	view.c view.h fetch.h interrupt_helpers.h screen_helpers.h rgb.h dlists.h dli15.h dli9.h dli256.h colorbars.h menu.h vblanks.h speak.h
+viewtest.s:	view.c view.h fetch.h interrupt_helpers.h screen_helpers.h rgb.h dlists.h dli15.h dli15b.h dli9.h dli256.h colorbars.h menu.h vblanks.h speak.h
 	${CC65} ${CC65_FLAGS} -I "${CC65_INC}" \
 		-D APODTEST \
 		-t atari \
@@ -244,6 +245,9 @@ sio.o:	sio.s
 
 dli15.o:	dli15.s dli15.h
 	${CA65} -I "${CC65_ASMINC}" -t atari dli15.s -o dli15.o
+
+dli15b.o:	dli15b.s dli15b.h
+	${CA65} -I "${CC65_ASMINC}" -t atari dli15b.s -o dli15b.o
 
 dli9.o:	dli9.s dli9.h
 	${CA65} -I "${CC65_ASMINC}" -t atari dli9.s -o dli9.o
