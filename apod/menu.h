@@ -43,9 +43,6 @@ enum {
   SAMPLE_4,
   SAMPLE_5,
 
-  /* Render (locally) a test pattern (e.g., color bars) */
-  SAMPLE_COLORBARS,
-
   NUM_SAMPLES
 };
 

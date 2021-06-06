@@ -15,3 +15,5 @@ vblanks.s
 view.s
 *.lst
 speak.s
+viewtest.s
+menutest.s

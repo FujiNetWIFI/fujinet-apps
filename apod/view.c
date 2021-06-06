@@ -18,17 +18,22 @@
   see "rgb" module).
 
   By Bill Kendrick <bill@newbreedsoftware.com>
-  2021-03-27 - 2021-05-27
+  2021-03-27 - 2021-06-04
 */
 
 #include <stdio.h>
 #include <atari.h>
+
+#ifdef APODTEST
 #include "colorbars.h"
+#else
+#include "fetch.h"
+#endif
+
 #include "dlists.h"
 #include "dli15.h"
 #include "dli256.h"
 #include "dli9.h"
-#include "fetch.h"
 #include "interrupt_helpers.h"
 #include "menu.h"
 #include "rgb.h"
@@ -88,11 +93,11 @@ void view(unsigned char choice, char sample, unsigned char pick_yr, unsigned pic
 
   /* Load or render the image! */
   wait_for_vblank();
-  if (sample == SAMPLE_COLORBARS) {
-    render_colorbars(choice);
-  } else {
-    fetch_image(choice, sample, size, pick_yr, pick_mo, pick_day);
-  }
+#ifdef APODTEST
+  render_colorbars(choice);
+#else
+  fetch_image(choice, sample, size, pick_yr, pick_mo, pick_day);
+#endif
 
   /* Screen-mem-ify the description text */
   for (i = 0; i < 40; i++) {

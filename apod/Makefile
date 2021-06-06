@@ -3,7 +3,7 @@
 # images, as converted by the 'apod' web app.
 #
 # Bill Kendrick <bill@newbreedsoftware.com>
-# 2021-03-27 - 2021-05-26
+# 2021-03-27 - 2021-06-04
 
 CC65BIN=/usr/bin
 CC65=${CC65BIN}/cc65
@@ -16,14 +16,19 @@ CC65_LIB=${CC65_HOME}/lib/
 CC65_CFG=${CC65_HOME}/cfg/
 CC65_FLAGS=-Osir --add-source
 
-all:	apod.xex
+all:	apod.xex apodtest.xex
 
 run:	apod.xex
 	atari800 -nobasic apod.xex
 
+runtest:	apodtest.xex
+	atari800 -nobasic apodtest.xex
+
 clean:
 	-rm apod.xex
+	-rm apodtest.xex
 	-rm apod.map
+	-rm apodtest.map
 	# O files from S source
 	-rm dlists.o
 	-rm dli15.o
@@ -48,6 +53,8 @@ clean:
 	-rm myprint.s
 	-rm menu.o
 	-rm menu.s
+	-rm menutest.o
+	-rm menutest.s
 	-rm nsio.o
 	-rm nsio.s
 	-rm rgb.o
@@ -60,13 +67,15 @@ clean:
 	-rm vblanks.s
 	-rm view.o
 	-rm view.s
+	-rm viewtest.o
+	-rm viewtest.s
 
-apod.xex:	apod.o app_key.o dlists.o dli15.o dli256.o dli9.o nsio.o sio.o myprint.o get_time.o interrupt_helpers.o screen_helpers.o colorbars.o menu.o rgb.o view.o vblanks.o speak.o fetch.o segments.o atari.cfg
+apod.xex:	apod.o app_key.o dlists.o dli15.o dli256.o dli9.o nsio.o sio.o myprint.o get_time.o interrupt_helpers.o screen_helpers.o menu.o rgb.o view.o vblanks.o speak.o fetch.o segments.o atari.cfg
 	${LD65} --lib-path "${CC65_LIB}" \
 		-o apod.xex \
 		-t atari \
 		-m apod.map \
-		apod.o app_key.o dlists.o dli15.o dli256.o dli9.o nsio.o sio.o myprint.o get_time.o interrupt_helpers.o screen_helpers.o colorbars.o menu.o rgb.o view.o vblanks.o speak.o fetch.o segments.o atari.lib
+		apod.o app_key.o dlists.o dli15.o dli256.o dli9.o nsio.o sio.o myprint.o get_time.o interrupt_helpers.o screen_helpers.o menu.o rgb.o view.o vblanks.o speak.o fetch.o segments.o atari.lib
 
 apod.o:	apod.s
 	${CA65} -I "${CC65_ASMINC}" -t atari apod.s -o apod.o
@@ -76,6 +85,13 @@ apod.s:	apod.c app_key.h get_time.h globals.h menu.h rgb.h screen_helpers.h view
 		-t atari \
 		apod.c \
 		-o apod.s
+
+apodtest.xex:	apod.o app_key.o dlists.o dli15.o dli256.o dli9.o nsio.o sio.o myprint.o colorbars.o get_time.o interrupt_helpers.o screen_helpers.o menutest.o rgb.o viewtest.o vblanks.o speak.o fetch.o segments.o atari.cfg
+	${LD65} --lib-path "${CC65_LIB}" \
+		-o apodtest.xex \
+		-t atari \
+		-m apod.map \
+		apod.o app_key.o dlists.o dli15.o dli256.o dli9.o nsio.o sio.o myprint.o colorbars.o get_time.o interrupt_helpers.o screen_helpers.o menutest.o rgb.o viewtest.o vblanks.o speak.o fetch.o segments.o atari.lib
 
 myprint.o:	myprint.s
 	${CA65} -I "${CC65_ASMINC}" -t atari myprint.s -o myprint.o
@@ -140,6 +156,16 @@ menu.s:	menu.c menu.h app_key.h get_time.h rgb.h screen_helpers.h myprint.h vers
 		menu.c \
 		-o menu.s
 
+menutest.o:	menutest.s
+	${CA65} -I "${CC65_ASMINC}" -t atari menutest.s -o menutest.o
+
+menutest.s:	menu.c menu.h app_key.h get_time.h rgb.h screen_helpers.h myprint.h version.h
+	${CC65} ${CC65_FLAGS} -I "${CC65_INC}" \
+		-D APODTEST \
+		-t atari \
+		menu.c \
+		-o menutest.s
+
 rgb.o:	rgb.s
 	${CA65} -I "${CC65_ASMINC}" -t atari rgb.s -o rgb.o
 
@@ -184,6 +210,16 @@ view.s:	view.c view.h fetch.h interrupt_helpers.h screen_helpers.h rgb.h dlists.
 		-t atari \
 		view.c \
 		-o view.s
+
+viewtest.o:	viewtest.s
+	${CA65} -I "${CC65_ASMINC}" -t atari viewtest.s -o viewtest.o
+
+viewtest.s:	view.c view.h fetch.h interrupt_helpers.h screen_helpers.h rgb.h dlists.h dli15.h dli9.h dli256.h colorbars.h menu.h vblanks.h speak.h
+	${CC65} ${CC65_FLAGS} -I "${CC65_INC}" \
+		-D APODTEST \
+		-t atari \
+		view.c \
+		-o viewtest.s
 
 fetch.o:	fetch.s
 	${CA65} -I "${CC65_ASMINC}" -t atari fetch.s -o fetch.o

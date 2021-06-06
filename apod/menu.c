@@ -18,7 +18,7 @@
   here.
 
   By Bill Kendrick <bill@newbreedsoftware.com>
-  2021-03-27 - 2021-05-05
+  2021-03-27 - 2021-06-04
 */
 
 #include <atari.h>
@@ -46,7 +46,7 @@ unsigned char choice_keys[NUM_CHOICES] = {
   KEY_F, /* Four-thousand ninety-six */
   KEY_A  /* APAC */
   /* Other keys used here:
-  0,1,2,3,5,9
+  0,1,2,3,5
   <,=,>
   R,G,B,L,X
   S
@@ -64,8 +64,7 @@ unsigned char sample_keys[NUM_SAMPLES] = {
   KEY_2,
   KEY_3,
   KEY_4,
-  KEY_5,
-  KEY_9
+  KEY_5
 };
 
 /* Note: Other key presses and key combinations
@@ -121,6 +120,7 @@ void dlist_setup_menu(void) {
   screen_on();
 }
 
+#ifndef APODTEST
 /**
  * Display the chosen date (or "current") on the menu
  */
@@ -146,14 +146,13 @@ void show_chosen_date(unsigned char y, unsigned char m, unsigned char d, unsigne
  */
 void show_sample_choice(char sample) {
   memset(scr_mem + 12 * 20 + 16, 0, 4);
-  if (sample == SAMPLE_COLORBARS) {
-    myprint(18, 12, "CB");
-  } else if (sample) {
+  if (sample) {
     scr_mem[12 * 20 + 19] = sample + 16;
   } else {
     myprint(16, 12, "APOD");
   }
 }
+#endif
 
 void show_settings(void) {
   char str[20];
@@ -196,12 +195,15 @@ void draw_menu(char sample, unsigned char y, unsigned char m, unsigned char d, u
   myprint(0, 11, "[A]*lo-res 256 color");
 
   myprint(8, 12, "WHAT");
+#ifdef APODTEST
+  myprint(0, 13, "color bars");
+#else
   myprint(0, 13, "[0] get apod");
   myprint(0, 14, "[<=>] change date");
   show_chosen_date(y, m, d, loaded_properly);
   myprint(0, 16, "[1-5] get samples");
-  myprint(0, 17, "[9] color bars");
   show_sample_choice(sample);
+#endif
 
   myprint(2, 18, "*ADJUST_SETTINGS");
   show_settings();
@@ -229,7 +231,10 @@ void pick_today() {
  * handled via globals.
  */
 void handle_menu(unsigned char * choice, char * sample) {
-  unsigned char keypress, date_chg;
+  unsigned char keypress;
+#ifndef APODTEST
+  unsigned char date_chg;
+#endif
   unsigned char i;
 
   /* Accept a choice */
@@ -250,6 +255,7 @@ void handle_menu(unsigned char * choice, char * sample) {
       }
     }
 
+#ifndef APODTEST
     for (i = 0; i < NUM_SAMPLES; i++) {
       if (sample_keys[i] == keypress) {
         *sample = i;
@@ -329,7 +335,9 @@ void handle_menu(unsigned char * choice, char * sample) {
       pick_mo = cur_mo;
       pick_day = cur_day;
       date_chg = 1;
-    } else if (keypress == KEY_X ||
+    }
+#endif
+    if (keypress == KEY_X ||
       (keypress & 0x3F) == KEY_R || (keypress & 0x3F) == KEY_G || (keypress & 0x3F) == KEY_B ||
       (keypress & 0x3F) == KEY_L
     ) {
@@ -354,6 +362,7 @@ void handle_menu(unsigned char * choice, char * sample) {
       }
     }
 
+#ifndef APODTEST
     /* Date changed! Keep it sane, and display it */
     if (date_chg) {
       if (pick_day > last_day[pick_mo]) {
@@ -366,5 +375,6 @@ void handle_menu(unsigned char * choice, char * sample) {
       }
       show_chosen_date(pick_yr, pick_mo, pick_day, (cur_yr != 99));
     }
+#endif
   } while (*choice == CHOICE_NONE);
 }
