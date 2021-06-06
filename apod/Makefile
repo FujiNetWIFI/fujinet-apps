@@ -44,6 +44,8 @@ clean:
 	-rm app_key.s
 	-rm colorbars.o
 	-rm colorbars.s
+	-rm dlists.o
+	-rm dlists.s
 	-rm fetch.o
 	-rm fetch.s
 	-rm get_time.o

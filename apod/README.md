@@ -7,7 +7,7 @@ with help from apc & others (see credits, below)
 Released under the GNU General Public License 3 (GPL-3);
 see COPYING
 
-2021-03-27 - 2021-06-05
+2021-03-27 - 2021-06-06
 
 ## Purpose
 Fetch and view [NASA's Astronomy Picture of the Day (APOD)](https://apod.nasa.gov/apod/),

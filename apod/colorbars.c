@@ -8,7 +8,7 @@
   Different screen modes get different patterns.
 
   By Bill Kendrick <bill@newbreedsoftware.com>
-  2021-03-27 - 2021-06-05
+  2021-03-27 - 2021-06-06
 */
 
 #include <string.h> /* for memset() */
@@ -52,10 +52,10 @@ void render_colorbars(unsigned char mode) {
     }
     if (mode == CHOICE_MEDRES_DLICOLOR) {
       for (i = 0; i < 192; i++) {
-        rgb_table[i * 4] = (i / 12);
-        rgb_table[i * 4 + 1] = (i / 12) + 6;
-        rgb_table[i * 4 + 2] = (i / 12) + 10;
-        rgb_table[i * 4 + 3] = (i / 12) + 14;
+        rgb_table[i * 4] = (i / 12) * 16;
+        rgb_table[i * 4 + 1] = (i / 12) * 16 + 6;
+        rgb_table[i * 4 + 2] = (i / 12) * 16 + 10;
+        rgb_table[i * 4 + 3] = (i / 12) * 16 + 14;
       }
     }
   } else if (mode == CHOICE_LOWRES_GREY) {

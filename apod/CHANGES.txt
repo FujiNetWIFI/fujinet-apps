@@ -1,7 +1,7 @@
 apod (Astronomy Picture of the Day) Client for #FujiNet
 Change Log
 
- * 2021-06-05
+ * 2021-06-06
    + Split colorbars into a test version of the APOD app,
      so the main app has a little more breathing room.
    + New viewing mode: medium resolution (160x192) with
