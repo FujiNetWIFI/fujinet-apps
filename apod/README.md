@@ -7,7 +7,7 @@ with help from apc & others (see credits, below)
 Released under the GNU General Public License 3 (GPL-3);
 see COPYING
 
-2021-03-27 - 2021-05-05
+2021-03-27 - 2021-06-04
 
 ## Purpose
 Fetch and view [NASA's Astronomy Picture of the Day (APOD)](https://apod.nasa.gov/apod/),
@@ -30,6 +30,7 @@ an image in one of the following graphics modes:
 
 - `[H]` - High resolution mono (320x192 black and white, aka "GRAPHICS 8")
 - `[M]` - Medium resolution four-color (160x192 four best colors, aka "GRAPHICS 15" aka "GRAPHICS 7+")
+- `[Z]` - Medium resolution four-color per scanline
 - `[C]` - Medium resolution 64-color (via flickering; "ColorView" mode)
 - `[G]` - Low resolution greyscale (80x192 sixteen shades of grey, aka "GRAPHICS 9")
 - `[F]` - Low resolution 4,096 color (via flickering; "ColorView" mode)
@@ -81,16 +82,23 @@ Currently, the images are:
 - 5 - Rainbow gradients
 
 #### Local samples
-Press `[9]` to render a test pattern.  This is done locally (and in fact
-does not require a #FujiNet device).
+Prior to June 2021, the APOD client included an option (`[9]`)
+to render test patterns ("color bars").
+
+To save some memory, this has been removed from the main program,
+and is available as separate stand-alone program, `apodtest.xex`.
+It is otherwise identical, but only does the test patterns,
+and cannot fetch images over the network (or have the date controls
+described above.)
+
+It not require a #FujiNet device).
 
 - In high resolution mono mode, a set of bars will appear, dithered to simulate shading.
 - In medium resolution four-color mode and low resolution greyscale mode, grey bars will appear.
+- In medium resolution four-color-per-scanline mode, multicolor bars will appear.
 - In low resoluton 4,096 color mode, a colorbar battern will appear with 6 colors at the top (red, yellow, green, cyan, blue, and purple), and sets of 16 and 8 shades of grey at the bottom.
 - In medium resoluton 64 color mode, a colorbar battern will appear with 6 colors at the top (red, yellow, green, cyan, blue, and purple), and 4 shades of grey at the bottom.
 - In low resolution 256 color mode, a grid of 256 colors (16 shades across, 16 hues down) appears.
-
-Press `[0]` to choose to fetch an APOD photo (the default).
 
 ## While Viewing
 Press `[Esc]` to return to the menu.

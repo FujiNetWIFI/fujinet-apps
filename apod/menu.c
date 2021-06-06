@@ -39,10 +39,11 @@
  */
 unsigned char choice_keys[NUM_CHOICES] = {
   KEY_NONE,
-  KEY_H, /* High-res */
-  KEY_M, /* Med-res */
+  KEY_H, /* High-res mono */
+  KEY_M, /* Med-res 4-color */
+  KEY_Z, /* Med-res 4-color-per-scanline [FIXME meaningless abbreviation] */
   KEY_C, /* Colorful/ColorView */
-  KEY_G, /* Greyscale */
+  KEY_G, /* Greyscale [FIXME conflict!] */
   KEY_F, /* Four-thousand ninety-six */
   KEY_A  /* APAC */
   /* Other keys used here:
@@ -101,8 +102,8 @@ void dlist_setup_menu(void) {
     dlist1[dl_idx] = DL_GRAPHICS1;
   }
 
-  dlist1[18] = DL_BLK2;
-  dlist1[19] = DL_GRAPHICS2;
+  dlist1[19] = DL_BLK2;
+  dlist1[20] = DL_GRAPHICS2;
 
   dlist1[25] = DL_BLK2;
   dlist1[26] = DL_GRAPHICS2;
@@ -127,16 +128,16 @@ void dlist_setup_menu(void) {
 void show_chosen_date(unsigned char y, unsigned char m, unsigned char d, unsigned char loaded_properly) {
   char str[20];
 
-  memset(scr_mem + (15 * 20), 0, 20);
+  memset(scr_mem + (16 * 20), 0, 20);
   if (d != 0) {
     sprintf(str, "20%02d-%02d-%02d", y, m, d);
-    myprint(2, 15, str);
-    myprint(13, 15, "[CT/SH]");
+    myprint(2, 16, str);
+    myprint(13, 16, "[CT/SH]");
   } else {
     if (!loaded_properly) {
-      myprint(2, 15, "[CTRL-T] get time");
+      myprint(2, 16, "[CTRL-T] get time");
     } else {
-      myprint(2, 15, "current");
+      myprint(2, 16, "current");
     }
   }
 }
@@ -145,11 +146,11 @@ void show_chosen_date(unsigned char y, unsigned char m, unsigned char d, unsigne
  * Display sample choice, if any, on the menu
  */
 void show_sample_choice(char sample) {
-  memset(scr_mem + 12 * 20 + 16, 0, 4);
+  memset(scr_mem + 13 * 20 + 16, 0, 4);
   if (sample) {
-    scr_mem[12 * 20 + 19] = sample + 16;
+    scr_mem[13 * 20 + 19] = sample + 16;
   } else {
-    myprint(16, 12, "APOD");
+    myprint(16, 13, "APOD");
   }
 }
 #endif
@@ -189,19 +190,20 @@ void draw_menu(char sample, unsigned char y, unsigned char m, unsigned char d, u
   myprint(8,  5, "HOW");
   myprint(0,  6, "[H] hi-res mono");
   myprint(0,  7, "[M] med-res 4 color");
-  myprint(0,  8, "[C]*med-res 64 color");
-  myprint(0,  9, "[G] lo-res 16 shade");
-  myprint(0, 10, "[F]*lo-res 4K color");
-  myprint(0, 11, "[A]*lo-res 256 color");
+  myprint(0,  8, "[Z] med-res 4/scanln");
+  myprint(0,  9, "[C]*med-res 64 color");
+  myprint(0, 10, "[G] lo-res 16 shade");
+  myprint(0, 11, "[F]*lo-res 4K color");
+  myprint(0, 12, "[A]*lo-res 256 color");
 
-  myprint(8, 12, "WHAT");
+  myprint(8, 13, "WHAT");
 #ifdef APODTEST
-  myprint(0, 13, "color bars");
+  myprint(0, 14, "color bars");
 #else
-  myprint(0, 13, "[0] get apod");
-  myprint(0, 14, "[<=>] change date");
+  myprint(0, 14, "[0] get apod");
+  myprint(0, 15, "[<=>] change date");
   show_chosen_date(y, m, d, loaded_properly);
-  myprint(0, 16, "[1-5] get samples");
+  myprint(0, 17, "[1-5] get samples");
   show_sample_choice(sample);
 #endif
 

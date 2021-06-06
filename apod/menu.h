@@ -12,6 +12,9 @@ enum {
   /* Med-Res 4 color (160x192 4 color (chosen by server); GRAPHICS 15 aka GRAPHICS 7+) */
   CHOICE_MEDRES_COLOR,
 
+  /* Med-Res (160x192) as above, but 4 colors per _scanline_ */
+  CHOICE_MEDRES_DLICOLOR,
+
   /* Med-Res 64 color (160x192 64 color via Red/Green/Blue; ColorView15) */
   CHOICE_MEDRES_RGB,
 

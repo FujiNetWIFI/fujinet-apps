@@ -1,5 +1,7 @@
 TODO for APOD #FujiNet client
-2021-05-05
+2021-06-04
+
+ * [G] key conflict on menu (green hue adjust, or GRAPHICS 9 greyscale)
 
  * Correctly view titles in modes that utilize GTIA.
 

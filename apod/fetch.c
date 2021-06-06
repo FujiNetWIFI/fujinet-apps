@@ -42,6 +42,7 @@ char url[255];
 void fetch_image(unsigned char choice, char sample, int size, unsigned char pick_yr, unsigned pick_mo, unsigned pick_day) {
   unsigned short data_len, data_read;
   char * txt_buf;
+  unsigned char i;
 
   txt_buf = (unsigned char *) (txt_mem + 40);
 
@@ -57,6 +58,12 @@ void fetch_image(unsigned char choice, char sample, int size, unsigned char pick
   if (size == 7680) {
     /* Single screen image to load */
     nread(1, scr_mem1, (unsigned short) size);
+  } else if (size == 8448) {
+    /* Single screen with color palette for every scanline */
+    for (i = 0; i < 192; i++) {
+      nread(1, scr_mem1 + (i * 40), 40);
+      nread(1, rgb_table[i * 4], 4);
+    }
   } else {
     /* Multiple screen images to load... */
 
