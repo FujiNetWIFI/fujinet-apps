@@ -9,7 +9,7 @@
   using the HTTP transport.
 
   By Bill Kendrick <bill@newbreedsoftware.com>
-  2021-03-27 - 2021-06-05
+  2021-03-27 - 2021-06-10
 */
 
 #include <stdio.h>
@@ -60,6 +60,7 @@ void fetch_image(unsigned char choice, char sample, int size, unsigned char pick
     nread(1, scr_mem1, (unsigned short) size);
   } else if (size == (40 + 4) * 192) {
     /* Single screen with color palette for every scanline */
+    retries = 0;
     for(data_read = 0; data_read < 7680; data_read += data_len)
     {
       nstatus(1);
@@ -67,10 +68,10 @@ void fetch_image(unsigned char choice, char sample, int size, unsigned char pick
       if (data_len == 0) {
         data_len = OS.rtclok[1];
         do {
-          OS.color4 = OS.rtclok[2];
+          OS.color4 = OS.rtclok[2] & 0x7F;
         } while (OS.rtclok[1] < data_len + 2);
         retries++;
-        if (retries > 3) {
+        if (retries > 1) {
           break;
         }
       } else {
@@ -81,24 +82,27 @@ void fetch_image(unsigned char choice, char sample, int size, unsigned char pick
       }
     }
 
-    for(data_read = 0; data_read < 768; data_read += data_len)
-    {
-      nstatus(1);
-      data_len = (OS.dvstat[1] << 8) + OS.dvstat[0];
-      if (data_len == 0) {
-        data_len = OS.rtclok[1];
-        do {
-          OS.color4 = OS.rtclok[2];
-        } while (OS.rtclok[1] < data_len + 2);
-        retries++;
-        if (retries > 3) {
-          break;
+    if (data_read == 7680) {
+      retries = 0;
+      for(data_read = 0; data_read < 768; data_read += data_len)
+      {
+        nstatus(1);
+        data_len = (OS.dvstat[1] << 8) + OS.dvstat[0];
+        if (data_len == 0) {
+          data_len = OS.rtclok[1];
+          do {
+            OS.color4 = OS.rtclok[2] & 0x7F;
+          } while (OS.rtclok[1] < data_len + 2);
+          retries++;
+          if (retries > 1) {
+            break;
+          }
+        } else {
+          if (data_read + data_len > 768) {
+            data_len = 768 - data_read;
+          }
+          nread(1, rgb_table + data_read, data_len);
         }
-      } else {
-        if (data_read + data_len > 768) {
-          data_len = 768 - data_read;
-        }
-        nread(1, rgb_table + data_read, data_len);
       }
     }
   } else {

@@ -7,7 +7,7 @@ with help from apc & others (see credits, below)
 Released under the GNU General Public License 3 (GPL-3);
 see COPYING
 
-2021-03-27 - 2021-06-06
+2021-03-27 - 2021-06-10
 
 ## Purpose
 Fetch and view [NASA's Astronomy Picture of the Day (APOD)](https://apod.nasa.gov/apod/),
@@ -30,7 +30,7 @@ an image in one of the following graphics modes:
 
 - `[H]` - High resolution mono (320x192 black and white, aka "GRAPHICS 8")
 - `[M]` - Medium resolution four-color (160x192 four best colors, aka "GRAPHICS 15" aka "GRAPHICS 7+")
-- `[Z]` - Medium resolution four-color per scanline
+- `[Z]` - Medium resolution four-color per scanline¹
 - `[C]` - Medium resolution 64-color (via flickering; "ColorView" mode)
 - `[G]` - Low resolution greyscale (80x192 sixteen shades of grey, aka "GRAPHICS 9")
 - `[F]` - Low resolution 4,096 color (via flickering; "ColorView" mode)
@@ -39,6 +39,16 @@ an image in one of the following graphics modes:
 Along with the image, the title of the picture will appear at the bottom of the screen.
 
 Once the image appears, press `[Esc]` to return to the menu.
+
+¹ 4 colors per scanline is the theoretical limit, the way the
+APOD viewer is designed.  Currently, the server quantizes the
+image in chunks of 4 scanlines, with no dithering, to provide
+a fast response.  If the server doesn't respond quickly enough,
+the FujiNet HTTP handler may abort, and you'll see the screen
+flash colors while APOD viewer waits to retry.  If it fails
+(it seems it always does), just try hitting `[Z]` again to
+fetch the same image.  The results should exist, and be cached
+on the webserver.
 
 ## What to view
 

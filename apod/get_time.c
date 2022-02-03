@@ -33,10 +33,27 @@ unsigned char last_day[13] = { 0, 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
  * (see https://github.com/FujiNetWIFI/fujinet-platformio/wiki/Accessing-the-Real-Time-Clock)
  */
 void get_time(void) {
+  /* Set the APETIME timezone to New York (Eastern Time);
+     the APOD photos change at 12:00am (00:00) daily in that time zone */
+  #define TZ_ET "EST5EDT"
+  /* See https://github.com/nayarsystems/posix_tz_db/blob/master/zones.csv */
+
+  OS.dcb.ddevic = 0x45; /* APETIME protocol */
+  OS.dcb.dunit = 0x01; /* unit 1 */
+  OS.dcb.dcomnd = 0x99; /* SETTZ request */
+  OS.dcb.dstats = 0x80; /* send */
+  OS.dcb.dbuf = TZ_ET;
+  OS.dcb.dtimlo = 15; /* timeout (seconds) */
+  OS.dcb.dunuse = 0;
+  OS.dcb.dbyt = (unsigned int) strlen(TZ_ET);
+  OS.dcb.daux = (unsigned int) strlen(TZ_ET);
+  siov();
+
+  /* Get the time in New York */
   memset(time_buf, 0, 6);
   OS.dcb.ddevic = 0x45; /* APETIME protocol */
   OS.dcb.dunit = 0x01; /* unit 1 */
-  OS.dcb.dcomnd = 0x93; /* GETTIME request */
+  OS.dcb.dcomnd = 0x9A; /* GETTZTIME request */
   OS.dcb.dstats = 0x40; /* receive */
   OS.dcb.dbuf = (void *) time_buf;
   OS.dcb.dtimlo = 15; /* timeout (seconds) */
@@ -45,6 +62,25 @@ void get_time(void) {
   OS.dcb.daux1 = 0xee;
   OS.dcb.daux2 = 0xa0;
   siov();
+
+  if (time_buf[0] == 0) {
+    /* Failed; maybe their FujiNet doesn't support the new
+       SETTZ and GETTZTIME features;
+       Try getting the FujiNet's local time via the classic
+       APETIME GETTIME request: */
+    OS.dcb.ddevic = 0x45; /* APETIME protocol */
+    OS.dcb.dunit = 0x01; /* unit 1 */
+    OS.dcb.dcomnd = 0x93; /* GETTIME request */
+    OS.dcb.dstats = 0x40; /* receive */
+    OS.dcb.dbuf = (void *) time_buf;
+    OS.dcb.dtimlo = 15; /* timeout (seconds) */
+    OS.dcb.dunuse = 0;
+    OS.dcb.dbyt = (unsigned int) 6; /* reading 6 characters */
+    OS.dcb.daux1 = 0xee;
+    OS.dcb.daux2 = 0xa0;
+    siov();
+  }
+
   if (time_buf[0] != 0) {
     cur_yr = time_buf[2];
     cur_mo = time_buf[1];
