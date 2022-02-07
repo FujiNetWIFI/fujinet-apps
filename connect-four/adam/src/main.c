@@ -32,7 +32,7 @@ unsigned char response[1024]; // Response buffer used by recv()
 
 #define PLAYER1_COLOR 8  // Color for player 1
 #define PLAYER2_COLOR 10 // Color for player 2
-#define BOARD_COLOR 4    // Color for board
+#define BOARD_COLOR 5    // Color for board
 #define BORDER_COLOR 7   // color for border
 
 // PROTOTYPES ////////////////////////////////////////////////////////////////
@@ -157,7 +157,7 @@ bool connection_waiting(void)
   DCB *dcb = eos_find_dcb(NET);
   
   while (eos_request_device_status(NET,dcb) < 0x80);
-  return eos_get_device_status(NET) & 2; // Return connected bit.
+  return eos_get_device_status(NET) & 2 == 0x02; // Return connected bit.
 }
 
 /**
@@ -241,7 +241,7 @@ void board_line2(void)
 void board(char *p1, char *p2)
 {
   // Draw the board
-  msx_color(INK_BLACK,BOARD_COLOR,BORDER_COLOR);
+  msx_color(INK_DARK_BLUE,BOARD_COLOR,BORDER_COLOR);
   gotoxy(BOARD_X, BOARD_Y   ); board_line1(); 
   gotoxy(BOARD_X, BOARD_Y+1 ); board_line2();
   gotoxy(BOARD_X, BOARD_Y+2 ); board_line1();
@@ -261,14 +261,14 @@ void board(char *p1, char *p2)
       msx_color(PLAYER1_COLOR,INK_TRANSPARENT,BORDER_COLOR);
       gotoxy(0,18); cprintf("\x80\x81");
       gotoxy(0,19); cprintf("\x82\x83");
-      gotoxy(2,19); msx_color(INK_BLACK,INK_TRANSPARENT,BORDER_COLOR); cprintf("%s",p1);
+      gotoxy(32,19); msx_color(INK_BLACK,INK_TRANSPARENT,BORDER_COLOR); cprintf(" %s",p1);
     }
 
   if (p2 != NULL)
     {
       msx_color(PLAYER2_COLOR,INK_TRANSPARENT,BORDER_COLOR);
       gotoxy(18,18); cprintf("\x80\x81");
-      gotoxy(18,19); cprintf("\x82\x83 %s",p2);
+      gotoxy(18,19); cprintf("\x82\x83");
       gotoxy(21,19); msx_color(INK_BLACK,INK_TRANSPARENT,BORDER_COLOR); cprintf("%s",p2);
     }
 }
@@ -446,6 +446,8 @@ bool listen_for_connection(void)
   status("  WAITING FOR CONNECTION TO TCP PORT 6502...");
 
   while (connection_waiting()==false);
+
+  status("  CONNECTION WAITING...ACCEPTING...");
   
   return true;
 }
@@ -666,7 +668,7 @@ void game(char player, bool listen, char *player1, char *player2)
 {
   char turn=player;
   char winner=0xFF;
-  char winfmt[]="%s WINS!\nPLAY AGAIN?";
+  char winfmt[]="\n  %s WINS!  PLAY AGAIN?";
   char winmsg[40];
   char c=0x85;
   
