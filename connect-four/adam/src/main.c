@@ -15,10 +15,10 @@ unsigned char response[1024]; // Response buffer used by recv()
 // CONSTANTS /////////////////////////////////////////////////////////////////
 
 #define BOARD_X 8     // Start column of board
-#define BOARD_Y 5     // Start row of board
+#define BOARD_Y 4     // Start row of board
 
 #define HOVER_X 64    // Start column pixel of hover sprite
-#define HOVER_Y 22    // Start row pixel of hover sprite
+#define HOVER_Y 14    // Start row pixel of hover sprite
 
 #define NET 0x09      // Adamnet ID for network device
 #define ACK 0x80      // Return value for AdamNet ACK
@@ -28,12 +28,14 @@ unsigned char response[1024]; // Response buffer used by recv()
 #define RETRY_COUNT 128 // # of times to retry
 
 #define READ_WRITE  12  // protocol channel needs both read and write
-#define LF           2  // Translation mode = LF
+#define NONE         0  // Translation mode = none
 
 #define PLAYER1_COLOR 8  // Color for player 1
 #define PLAYER2_COLOR 10 // Color for player 2
 #define BOARD_COLOR 5    // Color for board
 #define BORDER_COLOR 7   // color for border
+
+char lastcolumn = 0;
 
 // PROTOTYPES ////////////////////////////////////////////////////////////////
 
@@ -107,7 +109,7 @@ bool connect(char *h)
 
   c.cmd = 'O';
   c.mode = READ_WRITE;
-  c.translation = 0;
+  c.translation = NONE;
   sprintf(c.url,"N:TCP://%s:6502/",h);
 
   eos_write_character_device(NET,(char *)c, sizeof(c));
@@ -155,9 +157,32 @@ void listen(void)
 bool connection_waiting(void)
 {
   DCB *dcb = eos_find_dcb(NET);
-  
+  char c;
   while (eos_request_device_status(NET,dcb) < 0x80);
-  return eos_get_device_status(NET) & 2 == 0x02; // Return connected bit.
+  c=eos_get_device_status(NET);
+
+  if (c==2)
+    return true;
+  else
+    return false;
+}
+
+/**
+ * @brief Accept connection
+ */
+void accept_connection(void)
+{
+  struct
+  {
+    char cmd;
+    char aux1;
+    char aux2;
+  } a;
+
+  a.cmd = 'A';
+  a.aux1 = READ_WRITE;
+  a.aux2 = NONE;
+  eos_write_character_device(NET,(char *)a,sizeof(a));
 }
 
 /**
@@ -175,7 +200,7 @@ void send(char *buf)
   s.cmd = 'W';
 
   strcpy(s.buf,buf);
-  strcat(s.buf,"\n"); // Terminate with newline.
+  strcat(s.buf,"\n"); // Terminate with LF
 
   eos_write_character_device(NET,(char *)s,strlen(s.buf)+1); // To account for command byte
 }
@@ -196,7 +221,7 @@ void recv(char *buf)
   p = strchr(buf,'\n');
 
   if (p!=NULL)
-    *p=0; // remove LF
+    *p=0; // remove EOL
 }
 
 // BOARD DRAWING /////////////////////////////////////////////////////////////
@@ -224,7 +249,7 @@ unsigned char plot_piece(unsigned char x, unsigned char y, unsigned char p)
  */
 void board_line1(void)
 {
-  cputs("\x84\x85\x84\x85\x84\x85\x84\x85\x84\x85\x84\x85\x84\x85");
+  cputs("\x84\x85\x84\x85\x84\x85\x84\x85\x84\x85\x84\x85\x84\x85\x84\x85");
 }
 
 /**
@@ -232,7 +257,7 @@ void board_line1(void)
  */
 void board_line2(void)
 {
-  cputs("\x86\x87\x86\x87\x86\x87\x86\x87\x86\x87\x86\x87\x86\x87");
+  cputs("\x86\x87\x86\x87\x86\x87\x86\x87\x86\x87\x86\x87\x86\x87\x86\x87");
 }
 
 /**
@@ -254,6 +279,8 @@ void board(char *p1, char *p2)
   gotoxy(BOARD_X, BOARD_Y+9 ); board_line2();
   gotoxy(BOARD_X, BOARD_Y+10); board_line1();
   gotoxy(BOARD_X, BOARD_Y+11); board_line2();
+  gotoxy(BOARD_X, BOARD_Y+12); board_line1();
+  gotoxy(BOARD_X, BOARD_Y+13); board_line2();
 
   // Draw player names, if set. This allows board to be used on splash screen.
   if (p1 != NULL)
@@ -261,7 +288,7 @@ void board(char *p1, char *p2)
       msx_color(PLAYER1_COLOR,INK_TRANSPARENT,BORDER_COLOR);
       gotoxy(0,18); cprintf("\x80\x81");
       gotoxy(0,19); cprintf("\x82\x83");
-      gotoxy(32,19); msx_color(INK_BLACK,INK_TRANSPARENT,BORDER_COLOR); cprintf(" %s",p1);
+      gotoxy(2,19); msx_color(INK_BLACK,INK_TRANSPARENT,BORDER_COLOR); cprintf(" %s",p1);
     }
 
   if (p2 != NULL)
@@ -279,6 +306,9 @@ void board(char *p1, char *p2)
  */
 void hover(unsigned char x, unsigned char p)
 {
+  if (x==10) // We were asked to drop a piece from remote, just return.
+    return;
+  
   x <<= 4;
   x += HOVER_X;
   
@@ -324,18 +354,18 @@ void board_splash(void)
 {
   cprintf("     #FUJINET CONNECT FOUR");
   board(NULL,NULL);
-  plot_piece(0,5,0);
-  plot_piece(1,5,1);
-  plot_piece(1,4,0);
-  plot_piece(2,5,1);
+  plot_piece(0,6,0);
+  plot_piece(1,6,1);
+  plot_piece(1,5,0);
+  plot_piece(2,6,1);
+  plot_piece(2,5,0);
+  plot_piece(0,5,1);
   plot_piece(2,4,0);
+  plot_piece(2,3,1);
+  plot_piece(1,4,0);
+  plot_piece(1,3,1);
+  plot_piece(3,6,0);
   plot_piece(0,4,1);
-  plot_piece(2,3,0);
-  plot_piece(2,2,1);
-  plot_piece(1,3,0);
-  plot_piece(1,2,1);
-  plot_piece(3,5,0);
-  plot_piece(0,3,1);
   hover(4,0);
 }
 
@@ -414,26 +444,25 @@ void get_player_name(char *n)
 /**
  * @brief connect to host pointed by n
  * @param n pointer to hostname
- * @return true if connection successful.
+ * @return false = successful (as listen will be false)
  */
 bool connect_to_host(char *n)
 {
-  bool s=false;
+  bool listen;
   
   status("  CONNECTING TO HOST, PLEASE WAIT...");
   if (connect(n))
     {
       status("  CONNECTION SUCCESSFUL.");
-      s=true;
+      listen=false;
     }
   else
     {
       status("  COULD NOT CONNECT.");
-      s=false;
     }
   
   sleep(1);  
-  return s;
+  return listen;
 }
 
 /**
@@ -448,6 +477,8 @@ bool listen_for_connection(void)
   while (connection_waiting()==false);
 
   status("  CONNECTION WAITING...ACCEPTING...");
+
+  accept_connection();
   
   return true;
 }
@@ -458,20 +489,18 @@ bool listen_for_connection(void)
  */
 bool get_host_name(char *n)
 {
-  bool successful = false;
-  
-  while (!successful)
-    {
-      status("  ENTER HOSTNAME\n  OR [RETURN] TO LISTEN ON TCP PORT 6502");
-      get_line(n);
-      
-      if (n[0]==0x00)
-	successful=listen_for_connection();
-      else
-	successful=connect_to_host(n);
-   }
+  bool listen = false;
 
-  return true;
+ host:
+  status("  ENTER HOSTNAME\n  OR [RETURN] TO LISTEN ON TCP PORT 6502");
+  get_line(n);
+  
+  if (n[0]==0x00)
+    listen=listen_for_connection();
+  else
+    listen=connect_to_host(n);
+  
+  return listen;
 }
 
 /**
@@ -482,7 +511,11 @@ bool get_host_name(char *n)
 void send_move(unsigned char x, bool drop)
 {
   char s[4];
-  sprintf(s,"%d,%d",x,drop);
+
+  if (drop==true)
+    x=9;
+
+  sprintf(s,"%d",x+1);
   send(s);
 }
 
@@ -506,7 +539,7 @@ unsigned char hover_piece_local(unsigned char turn)
       switch(c)
 	{
 	case 0xA1: // RIGHT
-	  if (x<6)
+	  if (x<8)
 	    x++;
 	  break;
 	case 0xA3: // LEFT
@@ -534,8 +567,16 @@ unsigned char hover_piece_remote(unsigned char turn)
   while (drop==false)
     {
       recv(s);
-      sscanf(s,"%d,%d",&x,&drop);
-      hover(x,turn);
+      x=atoi(s);
+      
+      if (x==10)
+	drop=true;
+      else
+	{
+	  x -= 1; // Adjust for protocol
+	  lastcolumn=x;
+	  hover(x,turn);
+	}      
     }
 
   return x;
@@ -550,12 +591,12 @@ unsigned char hover_piece(unsigned char turn, bool listen)
 {
   if (listen==true && turn==0)
     return hover_piece_local(turn);
-  else if (listen==false && turn==0)
-    return hover_piece_remote(turn);
   else if (listen==true && turn==1)
     return hover_piece_remote(turn);
-  else
+  else if (listen==false && turn==0)
     return hover_piece_local(turn);
+  else if (listen==false && turn==1)
+    return hover_piece_remote(turn);
 }
 
 /**
@@ -608,6 +649,9 @@ unsigned char drop_piece(unsigned char turn, bool listen, unsigned char column)
   char row=0;
   char ypos = vpeek(0x1B00) + 2;
 
+  if (column == 10)
+    column = lastcolumn;
+  
   // Scoot piece to edge of board
   vpoke(0x1B00,ypos);
   vpoke(0x1B04,ypos);
@@ -616,7 +660,7 @@ unsigned char drop_piece(unsigned char turn, bool listen, unsigned char column)
   
   while (piece_below(column,row)==false)
     {
-      if (row == 5)
+      if (row == 6)
 	break;
 
       for (char i=0;i<16;i++)
@@ -719,18 +763,13 @@ void main(void)
   get_player_name(player1);
   listen=get_host_name(hostname);    
 
+  send(player1);
+  recv(player2);
+  
   if (listen)
-    {
-      send(player1);
-      recv(player2);
-      player=0;
-    }
+    player=0;
   else
-    {
-      recv(player2);
-      send(player1);
-      player=1;
-    }
-
+    player=1;
+  
   game(player,listen,player1,player2);
 }
