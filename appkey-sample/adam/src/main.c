@@ -71,14 +71,16 @@ unsigned char appkey_write(unsigned int creator, unsigned char app, unsigned cha
 void main(void)
 {
   msx_set_mode(0);
-  printf("\r\nAPPKEY TEST\n");
+  printf("\r\nAPPKEY TEST\n\n");
 
+  printf("%7s:%04X\n%7s:%02X\n%7s:%02X\n\n","CREATOR",TEST_CREATOR_ID,"APP",TEST_APP_ID,"KEY",TEST_KEY_ID);
+  
   while(1)
     {
-      printf("appkey_read returned %02xH\n",appkey_read(TEST_CREATOR_ID,TEST_APP_ID,TEST_KEY_ID,response));
+      printf("appkey_read returned %02xH\n\n",appkey_read(TEST_CREATOR_ID,TEST_APP_ID,TEST_KEY_ID,response));
       printf("CURRENT APPKEY VALUE:\n%s\n\n",response);
       printf("NEW APPKEY VALUE?\n");
       cgets(response);
-      printf("appkey_write returned %02xH\n",appkey_write(TEST_CREATOR_ID,TEST_APP_ID,TEST_KEY_ID,response));
+      printf("appkey_write returned %02xH\n\n",appkey_write(TEST_CREATOR_ID,TEST_APP_ID,TEST_KEY_ID,response));
     }
 }
