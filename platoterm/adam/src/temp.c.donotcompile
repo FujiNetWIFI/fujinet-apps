@@ -1,0 +1,428 @@
+  short offset; /* due to negative offsets */
+  int x;      /* Current X and Y coordinates */
+  int y;
+  int* px;   /* Pointers to X and Y coordinates used for actual plotting */
+  int* py;
+  unsigned char i; /* current character counter */
+  unsigned char a; /* current character byte */
+  unsigned char j,k; /* loop counters */
+  char b; /* current character row bit signed */
+  unsigned char width=FONT_SIZE_X;
+  unsigned char height=FONT_SIZE_Y;
+  unsigned short deltaX=1;
+  unsigned short deltaY=1;
+  unsigned char mainColor=current_foreground;
+  unsigned char altColor=current_background;
+  unsigned char *p;
+  unsigned char* curfont;
+  
+  switch(CurMem)
+    {
+    case M0:
+      curfont=font;
+      offset=-32;
+      break;
+    case M1:
+      curfont=font;
+      offset=64;
+      break;
+    case M2:
+      curfont=fontm23;
+      offset=-32;
+      break;
+    case M3:
+      curfont=fontm23;
+      offset=32;      
+      break;
+    }
+
+  if (CurMode==ModeRewrite)
+    {
+      altColor=current_background;
+    }
+  else if (CurMode==ModeInverse)
+    {
+      altColor=current_foreground;
+    }
+  
+  if (CurMode==ModeErase || CurMode==ModeInverse)
+    mainColor=current_background;
+  else
+    mainColor=current_foreground;
+
+  textcolor(mainColor);
+  
+  x=scalex((Coord->x&0x1FF));
+
+  if (ModeBold)
+    y=scaley((Coord->y+30)&0x1FF);
+  else
+    y=scaley((Coord->y+15)&0x1FF);
+
+  if (FastText==padF)
+    {
+      goto chardraw_with_fries;
+    }
+
+  /* the diet chardraw routine - fast text output. */
+  
+  for (i=0;i<count;++i)
+    {
+      a=*ch;
+      ++ch;
+      a+=offset;
+      p=&curfont[FONTPTR(a)];
+      
+      for (j=0;j<FONT_SIZE_Y;++j)
+  	{
+  	  b=*p;
+	  
+  	  for (k=0;k<FONT_SIZE_X;++k)
+  	    {
+  	      if (b<0) /* check sign bit. */
+		{
+		  textcolor(mainColor);
+		  if (CurMode==ModeErase)
+		    unplot(x,y);
+		  else
+		    plot(x,y);
+		}
+
+	      ++x;
+  	      b<<=1;
+  	    }
+
+	  ++y;
+	  if (y>191)
+	    y-=192;
+	  x-=width;
+	  ++p;
+  	}
+
+      x+=width;
+      y-=height;
+      if (y<0)
+	y=192+y;
+    }
+
+  return;
+
+ chardraw_with_fries:
+  if (Rotate)
+    {
+      deltaX=-abs(deltaX);
+      width=-abs(width);
+      px=&y;
+      py=&x;
+    }
+    else
+    {
+      px=&x;
+      py=&y;
+    }
+  
+  if (ModeBold)
+    {
+      deltaX = deltaY = 2;
+      width<<=1;
+      height<<=1;
+    }
+  
+  for (i=0;i<count;++i)
+    {
+      a=*ch;
+      ++ch;
+      a+=offset;
+      p=&curfont[FONTPTR(a)];
+      for (j=0;j<FONT_SIZE_Y;++j)
+  	{
+  	  b=*p;
+
+	  if (Rotate)
+	    {
+	      px=&y;
+	      py=&x;
+	    }
+	  else
+	    {
+	      px=&x;
+	      py=&y;
+	    }
+
+	  // special 9918 specific hack for inverse video
+	  if (CurMode==ModeInverse)
+	    {
+	      textcolor(altColor);
+	      for (k=0;k<FONT_SIZE_X;++k)
+	  	{
+	  	  if (ModeBold)
+	  	    {
+	  	      plot(*px+1,*py);
+	  	      plot(*px,*py+1);
+	  	      plot(*px+1,*py+1);
+	  	    }
+	  	  plot(*px,*py);
+	  	}
+	    }
+	  
+  	  for (k=0;k<FONT_SIZE_X;++k)
+  	    {
+  	      if (b<0) /* check sign bit. */
+		{
+		  textcolor(mainColor);
+		  if (ModeBold)
+		    {
+		      plot(*px+1,*py);
+		      plot(*px,*py+1);
+		      plot(*px+1,*py+1);
+		    }
+		  plot(*px,*py);
+		}
+	      else
+		{
+		  if (CurMode==ModeInverse || CurMode==ModeRewrite)
+		    {
+		      textcolor(altColor);
+		      if (ModeBold)
+			{
+			  plot(*px+1,*py);
+			  plot(*px,*py+1);
+			  plot(*px+1,*py+1);
+			}
+		      plot(*px,*py); 
+		    }
+		}
+
+	      x += deltaX;
+  	      b<<=1;
+  	    }
+
+	  y+=deltaY;
+	  if (y>191)
+	    y-=192;
+	  x-=width;
+	  ++p;
+  	}
+
+      Coord->x+=width;
+      x+=width;
+      y-=height;
+      if (y<0)
+	y=192+y;
+    }
+
+  return;
+  short offset; /* due to negative offsets */
+  int x;      /* Current X and Y coordinates */
+  int y;
+  int* px;   /* Pointers to X and Y coordinates used for actual plotting */
+  int* py;
+  unsigned char i; /* current character counter */
+  unsigned char a; /* current character byte */
+  unsigned char j,k; /* loop counters */
+  char b; /* current character row bit signed */
+  unsigned char width=FONT_SIZE_X;
+  unsigned char height=FONT_SIZE_Y;
+  unsigned short deltaX=1;
+  unsigned short deltaY=1;
+  unsigned char mainColor=current_foreground;
+  unsigned char altColor=current_background;
+  unsigned char *p;
+  unsigned char* curfont;
+  
+  switch(CurMem)
+    {
+    case M0:
+      curfont=font;
+      offset=-32;
+      break;
+    case M1:
+      curfont=font;
+      offset=64;
+      break;
+    case M2:
+      curfont=fontm23;
+      offset=-32;
+      break;
+    case M3:
+      curfont=fontm23;
+      offset=32;      
+      break;
+    }
+
+  if (CurMode==ModeRewrite)
+    {
+      altColor=current_background;
+    }
+  else if (CurMode==ModeInverse)
+    {
+      altColor=current_foreground;
+    }
+  
+  if (CurMode==ModeErase || CurMode==ModeInverse)
+    mainColor=current_background;
+  else
+    mainColor=current_foreground;
+
+  textcolor(mainColor);
+  
+  x=scalex((Coord->x&0x1FF));
+
+  if (ModeBold)
+    y=scaley((Coord->y+30)&0x1FF);
+  else
+    y=scaley((Coord->y+15)&0x1FF);
+
+  if (FastText==padF)
+    {
+      goto chardraw_with_fries;
+    }
+
+  /* the diet chardraw routine - fast text output. */
+  
+  for (i=0;i<count;++i)
+    {
+      a=*ch;
+      ++ch;
+      a+=offset;
+      p=&curfont[FONTPTR(a)];
+      
+      for (j=0;j<FONT_SIZE_Y;++j)
+  	{
+  	  b=*p;
+	  
+  	  for (k=0;k<FONT_SIZE_X;++k)
+  	    {
+  	      if (b<0) /* check sign bit. */
+		{
+		  textcolor(mainColor);
+		  if (CurMode==ModeErase)
+		    unplot(x,y);
+		  else
+		    plot(x,y);
+		}
+
+	      ++x;
+  	      b<<=1;
+  	    }
+
+	  ++y;
+	  if (y>191)
+	    y-=192;
+	  x-=width;
+	  ++p;
+  	}
+
+      x+=width;
+      y-=height;
+      if (y<0)
+	y=192+y;
+    }
+
+  return;
+
+ chardraw_with_fries:
+  if (Rotate)
+    {
+      deltaX=-abs(deltaX);
+      width=-abs(width);
+      px=&y;
+      py=&x;
+    }
+    else
+    {
+      px=&x;
+      py=&y;
+    }
+  
+  if (ModeBold)
+    {
+      deltaX = deltaY = 2;
+      width<<=1;
+      height<<=1;
+    }
+  
+  for (i=0;i<count;++i)
+    {
+      a=*ch;
+      ++ch;
+      a+=offset;
+      p=&curfont[FONTPTR(a)];
+      for (j=0;j<FONT_SIZE_Y;++j)
+  	{
+  	  b=*p;
+
+	  if (Rotate)
+	    {
+	      px=&y;
+	      py=&x;
+	    }
+	  else
+	    {
+	      px=&x;
+	      py=&y;
+	    }
+
+	  // special 9918 specific hack for inverse video
+	  if (CurMode==ModeInverse)
+	    {
+	      textcolor(altColor);
+	      for (k=0;k<FONT_SIZE_X;++k)
+	  	{
+	  	  if (ModeBold)
+	  	    {
+	  	      plot(*px+1,*py);
+	  	      plot(*px,*py+1);
+	  	      plot(*px+1,*py+1);
+	  	    }
+	  	  plot(*px,*py);
+	  	}
+	    }
+	  
+  	  for (k=0;k<FONT_SIZE_X;++k)
+  	    {
+  	      if (b<0) /* check sign bit. */
+		{
+		  textcolor(mainColor);
+		  if (ModeBold)
+		    {
+		      plot(*px+1,*py);
+		      plot(*px,*py+1);
+		      plot(*px+1,*py+1);
+		    }
+		  plot(*px,*py);
+		}
+	      else
+		{
+		  if (CurMode==ModeInverse || CurMode==ModeRewrite)
+		    {
+		      textcolor(altColor);
+		      if (ModeBold)
+			{
+			  plot(*px+1,*py);
+			  plot(*px,*py+1);
+			  plot(*px+1,*py+1);
+			}
+		      plot(*px,*py); 
+		    }
+		}
+
+	      x += deltaX;
+  	      b<<=1;
+  	    }
+
+	  y+=deltaY;
+	  if (y>191)
+	    y-=192;
+	  x-=width;
+	  ++p;
+  	}
+
+      Coord->x+=width;
+      x+=width;
+      y-=height;
+      if (y<0)
+	y=192+y;
+    }
+
+  return;
