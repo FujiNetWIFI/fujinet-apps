@@ -18,3 +18,4 @@ The custom API is hosted at fujinet.online/8bitwiki/wiki.php. GET requests can b
  * p: page number to display (default 1)
  * ps: page size, ColumnsxRows (Default: Atari 39x22)
 
+This script is included here as _wiki.php_ 
