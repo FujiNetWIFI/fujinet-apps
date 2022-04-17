@@ -1,9 +1,16 @@
+#include <conio.h>
 #include <msx.h>
 #include <graphics.h>
+#include <smartkeys.h>
 #include "screen.h"
 #include "font.h"
 #include "protocol.h"
-#include "conio.h"
+#include "math.h"
+#include "io.h"
+#include "sound.h"
+
+#include "font.h"
+#include "protocol.h"
 #include "math.h"
 #include "io.h"
 #include "sound.h"
@@ -33,8 +40,9 @@ short scalex(short x) { return (x >> 1); }
  */
 void screen_init(void)
 {
-  screen_set_pen_mode();
-  screen_clear();
+  msx_color(current_foreground,current_background,current_background);
+  clrscr();
+  smartkeys_sound_init();
 }
 
 /**
@@ -42,7 +50,7 @@ void screen_init(void)
  */
 void screen_wait(void)
 {
-  msleep(17); // 16.67ms and some change.
+  msleep(17); 
 }
 
 /**
@@ -50,7 +58,7 @@ void screen_wait(void)
  */
 void screen_beep(void)
 {
-  // TODO add beep
+  smartkeys_sound_play(SOUND_POSITIVE_CHIME);
 }
 
 /**
@@ -58,7 +66,6 @@ void screen_beep(void)
  */
 void screen_clear(void)
 {
-  screen_set_pen_mode();
   clrscr();
 }
 
@@ -67,10 +74,7 @@ void screen_clear(void)
  */
 void screen_set_pen_mode(void)
 {
-  if (CurMode==ModeErase || CurMode==ModeInverse)
-    msx_color(current_background,current_foreground,current_background);
-  else
-    msx_color(current_foreground,current_background,current_background);
+  msx_color(current_foreground,current_background,current_background);
 }
 
 /**
@@ -87,8 +91,16 @@ void screen_block_draw(padPt* Coord1, padPt* Coord2)
   
   screen_set_pen_mode();
 
-  for(y=y1;y<y2;y++)
-    line(x1,y,x2,y);
+  if (CurMode==ModeErase || CurMode==ModeInverse)
+    {
+      for (y=y1;y<y2;y++)
+	undraw(x1,y,x2,y);
+    }
+  else
+    {
+      for(y=y1;y<y2;y++)
+	draw(x1,y,x2,y);
+    }
 }
 
 /**
@@ -97,7 +109,10 @@ void screen_block_draw(padPt* Coord1, padPt* Coord2)
 void screen_dot_draw(padPt* Coord)
 {
   screen_set_pen_mode();
-  plot(scalex(Coord->x),scaley(Coord->y));
+  if (CurMode==ModeErase)
+    unplot(scalex(Coord->x),scaley(Coord->y));
+  else
+    plot(scalex(Coord->x),scaley(Coord->y));
 }
 
 /**
@@ -111,7 +126,11 @@ void screen_line_draw(padPt* Coord1, padPt* Coord2)
   unsigned short y2=scaley(Coord2->y);
   
   screen_set_pen_mode();
-  line(x1,y1,x2,y2);
+  if (CurMode==ModeErase)
+    undraw(x1,y1,x2,y2);
+  else
+    draw(x1,y1,x2,y2);
+
 }
 
 /**
@@ -171,7 +190,7 @@ void screen_char_draw(padPt* Coord, unsigned char* ch, unsigned char count)
   else
     mainColor=current_foreground;
 
-  msx_color(mainColor,altColor,altColor);
+  msx_color(mainColor,current_background,current_background);
   
   x=scalex((Coord->x&0x1FF));
 
@@ -201,7 +220,13 @@ void screen_char_draw(padPt* Coord, unsigned char* ch, unsigned char count)
   	  for (k=0;k<FONT_SIZE_X;++k)
   	    {
   	      if (b<0) /* check sign bit. */
-		plot(x,y);
+		{
+		  msx_color(mainColor,current_background,current_background);
+		  if (CurMode==ModeErase)
+		    unplot(x,y);
+		  else
+		    plot(x,y);
+		}
 
 	      ++x;
   	      b<<=1;
@@ -297,11 +322,11 @@ void screen_char_draw(padPt* Coord, unsigned char* ch, unsigned char count)
 		    {
 		      if (ModeBold)
 			{
-			  plot(*px+1,*py);
-			  plot(*px,*py+1);
-			  plot(*px+1,*py+1);
+			  unplot(*px+1,*py);
+			  unplot(*px,*py+1);
+			  unplot(*px+1,*py+1);
 			}
-		      plot(*px,*py); 
+		      unplot(*px,*py); 
 		    }
 		}
 
@@ -319,6 +344,7 @@ void screen_char_draw(padPt* Coord, unsigned char* ch, unsigned char count)
       Coord->x+=width;
       x+=width;
       y-=height;
+
       if (y<0)
 	y=192+y;
     }
@@ -377,35 +403,35 @@ unsigned char screen_color(padRGB* theColor)
 
   if (red==0 && green==0 && blue==0)
     {
-      current_foreground=INK_BLACK;
+      return INK_BLACK;
     }
   else if (red==0 && green==0 && blue==255)
     {
-      current_foreground=INK_LIGHT_BLUE;
+      return INK_LIGHT_BLUE;
     }
   else if (red==0 && green==255 && blue==0)
     {
-      current_foreground=INK_LIGHT_GREEN;
+      return INK_LIGHT_GREEN;
     }
   else if (red==255 && green==0 && blue==0)
     {
-      current_foreground=INK_LIGHT_RED;
+      return INK_LIGHT_RED;
     }
   else if (red==0 && green==255 && blue==255)
     {
-      current_foreground=INK_CYAN;
+      return INK_CYAN;
     }
   else if (red==255 && green==0 && blue==255)
     {
-      current_foreground=INK_MAGENTA;
+      return INK_MAGENTA;
     }
   else if (red==255 && green==255 && blue==0)
     {
-      current_foreground=INK_LIGHT_YELLOW;
+      return INK_LIGHT_YELLOW;
     }
   else
     {
-      current_foreground=INK_WHITE;
+      return INK_WHITE;
     }
 }
 
@@ -415,7 +441,7 @@ unsigned char screen_color(padRGB* theColor)
  */
 void screen_foreground(padRGB* theColor)
 {
-  current_foreground=screen_color(theColor);
+  current_foreground = screen_color(theColor);
 }
 
 /**
@@ -435,6 +461,7 @@ void screen_paint(padPt* Coord)
 
 /**
  * screen_done()
+ * Close down TGI
  */
 void screen_done(void)
 {

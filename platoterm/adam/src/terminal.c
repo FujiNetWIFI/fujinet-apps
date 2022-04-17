@@ -12,6 +12,7 @@
 #include "screen.h"
 #include "protocol.h"
 #include "touch.h"
+#include "splash.h"
 
 /**
  * ASCII Features to return in Features
@@ -81,7 +82,9 @@ extern unsigned char fontm23[768];
  */
 void terminal_init(void)
 {
+  ShowPLATO((padByte *)splash,sizeof(splash));
   terminal_set_tty();
+  terminal_initial_position();
 }
 
 /**
@@ -290,10 +293,12 @@ void terminal_char_load(padWord charnum, charData theChar)
   else if ((pix_cnt < 54) || (pix_cnt >= 85))
     {
       // Algorithm B - Sparsely or heavily populated bitmaps
+
+      // If densely set pixels, flip the bits.      
       for (u=16; u-->0; )
 	{
-	  /* if (pix_cnt >= 85) */
-	  /*   char_data[u]^=0xFF; */
+	  if (pix_cnt >= 85)
+	    char_data[u]^=0xFF;
 
 	  for (v=8; v-->0; )
 	    {
@@ -303,14 +308,15 @@ void terminal_char_load(padWord charnum, charData theChar)
 		}
 	    }
 	}
-      /* if (pix_cnt >= 85) */
-      /* 	{ */
-      /* 	  for (u=6; u-->0; ) */
-      /* 	    { */
-      /* 	      fontm23[FONTPTR(charnum)+u]^=0xFF; */
-      /* 	      fontm23[FONTPTR(charnum)+u]&=0xF0; */
-      /* 	    } */
-      /* 	} */
+
+      if (pix_cnt >= 85)
+      	{
+      	  for (u=6; u-->0; )
+      	    {
+      	      fontm23[FONTPTR(charnum)+u]^=0xFF;
+      	      fontm23[FONTPTR(charnum)+u]&=0xF8;
+      	    }
+      	}
     }
 }
 

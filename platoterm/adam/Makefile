@@ -3,10 +3,6 @@ TARGET_EXEC ?= platoterm.ddp
 BUILD_DIR ?= ./build
 SRC_DIRS ?= ./src
 
-ADDL_DIR1 := ../eoslib/src
-
-ADDL_LIB1 := ../eoslib/eos.lib
-
 CC=zcc
 AS=zcc
 
@@ -14,8 +10,8 @@ SRCS := $(shell find $(SRC_DIRS) -name *.cpp -or -name *.c -or -name *.asm)
 OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
 DEPS := $(OBJS:.o=.d)
 
-CFLAGS=+coleco -subtype=adam -I$(ADDL_DIR1) -I$(ADDL_DIR2) 
-LDFLAGS=+coleco -subtype=adam -o$(TARGET_EXEC) -create-app -l$(ADDL_LIB1) 
+CFLAGS=+coleco -subtype=adam 
+LDFLAGS=+coleco -subtype=adam -o$(TARGET_EXEC) -create-app -leos -lsmartkeys
 ASFLAGS=+coleco -subtype=adam
 
 INC_DIRS := $(shell find $(SRC_DIRS) -type d)

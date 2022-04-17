@@ -8,27 +8,46 @@
  */
 
 #include <stdbool.h>
+#include <eos.h>
+#include <string.h>
 #include "io.h"
+#include "protocol.h"
+
+#define NET 0x09
+
+static bool connected=false;
+
+static unsigned char inb;
+static unsigned char response[1024];
+DCB *dcb;
 
 /**
  * io_init() - Set-up the I/O
  */
 void io_init(void)
 {
-}
+  struct _oc
+  {
+    unsigned char cmd;
+    unsigned char mode;
+    unsigned char translation;
+    unsigned char url[30];
+  } OC;
 
-/**
- * io_init_funcptrs() - Set up I/O function pointers
- */
-void io_init_funcptrs(void)
-{
-}  
+  // Go ahead and close the channel just in case.
+  io_done();
+  
+  dcb = eos_find_dcb(NET);
 
-/**
- * io_open() - Open the device
- */
-void io_open(void)
-{
+  OC.cmd='O';
+  OC.mode=12; /* READ/WRITE */
+  OC.translation=0; /* NONE */
+  strcpy(OC.url,"N:TCP://IRATA.ONLINE:8005/");
+
+  /* PERFORM OPEN COMMAND */
+  eos_write_character_device(NET,(unsigned char *)OC,sizeof(OC));
+
+  connected=true;
 }
 
 /**
@@ -36,6 +55,17 @@ void io_open(void)
  */
 void io_send_byte(unsigned char b)
 {
+  struct _wc
+  {
+    unsigned char cmd;
+    unsigned char byte;
+  } WC;
+
+  WC.cmd = 'W';
+  WC.byte = b;
+
+  if (connected == true)
+    eos_write_character_device(NET,(unsigned char *)WC,sizeof(WC));
 }
 
 /**
@@ -44,13 +74,12 @@ void io_send_byte(unsigned char b)
  */
 bool io_main(void)
 {
-}
+  unsigned char r=eos_read_character_device(NET,response,sizeof(response));
 
-/**
- * io_recv_serial() - Receive and interpret serial data.
- */
-void io_recv_serial(void)
-{
+  if (r==0x80)
+      ShowPLATO(response,dcb->len);
+
+  return true;
 }
 
 /**
@@ -58,4 +87,5 @@ void io_recv_serial(void)
  */
 void io_done(void)
 {
+  eos_write_character_device(NET,"C",1);
 }
