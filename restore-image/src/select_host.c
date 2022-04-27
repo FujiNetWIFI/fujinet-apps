@@ -9,7 +9,7 @@
 #include "system.h"
 #include "select_host.h"
 
-unsigned char selected_host_slot;
+char selected_host_slot;
 
 State select_host(void)
 {
@@ -17,7 +17,7 @@ State select_host(void)
 
   while(1)
     {
-      if (input_select_host())
+      if (input_select_host(&selected_host_slot))
 	break;
     }
 

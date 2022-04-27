@@ -6,13 +6,15 @@
  * @license gpl v. 3
  */
 
-#ifndef INPUT_H
-#define INPUT_H
+#ifdef BUILD_ADAM
 
-#include <stdbool.h>
-#include "../typedefs.h"
+#include <conio.h>
+#include "die.h"
 
-void input_init(void);
-bool input_select_host(char *h);
+void die(char *c)
+{
+  gotoxy(0,23); cprintf(c);
+  while(1) {}
+}
 
-#endif /* INPUT_H */
+#endif /* BUILD_ADAM */
