@@ -1,4 +1,4 @@
-TARGET_EXEC ?= tape-restore-from-fujinet.ddp
+TARGET_EXEC ?= tape-restore-image.ddp
 
 BUILD_DIR ?= ./build
 SRC_DIRS ?= ./src
@@ -39,7 +39,7 @@ $(BUILD_DIR)/%.asm.o: %.asm
 .PHONY: clean
 
 clean:
-	$(RM) -r tape-restore-from-fujinet* $(BUILD_DIR)
+	$(RM) -r tape-restore-image* $(BUILD_DIR)
 
 -include $(DEPS)
 
