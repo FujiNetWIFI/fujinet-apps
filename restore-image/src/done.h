@@ -6,9 +6,11 @@
  * @license gpl v. 3
  */
 
-#include "select_host_slot.h"
+#ifndef DONE_H
+#define DONE_H
 
-State select_host_slot(void)
-{
-  return SELECT_FILE;
-}
+#include "typedefs.h"
+
+State done(void);
+
+#endif /* DONE_H */

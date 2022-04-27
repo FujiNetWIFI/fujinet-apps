@@ -6,9 +6,9 @@
  * @license gpl v. 3
  */
 
-#include "select_host_slot.h"
+#include "done.h"
 
-State select_host_slot(void)
+State done(void)
 {
-  return SELECT_FILE;
+  return DONE;
 }

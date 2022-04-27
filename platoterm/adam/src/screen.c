@@ -93,13 +93,11 @@ void screen_block_draw(padPt* Coord1, padPt* Coord2)
 
   if (CurMode==ModeErase || CurMode==ModeInverse)
     {
-      for (y=y1;y<y2;y++)
-	undraw(x1,y,x2,y);
+      clga(x1,y1,x2-x1,y2-y1);
     }
   else
     {
-      for(y=y1;y<y2;y++)
-	draw(x1,y,x2,y);
+      xorclga(x1,y1,x2-x1,y2-y1);
     }
 }
 
