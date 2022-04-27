@@ -8,6 +8,13 @@
 
 #include "io.h"
 
+HostSlots hs;
+
 void io_init(void)
 {
+}
+
+HostSlots *io_select_host(void)
+{
+  return &hs;
 }

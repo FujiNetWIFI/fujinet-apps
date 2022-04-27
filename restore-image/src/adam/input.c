@@ -11,3 +11,8 @@
 void input_init(void)
 {
 }
+
+bool input_select_host(void)
+{
+  return false;
+}

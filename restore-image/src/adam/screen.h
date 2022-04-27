@@ -9,6 +9,9 @@
 #ifndef SCREEN_H
 #define SCREEN_H
 
+#include "../typedefs.h"
+
 void screen_init(void);
+void screen_select_host(HostSlots *hs);
 
 #endif /* SCREEN_H */

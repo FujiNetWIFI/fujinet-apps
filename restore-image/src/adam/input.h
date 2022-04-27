@@ -9,6 +9,10 @@
 #ifndef INPUT_H
 #define INPUT_H
 
+#include <stdbool.h>
+#include "../typedefs.h"
+
 void input_init(void);
+bool input_select_host(void);
 
 #endif /* INPUT_H */

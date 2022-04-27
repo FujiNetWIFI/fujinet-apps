@@ -13,18 +13,7 @@
 #include "done.h"
 
 #include "typedefs.h"
-
-#ifdef BUILD_ATARI
-#include "atari/screen.h"
-#include "atari/input.h"
-#include "atari/io.h"
-#endif
-
-#ifdef BUILD_ADAM
-#include "adam/screen.h"
-#include "adam/input.h"
-#include "adam/io.h"
-#endif
+#include "system.h"
 
 State state=SELECT_HOST;
 

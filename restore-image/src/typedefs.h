@@ -18,4 +18,6 @@ typedef enum _state
     DONE
   } State;
 
+typedef char HostSlots[8][32];
+
 #endif /* TYPEDEFS_H */

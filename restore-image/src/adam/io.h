@@ -9,6 +9,9 @@
 #ifndef IO_H
 #define IO_H
 
+#include "../typedefs.h"
+
 void io_init(void);
+HostSlots *io_select_host(void);
 
 #endif /* IO_H */
