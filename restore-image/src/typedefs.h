@@ -11,7 +11,7 @@
 
 typedef enum _state
   {
-    SELECT_HOST_SLOT,
+    SELECT_HOST,
     SELECT_FILE,
     SELECT_TAPE,
     PERFORM,

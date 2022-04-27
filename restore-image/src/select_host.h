@@ -11,6 +11,6 @@
 
 #include "typedefs.h"
 
-State select_host_slot(void);
+State select_host(void);
 
 #endif /* SELECT_HOST_SLOT */

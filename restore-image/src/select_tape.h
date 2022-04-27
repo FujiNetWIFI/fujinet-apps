@@ -9,6 +9,8 @@
 #ifndef SELECT_TAPE_H
 #define SELECT_TAPE_H
 
+#include "typedefs.h"
+
 State select_tape(void);
 
 #endif /* SELECT_TAPE_H */

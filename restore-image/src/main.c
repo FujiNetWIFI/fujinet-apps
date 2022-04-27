@@ -6,6 +6,12 @@
  * @license gpl v. 3
  */
 
+#include "select_host.h"
+#include "select_file.h"
+#include "select_tape.h"
+#include "perform.h"
+#include "done.h"
+
 #include "typedefs.h"
 
 #ifdef BUILD_ATARI
@@ -20,7 +26,7 @@
 #include "io.h"
 #endif
 
-State state=SELECT_HOST_SLOT;
+State state=SELECT_HOST;
 
 void main(void)
 {
@@ -28,8 +34,8 @@ void main(void)
     {
       switch(state)
 	{
-	case SELECT_HOST_SLOT:
-	  state=select_host_slot();
+	case SELECT_HOST:
+	  state=select_host();
 	  break;
 	case SELECT_FILE:
 	  state=select_file();
