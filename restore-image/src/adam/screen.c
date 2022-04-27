@@ -25,6 +25,7 @@
 
 void screen_init(void)
 {
+  smartkeys_sound_init();
   smartkeys_set_mode();
 }
 
