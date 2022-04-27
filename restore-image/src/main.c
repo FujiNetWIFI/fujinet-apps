@@ -20,16 +20,20 @@
 #include "atari/io.h"
 #endif
 
-#ifdef BUILD_ATARI
-#include "screen.h"
-#include "input.h"
-#include "io.h"
+#ifdef BUILD_ADAM
+#include "adam/screen.h"
+#include "adam/input.h"
+#include "adam/io.h"
 #endif
 
 State state=SELECT_HOST;
 
 void main(void)
 {
+  screen_init();
+  input_init();
+  io_init();
+  
   while (1)
     {
       switch(state)
