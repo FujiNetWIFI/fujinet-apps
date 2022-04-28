@@ -167,9 +167,51 @@ void select_file_filter(void)
   memset(filter,0,32);
   screen_select_file_filter();
   input_line_filter(filter);
+  
   dir_eof=false;
   pos=0;
+
   sfState=SF_DISPLAY;
+}
+
+void select_file_advance(void)
+{
+  char *e;
+
+  bar_done();
+  
+  io_open_directory(selected_host_slot,path,filter);
+
+  io_set_directory_position(pos);
+  
+  e = io_read_directory(128,1);
+  
+  strcat(path,e); // append directory entry to end of current path
+
+  io_close_directory(); // have to use "e" before calling another io command, otherwise e gets wiped out
+
+  pos=0;
+  dir_eof=false;
+  
+  sfState=SF_DISPLAY; // and display the result.
+}
+
+void select_file_devance(void)
+{
+  char *p = strrchr(path,'/'); // find end of directory string (last /)
+
+  bar_done();
+
+  while (*--p != '/'); // scoot backward until we reach next /
+
+  p++;
+  
+  *p = 0; // truncate string.
+
+  pos=0;
+  dir_eof=false;
+  
+  sfState=SF_DISPLAY; // And display the result.
 }
 
 State select_file(void)
@@ -201,8 +243,10 @@ State select_file(void)
 	  select_file_filter();
 	  break;
 	case SF_ADVANCE_FOLDER:
+	  select_file_advance();
 	  break;
 	case SF_DEVANCE_FOLDER:
+	  select_file_devance();
 	  break;
 	case SF_DONE:
 	  break;
