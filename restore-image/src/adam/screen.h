@@ -13,7 +13,15 @@
 #include "../typedefs.h"
 
 void screen_init(void);
-void screen_select_host(HostSlots *hs);
+void screen_select_host(void);
 void screen_bar(char y, char c, char m, char i, bool onOff);
+void screen_select_file(void);
+void screen_select_file_display(char *p, char *f,char *hsn);
+void screen_select_file_display_entry(unsigned char y, char* e);
+void screen_select_file_prev(void);
+void screen_select_file_next(void);
+void screen_select_file_display_long_filename(char *e);
+void screen_select_file_clear_long_filename(void);
+void screen_select_file_choose(char visibleEntries);
 
 #endif /* SCREEN_H */

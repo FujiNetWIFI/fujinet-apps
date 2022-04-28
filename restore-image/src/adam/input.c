@@ -10,7 +10,10 @@
 
 #include <eos.h>
 #include <smartkeys.h>
+#include <string.h>
 #include "input.h"
+#include "../bar.h"
+#include "../select_file.h"
 
 /**
  * ADAM keyboard mapping
@@ -54,6 +57,13 @@
 #define KEY_C_UP_ARROW   0xA4
 #define KEY_C_DOWN_ARROW 0xA6
 
+#define ENTRY_TIMER_DUR 128
+
+extern DirectoryPosition pos;
+extern State state;
+extern bool dir_eof;
+extern bool long_entry_displayed;
+
 static GameControllerData cont;
 static unsigned char key=0;
 static unsigned char joystick=0;
@@ -64,6 +74,7 @@ static unsigned char keypad=0;
 static unsigned char keypad_copy=0;
 static unsigned char repeat=0;
 static unsigned short entry_timer;
+
 /**
  * Get input from keyboard/joystick
  * @return keycode (or synthesized keycode if joystick)
@@ -159,7 +170,9 @@ void input_init(void)
 
 bool input_select_host(char *h)
 {
-  unsigned char k = input();
+  unsigned char k;
+
+  while ((k = input()) < 2);
   
   switch(k)
     {
@@ -175,17 +188,80 @@ bool input_select_host(char *h)
       break;
     case KEY_UP_ARROW:
       if (*h > 0)
-	*h--;
+	*h = *h-1;
       break;
     case KEY_DOWN_ARROW:
-      if (*h < 8)
-	*h++;
+      if (*h < 7)
+	*h = *h+1;
       break;
     case KEY_RETURN:
       return true;
     }
   
   return false;
+}
+
+SFState input_select_file_choose(void)
+{
+  unsigned char k=input();
+
+  if (entry_timer>0)
+    entry_timer--;
+  
+  switch(k)
+    {
+    case KEY_RETURN:
+      pos+=bar_get();
+	  if (select_file_is_folder())
+	    return SF_ADVANCE_FOLDER;
+      else
+        return SF_DONE;
+    case KEY_ESCAPE:
+      state=SELECT_HOST;
+      return SF_DONE;
+    case KEY_HOME:
+      pos=0;
+      dir_eof=false;
+      return SF_DISPLAY;
+    case KEY_SMART_IV:
+      return strcmp(path,"/") == 0 ? SF_CHOOSE : SF_DEVANCE_FOLDER;
+    case KEY_SMART_V:
+      return SF_FILTER;
+    case KEY_SMART_VI:
+      smartkeys_sound_play(SOUND_CONFIRM);
+      return SF_DONE;
+    case KEY_UP_ARROW:
+      if ((bar_get() == 0) && (pos > 0))
+	return SF_PREV_PAGE;
+      else
+	{
+	  long_entry_displayed=false;
+	  entry_timer=ENTRY_TIMER_DUR;
+	  bar_up();
+	  select_file_display_long_filename();
+	  return SF_CHOOSE;
+	}
+    case KEY_DOWN_ARROW:
+      if ((bar_get() == 14) && (dir_eof==false))
+	return SF_NEXT_PAGE;
+      else
+	{
+	  long_entry_displayed=false;
+	  entry_timer=ENTRY_TIMER_DUR;
+	  bar_down();
+	  select_file_display_long_filename();
+	  return SF_CHOOSE;
+	}
+      break;
+    case KEY_C_UP_ARROW:
+      if (pos>0)
+	return SF_PREV_PAGE;
+    case KEY_C_DOWN_ARROW:
+      if (dir_eof==false)
+	return SF_NEXT_PAGE;
+    default:
+      return SF_CHOOSE;
+    }
 }
 
 #endif /* BUILD_ADAM */

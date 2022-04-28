@@ -9,6 +9,19 @@
 #ifndef TYPEDEFS_H
 #define TYPEDEFS_H
 
+typedef enum _sf_state
+  {
+    SF_INIT,
+    SF_DISPLAY,
+    SF_NEXT_PAGE,
+    SF_PREV_PAGE,
+    SF_CHOOSE,
+    SF_FILTER,
+    SF_ADVANCE_FOLDER,
+    SF_DEVANCE_FOLDER,
+    SF_DONE
+  } SFState;
+
 typedef enum _state
   {
     SELECT_HOST,
@@ -19,5 +32,7 @@ typedef enum _state
   } State;
 
 typedef char HostSlots[8][32];
+
+typedef unsigned short DirectoryPosition;
 
 #endif /* TYPEDEFS_H */

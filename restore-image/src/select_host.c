@@ -8,18 +8,27 @@
 
 #include "system.h"
 #include "select_host.h"
+#include "bar.h"
 
-char selected_host_slot;
+char selected_host_slot=0;
+HostSlots hs[8];
 
 State select_host(void)
 {
-  screen_select_host(io_select_host());
+  io_select_host();
+  screen_select_host();
+
+  bar_init(1,1,8,0);
 
   while(1)
     {
+      
       if (input_select_host(&selected_host_slot))
 	break;
+      bar_set(selected_host_slot);
     }
 
+  bar_done();
+  
   return SELECT_FILE;
 }

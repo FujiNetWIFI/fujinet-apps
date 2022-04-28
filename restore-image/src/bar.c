@@ -15,8 +15,10 @@ void bar_init(unsigned char y, unsigned char c, unsigned char m, unsigned char i
 {
   bar_y=y;
   bar_c=c;
-  bar_m=m;
+  bar_m=m-1;
   bar_i=i;
+
+  screen_bar(bar_y,bar_c,bar_m,bar_i,true);
 }
 
 void bar_up(void)

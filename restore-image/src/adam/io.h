@@ -12,6 +12,11 @@
 #include "../typedefs.h"
 
 void io_init(void);
-HostSlots *io_select_host(void);
+void io_select_host(void);
+void io_close_directory(void);
+void io_mount_host_slot(unsigned char hs);
+void io_open_directory(unsigned char h, char *p, char *f);
+void io_set_directory_position(DirectoryPosition pos);
+char *io_read_directory(unsigned char l, unsigned char a);
 
 #endif /* IO_H */

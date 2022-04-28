@@ -12,5 +12,7 @@
 #include "typedefs.h"
 
 State select_file(void);
+bool select_file_is_folder(void);
+void select_file_display_long_filename(void);
 
 #endif /* SELECT_FILE_H */
