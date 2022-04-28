@@ -11,7 +11,10 @@
 #include <eos.h>
 #include <smartkeys.h>
 #include <string.h>
+#include <conio.h>
+#include <msx.h>
 #include "input.h"
+#include "cursor.h"
 #include "../bar.h"
 #include "../select_file.h"
 
@@ -262,6 +265,68 @@ SFState input_select_file_choose(void)
     default:
       return SF_CHOOSE;
     }
+}
+
+static void input_clear_bottom(void)
+{
+  msx_vfill(0x1200,0x00,768);
+}
+
+void input_line(unsigned char x, unsigned char y, unsigned char o, char *c, unsigned char len, bool password)
+{
+  unsigned char pos=o;
+
+  c += o;
+  x += o;
+
+  cursor(true);
+  input_clear_bottom();
+
+  gotoxy(x,y);
+  cursor_pos(x,y);
+
+  while (key = eos_read_keyboard())
+    {
+      smartkeys_sound_play(SOUND_KEY_PRESS);
+      if (key == KEY_RETURN)
+	{
+	  cursor(false);
+	  break;
+	}
+      else if (key == KEY_BACKSPACE)
+	{
+	  if (pos > 0)
+	    {
+	      pos--;
+	      x--;
+	      c--;
+	      *c=0x00;
+	      putchar(KEY_BACKSPACE);
+	      putchar(KEY_SPACE);
+	      putchar(KEY_BACKSPACE);
+	      cursor_pos(x,y);
+	    }
+	}
+      else if (key > 0x1F && key < 0x7F) // Printable characters 
+	{
+	  if (pos < len)
+	    {
+	      pos++;
+	      x++;
+	      *c=key;
+	      c++;
+	      putchar(password ? 0x8B : key);
+	      cursor_pos(x,y);
+	    }
+	}
+    }
+  eos_end_read_keyboard();
+  eos_start_read_keyboard();
+}
+
+void input_line_filter(char *c)
+{
+  input_line(0,19,0,c,32,false);
 }
 
 #endif /* BUILD_ADAM */

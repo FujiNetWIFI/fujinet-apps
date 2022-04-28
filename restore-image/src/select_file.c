@@ -146,6 +146,32 @@ bool select_file_is_folder(void)
   return result; // Offset 10 = directory flag.
 }
 
+void select_file_next_page(void)
+{
+  bar_done();
+  pos += ENTRIES_PER_PAGE;
+  sfState=SF_DISPLAY;
+  dir_eof=false;
+}
+
+void select_file_prev_page(void)
+{
+  bar_done();
+  pos -= ENTRIES_PER_PAGE;
+  sfState=SF_DISPLAY;
+  dir_eof=false;
+}
+
+void select_file_filter(void)
+{
+  memset(filter,0,32);
+  screen_select_file_filter();
+  input_line_filter(filter);
+  dir_eof=false;
+  pos=0;
+  sfState=SF_DISPLAY;
+}
+
 State select_file(void)
 {
   char visibleEntries=0;
@@ -163,13 +189,16 @@ State select_file(void)
 	  visibleEntries=select_file_display();
 	  break;
 	case SF_NEXT_PAGE:
+	  select_file_next_page();
 	  break;
 	case SF_PREV_PAGE:
+	  select_file_prev_page();
 	  break;
 	case SF_CHOOSE:
 	  select_file_choose(visibleEntries);
 	  break;
 	case SF_FILTER:
+	  select_file_filter();
 	  break;
 	case SF_ADVANCE_FOLDER:
 	  break;

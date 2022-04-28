@@ -149,4 +149,11 @@ void screen_select_file_choose(char visibleEntries)
   smartkeys_sound_play(SOUND_MODE_CHANGE);
 }
 
+void screen_select_file_filter(void)
+{
+  smartkeys_display(NULL,NULL,NULL,NULL,NULL,NULL);
+  smartkeys_status("  ENTER A WILDCARD FILTER.\n  E.G. *Coleco*");
+  smartkeys_sound_play(SOUND_POSITIVE_CHIME);
+}
+
 #endif /* BUILD_ADAM */

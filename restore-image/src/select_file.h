@@ -9,6 +9,7 @@
 #ifndef SELECT_FILE_H
 #define SELECT_FILE_H
 
+#include <stdbool.h>
 #include "typedefs.h"
 
 State select_file(void);
