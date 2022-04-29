@@ -10,11 +10,12 @@
 #include "select_host.h"
 #include "bar.h"
 
-char selected_host_slot=0;
+char selected_host_slot;
 HostSlots hs[8];
 
 State select_host(void)
 {
+  selected_host_slot=0;
   io_select_host();
   screen_select_host();
 

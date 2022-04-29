@@ -66,6 +66,7 @@ extern DirectoryPosition pos;
 extern State state;
 extern bool dir_eof;
 extern bool long_entry_displayed;
+extern unsigned char selected_tape;
 
 static GameControllerData cont;
 static unsigned char key=0;
@@ -220,8 +221,7 @@ SFState input_select_file_choose(void)
       else
         return SF_DONE;
     case KEY_ESCAPE:
-      state=SELECT_HOST;
-      return SF_DONE;
+      return SF_ABORT;
     case KEY_HOME:
       pos=0;
       dir_eof=false;
@@ -327,6 +327,35 @@ void input_line(unsigned char x, unsigned char y, unsigned char o, char *c, unsi
 void input_line_filter(char *c)
 {
   input_line(0,19,0,c,32,false);
+}
+
+void input_select_tape()
+{
+  char k;
+
+  selected_tape=0;
+  
+  while (selected_tape==0)
+    {
+      switch(input())
+	{
+	case 0x83:
+	  selected_tape=0x04;
+	  break;
+	case 0x84:
+	  selected_tape=0x05;
+	  break;
+	case 0x85:
+	  selected_tape=0x08;
+	  break;
+	case 0x86:
+	  selected_tape=0x18;
+	  break;
+	default:
+	  selected_tape=0;
+	  break;
+	}
+    }
 }
 
 #endif /* BUILD_ADAM */

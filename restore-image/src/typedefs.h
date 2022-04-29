@@ -19,8 +19,18 @@ typedef enum _sf_state
     SF_FILTER,
     SF_ADVANCE_FOLDER,
     SF_DEVANCE_FOLDER,
-    SF_DONE
+    SF_DONE,
+    SF_ABORT
   } SFState;
+
+typedef enum _pf_state
+  {
+    PF_INIT,
+    PF_CONFIRM,
+    PF_RESTORE,
+    PF_ABORT,
+    PF_DONE
+  } PFState;
 
 typedef enum _state
   {

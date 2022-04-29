@@ -20,7 +20,7 @@ extern HostSlots hs;
 #define ENTRY_TIMER_DUR 128
 #define DIR_MAX_LEN 31
 
-SFState sfState;
+SFState sfState=SF_INIT;
 char path[224];
 char filter[32];
 DirectoryPosition pos=0;
@@ -214,6 +214,13 @@ void select_file_devance(void)
   sfState=SF_DISPLAY; // And display the result.
 }
 
+void select_file_done()
+{
+  io_open_directory(selected_host_slot,path,filter);
+  io_set_directory_position(pos);
+  strcat(path,io_read_directory(128,0));
+}
+
 State select_file(void)
 {
   char visibleEntries=0;
@@ -249,9 +256,12 @@ State select_file(void)
 	  select_file_devance();
 	  break;
 	case SF_DONE:
-	  break;
+	  select_file_done();
+	  return SELECT_TAPE;
+	case SF_ABORT:
+	  return SELECT_HOST;
 	}
     }
   
-  return SELECT_TAPE;
+  return SELECT_FILE;
 }

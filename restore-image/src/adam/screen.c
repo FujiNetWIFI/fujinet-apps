@@ -53,6 +53,8 @@ void screen_init(void)
 
 void screen_select_host(void)
 {
+  smartkeys_set_mode();
+  clrscr();
   smartkeys_display(NULL,NULL,NULL,NULL,NULL,NULL);
   smartkeys_status("  WELCOME TO RESTORE-IMAGE\n  PLEASE SELECT A HOST SLOT\n  AND PRESS [RETURN]");
 
@@ -78,6 +80,7 @@ void screen_bar(char y, char c, char m, char i, bool onOff)
 void screen_select_file(void)
 {
   smartkeys_set_mode();
+  clrscr();
   msx_color(15,4,7);
   msx_vfill(MODE2_ATTR,0xF4,512);
 
@@ -153,6 +156,13 @@ void screen_select_file_filter(void)
 {
   smartkeys_display(NULL,NULL,NULL,NULL,NULL,NULL);
   smartkeys_status("  ENTER A WILDCARD FILTER.\n  E.G. *Coleco*");
+  smartkeys_sound_play(SOUND_POSITIVE_CHIME);
+}
+
+void screen_select_tape(void)
+{
+  smartkeys_display(NULL,NULL,"  DISK\n   1","  DISK\n   2","  TAPE\n   1", "  TAPE\n   2");
+  smartkeys_status("  SELECT\n  DESTINATION");
   smartkeys_sound_play(SOUND_POSITIVE_CHIME);
 }
 
