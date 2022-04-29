@@ -14,6 +14,7 @@
 #include "die.h"
 
 #define FUJI_DEV 0x0F
+#define NET_DEV 0x09
 #define RESPONSE_SIZE 1024
 #define ACK 0x80
 #define READ_HOST_LIST "\xF4"
@@ -98,6 +99,28 @@ char *io_read_directory(unsigned char l, unsigned char a)
   c[2]=a;
   io_command_and_response(&c,3);
   return response;
+}
+
+void io_perform_open(char *path)
+{
+  // x04 = READ, x00 = NO TRANSLATION
+
+  memset(response,0,1024);
+  
+  if (!strcasecmp(hs[selected_host_slot],"SD"))
+    {
+      strcpy(response,"O\x04\x00N:SD://"); 
+    }
+  else
+    {
+      strcpy(response,"O\x04\x00N:TNFS://");
+      strcat(response,hs[selected_host_slot]);
+    }
+
+  // Finally concatenate path
+  strcat(response,path);
+
+  eos_write_character_device(NET_DEV,response,256);
 }
 
 #endif /* BUILD_ADAM */

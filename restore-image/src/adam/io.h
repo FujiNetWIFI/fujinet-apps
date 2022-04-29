@@ -18,5 +18,6 @@ void io_mount_host_slot(unsigned char hs);
 void io_open_directory(unsigned char h, char *p, char *f);
 void io_set_directory_position(DirectoryPosition pos);
 char *io_read_directory(unsigned char l, unsigned char a);
+void io_perform_open(char *path);
 
 #endif /* IO_H */

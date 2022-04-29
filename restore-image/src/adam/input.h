@@ -17,5 +17,6 @@ bool input_select_host(char *h);
 SFState input_select_file_choose(void);
 void input_line_filter(char *c);
 void input_select_tape(void);
+bool input_perform_confirm(void);
 
 #endif /* INPUT_H */

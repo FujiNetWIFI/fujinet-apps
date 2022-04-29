@@ -358,4 +358,20 @@ void input_select_tape()
     }
 }
 
+bool input_perform_confirm()
+{
+  char k=0;
+
+  while (k==0)
+    {
+      switch(input())
+	{
+	case 0x86:
+	  return true;
+	default:
+	  return false;
+	}
+    }
+}
+
 #endif /* BUILD_ADAM */

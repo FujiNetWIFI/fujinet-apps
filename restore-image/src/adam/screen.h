@@ -25,5 +25,6 @@ void screen_select_file_clear_long_filename(void);
 void screen_select_file_choose(char visibleEntries);
 void screen_select_file_filter(void);
 void screen_select_tape(void);
+void screen_perform_confirm(void);
 
 #endif /* SCREEN_H */

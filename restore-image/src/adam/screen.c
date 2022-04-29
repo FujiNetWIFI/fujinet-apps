@@ -147,7 +147,7 @@ void screen_select_file_clear_long_filename(void)
 void screen_select_file_choose(char visibleEntries)
 {  
   smartkeys_display(NULL,NULL,NULL,(strcmp(path,"/") == 0) ? NULL: "   UP"," FILTER", "  SELECT");
-  smartkeys_status("  SELECT SOURCE FILE\n  [ESC] ABORT");
+  smartkeys_status("  SELECT SOURCE FILE.\n  [ESC] ABORT");
   
   smartkeys_sound_play(SOUND_MODE_CHANGE);
 }
@@ -162,8 +162,19 @@ void screen_select_file_filter(void)
 void screen_select_tape(void)
 {
   smartkeys_display(NULL,NULL,"  DISK\n   1","  DISK\n   2","  TAPE\n   1", "  TAPE\n   2");
-  smartkeys_status("  SELECT\n  DESTINATION");
+  smartkeys_status("  SELECT\n  DESTINATION.");
   smartkeys_sound_play(SOUND_POSITIVE_CHIME);
+}
+
+void screen_perform_confirm(void)
+{
+  smartkeys_display(NULL,NULL,NULL,NULL,NULL," PERFORM\n RESTORE");
+  smartkeys_status("  PLACE MEDIA IN DRIVE.");
+}
+
+void screen_error(char *c)
+{
+  gotoxy(0,19); cprintf("%s",c);
 }
 
 #endif /* BUILD_ADAM */
