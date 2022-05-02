@@ -10,18 +10,25 @@
 
 #include <eos.h>
 #include <string.h>
+#include <conio.h>
 #include "io.h"
 #include "die.h"
 
 #define FUJI_DEV 0x0F
 #define NET_DEV 0x09
+#define DISK_DEV 0x07
+
 #define RESPONSE_SIZE 1024
 #define ACK 0x80
 #define READ_HOST_LIST "\xF4"
+#define FILE_MAXLEN 36
 
-extern HostSlots hs[8];
+extern char hs[8][32];
+extern unsigned char selected_host_slot;
+extern unsigned char selected_tape;
 
 static char response[1024];
+static DCB *dcb;
 
 static void io_command_and_response(void* buf, unsigned short len)
 {
@@ -32,20 +39,15 @@ static void io_command_and_response(void* buf, unsigned short len)
 
 void io_init(void)
 {
+  io_perform_close();
   eos_start_read_keyboard(); // might as well. :)
+  dcb=eos_find_dcb(NET_DEV);
 }
 
 void io_select_host(void)
 {
-  unsigned char r = eos_write_character_device(FUJI_DEV,READ_HOST_LIST,1);
-
-  if (r != ACK)
-    die("COULD NOT SEND HOST LIST CMD");
-
-  r = eos_read_character_device(FUJI_DEV,&hs,RESPONSE_SIZE);
-
-  if (r != ACK)
-    die("COULD NOT READ HOST LIST");  
+  io_command_and_response("\xF4",1);
+  memcpy(hs,response,256);
 }
 
 void io_close_directory(void)
@@ -103,24 +105,121 @@ char *io_read_directory(unsigned char l, unsigned char a)
 
 void io_perform_open(char *path)
 {
-  // x04 = READ, x00 = NO TRANSLATION
+  struct {
+    unsigned char hostSlot;
+    unsigned char mode;
+    unsigned char file[FILE_MAXLEN];
+  } deviceSlots[8];
 
-  memset(response,0,1024);
+  struct
+  {
+    char cmd;
+    char ds;
+    char mode;
+  } mi;
+
+  struct
+  {
+    char cmd;
+    char ds;
+    char fn[256];
+  } sdf;
+
+  struct
+  {
+    char cmd;
+    char deviceSlots[304];
+  } pds;
+
+  memset(deviceSlots,0,sizeof(deviceSlots));
+  memset(mi,0,sizeof(mi));
+  memset(sdf,0,sizeof(sdf));
+  memset(pds,0,sizeof(pds));
   
-  if (!strcasecmp(hs[selected_host_slot],"SD"))
-    {
-      strcpy(response,"O\x04\x00N:SD://"); 
-    }
-  else
-    {
-      strcpy(response,"O\x04\x00N:TNFS://");
-      strcat(response,hs[selected_host_slot]);
-    }
+  mi.cmd = 0xF8;  /* Mount Image in Device Slot */
+  mi.ds  = 0x03;  /* Use device slot 4 */
+  mi.mode = 0x00; /* Read only */
+  
+  sdf.cmd = 0xE2; /* Set Device Slot Filename */
+  sdf.ds  = 0x03; /* Use device slot 4 */
+  strcpy(sdf.fn,path);
 
-  // Finally concatenate path
-  strcat(response,path);
+  /* Read; fill in device slot; put back. */
+  io_command_and_response("\xF2",1); /* GET DEVICE SLOTS */
+  memcpy(deviceSlots,response,304);
 
-  eos_write_character_device(NET_DEV,response,256);
+  deviceSlots[3].hostSlot = selected_host_slot;
+  deviceSlots[3].mode     = 0x00; /* READ ONLY */
+  strncpy(deviceSlots[3].file,path,FILE_MAXLEN);
+
+  pds.cmd = 0xF1; /* Put Device Slots cmd */
+  memcpy(pds.deviceSlots,deviceSlots,304);
+
+  eos_write_character_device(FUJI_DEV,pds,sizeof(pds));
+
+  /* Finally set the device filename for the slot... */
+  eos_write_character_device(FUJI_DEV,sdf,sizeof(sdf));
+
+  /* ...and mount it. */
+  eos_write_character_device(FUJI_DEV,mi,sizeof(mi));
+}
+
+void io_perform_close(void)
+{
+  struct
+  {
+    char cmd;
+    char ds;
+  } ui;
+
+  ui.cmd = 0xE9; /* unmount disk image */
+  ui.ds  = 0x03; /* use device slot 4  */
+
+  eos_write_character_device(FUJI_DEV,ui,sizeof(ui));
+}
+
+bool io_perform_read_block(unsigned long blockNum, unsigned char *buf)
+{
+  return eos_read_block(DISK_DEV,blockNum,buf) == 0x80;
+}
+
+unsigned char io_perform_write_error(void)
+{
+  DCB *dcb;
+
+  eos_request_device_status(selected_tape,dcb);
+  return eos_get_device_status(NET_DEV);
+}
+
+unsigned char io_perform_write_block(unsigned char dev, unsigned long blockNum, unsigned char *buf)
+{
+  return eos_write_block(dev,blockNum,buf);
+}
+
+unsigned char io_perform_verify_block(unsigned char dev, unsigned long blockNum, unsigned char *buf)
+{
+  return eos_read_block(dev,blockNum,buf);  
+}
+
+bool io_perform_eom(void)
+{
+  DCB *dcb;
+  char s;
+  
+  eos_request_device_status(DISK_DEV,dcb);
+  s=eos_get_device_status(DISK_DEV) & 0x0F;
+
+  return s == 0x02; /* Missing block? */
+}
+
+void io_perform_rewind(void)
+{
+  DCB *dcb;
+
+  dcb=eos_find_dcb(selected_tape);
+
+  dcb->block=0;
+  dcb->status=2;
 }
 
 #endif /* BUILD_ADAM */

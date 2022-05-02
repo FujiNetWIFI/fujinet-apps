@@ -64,6 +64,7 @@
 
 extern DirectoryPosition pos;
 extern State state;
+extern PFState pfState;
 extern bool dir_eof;
 extern bool long_entry_displayed;
 extern unsigned char selected_tape;
@@ -215,11 +216,15 @@ SFState input_select_file_choose(void)
   switch(k)
     {
     case KEY_RETURN:
+    case KEY_SMART_VI:
       pos+=bar_get();
 	  if (select_file_is_folder())
 	    return SF_ADVANCE_FOLDER;
-      else
-        return SF_DONE;
+	  else
+	    {
+	      smartkeys_sound_play(SOUND_CONFIRM);
+	      return SF_DONE;
+	    }
     case KEY_ESCAPE:
       return SF_ABORT;
     case KEY_HOME:
@@ -230,9 +235,6 @@ SFState input_select_file_choose(void)
       return strcmp(path,"/") == 0 ? SF_CHOOSE : SF_DEVANCE_FOLDER;
     case KEY_SMART_V:
       return SF_FILTER;
-    case KEY_SMART_VI:
-      smartkeys_sound_play(SOUND_CONFIRM);
-      return SF_DONE;
     case KEY_UP_ARROW:
       if ((bar_get() == 0) && (pos > 0))
 	return SF_PREV_PAGE;
@@ -339,12 +341,6 @@ void input_select_tape()
     {
       switch(input())
 	{
-	case 0x83:
-	  selected_tape=0x04;
-	  break;
-	case 0x84:
-	  selected_tape=0x05;
-	  break;
 	case 0x85:
 	  selected_tape=0x08;
 	  break;
@@ -362,14 +358,43 @@ bool input_perform_confirm()
 {
   char k=0;
 
-  while (k==0)
+  while (1)
     {
       switch(input())
 	{
 	case 0x86:
 	  return true;
-	default:
+	case 0x85:
 	  return false;
+	}
+    }
+}
+
+void input_perform_error()
+{
+  while (1)
+    {
+      switch(input())
+	{
+	case 0x85:
+	  pfState=PF_ABORT;
+	  return;
+	case 0x86:
+	  return;
+	}
+    }
+}
+
+PFState input_perform_done()
+{
+  while(1)
+    {
+      switch(input())
+	{
+	case 0x85:
+	  return PF_RESTART;
+	case 0x86:
+	  return PF_INIT;
 	}
     }
 }

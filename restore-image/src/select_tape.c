@@ -16,7 +16,7 @@ State select_tape(void)
   while (selected_tape==0)
     {
       screen_select_tape();
-      selected_tape=input_select_tape();
+      input_select_tape();
     }
   
   return PERFORM;

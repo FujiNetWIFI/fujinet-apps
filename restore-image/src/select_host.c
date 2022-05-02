@@ -11,7 +11,7 @@
 #include "bar.h"
 
 char selected_host_slot;
-HostSlots hs[8];
+char hs[8][32];
 
 State select_host(void)
 {

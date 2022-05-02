@@ -24,7 +24,7 @@
 #define ATTR_BAR 0x13;
 #define ATTR_COL 0xF5;
 
-extern HostSlots hs[8];
+extern char hs[8][32];
 
 static char udg[] =
   {
@@ -45,8 +45,9 @@ static char udg[] =
 void screen_init(void)
 {
   void *param = &udg;
+  
+  msx_color(0,0,0);
 
-  smartkeys_sound_init();
   console_ioctl(IOCTL_GENCON_SET_UDGS,&param);
   smartkeys_set_mode();
 }
@@ -79,8 +80,8 @@ void screen_bar(char y, char c, char m, char i, bool onOff)
 
 void screen_select_file(void)
 {
-  smartkeys_set_mode();
-  clrscr();
+  msx_vfill(0x0000,0x00,5120);
+  
   msx_color(15,4,7);
   msx_vfill(MODE2_ATTR,0xF4,512);
 
@@ -117,7 +118,7 @@ void screen_select_file_display_entry(unsigned char y, char* e)
   cprintf("%c%c",*e++,*e++);
   msx_color(1,15,7);
   cprintf("%-30s",e);
-  smartkeys_sound_play(SOUND_TYPEWRITER_CLACK);
+  //smartkeys_sound_play(SOUND_TYPEWRITER_CLACK);
 }
 
 void screen_select_file_prev(void)
@@ -149,21 +150,21 @@ void screen_select_file_choose(char visibleEntries)
   smartkeys_display(NULL,NULL,NULL,(strcmp(path,"/") == 0) ? NULL: "   UP"," FILTER", "  SELECT");
   smartkeys_status("  SELECT SOURCE FILE.\n  [ESC] ABORT");
   
-  smartkeys_sound_play(SOUND_MODE_CHANGE);
+  // smartkeys_sound_play(SOUND_MODE_CHANGE);
 }
 
 void screen_select_file_filter(void)
 {
   smartkeys_display(NULL,NULL,NULL,NULL,NULL,NULL);
   smartkeys_status("  ENTER A WILDCARD FILTER.\n  E.G. *Coleco*");
-  smartkeys_sound_play(SOUND_POSITIVE_CHIME);
+  // smartkeys_sound_play(SOUND_POSITIVE_CHIME);
 }
 
 void screen_select_tape(void)
 {
-  smartkeys_display(NULL,NULL,"  DISK\n   1","  DISK\n   2","  TAPE\n   1", "  TAPE\n   2");
+  smartkeys_display(NULL,NULL,NULL,NULL,"  TAPE\n   1", "  TAPE\n   2");
   smartkeys_status("  SELECT\n  DESTINATION.");
-  smartkeys_sound_play(SOUND_POSITIVE_CHIME);
+  // smartkeys_sound_play(SOUND_POSITIVE_CHIME);
 }
 
 void screen_perform_confirm(void)
@@ -172,9 +173,49 @@ void screen_perform_confirm(void)
   smartkeys_status("  PLACE MEDIA IN DRIVE.");
 }
 
-void screen_error(char *c)
+void screen_perform_read(unsigned long blockNum)
 {
-  gotoxy(0,19); cprintf("%s",c);
+  gotoxy(0,19); cprintf("%10lu%-22s",blockNum," BLOCKS READ");
+}
+
+void screen_perform_write(unsigned long blockNum)
+{
+  gotoxy(0,19); cprintf("%10lu%-22s",blockNum," BLOCKS WRITTEN");
+  csleep(5);
+}
+
+void screen_perform_error(void)
+{
+  smartkeys_display(NULL,NULL,NULL,NULL,"    NO","   YES");
+  smartkeys_status("  BLOCK WRITE ERROR\n  RETRY?");
+}
+
+void screen_perform_verify_read(unsigned long blockNum)
+{
+  gotoxy(0,19); cprintf("%10lu%-22s",blockNum," BLOCKS RE-READ");
+}
+
+void screen_perform_verify_check(void)
+{
+  gotoxy(0,19); cprintf("%10s%-22s","","CHECKING");
+}
+
+void screen_perform_abort(void)
+{
+  smartkeys_display(NULL,NULL,NULL,NULL,NULL,NULL);
+  smartkeys_status("  OPERATION ABORTED.");
+}
+
+void screen_perform_restore(void)
+{
+  smartkeys_display(NULL,NULL,NULL,NULL,NULL,NULL);
+  smartkeys_status("  PERFORMING RESTORE");
+}
+
+void screen_perform_done(void)
+{
+  smartkeys_display(NULL,NULL,NULL,NULL,"   NO","   YES");
+  smartkeys_status("  RESTORE DONE!\n  DO SAME TAPE AGAIN?");
 }
 
 #endif /* BUILD_ADAM */

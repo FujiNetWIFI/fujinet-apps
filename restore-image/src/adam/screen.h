@@ -26,5 +26,13 @@ void screen_select_file_choose(char visibleEntries);
 void screen_select_file_filter(void);
 void screen_select_tape(void);
 void screen_perform_confirm(void);
+void screen_perform_read(unsigned long blockNum);
+void screen_perform_write(unsigned long blockNum);
+void screen_perform_error(void);
+void screen_perform_verify_read(unsigned long blockNum);
+void screen_perform_verify_check(void);
+void screen_perform_abort(void);
+void screen_perform_restore(void);
+void screen_perform_done(void);
 
 #endif /* SCREEN_H */

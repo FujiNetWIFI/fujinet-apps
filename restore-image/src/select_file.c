@@ -224,6 +224,8 @@ void select_file_done()
 State select_file(void)
 {
   char visibleEntries=0;
+
+  sfState=SF_INIT;
   
   screen_select_file();
 
