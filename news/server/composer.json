@@ -1,0 +1,7 @@
+{
+    "require": {
+        "html2text/html2text": "^4.3",
+        "p3k/emoji-detector": "^0.3.1",
+        "fivefilters/readability.php": "dev-master"
+    }
+}
