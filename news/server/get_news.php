@@ -5,8 +5,8 @@
  *
  * This script grabs the latest headlines from the categories,
  * then grabs the actual content and saves it in a database.
- * It can be run every 15 minutes for the 9 categories and
- * still remain under the api limit of 200 requests per day.
+ * It can be run every hour for the 9 categories selected and
+ * just hit the api limit of 200 requests per day.
  * 
  * ex request: https://newsdata.io/api/1/news?apikey=YOUR_API_KEY&category=top
  *
@@ -49,20 +49,6 @@ $country = "us";
  */
 $lang = "en";
 $baseURL = "https://newsdata.io/api/1/news?apikey=".$api_key."&country=".$country."&language=".$lang;
-
-// Categories selected for news articles
-$categoryArray = array
-	(
-		0 => "top",
-		1 => "world",
-		2 => "science",
-		3 => "business",
-		4 => "technology",
-		5 => "health",
-		6 => "entertainment",
-		7 => "politics",
-		8 => "sports"
-	);
 
 // Database Variables
 $dbuser = "dbusername";

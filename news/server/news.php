@@ -13,6 +13,7 @@
  *      crlf=carriage return & line feed
  *   ps: page size, ColumnsxRows
  *      (default Atari 39x22)
+ *   p: page number to display (default 1)
  *
  * Category variables:
  *   c: category name:
@@ -22,7 +23,6 @@
  *
  * Article variables:
  *   a: article ID from search results
- *   p: page number to display (default 1)
  *
  * If category and article ID are both provided, article
  * will be returned and category ignored.
@@ -69,8 +69,21 @@ if ( isset($_GET['a']) )
 }
 elseif ( isset($_GET['c']) )
 {
-	//TODO: Verify category name is acceptable
-	$category = $_GET['c'];
+	// Make sure category provided is valid
+	$category = NULL;
+	foreach($categoryArray as $thisCat)
+	{
+		if($thisCat == $_GET['c'])
+		{
+			$category = $_GET['c'];
+			break;
+		}
+	}
+	if ($category == NULL)
+	{
+		echo translate_text("ERROR: invalid category: ".$_GET['c']).line_ending();
+		exit(1);
+	}
 	$articleID = NULL;
 }
 else

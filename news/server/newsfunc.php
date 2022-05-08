@@ -4,6 +4,20 @@
  */
 require_once('vendor/autoload.php');
 
+// Categories selected for news articles
+$categoryArray = array
+	(
+		0 => "top",
+		1 => "world",
+		2 => "science",
+		3 => "business",
+		4 => "technology",
+		5 => "health",
+		6 => "entertainment",
+		7 => "politics",
+		8 => "sports"
+	);
+
 // Remove any junk we don't want from the text
 function stripGarbage($str)
 {
