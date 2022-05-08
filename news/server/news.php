@@ -104,7 +104,7 @@ if ($articleID != NULL)
 		
 		$separator = line_ending();
 		$line = strtok($articleText, $separator);
-		$output = "";
+		$output = NULL;
 		$linecount = 1;
 		$pagecount = 1;
 		
@@ -126,10 +126,24 @@ if ($articleID != NULL)
 		echo translate_text("ERROR: Article not found").line_ending();
 		exit(1);
 	}
+	$pagecount--; // We've gone too far, back it up
+	if ($output == NULL) // Something went wrong, try to find out and error
+	{
+		if ($page > $pagecount)
+		{
+			echo translate_text("ERROR: page ".$page." of ".$pagecount." out of range").line_ending();
+			exit(1);
+		}
+		else
+		{
+			echo translate_text("ERROR: no article data to display").line_ending();
+			exit(1);
+		}
+	}
 	echo translate_text($article['title']).line_ending();
 	echo translate_text($article['pubdate']).line_ending();
 	echo translate_text($article['source']).line_ending();
-	echo $page."/".($pagecount-1).line_ending();
+	echo $page."/".$pagecount.line_ending();
 	echo $output;
 	exit(0);
 }
