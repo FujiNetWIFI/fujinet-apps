@@ -177,7 +177,8 @@ if(mysqli_num_rows($result) > 0)
 			$limitcount = 1; // Reset the counter
 			$pagecount++; // Next page
 		}
-		$limitcount++;
+		else
+			$limitcount++;
 	}
 }
 else
