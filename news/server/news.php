@@ -63,7 +63,10 @@ else
  * for category and define default if not given
  */
 if ( isset($_GET['a']) )
+{
 	$articleID = $_GET['a'];
+	$category = NULL;
+}
 elseif ( isset($_GET['c']) )
 {
 	//TODO: Verify category name is acceptable
@@ -131,7 +134,18 @@ if ($articleID != NULL)
 	exit(0);
 }
 
-// Get and return list of articles,
+// Get and return list of articles in a category
+$categorySQL = "SELECT COUNT(*) FROM `articles` WHERE `category` = '".$category."';";
+if(!$catResult = mysqli_query($dbconn, $categorySQL))
+	echo "ERROR: " . $addSQL . "<br>" . $dbconn->error . "<br>\n";
+$resultArray = mysqli_fetch_array($catResult);
+$pageTotal = ceil($resultArray[0]/$limit);
+if ($page > $pageTotal || $page < 1)
+{
+	echo translate_text("ERROR: page ".$page." of ".$pageTotal." out of range").line_ending();
+	exit(1);
+}
+echo $page."/".$pageTotal.line_ending();
 $articleSQL = "SELECT `id`, `pubdate`, `title` FROM `articles` WHERE `category` = '".$category."' ORDER BY `pubdate` DESC LIMIT ".($limit*$page);
 $result = mysqli_query($dbconn, $articleSQL);
 if(mysqli_num_rows($result) > 0)
