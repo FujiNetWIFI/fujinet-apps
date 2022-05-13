@@ -16,7 +16,7 @@ extern State state;
 extern char path[128];
 
 unsigned char src[16384], dst[16384];
-PFState pfState;
+PFState pfState, pfStateRetry;
 
 unsigned long readBlockNum, writeBlockNum, verifyBlockNum;
 unsigned short readOffset, writeOffset, verifyOffset;
@@ -52,7 +52,12 @@ void perform_read(void)
     {
       screen_perform_read(readBlockNum);
 
-      io_perform_read_block(readBlockNum,&src[readOffset]);
+      if (!io_perform_read_block(readBlockNum,&src[readOffset]))
+	{
+	  pfState=PF_ERROR;
+	  pfStateRetry=PF_RESTORE;
+	  return;
+	}
 
       if (io_perform_eom())
 	{
@@ -78,7 +83,12 @@ void perform_write(void)
     {
       screen_perform_write(writeBlockNum);
 
-      io_perform_write_block(selected_tape,writeBlockNum,&src[writeOffset]);
+      if (!io_perform_write_block(selected_tape,writeBlockNum,&src[writeOffset]))
+	{
+	  pfState=PF_ERROR;
+	  pfStateRetry=PF_RESTORE;
+	  return;
+	}
 
       writeOffset += 1024;
       writeBlockNum++;
@@ -105,8 +115,10 @@ void perform_verify(void)
       if (!io_perform_verify_block(selected_tape,verifyBlockNum,&dst[verifyOffset]))
 	{
 	  pfState=PF_ERROR;
+	  pfStateRetry=PF_RESTORE;
 	  return;
 	}
+      
       verifyOffset += 1024;
       verifyBlockNum++;
     }

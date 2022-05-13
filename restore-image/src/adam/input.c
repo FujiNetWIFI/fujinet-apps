@@ -64,7 +64,7 @@
 
 extern DirectoryPosition pos;
 extern State state;
-extern PFState pfState;
+extern PFState pfState, pfStateRetry;
 extern bool dir_eof;
 extern bool long_entry_displayed;
 extern unsigned char selected_tape;
@@ -380,6 +380,7 @@ void input_perform_error()
 	  pfState=PF_ABORT;
 	  return;
 	case 0x86:
+	  pfState=pfStateRetry;
 	  return;
 	}
     }

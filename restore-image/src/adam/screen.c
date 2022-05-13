@@ -187,7 +187,7 @@ void screen_perform_write(unsigned long blockNum)
 void screen_perform_error(void)
 {
   smartkeys_display(NULL,NULL,NULL,NULL,"    NO","   YES");
-  smartkeys_status("  BLOCK WRITE ERROR\n  RETRY?");
+  smartkeys_status("  FAILED, RETRY?");
 }
 
 void screen_perform_verify_read(unsigned long blockNum)

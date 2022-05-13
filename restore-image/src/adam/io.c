@@ -193,12 +193,12 @@ unsigned char io_perform_write_error(void)
 
 unsigned char io_perform_write_block(unsigned char dev, unsigned long blockNum, unsigned char *buf)
 {
-  return eos_write_block(dev,blockNum,buf);
+  return eos_write_block(dev,blockNum,buf) == 0x00;
 }
 
 unsigned char io_perform_verify_block(unsigned char dev, unsigned long blockNum, unsigned char *buf)
 {
-  return eos_read_block(dev,blockNum,buf);  
+  return eos_read_block(dev,blockNum,buf) == 0x80;  
 }
 
 bool io_perform_eom(void)
