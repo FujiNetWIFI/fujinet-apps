@@ -69,6 +69,8 @@ void main(void)
       msx_vfill(MODE2_ATTR+0x100,0xF5,0x100);
       msx_vfill(MODE2_ATTR+0x200,0x1F,0x1200);
 
+      msx_vfill(0x0000,0x00,0x1400);
+
       while (eos_write_character_device(NET_DEV,(unsigned char *)OC,sizeof(OC)) < 0x80);
 
       while (eos_write_character_device(NET_DEV,(unsigned char *)SCM,sizeof(SCM)) < 0x80);
@@ -76,16 +78,19 @@ void main(void)
 
       strncpy(QC.query,"/0/account/display_name",128);
       while (eos_write_character_device(NET_DEV,(unsigned char *)QC,sizeof(QC)) < 0x80);
+      memset(response,0,1024);
       while (eos_read_character_device(NET_DEV,response,1024) < 0x80);
       msx_color(15,4,7); gotoxy(0,0); cprintf("%s",response);
 
       strncpy(QC.query,"/0/created_at",128);
       while (eos_write_character_device(NET_DEV,(unsigned char *)QC,sizeof(QC)) < 0x80);
+      memset(response,0,1024);
       while (eos_read_character_device(NET_DEV,response,1024) < 0x80);
       msx_color(15,5,7); gotoxy(0,1); cprintf("%s",response);
 
       strncpy(QC.query,"/0/content",128);
       while (eos_write_character_device(NET_DEV,(unsigned char *)QC,sizeof(QC)) < 0x80);
+      memset(response,0,1024);
       while (eos_read_character_device(NET_DEV,response,1024) < 0x80);
       msx_color(1,15,7); smartkeys_puts(0,16,response);
 
