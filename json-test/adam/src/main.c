@@ -40,7 +40,6 @@ void main(void)
     unsigned char cmd;
     char mode;
   } SCM; // Set Channel Mode command
-
   struct _qc
   {
     unsigned char cmd;
