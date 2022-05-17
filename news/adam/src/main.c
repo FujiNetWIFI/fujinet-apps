@@ -73,7 +73,7 @@ struct _article_list
 
 unsigned char old_i;
 
-int pageNum, articleId;
+int pageNum, catPageNum, articleId;
 
 bool connected(void)
 {
@@ -304,6 +304,7 @@ void article_list(void)
 	case KEY_GET:
 	case KEY_RETURN:
 	  articleId=articleList[i].id;
+    catPageNum=pageNum;
 	  pageNum=1;
 	  state=ARTICLE;
 	  return;
@@ -420,6 +421,7 @@ void article(void)
 	  while (input() != KEY_SMART_VI); 
 	  return;
 	case KEY_SMART_III:
+    pageNum=catPageNum;
 	  state=ARTICLE_LIST;
 	  return;
 	case KEY_SMART_IV:
