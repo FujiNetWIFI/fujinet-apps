@@ -1112,7 +1112,7 @@ State display(void)
 	  if (timer > 16384)
 	    {
 	      timer=0;
-	      return DISPLAY;
+	      return FETCH;
 	    }
 	  else
 	    timer++;
