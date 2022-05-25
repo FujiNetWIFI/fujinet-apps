@@ -103,54 +103,6 @@ const char *url = "N:HTTPS://oldbytes.space/api/v1/timelines/public?limit=1";
 ]
 */
 
-/**
- * Parse the JSON data stream opened by the N: SIO Command 'O' - Open
- * command. The data is loaded entirely into #FujiNet memory, ready to be
- * queried by the N: SIO Command $81 - Query JSON command.
- *
- * From https://github.com/FujiNetWIFI/fujinet-platformio/wiki/N%3A-SIO-Command-%2480---Parse-JSON
- * 2022-05-25
- */
-unsigned char sio_json_parse(unsigned char unit)
-{
-  OS.dcb.ddevic = FUJINET_SIO_DEVICEID;
-  OS.dcb.dunit = unit;
-  OS.dcb.dcomnd = 0x80; /* Parse JSON */
-  OS.dcb.dstats = 0x00;
-  OS.dcb.dbuf = NULL;
-  OS.dcb.dtimlo = 0x0f;
-  OS.dcb.dbyt = 0;
-  OS.dcb.daux1 = AUX1;
-  OS.dcb.daux2 = 0; /* No Translation */
-  return siov();
-}
-
-/**
- * Query the JSON parser to return specific pieces of information
- * specified by the query string. The query string is formally defined in
- * the "JSON Query Format"
- * (https://github.com/FujiNetWIFI/fujinet-platformio/wiki/JSON-Query-Format).
- *
- * The size of this query string is always 256 bytes, and should be
- * terminated by ATASCII EOL.
- *
- * From https://github.com/FujiNetWIFI/fujinet-platformio/wiki/N%3A-SIO-Command-%2481---Query-JSON
- * 2022-05-25
- */
-unsigned char sio_json_query(unsigned char unit, char* queryDeviceSpec)
-{
-  OS.dcb.ddevic = FUJINET_SIO_DEVICEID;
-  OS.dcb.dunit = unit;
-  OS.dcb.dcomnd = 0x81; /* Query JSON */
-  OS.dcb.dstats = 0x80;
-  OS.dcb.dbuf = queryDeviceSpec;
-  OS.dcb.dtimlo = 0x0f;
-  OS.dcb.dbyt = 256;
-  OS.dcb.daux1 = AUX1;
-  OS.dcb.daux2 = 0; /* No Translation */
-  return siov();
-}
-
 void inf_loop(void) {
   do { } while(1);
 }
@@ -186,9 +138,17 @@ void main(void) {
     abort();
   }
 
+  printf("Setting channel mode to JSON.\n");
+
+  err = nchanmode(1,1);
+  if (err != 1 /* SUCCESS */) {
+    printf("Error = %d\n", err);
+    abort();
+  }  
+  
   printf("Parsing JSON\n\n");
 
-  err = sio_json_parse(1);
+  err = njsonparse(1);
   if (err != 1 /* SUCCESS */) {
     printf("Error = %d\n", err);
     abort();
@@ -201,7 +161,7 @@ void main(void) {
 
     sprintf(query, "N1:%s%c", elements[i], CH_EOL);
 
-    err = sio_json_query(1, (char *) query);
+    err = njsonQuery(1, (char *) query);
     if (err != 1 /* SUCCESS */) {
       printf("Error = %d\n", err);
       abort();
