@@ -84,3 +84,44 @@ unsigned char nstatus(unsigned char unit)
   return siov();
 }
 
+unsigned char nchanmode(unsigned char unit, unsigned char mode)
+{
+  OS.dcb.ddevic = FUJINET_SIO_DEVICEID;
+  OS.dcb.dunit = unit;
+  OS.dcb.dcomnd = 0xFC;
+  OS.dcb.dstats = 0x80;
+  OS.dcb.dbuf = buf;
+  OS.dcb.dtimlo = 0x1f;
+  OS.dcb.dbyt = 0;
+  OS.dcb.daux1 = 0;
+  OS.dcb.daux2 = mode; // NO TRANSLATION!
+  return siov();
+}
+
+unsigned char njsonparse(unsigned char unit)
+{
+  OS.dcb.ddevic = FUJINET_SIO_DEVICEID;
+  OS.dcb.dunit = unit;
+  OS.dcb.dcomnd = 'P';
+  OS.dcb.dstats = 0x80;
+  OS.dcb.dbuf = buf;
+  OS.dcb.dtimlo = 0x1f;
+  OS.dcb.dbyt = 256;
+  OS.dcb.daux1 = 0;
+  OS.dcb.daux2 = mode; // NO TRANSLATION!
+  return siov();
+}
+
+unsigned char njsonQuery(unsigned char unit, char *buf)
+{
+  OS.dcb.ddevic = FUJINET_SIO_DEVICEID;
+  OS.dcb.dunit = unit;
+  OS.dcb.dcomnd = 'Q';
+  OS.dcb.dstats = 0x80;
+  OS.dcb.dbuf = buf;
+  OS.dcb.dtimlo = 0x1f;
+  OS.dcb.dbyt = 256;
+  OS.dcb.daux1 = 0;
+  OS.dcb.daux2 = mode; // NO TRANSLATION!
+  return siov();
+}
