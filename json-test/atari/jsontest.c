@@ -4,9 +4,10 @@
  * A test program showing how to use the JSON parsing functions to traverse
  * live data from e.g. HTTPS, for the Atari 8-bit.
  *
- * @author Bill Kendrick
- * @email  bill@newbreedsoftware.com
- * @license gpl v. 3, see LICENSE.md for details
+ * Bill Kendrick <bill@newbreedsoftware.com>
+ * License: v. 3, see LICENSE.md for details
+ *
+ * 2022-05-25 - 2022-05-25
  */
 
 #include <atari.h>
@@ -14,7 +15,12 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include "sio.h"
 #include "nsio.h"
+
+// #define ABORT_ON_ERROR
+
+#define AUX1 4 /* READ */
 
 const char *url = "N:HTTPS://oldbytes.space/api/v1/timelines/public?limit=1";
 
@@ -97,9 +103,116 @@ const char *url = "N:HTTPS://oldbytes.space/api/v1/timelines/public?limit=1";
 ]
 */
 
-void main(void) {
-  printf("%cJSON Test\n", CH_CLR);
+/**
+ * Parse the JSON data stream opened by the N: SIO Command 'O' - Open
+ * command. The data is loaded entirely into #FujiNet memory, ready to be
+ * queried by the N: SIO Command $81 - Query JSON command.
+ *
+ * From https://github.com/FujiNetWIFI/fujinet-platformio/wiki/N%3A-SIO-Command-%2480---Parse-JSON
+ * 2022-05-25
+ */
+unsigned char sio_json_parse(unsigned char unit)
+{
+  OS.dcb.ddevic = FUJINET_SIO_DEVICEID;
+  OS.dcb.dunit = unit;
+  OS.dcb.dcomnd = 0x80; /* Parse JSON */
+  OS.dcb.dstats = 0x00;
+  OS.dcb.dbuf = NULL;
+  OS.dcb.dtimlo = 0x0f;
+  OS.dcb.dbyt = 0;
+  OS.dcb.daux1 = AUX1;
+  OS.dcb.daux2 = 0; /* No Translation */
+  return siov();
+}
 
+/**
+ * Query the JSON parser to return specific pieces of information
+ * specified by the query string. The query string is formally defined in
+ * the "JSON Query Format"
+ * (https://github.com/FujiNetWIFI/fujinet-platformio/wiki/JSON-Query-Format).
+ *
+ * The size of this query string is always 256 bytes, and should be
+ * terminated by ATASCII EOL.
+ *
+ * From https://github.com/FujiNetWIFI/fujinet-platformio/wiki/N%3A-SIO-Command-%2481---Query-JSON
+ * 2022-05-25
+ */
+unsigned char sio_json_query(unsigned char unit, char* queryDeviceSpec)
+{
+  OS.dcb.ddevic = FUJINET_SIO_DEVICEID;
+  OS.dcb.dunit = unit;
+  OS.dcb.dcomnd = 0x81; /* Query JSON */
+  OS.dcb.dstats = 0x80;
+  OS.dcb.dbuf = queryDeviceSpec;
+  OS.dcb.dtimlo = 0x0f;
+  OS.dcb.dbyt = 256;
+  OS.dcb.daux1 = AUX1;
+  OS.dcb.daux2 = 0; /* No Translation */
+  return siov();
+}
+
+void inf_loop(void) {
   do { } while(1);
+}
+
+void abort(void) {
+#ifdef ABORT_ON_ERROR
+  printf("ABORTING\n");
+  inf_loop();
+#endif
+}
+
+#define NUM_ELEMENTS 3
+const char * elements[NUM_ELEMENTS] = {
+  "id",
+  "account/username",
+  "nonexistent"
+};
+
+char query[256];
+char buf[256];
+
+void main(void) {
+  unsigned char err;
+  unsigned char i;
+
+  printf("%cJSON Test\n\n", CH_CLR);
+
+  printf("Opening %s\n\n", url);
+
+  err = nopen(1, (char *) url, AUX1);
+  if (err != 1 /* SUCCESS */) {
+    printf("Error = %d\n", err);
+    abort();
+  }
+
+  printf("Parsing JSON\n\n");
+
+  err = sio_json_parse(1);
+  if (err != 1 /* SUCCESS */) {
+    printf("Error = %d\n", err);
+    abort();
+  }
+
+  printf("Reading elements...\n\n");
+
+  for (i = 0; i < NUM_ELEMENTS; i++) {
+    printf("Querying %s\n", elements[i]);
+
+    sprintf(query, "N1:%s%c", elements[i], CH_EOL);
+
+    err = sio_json_query(1, (char *) query);
+    if (err != 1 /* SUCCESS */) {
+      printf("Error = %d\n", err);
+      abort();
+    }
+
+    err = nread(1, buf, sizeof(buf));
+    printf(">> %s\n\n", buf);
+  }
+
+  nclose(1);
+
+  inf_loop();
 }
 

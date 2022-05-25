@@ -11,6 +11,8 @@
 #ifndef NSIO_H
 #define NSIO_H
 
+#define FUJINET_SIO_DEVICEID 0x71
+
 /**
  * Open a file on N: device
  * @param unit the SIO unit number

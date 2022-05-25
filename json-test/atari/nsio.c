@@ -1,6 +1,4 @@
 /*
-  ISS Tracker for Ataris using #Fujinet.
-
   This module provides "nXXXX()" functions for
   talking to the #FujiNet N: device via direct SIO Calls.
 
@@ -8,7 +6,7 @@
   by Thomas Cherryhomes <thom.cherryhomes@gmail.com>
   (Released under GPL 3.0)
 
-  Last modified: 2021-05-03
+  Last modified: 2022-05-25
 */
 
 #include <atari.h>
@@ -18,12 +16,10 @@
 #include "sio.h"
 #include "nsio.h"
 
-#define FUJINET_SIO_DEVICEID 0x71
-
 unsigned char nopen(unsigned char unit, char* buf, unsigned char aux1)
 {
   OS.dcb.ddevic = FUJINET_SIO_DEVICEID;
-  OS.dcb.dunit=unit;
+  OS.dcb.dunit = unit;
   OS.dcb.dcomnd = 'O';
   OS.dcb.dstats = 0x80;
   OS.dcb.dbuf = buf;
