@@ -1,8 +1,8 @@
 #ifndef SIO_H
 #define SIO_H
 
-#define SIO_READ 0x40;
-#define SIO_WRITE 0x80;
+#define SIO_READ 0x40
+#define SIO_WRITE 0x80
 
 /**
  * Function to call sio
