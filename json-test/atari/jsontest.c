@@ -20,8 +20,6 @@
 
 // #define ABORT_ON_ERROR
 
-#define AUX1 4 /* READ */
-
 const char *url = "N:HTTPS://oldbytes.space/api/v1/timelines/public?limit=1";
 
 /*
@@ -132,7 +130,7 @@ void main(void) {
 
   printf("Opening %s\n\n", url);
 
-  err = nopen(1, (char *) url, AUX1);
+  err = nopen(1, (char *) url, 4 /* READ */);
   if (err != 1 /* SUCCESS */) {
     printf("Error = %d\n", err);
     abort();
@@ -175,4 +173,3 @@ void main(void) {
 
   inf_loop();
 }
-

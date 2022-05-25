@@ -11,8 +11,6 @@
 #ifndef NSIO_H
 #define NSIO_H
 
-#define FUJINET_SIO_DEVICEID 0x71
-
 /**
  * Open a file on N: device
  * @param unit the SIO unit number
@@ -53,5 +51,35 @@ unsigned char nwrite(unsigned char unit, char* buf, unsigned short len);
  * @return the error code
  */
 unsigned char nstatus(unsigned char unit);
+
+/* From channelMode in fujinet-platformio/lib/device/sio/network.h */
+#define MODE_PROTOCOL 0
+#define MODE_JSON 1
+
+/**
+ * Change the mode of previously-opened Nu:
+ * @param unit the SIO unit number
+ * @param mode the mode to change to (MODE_PROTCOL or MODE_JSON)
+ * @return the error code
+ */
+unsigned char nchanmode(unsigned char unit, unsigned char mode);
+
+/**
+ * Read and parse JSON from previously-opened Nu:
+ * (Note: the N: device must be in JSON bmode; see nchanmode())
+ * @param unit the SIO unit number
+ * @return the error code
+ */
+unsigned char njsonparse(unsigned char unit);
+
+/**
+ * Query JSON from Nu:
+ * (Note: the JSON must be parsed first; see njsonparse().
+ * Then the data you've requested should be read; see nread().)
+ * @param unit the SIO unit number
+ * @param buf buffer containing the path of JSON data to query
+ * @return the error code
+ */
+unsigned char njsonQuery(unsigned char unit, char *buf);
 
 #endif /* NSIO_H */
