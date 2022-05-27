@@ -7,7 +7,7 @@
  * Bill Kendrick <bill@newbreedsoftware.com>
  * License: v. 3, see LICENSE.md for details
  *
- * 2022-05-25 - 2022-05-25
+ * 2022-05-25 - 2022-05-26
  */
 
 #include <atari.h>
@@ -112,6 +112,15 @@ void abort(void) {
 #endif
 }
 
+void success_or_fail(unsigned char err) {
+  if (err != 1 /* SUCCESS */) {
+    printf("Error = %d\n\n", err);
+    abort();
+  } else {
+    printf("Success!\n\n");
+  }
+}
+
 #define NUM_ELEMENTS 3
 const char * elements[NUM_ELEMENTS] = {
   "id",
@@ -125,32 +134,36 @@ char buf[256];
 void main(void) {
   unsigned char err;
   unsigned char i;
+  int data_len;
 
   printf("%cJSON Test\n\n", CH_CLR);
 
-  printf("Opening %s\n\n", url);
+
+  /* Open the JSON file over the network */
+
+  printf("Opening %s\n", url);
 
   err = nopen(1, (char *) url, 4 /* READ */);
-  if (err != 1 /* SUCCESS */) {
-    printf("Error = %d\n", err);
-    abort();
-  }
+  success_or_fail(err);
 
-  printf("Setting channel mode to JSON.\n");
 
-  err = nchanmode(1,1);
-  if (err != 1 /* SUCCESS */) {
-    printf("Error = %d\n", err);
-    abort();
-  }  
-  
-  printf("Parsing JSON\n\n");
+  /* Switch to JSON mode */
 
-  err = njsonparse(1);
-  if (err != 1 /* SUCCESS */) {
-    printf("Error = %d\n", err);
-    abort();
-  }
+  printf("Setting channel mode to JSON\n");
+
+  err = nchanmode(1, 4 /* READ */, 1 /* JSON */);
+  success_or_fail(err);
+
+
+  /* Parse the JSON */ 
+
+  printf("Parsing JSON\n");
+
+  err = njsonparse(1, 4);
+  success_or_fail(err);
+
+
+  /* Read the elements */
 
   printf("Reading elements...\n\n");
 
@@ -158,18 +171,32 @@ void main(void) {
     printf("Querying %s\n", elements[i]);
 
     sprintf(query, "N1:%s%c", elements[i], CH_EOL);
+    err = njsonQuery(1, 4, (char *) query);
+    success_or_fail(err);
 
-    err = njsonQuery(1, (char *) query);
-    if (err != 1 /* SUCCESS */) {
-      printf("Error = %d\n", err);
-      abort();
+    if (err == 1) {
+      printf("Requesting status\n");
+      err = nstatus(1);
+      success_or_fail(err);
+
+      if (err == 1) {
+        data_len = (OS.dvstat[1] << 8) + OS.dvstat[0];
+
+        printf("Reading %d bytes of data\n", data_len);
+
+        buf[0] = '\0';
+        err = nread(1, buf, data_len);
+        success_or_fail(err);
+
+        if (err == 1) {
+          printf("FETCHED: %s\n\n", buf);
+        }
+      }
     }
-
-    err = nread(1, buf, sizeof(buf));
-    printf(">> %s\n\n", buf);
   }
 
   nclose(1);
 
   inf_loop();
 }
+

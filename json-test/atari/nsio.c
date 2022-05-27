@@ -87,7 +87,7 @@ unsigned char nstatus(unsigned char unit)
   return siov();
 }
 
-unsigned char nchanmode(unsigned char unit, unsigned char mode)
+unsigned char nchanmode(unsigned char unit, unsigned char aux1, unsigned char mode)
 {
   OS.dcb.ddevic = FUJINET_SIO_DEVICEID;
   OS.dcb.dunit = unit;
@@ -96,12 +96,12 @@ unsigned char nchanmode(unsigned char unit, unsigned char mode)
   OS.dcb.dbuf = NULL;
   OS.dcb.dtimlo = TIMEOUT;
   OS.dcb.dbyt = 0;
-  OS.dcb.daux1 = 0;
+  OS.dcb.daux1 = aux1;
   OS.dcb.daux2 = mode;
   return siov();
 }
 
-unsigned char njsonparse(unsigned char unit)
+unsigned char njsonparse(unsigned char unit, unsigned char aux1)
 {
   OS.dcb.ddevic = FUJINET_SIO_DEVICEID;
   OS.dcb.dunit = unit;
@@ -110,12 +110,12 @@ unsigned char njsonparse(unsigned char unit)
   OS.dcb.dbuf = NULL;
   OS.dcb.dtimlo = TIMEOUT;
   OS.dcb.dbyt = 256;
-  OS.dcb.daux1 = 0;
-  OS.dcb.daux2 = 1; // ???
+  OS.dcb.daux1 = aux1;
+  OS.dcb.daux2 = 0; // NO TRANSLATION!
   return siov();
 }
 
-unsigned char njsonQuery(unsigned char unit, char *buf)
+unsigned char njsonQuery(unsigned char unit, unsigned char aux1, char *buf)
 {
   OS.dcb.ddevic = FUJINET_SIO_DEVICEID;
   OS.dcb.dunit = unit;
@@ -124,7 +124,7 @@ unsigned char njsonQuery(unsigned char unit, char *buf)
   OS.dcb.dbuf = buf;
   OS.dcb.dtimlo = TIMEOUT;
   OS.dcb.dbyt = 256;
-  OS.dcb.daux1 = 0;
-  OS.dcb.daux2 = 0; // ???
+  OS.dcb.daux1 = aux1;
+  OS.dcb.daux2 = 0; // NO TRANSLATION!
   return siov();
 }

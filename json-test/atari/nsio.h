@@ -59,27 +59,30 @@ unsigned char nstatus(unsigned char unit);
 /**
  * Change the mode of previously-opened Nu:
  * @param unit the SIO unit number
+ * @param aux1 the AUX1 value (same as what was used to open (read/write))
  * @param mode the mode to change to (MODE_PROTCOL or MODE_JSON)
  * @return the error code
  */
-unsigned char nchanmode(unsigned char unit, unsigned char mode);
+unsigned char nchanmode(unsigned char unit, unsigned char aux1, unsigned char mode);
 
 /**
  * Read and parse JSON from previously-opened Nu:
  * (Note: the N: device must be in JSON bmode; see nchanmode())
  * @param unit the SIO unit number
+ * @param aux1 the AUX1 value (same as what was used to open (read/write))
  * @return the error code
  */
-unsigned char njsonparse(unsigned char unit);
+unsigned char njsonparse(unsigned char unit, unsigned char aux1);
 
 /**
  * Query JSON from Nu:
  * (Note: the JSON must be parsed first; see njsonparse().
  * Then the data you've requested should be read; see nread().)
  * @param unit the SIO unit number
+ * @param aux1 the AUX1 value (same as what was used to open (read/write))
  * @param buf buffer containing the path of JSON data to query
  * @return the error code
  */
-unsigned char njsonQuery(unsigned char unit, char *buf);
+unsigned char njsonQuery(unsigned char unit, unsigned char aux1, char *buf);
 
 #endif /* NSIO_H */
