@@ -123,9 +123,10 @@ void success_or_fail(unsigned char err) {
 
 #define NUM_ELEMENTS 3
 const char * elements[NUM_ELEMENTS] = {
-  "id",
-  "account/username",
-  "nonexistent"
+  "/0/account/display_name",
+  "/0/created_at",
+  "/0/content"
+  "/0/nonexistent"
 };
 
 char query[256];
@@ -143,7 +144,7 @@ void main(void) {
 
   printf("Opening %s\n", url);
 
-  err = nopen(1, (char *) url, 4 /* READ */);
+  err = nopen(1, (char *) url, 12 /* READ */);
   success_or_fail(err);
 
 
@@ -151,7 +152,7 @@ void main(void) {
 
   printf("Setting channel mode to JSON\n");
 
-  err = nchanmode(1, 4 /* READ */, 1 /* JSON */);
+  err = nchanmode(1, 12 /* READ */, 1 /* JSON */);
   success_or_fail(err);
 
 
@@ -159,7 +160,7 @@ void main(void) {
 
   printf("Parsing JSON\n");
 
-  err = njsonparse(1, 4);
+  err = njsonparse(1, 12);
   success_or_fail(err);
 
 
@@ -171,7 +172,7 @@ void main(void) {
     printf("Querying %s\n", elements[i]);
 
     sprintf(query, "N1:%s%c", elements[i], CH_EOL);
-    err = njsonQuery(1, 4, (char *) query);
+    err = njsonQuery(1, 12, (char *) query);
     success_or_fail(err);
 
     if (err == 1) {

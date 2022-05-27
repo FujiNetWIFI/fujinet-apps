@@ -3,11 +3,11 @@
 # Bill Kendrick <bill@newbreedsoftware.com>
 # 2022-05-25 - 2022-05-25
 
-CC65BIN=/usr/bin
+CC65BIN=/usr/local/bin
 CC65=${CC65BIN}/cc65
 CA65=${CC65BIN}/ca65
 LD65=${CC65BIN}/ld65
-CC65_HOME=/usr/share/cc65/
+CC65_HOME=/usr/local/share/cc65/
 CC65_INC=${CC65_HOME}/include/
 CC65_ASMINC=${CC65_HOME}/asminc/
 CC65_LIB=${CC65_HOME}/lib/
