@@ -92,7 +92,7 @@ unsigned char nchanmode(unsigned char unit, unsigned char aux1, unsigned char mo
   OS.dcb.ddevic = FUJINET_SIO_DEVICEID;
   OS.dcb.dunit = unit;
   OS.dcb.dcomnd = 0xFC;
-  OS.dcb.dstats = 0x80;
+  OS.dcb.dstats = 0x00;
   OS.dcb.dbuf = NULL;
   OS.dcb.dtimlo = TIMEOUT;
   OS.dcb.dbyt = 0;
@@ -106,10 +106,10 @@ unsigned char njsonparse(unsigned char unit, unsigned char aux1)
   OS.dcb.ddevic = FUJINET_SIO_DEVICEID;
   OS.dcb.dunit = unit;
   OS.dcb.dcomnd = 'P';
-  OS.dcb.dstats = 0x80;
+  OS.dcb.dstats = 0x00;
   OS.dcb.dbuf = NULL;
   OS.dcb.dtimlo = TIMEOUT;
-  OS.dcb.dbyt = 256;
+  OS.dcb.dbyt = 0;
   OS.dcb.daux1 = aux1;
   OS.dcb.daux2 = 0; // NO TRANSLATION!
   return siov();
