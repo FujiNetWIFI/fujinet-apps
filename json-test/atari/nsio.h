@@ -11,11 +11,17 @@
 #ifndef NSIO_H
 #define NSIO_H
 
+/* From channelMode in fujinet-platformio/lib/device/sio/network.h */
+
+#define CHANNELMODE_PROTOCOL 0
+#define CHANNELMODE_JSON 1
+
+
 /**
  * Open a file on N: device
  * @param unit the SIO unit number
  * @param buf the target buffer
- * @param aux1 the AUX1 value to use on open (read/write)
+ * @param aux1 the AUX1 value to use on open (read/write/etc.)
  * @return error code
  */
 unsigned char nopen(unsigned char unit, char* buf, unsigned char aux1);
@@ -52,15 +58,11 @@ unsigned char nwrite(unsigned char unit, char* buf, unsigned short len);
  */
 unsigned char nstatus(unsigned char unit);
 
-/* From channelMode in fujinet-platformio/lib/device/sio/network.h */
-#define MODE_PROTOCOL 0
-#define MODE_JSON 1
-
 /**
  * Change the mode of previously-opened Nu:
  * @param unit the SIO unit number
- * @param aux1 the AUX1 value (same as what was used to open (read/write))
- * @param mode the mode to change to (MODE_PROTCOL or MODE_JSON)
+ * @param aux1 the AUX1 value (same as what was used to open (read/write/etc.))
+ * @param mode the mode to change to (CHANNELMODE_PROTOCOL or CHANNELMODE_JSON)
  * @return the error code
  */
 unsigned char nchanmode(unsigned char unit, unsigned char aux1, unsigned char mode);
@@ -69,7 +71,7 @@ unsigned char nchanmode(unsigned char unit, unsigned char aux1, unsigned char mo
  * Read and parse JSON from previously-opened Nu:
  * (Note: the N: device must be in JSON bmode; see nchanmode())
  * @param unit the SIO unit number
- * @param aux1 the AUX1 value (same as what was used to open (read/write))
+ * @param aux1 the AUX1 value (same as what was used to open (read/write/etc.))
  * @return the error code
  */
 unsigned char njsonparse(unsigned char unit, unsigned char aux1);
@@ -79,10 +81,10 @@ unsigned char njsonparse(unsigned char unit, unsigned char aux1);
  * (Note: the JSON must be parsed first; see njsonparse().
  * Then the data you've requested should be read; see nread().)
  * @param unit the SIO unit number
- * @param aux1 the AUX1 value (same as what was used to open (read/write))
+ * @param aux1 the AUX1 value (same as what was used to open (read/write/etc.))
  * @param buf buffer containing the path of JSON data to query
  * @return the error code
  */
-unsigned char njsonQuery(unsigned char unit, unsigned char aux1, char *buf);
+unsigned char njsonquery(unsigned char unit, unsigned char aux1, char *buf);
 
 #endif /* NSIO_H */
