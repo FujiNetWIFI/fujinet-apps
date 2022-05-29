@@ -1,3 +1,9 @@
+2022-05-29 "ARGONAUTS"
+ * Implementation changes:
+   * WIP: Now uses #FujiNet firmware's built-in JSON fetching & parsing
+     functionality.
+     (https://github.com/FujiNetWIFI/fujinet-platformio/wiki/JSON-Query-Format)
+
 2021-05-21 "BORDERS"
  * Visual improvements:
    * Black (rather than ocean blue) screen borders
