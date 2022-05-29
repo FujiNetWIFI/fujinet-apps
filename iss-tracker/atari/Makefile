@@ -46,11 +46,11 @@ clean:
 
 release:	clean releaseclean
 	mkdir release
-	mkdir release/iss-tracker-atari-${VERSION}
-	mkdir release/iss-tracker-atari-${VERSION}/img
-	cp *.* release/iss-tracker-atari-${VERSION}/
-	cp img/* release/iss-tracker-atari-${VERSION}/img/
-	tar -czf release/iss-tracker-atari-${VERSION}.tar.gz release/iss-tracker-atari-${VERSION}/
+	mkdir release/iss-tracker-atari-${VERSION}-src
+	mkdir release/iss-tracker-atari-${VERSION}-src/img
+	cp *.* release/iss-tracker-atari-${VERSION}-src/
+	cp img/* release/iss-tracker-atari-${VERSION}-src/img/
+	tar -czf release/iss-tracker-atari-${VERSION}-src.tar.gz release/iss-tracker-atari-${VERSION}-src/
 
 releaseclean:
 	-rm -rf release
