@@ -388,8 +388,10 @@ void main(void) {
       parse_json("/timestamp");
       timestamp = atol(json_part);
 
+      /*
       message(0, 3, "Timestamp = ");
       message(12, 3, json_part);
+      */
 
       nchanmode(1, 12, CHANNELMODE_PROTOCOL);
       nclose(1);
