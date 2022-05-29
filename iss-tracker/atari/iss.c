@@ -6,6 +6,7 @@
 #include "nsio.h"
 #include "colors.h"
 
+/* FIXME: Get "VERSION" from Makefile */
 #define VERSION "2021-05-29 \"ARGONAUTS\"" /* get it? "JSON and the..."? */
 
 /* How long to wait before auto-refresh */

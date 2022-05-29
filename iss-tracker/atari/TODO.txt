@@ -5,6 +5,8 @@ TODO for ISS Tracker for #FujiNet
 
  * May need to deal with Unicode characters in astronaut names!
 
+ * Handle VERSION number in one place (Makefile)
+
  * Allow adjusting colors.
    * Save colors to FujiNet (app key); reload on start-up.
 

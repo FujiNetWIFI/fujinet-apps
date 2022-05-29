@@ -20,6 +20,9 @@ CC65_LIB=${CC65_HOME}/lib/
 CC65_CFG=${CC65_HOME}/cfg/
 CC65_FLAGS=-Osir --add-source
 
+# FIXME: Use this in "iss.c" as well
+VERSION=2022-05-29
+
 all:	iss.xex
 
 run:	iss.xex
@@ -40,6 +43,17 @@ clean:
 	-rm app_key.s
 	-rm colors.o
 	-rm colors.s
+
+release:	clean releaseclean
+	mkdir release
+	mkdir release/iss-tracker-atari-${VERSION}
+	mkdir release/iss-tracker-atari-${VERSION}/img
+	cp *.* release/iss-tracker-atari-${VERSION}/
+	cp img/* release/iss-tracker-atari-${VERSION}/img/
+	tar -czf release/iss-tracker-atari-${VERSION}.tar.gz release/iss-tracker-atari-${VERSION}/
+
+releaseclean:
+	-rm -rf release
 
 iss.xex:	iss.o nsio.o sio.o app_key.o colors.o segments.o atari.cfg
 	${LD65} --lib-path "${CC65_LIB}" \
