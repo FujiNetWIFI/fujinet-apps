@@ -11,7 +11,7 @@
 /* How long to wait before auto-refresh */
 #define RTCLOK1_WAIT ((3 /* minutes */ * 60 /* seconds per minute */ * 60 /* 'jiffies' per second */) / 256 /* RTCLOK2 cycles per RTCLOK1 increment */)
 
-/* We fetch 10 x 2 positions per request = 20 positions.
+/* We fetch 2 x 10 positions per request = 20 positions.
    At 5 minutes, we get 20 * 5 = 100 minutes, or approx. 1.5 hrs
    of future positions (approx. one orbit!) */
 #define TRACK_TIMESKIP (5 /* minutes */ * 60 /* seconds per minute */)
@@ -246,7 +246,7 @@ unsigned char open_json(unsigned char * url) {
   err = nopen(1, url, 12);
   if (err != 1)
     return err;
-  
+
   err = nchanmode(1, 12, CHANNELMODE_JSON);
   if (err != 1)
     return err;
@@ -388,6 +388,9 @@ void main(void) {
       parse_json("/timestamp");
       timestamp = atol(json_part);
 
+      message(0, 3, "Timestamp = ");
+      message(12, 3, json_part);
+
       nchanmode(1, 12, CHANNELMODE_PROTOCOL);
       nclose(1);
 
@@ -471,7 +474,7 @@ void main(void) {
           /* ERROR */
           message(MSG_CENTER, 0, "Cannot read from open-notify!");
           message(MSG_CENTER, 1, "Press a key to continue...");
-    
+
           OS.ch = KEY_NONE;
           do {
           } while (OS.ch == KEY_NONE);
@@ -483,9 +486,9 @@ void main(void) {
           GTIA_WRITE.hposp1 = 0;
           GTIA_WRITE.hposp2 = 0;
           GTIA_WRITE.hposp3 = 0;
- 
+
           parse_json("/number");
-          
+
           blit_text(0, 0, "There are    people");
           blit_text(10, 0, json_part);
           blit_text(0, 1, "in space right now!");
@@ -592,36 +595,67 @@ void main(void) {
         memcpy((unsigned char *) scr_mem, (unsigned char *) map_data, 3200);
 
         /* Fetch some upcoming ISS positions based (via timestamps) */
-        clear_message();
-        message(MSG_CENTER, 1, "Fetching upcoming ISS positions...");
-        message(MSG_CENTER, 3, "(Press [Esc] to abort)");
-
-        for (i = 0; i < 10 && OS.ch != KEY_ESC; i++) {
-          sprintf(txt, "%d..", i + 1);
-          message(i * 4, 2, txt);
+        for (j = 0; j < 2; j++) {
+          clear_message();
+          message(MSG_CENTER, 1, "Fetching upcoming ISS positions...");
+          message(MSG_CENTER, 3, "(Press [Esc] to abort)");
 
           /* 25544 is the NORAD catalog id for ISS */
-          sprintf(url, "N:HTTP://api.wheretheiss.at/v1/satellites/25544/positions?timestamps=%ld,%ld",
-                  timestamp + TRACK_TIMESKIP * (i * 2),
-                  timestamp + TRACK_TIMESKIP * ((i * 2) + 1));
+          /* (See https://wheretheiss.at/w/developer) */
+          strcpy(url, "N:HTTP://api.wheretheiss.at/v1/satellites/25544/positions?timestamps=");
+          /*
+            [
+              {
+               "name":"iss",
+               "id":25544,
+               "latitude":7.1968908529967,
+               "longitude":60.044011550192,
+               "altitude":420.71351882199,
+               "velocity":27571.98562669,
+               "visibility":"daylight",
+               "footprint":4511.0917440604,
+               "timestamp":1653813276,
+               "daynum":2459728.8573611,
+               "solar_lat":21.638079352284,
+               "solar_lon":50.704597397843,
+               "units":"kilometers"
+              },
+              ...
+          */
+          for (i = 0; i < 10; i++) {
+            sprintf(tmp, "%ld", timestamp + TRACK_TIMESKIP * ((10 * j) + i));
+            strcat(url, tmp);
+            if (i < 9) {
+              strcat(url, ",");
+            }
+          }
+
           open_json(url);
 
-          for (j = 0; j < 2; j++) {
-            parse_json("latitude\":"); /* FIXME */
+          for (i = 0; i < 10 && OS.ch != KEY_ESC; i++) {
+            sprintf(txt, "%d..", i + 1);
+            message(i * 4, 2, txt);
+
+            sprintf(tmp, "/%d/latitude", i);
+            parse_json(tmp);
             lat = atoi(json_part);
-  
-            parse_json("longitude\":"); /* FIXME */
+
+            sprintf(tmp, "/%d/longitude", i);
+            parse_json(tmp);
             lon = atoi(json_part);
-  
+
             /* Map longitude (-180 -> 180 degrees east) to screen X position (0 left -> 159 right) */
             x = X_CENTER + (unsigned char) ((lon << 2) / 9);
-  
+
             /* Map latitude (-90 -> 90 degrees north) to screen Y position (0 top -> 79 bottom) */
             y = Y_CENTER - (unsigned char) ((lat << 2) / 9);
-  
+
             /* FIXME: A better plot routine would be good here! */
             scr_mem[y * 40 + (x >> 2)] = 0x00;
           }
+
+          nchanmode(1, 12, CHANNELMODE_PROTOCOL);
+          nclose(1);
 
           /* Pause 1 second (API rate-limit requirement!) */
           OS.rtclok[2] = 0;
