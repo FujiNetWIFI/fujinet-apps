@@ -258,6 +258,7 @@ unsigned char open_json(unsigned char * url) {
 
 unsigned char json_part[256];
 unsigned char query[256];
+unsigned char tmp[256];
 
 void parse_json(unsigned char * element) {
   unsigned char err;
@@ -278,6 +279,7 @@ void parse_json(unsigned char * element) {
   }
 
   err = nread(1, json_part, data_len);
+  json_part[data_len - 1 /* eat final char because of "ending in an ATASCII EOL" */] = '\0';
   /* FIXME: Detect error */
 }
 
@@ -347,6 +349,9 @@ void main(void) {
     message(MSG_CENTER, 1, "Fetching ISS position...");
 
     err = open_json("N:HTTP://api.open-notify.org/iss-now.json");
+    /*
+      {"iss_position": {"longitude": "60.0548", "latitude": "7.1665"}, "message": "success", "timestamp": 1653813276}
+    */
 
     clear_message();
 
@@ -383,6 +388,7 @@ void main(void) {
       parse_json("/timestamp");
       timestamp = atol(json_part);
 
+      nchanmode(1, 12, CHANNELMODE_PROTOCOL);
       nclose(1);
 
       /* Draw the ISS in its position over the map */
@@ -447,6 +453,17 @@ void main(void) {
         message(MSG_CENTER, 1, "Fetching who is in space position...");
 
         err = open_json("N:HTTP://api.open-notify.org/astros.json");
+        /*
+        {
+          "people": [
+            {"craft": "ISS", "name": "Oleg Artemyev"},
+            {"craft": "ISS", "name": "Denis Matveev"},
+            ...
+          ],
+          "message": "success",
+          "number": 7
+        }
+        */
 
         clear_message();
 
@@ -466,8 +483,8 @@ void main(void) {
           GTIA_WRITE.hposp1 = 0;
           GTIA_WRITE.hposp2 = 0;
           GTIA_WRITE.hposp3 = 0;
-
-          parse_json("number\": ");
+ 
+          parse_json("/number");
           
           blit_text(0, 0, "There are    people");
           blit_text(10, 0, json_part);
@@ -477,7 +494,8 @@ void main(void) {
 
           key = KEY_NONE;
           for (i = 0; i < n && key != KEY_ESC; i++) {
-            parse_json("\"name\": "); /* FIXME */
+            sprintf(tmp, "/people/%d/name", i);
+            parse_json(tmp);
 
             y = 6 - (strlen(json_part) / 40);
             ptr = json_part;
@@ -507,7 +525,8 @@ void main(void) {
             clear_message();
             snprintf(txt, 80, "%s is on ", json_part);
 
-            parse_json("\"craft\": "); /* FIXME */
+            sprintf(tmp, "/people/%d/craft", i);
+            parse_json(tmp);
             strcat(txt, json_part);
 
             strcpy(json_part, txt);
@@ -557,6 +576,9 @@ void main(void) {
               bell(BELL_ABORT);
             }
           }
+
+          nchanmode(1, 12, CHANNELMODE_PROTOCOL);
+          nclose(1);
 
           /* Clear map: */
           memcpy((unsigned char *) scr_mem, (unsigned char *) map_data, 3200);

@@ -1,6 +1,8 @@
 TODO for ISS Tracker for #FujiNet
 2022-05-29
 
+ * Better error handling! (See FIXMEs)
+
  * May need to deal with Unicode characters in astronaut names!
 
  * Allow adjusting colors.
