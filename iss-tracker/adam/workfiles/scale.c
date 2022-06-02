@@ -31,7 +31,8 @@ int main(int argc, char *argv[])
 
   printf("  };\n\nunsigned char ypos[360] = \n  { ");
   
-  for (float i=180.0; i>-180.0; i--)
+//  for (float i=180.0; i>-180.0; i--)
+    for (float i=-180; i<180.0; i++)
     {
       printf("%d,",(unsigned char)floor((y*i) + (atof(argv[2]) / 2)));
     }
