@@ -1,7 +1,7 @@
 # Makefile for jsontest for Atari
 #
 # Bill Kendrick <bill@newbreedsoftware.com>
-# 2022-05-25 - 2022-05-25
+# 2022-05-25 - 2022-06-01
 
 CC65BIN=/usr/local/bin
 CC65=${CC65BIN}/cc65
@@ -14,19 +14,20 @@ CC65_LIB=${CC65_HOME}/lib/
 CC65_CFG=${CC65_HOME}/cfg/
 CC65_FLAGS=-Osir --add-source
 
-all:	jsontest.xex
-
-run:	jsontest.xex
-	atari800 -nobasic jsontest.xex
+all:	jsontest.xex uptodate.xex
 
 clean:
 	-rm jsontest.xex
 	-rm jsontest.map
+	-rm uptodate.xex
+	-rm uptodate.map
 	# O files from S source
 	-rm sio.o
 	# S assembly from C source, and corresponding O files
 	-rm jsontest.o
 	-rm jsontest.s
+	-rm uptodate.o
+	-rm uptodate.s
 	-rm nsio.o
 	-rm nsio.s
 
@@ -45,6 +46,22 @@ jsontest.s:	jsontest.c nsio.h sio.h
 		-t atari \
 		jsontest.c \
 		-o jsontest.s
+
+uptodate.xex:	uptodate.o nsio.o sio.o atari.cfg
+	${LD65} --lib-path "${CC65_LIB}" \
+		-o uptodate.xex \
+		-t atari \
+		-m uptodate.map \
+		uptodate.o nsio.o sio.o atari.lib
+
+uptodate.o:	uptodate.s
+	${CA65} -I "${CC65_ASMINC}" -t atari uptodate.s -o uptodate.o
+
+uptodate.s:	uptodate.c nsio.h sio.h
+	${CC65} ${CC65_FLAGS} -I "${CC65_INC}" \
+		-t atari \
+		uptodate.c \
+		-o uptodate.s
 
 nsio.o:	nsio.s
 	${CA65} -I "${CC65_ASMINC}" -t atari nsio.s -o nsio.o

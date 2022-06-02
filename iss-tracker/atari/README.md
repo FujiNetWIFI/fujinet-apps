@@ -6,7 +6,7 @@ Bill Kendrick bill@newbreedsoftware.com
 Released under the GNU General Public License 3 (GPL-3);
 see COPYING
 
-2021-05-17 - 2021-05-21
+2021-05-17 - 2022-05-29
 
 ## Purpose
 View the current position of the International Space Station
@@ -61,3 +61,17 @@ Programming and ISS sprite by Bill Kendrick.
 
 Data sources provided by Nathan Bergey (Open-Notify)
 and Bill Shupp (Where The ISS At?).
+
+## Requirements
+This requires a #FujiNet with firmware capable of parsing and
+allowing querying of JSON.
+(As of this commit to `fujinet-platformio`:
+https://github.com/FujiNetWIFI/fujinet-platformio/commit/5785d76860245863254f91736d42f6c0f61182c6)
+
+For #FujiNet devices still using an older firmware, download
+ISS Tracker version `2021-05-21`.
+
+## Links
+- Homepage: http://www.newbreedsoftware.com/fujinet-iss-tracker/
+- Git source code repository: https://github.com/FujiNetWIFI/fujinet-apps/tree/master/iss-tracker/atari
+

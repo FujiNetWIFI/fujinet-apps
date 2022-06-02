@@ -5,9 +5,11 @@
  * live data from e.g. HTTPS, for the Atari 8-bit.
  *
  * Bill Kendrick <bill@newbreedsoftware.com>
+ * Thomas Cherryhomes <thom dot cherryhomes at gmail dot com>
+ *
  * License: v. 3, see LICENSE.md for details
  *
- * 2022-05-25 - 2022-05-26
+ * 2022-05-25 - 2022-05-27
  */
 
 #include <atari.h>
@@ -114,10 +116,10 @@ void abort(void) {
 
 void success_or_fail(unsigned char err) {
   if (err != 1 /* SUCCESS */) {
-    printf("Error = %d\n\n", err);
+    printf("Error = %d\n", err);
     abort();
   } else {
-    printf("Success!\n\n");
+    printf("Success!\n");
   }
 }
 
@@ -142,25 +144,25 @@ void main(void) {
 
   /* Open the JSON file over the network */
 
-  printf("Opening %s\n", url);
+  printf("Opening %s...", url);
 
-  err = nopen(1, (char *) url, 12 /* READ */);
+  err = nopen(1, (char *) url, SIO_READ + SIO_WRITE);
   success_or_fail(err);
 
 
   /* Switch to JSON mode */
 
-  printf("Setting channel mode to JSON\n");
+  printf("Setting channel mode to JSON...");
 
-  err = nchanmode(1, 12 /* READ */, 1 /* JSON */);
+  err = nchanmode(1, SIO_READ + SIO_WRITE, CHANNELMODE_JSON);
   success_or_fail(err);
 
 
   /* Parse the JSON */ 
 
-  printf("Parsing JSON\n");
+  printf("Parsing JSON...");
 
-  err = njsonparse(1, 12);
+  err = njsonparse(1, SIO_READ + SIO_WRITE);
   success_or_fail(err);
 
 
@@ -169,28 +171,32 @@ void main(void) {
   printf("Reading elements...\n\n");
 
   for (i = 0; i < NUM_ELEMENTS; i++) {
-    printf("Querying %s\n", elements[i]);
+    printf("Querying \"%s\"...", elements[i]);
 
     sprintf(query, "N1:%s%c", elements[i], CH_EOL);
-    err = njsonQuery(1, 12, (char *) query);
+    err = njsonquery(1, SIO_READ + SIO_WRITE, (char *) query);
     success_or_fail(err);
 
     if (err == 1) {
-      printf("Requesting status\n");
+      printf("Requesting status...");
       err = nstatus(1);
       success_or_fail(err);
 
       if (err == 1) {
         data_len = (OS.dvstat[1] << 8) + OS.dvstat[0];
 
-        printf("Reading %d bytes of data\n", data_len);
+        if (data_len != 0) {
+          printf("Reading %d bytes of data...", data_len);
 
-        buf[0] = '\0';
-        err = nread(1, buf, data_len);
-        success_or_fail(err);
+          buf[0] = '\0';
+          err = nread(1, buf, data_len);
+          success_or_fail(err);
 
-        if (err == 1) {
-          printf("FETCHED: %s\n\n", buf);
+          if (err == 1) {
+            printf("FETCHED: %s\n\n", buf);
+          }
+        } else {
+          printf("NOT FOUND\n\n");
         }
       }
     }

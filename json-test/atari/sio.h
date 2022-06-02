@@ -1,8 +1,10 @@
 #ifndef SIO_H
 #define SIO_H
 
-#define SIO_READ 0x40
-#define SIO_WRITE 0x80
+#define SIO_READ 0x04
+#define SIO_WRITE 0x08
+#define SIO_DIRECTORY 0x02
+#define SIO_APPEND 0x01
 
 /**
  * Function to call sio
