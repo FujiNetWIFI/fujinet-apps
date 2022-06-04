@@ -15,6 +15,12 @@
 #include "LynxGD.h"
 
 char buffer[256];
+struct _esm
+{
+  char cmd;
+  unsigned short port;
+  char hostname[64];
+} esm;
 
 void main(void)
 {
@@ -58,6 +64,12 @@ void main(void)
   
   LynxGD_CloseFile();
   tgi_outtext(" CLO");
+
+  esm.cmd = 0xF0;
+  esm.port = 6502;
+  strcpy(esm.hostname,"140.141.153.57");
+  fujinet_send(0x0F,(unsigned char *)esm,sizeof(esm));
+  
   LynxGD_Program("netload.lnx");
   tgi_outtext(" PRO");
   LaunchROM();
