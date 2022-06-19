@@ -63,15 +63,19 @@ void in()
   sp_read(net,bw);
 
   for (i=0;i<bw;i++)
-    cputc(sp_payload[i]);
+    if (sp_payload[i]!='\r')
+      putchar(sp_payload[i]);
 }
 
 void out()
 {
   if (kbhit())
     {
-      sp_payload[0]=cgetc();
-      sp_write(net,1);
+      memset(sp_payload,0,sizeof(sp_payload));
+      sp_payload[0]=1;
+      sp_payload[1]=0;
+      sp_payload[2]=cgetc();
+      sp_control(net,'W');
     }
 }
 
