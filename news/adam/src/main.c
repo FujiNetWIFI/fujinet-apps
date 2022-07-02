@@ -66,14 +66,15 @@ const char delim[2] = "|";
 
 struct _article_list
 {
-  int id;
+  long int id;
   char date[20];
   char title[128];
 } articleList[8];
 
 unsigned char old_i;
 
-int pageNum, catPageNum, articleId;
+long int articleId;
+int pageNum, catPageNum;
 
 bool connected(void)
 {
@@ -262,7 +263,7 @@ void article_list(void)
   // Tokenize and gather article entries.
   while (p != NULL)
     {
-      articleList[n].id = atoi(p);
+      articleList[n].id = atol(p);
 
       p = strtok(NULL, delim);
       strncpy(articleList[n].date,p,20);
@@ -360,7 +361,7 @@ void article(void)
   memset(response,0,sizeof(response));
   
   // Set up URL
-  sprintf(OC.url,"%s?t=lf&ps=31x18&p=%u&a=%d",urlBase,pageNum,articleId);
+  sprintf(OC.url,"%s?t=lf&ps=31x18&p=%u&a=%ld",urlBase,pageNum,articleId);
 
   // Send to FujiNet
   r = eos_write_character_device(NET,(unsigned char *)OC,sizeof(OC));
