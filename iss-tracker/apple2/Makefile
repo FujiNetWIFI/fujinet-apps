@@ -9,7 +9,7 @@
  
 # Space or comma separated list of cc65 supported target platforms to build for.
 # Default: c64 (lowercase!)
-TARGETS := apple2
+TARGETS := apple2 apple.ip65
  
 # Name of the final, single-file executable.
 # Default: name of the current dir with target name appended
