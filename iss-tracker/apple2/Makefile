@@ -35,7 +35,7 @@ ASFLAGS =
  
 # Additional linker flags and options.
 # Default: none
-LDFLAGS = $(LDFLAGS.$(TARGETS))
+LDFLAGS = --start-addr 0x4000
  
 # Path to the directory containing C and ASM sources.
 # Default: src
