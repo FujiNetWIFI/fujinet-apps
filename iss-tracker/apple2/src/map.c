@@ -12,18 +12,20 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <unistd.h>
+#include <fcntl.h>
 
 void map(void)
 {
-  FILE *fp = fopen("MAP.HGR","rb");
+  int f = open("MAP.HGR",O_RDONLY);
 
-  if (!fp)
+  if (f==-1)
     {
       perror("map open");
       cgetc();
       exit(1);
     }
 
-  fread((void *)0x2000,sizeof(unsigned char),0x2000,fp);
-  fclose(fp);
+  read(f,(void *)0x2000,0x2000);
+  close(f);
 }
