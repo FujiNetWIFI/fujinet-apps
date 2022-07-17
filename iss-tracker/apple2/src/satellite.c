@@ -125,9 +125,9 @@ void satellite(int lon, int lat)
       for (j=0;j<16;j+=2)
 	{
 	  if (b < 0)
-	    tgi_setcolor(TGI_COLOR_WHITE);
+	    tgi_setcolor(TGI_COLOR_WHITE2);
 	  else
-	    tgi_setcolor(TGI_COLOR_BLACK);
+	    tgi_setcolor(TGI_COLOR_BLACK2);
 	  tgi_setpixel(x+j,y+i);
 	  tgi_setpixel(x+j+1,y+i);
 	  b <<= 1;
