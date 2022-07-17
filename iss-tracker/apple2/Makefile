@@ -9,7 +9,7 @@
  
 # Space or comma separated list of cc65 supported target platforms to build for.
 # Default: c64 (lowercase!)
-TARGETS := apple2
+TARGETS := apple2 apple.ip65
  
 # Name of the final, single-file executable.
 # Default: name of the current dir with target name appended
@@ -27,7 +27,7 @@ CONFIG  :=
  
 # Additional C compiler flags and options.
 # Default: none
-CFLAGS  = -Os -DBUILD_APPLE2
+CFLAGS  = -Os --static-locals -DBUILD_APPLE2
  
 # Additional assembler flags and options.
 # Default: none
@@ -35,7 +35,7 @@ ASFLAGS =
  
 # Additional linker flags and options.
 # Default: none
-LDFLAGS = $(LDFLAGS.$(TARGETS))
+LDFLAGS = --start-addr 0x4000 --ld-args -D,__HIMEM__=0xBF00 apple2-iobuf-0800.o
  
 # Path to the directory containing C and ASM sources.
 # Default: src
