@@ -40,7 +40,7 @@ void main(void)
     {
       read(f,&net,sizeof(net));
       close(f);
-      net &= ~'0';
+      net &= 7;
     }
   
   if (ip65_init(net))
