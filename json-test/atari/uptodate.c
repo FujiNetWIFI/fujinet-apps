@@ -5,15 +5,11 @@
  * firmware, and ask the #FujiNet what version you're running,
  * and tell you whether you're up-to-date!
  *
- * TODO:
- *  * Pausing/paginate (rather than just scrolling things off the top
- *    of the screen; you can use Ctrl+1 in the meantime)
- *
  * Bill Kendrick <bill@newbreedsoftware.com>
  *
  * License: v. 3, see LICENSE.md for details
  *
- * 2022-06-01 - 2022-06-01
+ * 2022-06-01 - 2022-08-09
  */
 
 #include <atari.h>
@@ -57,6 +53,8 @@ void fuji_sio_read_adapter_config()
 
 const char *url = "N:https://fujinet.online/firmware/releases_atari/releases.json";
 
+#define IO_CHAN 1
+
 /*
 {
   "releases":
@@ -75,36 +73,113 @@ const char *url = "N:https://fujinet.online/firmware/releases_atari/releases.jso
 }
 */
 
+/**
+ * Spin in an infinite loop
+ */
 void inf_loop(void) {
   do { } while(1);
 }
 
+/**
+ * Abort! Show a message, close device, jump to infinite loop
+ */
 void abort(void) {
   printf("ABORTING\n");
+  nclose(IO_CHAN);
   inf_loop();
 }
 
+#define ERR_CODE_SUCCESS 1
+
+/**
+ * If success, we proceed; if error, we show the error code
+ * message and abort the process.
+ *
+ * @param unsigned char err - Error code
+ */
 void success_or_fail(unsigned char err) {
-  if (err != 1 /* SUCCESS */) {
+  if (err != ERR_CODE_SUCCESS) {
     printf("Error = %d\n", err);
     abort();
   }
 }
 
+int output_x = 0;
+int output_line = 0;
+#define SCREEN_WIDTH 40
+#define LINES_UNTIL_PAUSE 20
+
+/**
+ * Displays a string of text (which may be more than one line,
+ * generally wrapped with explicit newlines (\n)).
+ * Once 20 or more lines have been displayed, pauses and prompts
+ * the user to press a key (or [Esc] to abort the process).
+ *
+ * @param char * str - text to display
+ */
+void show(char * str) {
+  int i, len;
+  unsigned char c;
+
+  /* Display it... */
+  printf(str);
+
+  /* We could possibly use Atari S: screen device
+   * values (OS.rowcrs, OS.colcrs), but just managing it
+   * ourselves here (more portable? yeah, that's the ticket!) */
+  len = strlen(str);
+  for (i = 0; i < len; i++) {
+    if (str[i] == '\n') {
+      output_line++;
+      output_x = 0;
+    } else {
+      output_x++;
+      if (output_x == SCREEN_WIDTH) {
+        output_x = 0;
+        output_line++;
+      }
+    }
+  }
+
+  /* If we're near the bottom of the screen, pause
+   * for a keypress.
+   */
+  if (output_line > LINES_UNTIL_PAUSE && output_x == 0) {
+    printf("PRESS A KEY ([Esc] to abort)\n");
+
+    OS.ch = KEY_NONE;
+    do {
+      c = OS.ch;
+    } while (c == KEY_NONE);
+    OS.ch = KEY_NONE;
+
+    if (c == KEY_ESC) {
+      abort();
+    }
+
+    /* Start another chunk of ~20 lines */
+    output_line = 0;
+  }
+}
+
+/* The elements we want to extract from the JSON */
 #define NUM_ELEMENTS 3
 const char * elements[NUM_ELEMENTS] = {
   "version",
   "version_date",
   "description"
 };
+#define ELEMENT_VERSION 0
 #define ELEMENT_DESCRIPTION 2
 
+/* How to prefix (on-screen) each extracted JSON element we're displaying */
 const char * prefix[NUM_ELEMENTS] = {
   "V:",
   "D:",
   "  ",
 };
 
+/* How to postfix (on-screen) each extracted JSON element we're displaying */
 const char * post[NUM_ELEMENTS] = {
   "\n",
   "\n",
@@ -114,61 +189,72 @@ const char * post[NUM_ELEMENTS] = {
 char query[256];
 char buf[256];
 char newbuf[256];
+char output[256];
 int last_space_in, last_space_out;
+
 
 void main(void) {
   unsigned char err;
   unsigned char i, j, x, n, nn, m;
   int data_len;
 
-  printf("%c#FujiNet Up To Date Checker\n\n", CH_CLR);
+  /* Title/credits */
+  printf("%c", CH_CLR);
+  sprintf(output, "#FujiNet Up-To-Date Checker\nby Bill Kendrick 2022-08-08\n\n");
+  show(output);
 
+  /* Read and display our device's version */
   fuji_sio_read_adapter_config();
 
-  printf("You are running version %s\n\n", adapterConfig.fn_version);
+  sprintf(output, "You are running version %s\n\n", adapterConfig.fn_version);
+  show(output);
 
 
-  /* Open the JSON file over the network */
+  /* Open the JSON file that describes available releases (over the network!) */
 
-  printf("Contacting fujinet.online...");
-  err = nopen(1, (char *) url, SIO_READ + SIO_WRITE);
+  sprintf(output, "Contacting fujinet.online...");
+  show(output);
+  err = nopen(IO_CHAN, (char *) url, SIO_READ + SIO_WRITE);
   success_or_fail(err);
 
 
   /* Switch to JSON mode */
-  err = nchanmode(1, SIO_READ + SIO_WRITE, CHANNELMODE_JSON);
+  err = nchanmode(IO_CHAN, SIO_READ + SIO_WRITE, CHANNELMODE_JSON);
   success_or_fail(err);
 
 
-  /* Parse the JSON */ 
-  printf("parsing...");
-  err = njsonparse(1, SIO_READ + SIO_WRITE);
+  /* Parse the JSON */
+  sprintf(output, "parsing...");
+  show(output);
+  err = njsonparse(IO_CHAN, SIO_READ + SIO_WRITE);
   success_or_fail(err);
-  printf("\n\n");
+  sprintf(output, "\n\n");
+  show(output);
 
   /* Read the elements */
 
   for (j = 0; j < 10; j++) {
     for (i = 0; i < NUM_ELEMENTS; i++) {
-      sprintf(query, "N1:/releases/%d/%s%c", j,elements[i], CH_EOL);
-      err = njsonquery(1, SIO_READ + SIO_WRITE, (char *) query);
+      sprintf(query, "N1:/releases/%d/%s%c", j, elements[i], CH_EOL);
+      err = njsonquery(IO_CHAN, SIO_READ + SIO_WRITE, (char *) query);
       success_or_fail(err);
-  
-      if (err == 1) {
-        err = nstatus(1);
+
+      if (err == ERR_CODE_SUCCESS) {
+        err = nstatus(IO_CHAN);
         success_or_fail(err);
-  
-        if (err == 1) {
+
+        if (err == ERR_CODE_SUCCESS) {
           data_len = (OS.dvstat[1] << 8) + OS.dvstat[0];
-  
+
           if (data_len != 0) {
             buf[0] = '\0';
-            err = nread(1, buf, data_len);
+            err = nread(IO_CHAN, buf, data_len);
             success_or_fail(err);
             buf[data_len - 1] = '\0'; /* Remove "\n" at the end! */
-  
-            if (err == 1) {
+
+            if (err == ERR_CODE_SUCCESS) {
               if (i == ELEMENT_DESCRIPTION) {
+                /* Word-wrap this bad-boy */
                 last_space_in = -1;
                 last_space_out = -1;
                 x = strlen(prefix[i]);
@@ -193,9 +279,18 @@ void main(void) {
                 }
                 newbuf[m] = '\0';
 
-                printf("%s%s%s", prefix[i], newbuf, post[i]);
+                sprintf(output, "%s%s%s", prefix[i], newbuf, post[i]);
+                show(output);
               } else {
-                printf("%s%s%s", prefix[i], buf, post[i]);
+                if (i == ELEMENT_VERSION) {
+                  if (strcmp(buf, adapterConfig.fn_version + 1 /* skip "#" at the beginning */) == 0) {
+                    /* Version from releases JSON is the same as ours! Flag it! */
+                    strcpy(buf + strlen(buf), " << YOURS");
+                  }
+                }
+
+                sprintf(output, "%s%s%s", prefix[i], buf, post[i]);
+                show(output);
               }
             }
           } else {
@@ -206,8 +301,9 @@ void main(void) {
     }
   }
 
-  nclose(1);
+  printf("Done!\n");
+
+  nclose(IO_CHAN);
 
   inf_loop();
 }
-
