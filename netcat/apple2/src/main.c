@@ -27,6 +27,30 @@ bool getURL(void)
   return url[0]=='N' && url[1] == ':';
 }
 
+void getCreds(void)
+{
+  char username[64], password[64];
+  
+  cprintf("LOGIN, OR <RETURN> FOR NONE:\r\n>> ");
+  gets(username);
+
+  if (username[0]!=0x00)
+    {
+      sp_payload[0]=strlen(username);
+      strcpy((char *)&sp_payload[2],username);
+      sp_control(net,0xFD);
+    }
+  
+  cprintf("LOGIN, OR <RETURN> FOR NONE:\r\n>> ");
+  gets(password);
+
+  if (password[0]!=0x00)
+    {
+      sp_payload[0]=strlen(password);
+      strcpy((char *)&sp_payload[2],password);
+      sp_control(net,0xFD);
+    }
+}
 void connect(void)
 {
   sp_open(net);
@@ -86,6 +110,7 @@ bool done(void)
 
 void main(void)
 {
+  videomode(VIDEOMODE_80x24);
   sp_init();
   net = sp_find_network();
 
@@ -94,6 +119,8 @@ void main(void)
   cprintf("NET DEV IS %d\r\n",net);
   
   while(!getURL());
+
+  getCreds();
   
   connect();
 
