@@ -19,6 +19,11 @@ SPDevice net;
 
 State state;
 
+char url[256];
+unsigned char buf[4096];
+
+const char *urlBase = "N:HTTP://FUJINET.ONLINE/8bitnews/news.php";
+
 void main(void)
 {
   clrscr();

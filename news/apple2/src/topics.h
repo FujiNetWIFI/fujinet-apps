@@ -14,9 +14,7 @@
 typedef enum
   {
     TOPICS_SHOW,
-    TOPICS_UP,
-    TOPICS_DOWN,
-    TOPICS_DONE,
+    TOPICS_INPUT,
   } TopicsState;
 
 State topics(void);
