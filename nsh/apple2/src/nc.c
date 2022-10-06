@@ -17,6 +17,7 @@
 #include "sp.h"
 
 extern unsigned char buf[1024];
+extern unsigned char net;
 unsigned char txbuf[64];
 
 #define READWRITE 12
@@ -26,11 +27,24 @@ unsigned char txbuf[64];
 void in(void)
 {
   unsigned short i;
-  unsigned short l = network_read((char *)buf, sizeof(buf));
+  unsigned short l;
+
+  sp_status(net,'S');
+
+  l=(unsigned short)sp_payload[0];
+
+  if (l>1024)
+    l=1024;
   
   if (l > 0)
-    for (i=0;i<l;i++)
-      cputc(buf[i]);
+    {
+      sp_read(net,l);
+      
+      memcpy(buf,sp_payload,l);
+
+      for (i=0;i<l;i++)
+	putchar(buf[i]);
+    }
 }
 
 void out(void)
@@ -63,17 +77,7 @@ void nc(char *s)
       input(s);
     }
 
-  if (network_open(s,READWRITE,NO_TRANSLATION) != 0x80) // Testing to see if we're nulling the string.
-    {
-      printf("COULD NOT OPEN SOCKET\n");
-      goto bye;
-    }
-
-  if (!wait_for_connect2())
-    {
-      printf("COULD NOT CONNECT\n");
-      goto bye;
-    }
+  network_open(s,READWRITE,NO_TRANSLATION); 
 
   cprintf("CONNECTED.\n");
 
@@ -82,12 +86,12 @@ void nc(char *s)
       in();
       out();
 
-      if (sc==0)
-	if (check_for_disconnect())
-	  {
-	    printf("DISCONNECTED\n");
-	    break;
-	  }
+      /* if (sc==0) */
+	/* if (check_for_disconnect()) */
+	/*   { */
+	/*     printf("DISCONNECTED\n"); */
+	/*     break; */
+	/*   } */
 
       sc++;
     }

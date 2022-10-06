@@ -10,6 +10,8 @@
 #include "network.h"
 #include "sp.h"
 
+extern unsigned char net;
+
 unsigned short network_read(char *buf, unsigned short len)
 {  
   unsigned short offset=0;
@@ -21,9 +23,11 @@ unsigned short network_read(char *buf, unsigned short len)
       unsigned short i=len;
 
       if (len>sizeof(sp_payload))
-	i=sp_payload;
+	i=sizeof(sp_payload);
 
-      sp_read(&buf[offset],i);
+      sp_read(net,i);
+
+      memcpy((char *)&buf[offset],sp_payload,i);
       
       len -= i;
       offset += i;

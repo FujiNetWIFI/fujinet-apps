@@ -10,6 +10,8 @@
 #include "help.h"
 
 const char *helptext=
+  "40         40 Column Mode\n"
+  "80         80 Column Mode\n"
   "CLS        Clear Screen\n"
   "CD         Change N: Prefix\n"
   "DIR        Show Directory\n"

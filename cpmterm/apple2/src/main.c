@@ -51,6 +51,8 @@ void out()
 
 void main(void)
 {  
+  unsigned char i;
+
   videomode(VIDEOMODE_80x24);
   sp_init();
   cpm = sp_find_cpm();
@@ -66,6 +68,7 @@ void main(void)
   while(1)
     {
       in();
+      for (i=0;i<255;i++);
       out();
     }
 }

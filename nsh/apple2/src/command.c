@@ -6,6 +6,7 @@
  * @license GPL v. 3 (see LICENSE.md)
  */
 
+#include <apple2enh.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -42,6 +43,10 @@ bool command(char *s, char *t)
 
   if (!strcmp(t,"HELP"))
     help();
+  else if (!strcmp(t,"40"))
+    videomode(VIDEOMODE_40x24);
+  else if (!strcmp(t,"80"))
+    videomode(VIDEOMODE_80x24);
   else if (!strcmp(t,"CLS"))
     cls();
   else if (!strcmp(t,"PWD"))
