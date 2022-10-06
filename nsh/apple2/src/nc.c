@@ -11,13 +11,12 @@
 #include <string.h>
 #include <conio.h>
 #include "dir.h"
-#include "adamnet_read.h"
-#include "adamnet_write.h"
 #include "network.h"
 #include "wait_for_connect.h"
 #include "input.h"
+#include "sp.h"
 
-extern unsigned char response[1024];
+extern unsigned char buf[1024];
 unsigned char txbuf[64];
 
 #define READWRITE 12
@@ -26,11 +25,12 @@ unsigned char txbuf[64];
 
 void in(void)
 {
-  unsigned short l = network_read(response, sizeof(response));
+  unsigned short i;
+  unsigned short l = network_read((char *)buf, sizeof(buf));
   
   if (l > 0)
-    for (unsigned short i=0;i<l;i++)
-      cputc(response[i]);
+    for (i=0;i<l;i++)
+      cputc(buf[i]);
 }
 
 void out(void)
@@ -40,7 +40,7 @@ void out(void)
   if (kbhit())
     {
       txbuf[0]=cgetc();
-      network_write(txbuf,1); // send one char.
+      network_write((char *)txbuf,1); // send one char.
     }
 }
 

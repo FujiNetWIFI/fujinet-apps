@@ -1,6 +1,5 @@
 #include "network.h"
-#include "dcb.h"
-#include "find_dcb.h"
+#include "sp.h"
 
 /**
  * @brief Get Network Device Status byte 
@@ -8,19 +7,11 @@
  * @param len Buffer length
  * @param returns DCB status
  */
+
+extern unsigned char net;
+
 unsigned char network_statusbyte(void)
 {
-  DCB *dcb = find_dcb();
-
-  while (1)
-    {
-      dcb->status = 1; // status
-      
-      while (dcb->status < 0x80);
-
-      if (dcb->status != 0x9B)
-	break;
-    }
-  
-  return dcb->dev_status;
+  sp_status(net,'S');
+  return sp_payload[2];
 }

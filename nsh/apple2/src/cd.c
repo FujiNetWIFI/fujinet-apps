@@ -10,21 +10,18 @@
 #include <stdlib.h>
 #include <string.h>
 #include "cd.h"
-#include "adamnet_read.h"
-#include "adamnet_write.h"
+#include "sp.h"
 
-extern unsigned char response[1024];
+extern unsigned char net;
 
 void cd(char *s)
 {
-  char resp[257];
-
-  memset(resp,0,sizeof(resp));
+  memset(sp_payload,0,sizeof(sp_payload));
   
-  resp[0]=','; // 0x2C
-
   if (s!=NULL)
-    strncpy(&resp[1],s,256);
-  
-  adamnet_write(resp,strlen(resp));
+    strncpy((char *)&sp_payload[2],s,256);
+
+  sp_payload[0]=0x00;
+  sp_payload[1]=0x01;
+  sp_control(net,',');
 }

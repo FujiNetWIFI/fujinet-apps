@@ -10,24 +10,22 @@
 #include <stdio.h>
 #include <string.h>
 #include "network.h"
-#include "adamnet_write.h"
+#include "sp.h"
 #include "debug.h"
 
-extern unsigned char response[1024];
+extern unsigned char net;
 
 unsigned char network_open(char *url, unsigned char mode, unsigned char translation)
 {
-  char *p = &response[3];
-  memset(response,0,sizeof(response));
-  
-  response[0]='O';
-  response[1]=mode;
-  response[2]=translation;
-  
-  strncpy(p,url,1024);
+  char *p = (char *)&sp_payload[3];
+  memset(sp_payload,0,sizeof(sp_payload));
 
-  if (debug_enabled())
-    printf("\nNETWORK OPEN MODE %u TRANS %u URL %s\n",mode,translation,url);
+  sp_open(net);
+  sp_payload[0]=0x02; // 258 bytes
+  sp_payload[1]=0x01;
+  sp_payload[2]=mode; // READ/WRITE (or GET)
+  sp_payload[3]=translation; // NO TRANSLATION
+  memcpy(&sp_payload[4],url,256);
 
-  return adamnet_write(response,strlen(p)+3);
+  return sp_control(net,'O');
 }

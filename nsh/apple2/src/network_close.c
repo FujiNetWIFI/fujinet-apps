@@ -5,16 +5,14 @@
  */
 
 #include <stdio.h>
-#include "adamnet_write.h"
 #include "network.h"
 #include "debug.h"
+#include "sp.h"
+
+extern unsigned char net;
 
 unsigned char network_close(void)
 {
-  unsigned char resp='C';
-
-  if (debug_enabled())
-    printf("\nNETWORK CLOSE\n");
-  
-  return adamnet_write(&resp,1);
+  sp_control(net,'C');
+  return sp_close(net);
 }

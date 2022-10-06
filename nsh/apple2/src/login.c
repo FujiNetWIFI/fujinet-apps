@@ -11,20 +11,16 @@
 #include <string.h>
 #include <stdbool.h>
 #include "mkdir.h"
-#include "adamnet_read.h"
-#include "adamnet_write.h"
 #include "input.h"
+#include "sp.h"
 
-extern unsigned char response[1024];
+extern unsigned char net;
 extern bool _input_pw;
 
+char u[128], p[128];
+
 void login(char *s, char *t)
-{
-  char resp[257];
-  char u[128], p[128];
-  char lc[128]={0xFD};
-  char pc[128]={0xFE};
-  
+{  
   if (s==NULL)
     {
       s=u;
@@ -41,10 +37,14 @@ void login(char *s, char *t)
       _input_pw=false;
     }
 
-  strncpy(&lc[1],s,127);
-  strncpy(&pc[1],t,127);
+  sp_payload[0]=128;
+  sp_payload[1]=0;
+  
+  strncpy((char *)&sp_payload[2],s,127);
+  sp_control(net,0xFD);
 
-  adamnet_write(lc,sizeof(lc));  
-  adamnet_write(pc,sizeof(pc));
+  strncpy((char *)&sp_payload[2],t,127);
+  sp_control(net,0xFE);
+
   printf("\n");
 }

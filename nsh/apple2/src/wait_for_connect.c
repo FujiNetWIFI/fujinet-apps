@@ -18,11 +18,12 @@
 bool _wait_for_connect(unsigned char bit)
 {
   bool retries = RETRY_COUNT;
+  unsigned short to;
   
   // Wait until connection established
   while (retries > 0)
     {
-      csleep(5);
+      for (to=0;to<512;to++);
       if (network_statusbyte() & bit)
 	return true;
       else

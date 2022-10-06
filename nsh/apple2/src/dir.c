@@ -10,17 +10,16 @@
 #include <stdlib.h>
 #include <string.h>
 #include "dir.h"
-#include "adamnet_read.h"
-#include "adamnet_write.h"
+#include "sp.h"
 #include "network.h"
 #include "wait_for_connect.h"
-
-extern unsigned char response[1024];
 
 #define DIRECTORY 6
 #define LONG_DIRECTORY 128
 #define CONNECTED 2
 #define ATASCII_EOL 0x9B
+
+extern unsigned char buf[1024];
 
 void dir(char *s)
 {
@@ -34,10 +33,10 @@ void dir(char *s)
 
   do
     {
-      char buf[1024];
-      unsigned short l = network_read(buf,sizeof(buf));
+      unsigned short l = network_read((char *)buf,sizeof(buf));
+      int i;
       
-      for (int i=0;i<l;i++)
+      for (i=0;i<l;i++)
 	putchar(buf[i]==ATASCII_EOL ? 0x0A : buf[i]);
       
     } while (network_statusbyte() & CONNECTED);

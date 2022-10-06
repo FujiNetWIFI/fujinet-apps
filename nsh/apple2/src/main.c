@@ -7,15 +7,34 @@
  */
 
 #include <stdio.h>
+#include <conio.h>
 #include "nsh.h"
+#include "sp.h"
+
+unsigned char buf[1024];
+unsigned char net;
 
 void banner(void)
 {
-  printf("\x1b" "E" "Welcome to N:\n\nTYPE 'HELP' FOR COMMANDS.\n\n");
+  clrscr();
+  printf("Welcome to N:\n\nTYPE 'HELP' FOR COMMANDS.\n\n");
 }
 
 void main(void)
 {
+  sp_init();
+  net = sp_find_network();
+
+  clrscr();
+  cursor(1);
+  
+  if (net == 0)
+    {
+      printf("COULD NOT FIND NET.");
+      cgetc();
+      return;
+    }
+  
   banner();
   
   while (1)

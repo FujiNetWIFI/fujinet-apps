@@ -10,18 +10,17 @@
 #include "help.h"
 
 const char *helptext=
-  "CLS\tClear Screen\n"
-  "CD\tChange N: Prefix\n"
-  "DEBUG\t1 = ON, 0 = OFF, enable debug output\n"
-  "DIR\tShow Directory\n"
-  "ERA\tErase file from N:\n"
-  "EXIT\tBack to CP/M\n"
-  "GET\tRetrieve a file from N:\n"
-  "LOGIN\tSet N: Credentials\n"
-  "MKDIR\tMake Directory on N:\n"
-  "NC\tNetwork Terminal\n"
-  "PUT\tStore a file to N:\n"
-  "PWD\tPrint Prefix\n"
+  "CLS        Clear Screen\n"
+  "CD         Change N: Prefix\n"
+  "DIR        Show Directory\n"
+  "ERA        Erase file from N:\n"
+  "EXIT       Back to PRODOS\n"
+  "GET        Retrieve a file from N:\n"
+  "LOGIN      Set N: Credentials\n"
+  "MKDIR      Make Directory on N:\n"
+  "NC         Network Terminal\n"
+  "PUT        Store a file to N:\n"
+  "PWD        Print Prefix\n"
   ;
   
 

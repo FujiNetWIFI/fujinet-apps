@@ -17,6 +17,8 @@
 #define READ 4
 #define NO_TRANSLATION 0
 
+extern unsigned char buf[1024];
+
 void get(char *s, char *t)
 {
   char source[128], dest[24];
@@ -61,8 +63,7 @@ void get(char *s, char *t)
 
   while (1)
     {
-      char buf[1024];
-      unsigned short l = network_read(buf,sizeof(buf));
+      unsigned short l = network_read((char *)buf,sizeof(buf));
 
       if (fwrite(buf,sizeof(char),l,fp) != l)
 	{
@@ -76,7 +77,7 @@ void get(char *s, char *t)
       
       if (!(network_statusbyte() & CONNECTED))
 	{
-	  l = network_read(buf,sizeof(buf));
+	  l = network_read((char *)buf,sizeof(buf));
 	  fwrite(buf,sizeof(char),l,fp);
 	  printf("\n\nDONE.\n");
 	  break;

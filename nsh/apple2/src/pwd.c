@@ -10,25 +10,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include "pwd.h"
-#include "adamnet_read.h"
-#include "adamnet_write.h"
+#include "sp.h"
 
-extern unsigned char response[1024];
+extern unsigned char net;
 
 void pwd(void)
 {
-  unsigned char c='0'; // 0x30 PWD
-  unsigned char r=adamnet_write(&c,1);
-
-  if (r!=0x80)
-    return;
-
-  memset(response,0,sizeof(response));
-  
-  r=adamnet_read(response,sizeof(response));
-
-  if (response[0]==0x00)
-    printf("NO PREFIX IS SET\n");
-  else
-    printf("%s\n",response);
+  sp_status(net,'0');
+  printf("%s\n",sp_payload);
 }

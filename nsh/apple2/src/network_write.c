@@ -10,30 +10,34 @@
 #include <string.h>
 #include <conio.h>
 #include "network.h"
-#include "dcb.h"
-#include "find_dcb.h"
-#include "adamnet_write.h"
+#include "sp.h"
+
+extern unsigned char net;
 
 unsigned char network_write(char *buf, unsigned short len)
-{  
-  unsigned char r=0;
+{
+  unsigned short offset=2;
+  
   while (len>0)
     {
-      char out[513]={'W'};
-      unsigned short l = len > 128 ? 128 : len;
+      unsigned short i=len;
       
-      memcpy(&out[1],buf,l);
+      memset(sp_payload,0,sizeof(sp_payload));
 
-      r=adamnet_write(out,l+1);
+      if (i>sizeof(sp_payload))
+	i=sizeof(sp_payload)-2;
 
-      if (r!=0x80)
-	break;
-      else
-	{
-	  len -= l;
-	}
+      memcpy(&sp_payload[offset],buf,i);
+
+      sp_payload[0]=i & 0xFF;
+      sp_payload[1]=i >> 8;
+
+      sp_control(net,'W');
       
+      offset += i+2;
+      len -= i;
     }
-  return r;
+
+  return offset;
 }
 

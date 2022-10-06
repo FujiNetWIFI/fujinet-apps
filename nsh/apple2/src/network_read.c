@@ -7,24 +7,27 @@
  */
 
 #include <string.h>
-#include <conio.h>
 #include "network.h"
-#include "dcb.h"
-#include "find_dcb.h"
-#include "adamnet_read.h"
-
-extern unsigned char response[1024];
+#include "sp.h"
 
 unsigned short network_read(char *buf, unsigned short len)
-{
-  DCB *dcb = find_dcb();
-  unsigned char r=adamnet_read(response,sizeof(response));
+{  
+  unsigned short offset=0;
+
+  memset(buf,0,len);
   
-  if (r == 0x80)
+  while (len>0)
     {
-      memcpy(buf,response,dcb->len);
-      return dcb->len;
+      unsigned short i=len;
+
+      if (len>sizeof(sp_payload))
+	i=sp_payload;
+
+      sp_read(&buf[offset],i);
+      
+      len -= i;
+      offset += i;
     }
-  else
-    return 0;
+  
+  return offset;
 }

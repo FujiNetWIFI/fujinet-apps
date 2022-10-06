@@ -9,12 +9,12 @@
 #ifndef CLS_H
 #define CLS_H
 
-#include <stdio.h>
+#include <conio.h>
 #include "cls.h"
 
 void cls(void)
 {
-  printf("\x1b" "E");
+  clrscr();
 }
 
 #endif /* CLS_H */
