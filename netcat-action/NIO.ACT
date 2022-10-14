@@ -235,3 +235,22 @@ BYTE FUNC nwrite(BYTE ARRAY ds, BYTE ARRAY buf, CARD len)
 
 RETURN (geterror(ds))
 
+; Get FujiNet Status
+;
+; Author: Michael Goroll
+;  <atari@goroll.net>
+;
+PROC fstatus(BYTE ARRAY buf)
+
+DDEVIC = $70
+DUNIT  = $01
+DCOMND = $E8
+DSTATS = $40    ; Payload to Atari
+DBUF   = buf    ; status buffer
+DTIMLO = $0F    ; 8 second timeout
+DBYT   = $88    ; 139 byte payload
+DAUX1  = 0      ; R/W
+DAUX2  = 0      ; translation
+siov()
+
+RETURN
