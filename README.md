@@ -95,6 +95,16 @@ News reader client and "FujiNews", news article fetch & store server for FujiNet
 
 ----------------------------------------------------------------------
 
+## Apple II
+
+### Apple II Samples
+
+#### `clock`
+Small C program to demonstrate how to access the FujiNet RTC directly or via
+the ProDOS driver
+
+----------------------------------------------------------------------
+
 ## Cross-Platform
 
 ### Cross-Platform Terminals
