@@ -48,7 +48,7 @@ void getCreds(void)
     {
       sp_payload[0]=strlen(password);
       strcpy((char *)&sp_payload[2],password);
-      sp_control(net,0xFD);
+      sp_control(net,0xFE);
     }
 }
 void connect(void)
