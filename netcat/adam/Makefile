@@ -1,4 +1,4 @@
-TARGET_EXEC ?= simpleterm-text40.ddp
+TARGET_EXEC ?= nc
 
 BUILD_DIR ?= ./build
 SRC_DIRS ?= ./src
@@ -10,9 +10,9 @@ SRCS := $(shell find $(SRC_DIRS) -name *.cpp -or -name *.c -or -name *.asm)
 OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
 DEPS := $(OBJS:.o=.d)
 
-CFLAGS=+coleco -subtype=adam -DTEXT40 -O3
-LDFLAGS=+coleco -subtype=adam -o$(TARGET_EXEC) -pragma-redirect:CRT_FONT=_font_8x8_coleco_adam_system -create-app -leos
-ASFLAGS=+coleco -subtype=adam
+CFLAGS=+cpm -subtype=adam -O3
+LDFLAGS=+cpm -subtype=adam -m -s
+ASFLAGS=+cpm -subtype=adam
 
 INC_DIRS := $(shell find $(SRC_DIRS) -type d)
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))

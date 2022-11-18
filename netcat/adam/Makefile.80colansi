@@ -1,4 +1,4 @@
-TARGET_EXEC ?= simpleterm.ddp
+TARGET_EXEC ?= netcat-80col
 
 BUILD_DIR ?= ./build
 SRC_DIRS ?= ./src
@@ -11,7 +11,7 @@ OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
 DEPS := $(OBJS:.o=.d)
 
 CFLAGS=+coleco -subtype=adam -O3
-LDFLAGS=+coleco -subtype=adam -o$(TARGET_EXEC) -pragma-need=ansiterminal -pragma-define:ansicolumns=64 -create-app -leos
+LDFLAGS=+coleco -subtype=adam -clib=ansi -pragma-need=ansiterminal -pragma-redirect:ansifont=_oemascii -pragma-define:ansifont_is_packed=0 -pragma-define:ansicolumns=80 -o$(TARGET_EXEC) -create-app -leos -m -s
 ASFLAGS=+coleco -subtype=adam
 
 INC_DIRS := $(shell find $(SRC_DIRS) -type d)
