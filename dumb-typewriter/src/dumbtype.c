@@ -20,7 +20,6 @@ void main(void)
   sp_init();
   
   ptr = sp_find_printer();
-  ptr = 9; // todo fix find_printer();
 
   printf("Printer is dev %u\n\n",ptr);
 

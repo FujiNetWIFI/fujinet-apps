@@ -252,25 +252,29 @@ int8_t sp_find_printer()
     return -err;
 
   num = sp_payload[0];
-  num+=2;
+  num+=2; 
 
   for (i = 1; i < num; i++)
     {
       err = sp_status(i, 0x03); // get DIB
+      if (sp_payload[4] == net_len) {
+	    int sameName = 1;				// add string comparison result flag
+	    for (j = 0; j < net_len; j++) {
+	      if (net[j]!=sp_payload[5+j]) {
+			  sameName = 0;
+              break;
+	      //  return 0;
+          }
+	    }
+        if (sameName) {                  // add comparison check
+	      printf("PRINTER UNIT IS: %d\n\n",i);  // need this line and cgetc  ?
 
-      if (sp_payload[4] == net_len)
-	{
-	  for (j = 0; j < net_len; j++)
-	    if (net[j]!=sp_payload[5+j])
-	      return 0;
+	      cgetc();
 
-	  printf("PRINTER UNIT IS: %d\n\n",i);
-
-	  cgetc();
-
-	  return i;
-	}
+	      return i;
+        }
     }
+  }
   printf("NET NOT FOUND");
   cgetc();
   return 0;
