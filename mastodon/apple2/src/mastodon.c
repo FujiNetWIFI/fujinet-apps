@@ -63,7 +63,7 @@ void main(void)
       memset(sp_payload,0,sizeof(sp_payload));
       sp_read(net,len); // Get Result
       revers(1);
-      printf("%s\n",(const char *)&sp_payload[0]);
+      printf("%40s",(const char *)&sp_payload[0]);
 
       // Display Created At
       memset(sp_payload,0,sizeof(sp_payload));
@@ -75,7 +75,7 @@ void main(void)
       len=(unsigned short)sp_payload[0];
       memset(sp_payload,0,sizeof(sp_payload));
       sp_read(net,len); // Get Result
-      printf("%s\n",(const char *)&sp_payload[0]);
+      printf("%40s",(const char *)&sp_payload[0]);
       revers(0);
 
       // Display content

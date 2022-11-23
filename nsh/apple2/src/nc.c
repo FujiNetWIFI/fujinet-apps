@@ -40,10 +40,8 @@ void in(void)
     {
       sp_read(net,l);
       
-      memcpy(buf,sp_payload,l);
-
       for (i=0;i<l;i++)
-	putchar(buf[i]);
+	putchar(sp_payload[i]);
     }
 }
 
