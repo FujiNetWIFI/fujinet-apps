@@ -13,7 +13,7 @@ TARGETS := apple2
  
 # Name of the final, single-file executable.
 # Default: name of the current dir with target name appended
-PROGRAM := mastodon
+PROGRAM := mastodon.system
  
 # Path(s) to additional libraries required for linking the program
 # Use only if you don't want to place copies of the libraries in SRCDIR
@@ -35,7 +35,7 @@ ASFLAGS =
  
 # Additional linker flags and options.
 # Default: none
-LDFLAGS = --start-addr 0x4000 --ld-args -D,__HIMEM__=0xBF00 apple2-iobuf-0800.o
+LDFLAGS = 
  
 # Path to the directory containing C and ASM sources.
 # Default: src
@@ -315,9 +315,8 @@ test: $(PROGRAM)
 	$(POSTEMUCMD)
  
 dist: $(PROGRAM)
-	     cp dist.apple2/bootable.po dist.apple2/dist.po
-	     java -jar dist.apple2/ac.jar -p dist.apple2/dist.po mastodon.system sys <dist.apple2/mastodon.system
-	     java -jar dist.apple2/ac.jar -as dist.apple2/dist.po mastodon bin <mastodon
+	     cp dist.apple2/bootable.po dist.apple2/mastodon.po
+	     java -jar dist.apple2/ac.jar -as dist.apple2/mastodon.po mastodon.system sys <mastodon.system
 
 clean:
 	$(call RMFILES,$(OBJECTS))

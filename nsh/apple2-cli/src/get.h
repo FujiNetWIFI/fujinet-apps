@@ -9,6 +9,6 @@
 #ifndef GET_H
 #define GET_H
 
-void get(char *s, char *t);
+void get(char *s, char *t, char *u, char *v);
 
 #endif /* GET_H */

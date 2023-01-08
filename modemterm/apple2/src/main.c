@@ -21,12 +21,13 @@ void in()
   
   sp_status(modem,'S');
 
-  bw = (unsigned short)sp_payload[0];
+  bw  = sp_payload[0] & 0xFF;
+  bw |= sp_payload[1] << 8;
 
   if (bw==0)
     return;
-  if (bw > sizeof(sp_payload))
-    bw = sizeof(sp_payload);
+  if (bw > 512)
+    bw = 512;
 
   memset(sp_payload,0,sizeof(sp_payload));
   

@@ -58,7 +58,7 @@ bool command(char *s, char *t)
   else if (!strcmp(t,"EXIT"))
     bye();  
   else if (!strcmp(t,"GET"))
-    get(strtok(NULL," "),strtok(NULL," "));
+    get(strtok(NULL," "),strtok(NULL," "),strtok(NULL," "),strtok(NULL," "));
   else if (!strcmp(t,"PUT"))
     put(strtok(NULL," "),strtok(NULL," "));
   else if (!strcmp(t,"NC"))

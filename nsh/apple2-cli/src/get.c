@@ -9,6 +9,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <apple2.h>
 #include "input.h"
 #include "network.h"
 #include "wait_for_connect.h"
@@ -19,9 +20,9 @@
 
 extern unsigned char buf[1024];
 
-void get(char *s, char *t)
+void get(char *s, char *t, char *u, char *v)
 {
-  char source[128], dest[24];
+  char source[128], dest[24], type[2], aux[4];
   FILE *fp = NULL;
   unsigned long total=0;
   
@@ -47,6 +48,24 @@ void get(char *s, char *t)
       if (t[0]==0x00)
 	return;
     }
+
+  if (u == NULL)
+    {
+      printf("TYPE CODE $");
+      u=type;
+      input(u);
+    }
+
+  sscanf(u,"%02x\n",_filetype);
+
+  if (v == NULL)
+    {
+      printf("AUX CODE $");
+      v=aux;
+      input(v);
+    }
+
+  sscanf(v,"%04x\n",_auxtype);
 
   network_open(s,READ,NO_TRANSLATION);
 

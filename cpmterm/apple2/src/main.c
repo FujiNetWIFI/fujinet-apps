@@ -51,7 +51,7 @@ void out()
 
 void main(void)
 {  
-  unsigned char i;
+  unsigned short i;
 
   videomode(VIDEOMODE_80x24);
   sp_init();
@@ -67,8 +67,9 @@ void main(void)
   
   while(1)
     {
+      cursor(1);
       in();
-      for (i=0;i<255;i++);
+      for (i=0;i<8192;i++);
       out();
     }
 }

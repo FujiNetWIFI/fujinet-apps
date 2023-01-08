@@ -10,6 +10,8 @@
 char url[256];
 int8_t net;
 
+char username[64], password[64];
+
 void banner(void)
 {
   clrscr();
@@ -29,24 +31,24 @@ bool getURL(void)
 
 void getCreds(void)
 {
-  char username[64], password[64];
-  
   cprintf("LOGIN, OR <RETURN> FOR NONE:\r\n>> ");
   gets(username);
 
   if (username[0]!=0x00)
     {
       sp_payload[0]=strlen(username);
+      sp_payload[1]=0;
       strcpy((char *)&sp_payload[2],username);
       sp_control(net,0xFD);
     }
   
-  cprintf("LOGIN, OR <RETURN> FOR NONE:\r\n>> ");
+  cprintf("\n\nPASSWORD, OR <RETURN> FOR NONE:\r\n>> ");
   gets(password);
 
   if (password[0]!=0x00)
     {
       sp_payload[0]=strlen(password);
+      sp_payload[1]=0;
       strcpy((char *)&sp_payload[2],password);
       sp_control(net,0xFE);
     }
@@ -75,12 +77,11 @@ void in()
   
   sp_status(net,'S');
 
-  bw = (unsigned short)sp_payload[0];
-  
+  bw = sp_payload[0];
+  bw |= (sp_payload[1]) << 8;
+
   if (bw==0)
     return;
-  if (bw > sizeof(sp_payload))
-    bw = sizeof(sp_payload);
 
   memset(sp_payload,0,sizeof(sp_payload));
   
