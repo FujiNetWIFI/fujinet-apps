@@ -31,7 +31,7 @@
 #define SP_WRITE_PARAM_COUNT 4
 
 // extern globals:
-uint8_t sp_payload[1024];
+uint8_t sp_payload[2048];
 uint16_t sp_count;
 uint8_t sp_dest;
 uint16_t sp_dispatch;

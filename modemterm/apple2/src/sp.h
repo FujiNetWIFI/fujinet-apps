@@ -9,7 +9,7 @@
 
 #include <stdint.h>
 
-extern uint8_t sp_payload[1024];
+extern uint8_t sp_payload[2048];
 extern uint16_t sp_count, sp_dispatch;
 extern uint8_t sp_dest;
 extern uint8_t sp_error;

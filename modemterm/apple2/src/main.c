@@ -12,6 +12,8 @@
 #include <string.h>
 #include "sp.h"
 
+#define MAX_SIZE 2000
+
 unsigned char modem;
 
 void in()
@@ -26,8 +28,8 @@ void in()
 
   if (bw==0)
     return;
-  if (bw > 512)
-    bw = 512;
+  if (bw > MAX_SIZE)
+    bw = MAX_SIZE;
 
   memset(sp_payload,0,sizeof(sp_payload));
   
@@ -49,7 +51,7 @@ void out()
 }
 
 void main(void)
-{  
+{
   sp_init();
   modem = sp_find_modem();
 
