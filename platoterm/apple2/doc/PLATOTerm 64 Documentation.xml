@@ -1,0 +1,1191 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-model href="http://docbook.org/xml/5.1/rng/docbook.rng" schematypens="http://relaxng.org/ns/structure/1.0"?>
+<?xml-model href="http://docbook.org/xml/5.1/rng/docbook.rng" type="application/xml" schematypens="http://purl.oclc.org/dsdl/schematron"?>
+<book xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.1">
+    <info>
+        <title>PLATOTerm 64 Users Guide</title>
+        <author>
+            <personname>Thomas Cherryhomes</personname>
+            <address><city>8401 Swan Park Dr.</city>
+<street>Denton, TX</street>
+<postcode>76210</postcode>
+<country>USA</country>            </address>
+            <email>thom.cherryhomes@gmail.com</email>
+        </author>
+    </info>
+    <part>
+        <title>PLATOTerm 64 Setup</title>
+        <chapter>
+            <title>Introduction to PLATOTerm 64</title>
+            <sect1>
+                <title>What is PLATOTerm 64?</title>
+                <para>PLATOTerm64 is a Terminal Emulator for your Commodore 64 computer that
+                    emulates a PLATO terminal. With PLATOTerm64, you can successfully access such
+                    internet-accessible services, such as <link xlink:href="http://www.irata.online/">IRATA.ONLINE</link>, or <link xlink:href="http://www.cyber1.org/">CYBER1.ORG</link>, which are unique
+                    services that you can access not only from your Commodore 64, but from many
+                    other vintage computers, as well.</para>
+                <para>PLATOTerm64 works on any Commodore 64 computer, or Commodore 128 computer
+                    running in Commodore 64 mode, and takes advantage of the Commodore 64's 320x200
+                    graphics mode to provide the graphical display needed by a PLATO system. All of
+                    the keys present on a PLATO terminal are mapped to equivalent keys on the
+                    Commodore keyboard, and the PLATO terminal display is resized from its original
+                    512x512 size, to fit on the 320x200 display provided by your Commodore 64. The
+                    touch display nominally provided by the PLATO terminal is simulated using either
+                    a supported mouse, light pen, or touch tablet.</para>
+                <para>System requirements, including peripheral requirements are addressed,
+                    below.</para>
+            </sect1>
+            <sect1>
+                <title>What is PLATO?</title>
+                <para>PLATO, which stood for Programmed Logic for Automatic Teaching Operations, was
+                    perhaps the first generalized computer assisted instruction system. The project,
+                    started in 1960, initially ran on the ILLIAC I computer at the University of
+                    Illinois at Urbana-Champaign, and by the 1970s was supporting several thousand
+                    graphical terminals, distributed worldwide, running on nearly a dozen networked
+                    mainframe computers. Many innovations were originally developed on PLATO, and
+                    the purpose of PLATOTerm, and by extension, PLATO sites like IRATA.ONLINE, and
+                    CYBER1.ORG, exist to not only preserve the legacy of PLATO, but to expose its
+                    uniqueness to vintage computer users, and give them a unique online
+                    destination.</para>
+                <para>PLATO environments provide an interactive; graphical environment, that is
+                    controlled by both a keyboard and a touch screen, originally to facilitate what
+                    was thought to be required for Computer Based training, but was ultimately
+                    expanded into many other very unique innovations, due to the combination of
+                    unique technology and culture that grew up around the PLATO environment. </para>
+                <sect2>
+                    <title>Knowing more about PLATO History and Culture</title>
+                    <para>If you would like to know more about PLATO, as well as its origins and
+                        historical impact. You should read Brian Dear's book: <link xlink:href="http://www.friendlyorangeglow.com/">The Friendly Orange
+                            Glow: The Untold Story of the PLATO System and the Dawn of
+                            Cyberculture</link>. </para>
+                </sect2>
+            </sect1>
+            <sect1>
+                <title>Scope of this manual</title>
+                <para>This book is intended as an introductory user's guide to both PLATOTerm64, as
+                    well as an overview of the two extant PLATO services, <link xlink:href="http://www.irata.online/">IRATA.ONLINE</link> and <link xlink:href="http://www.cyber1.org/">CYBER1.ORG</link>. You will be shown the
+                    process of loading and configuring PLATOTerm64, as well as ensuring that you can
+                    connect to the two aforementioned services. It is important that you follow the
+                    instructions in this manual, to get the best experience you can out of these two
+                    services.</para>
+                <sect2>
+                    <title>Corrections?</title>
+                    <para>If you have any potential corrections, or otherwise improvements, you can
+                        either contact the author, or fork the documentation, make the changes, and
+                        issue a pull request on Github, as the documentation is open-source, and in
+                        an easy to understand XML format (DocBook 5.1, as of the time of this
+                        writing.) Once the pull request has been reviewed and approved, your name
+                        will be added to the credits of this manual. </para>
+                </sect2>
+            </sect1>
+        </chapter>
+        <chapter>
+            <title>Setting up PLATOTerm64</title>
+            <para>PLATOTerm64 is easy to set up. Once you have finished this chapter, PLATOTerm
+                should be running and waiting to be able to connect to a PLATO service.</para>
+            <sect1>
+                <title>Hardware Requirements</title>
+                <para>PLATOTerm64 requires the following hardware to function correctly:<itemizedlist>
+                        <listitem>
+                            <para><emphasis role="bold">Computer:</emphasis> A Commodore 64 or 128
+                                running in Commodore 64 mode. SuperCPU is also supported.</para>
+                        </listitem>
+                        <listitem>
+                            <para><emphasis role="bold">Display:</emphasis> While a television can
+                                work. For best result, use a monitor connected via the monitor port.
+                                For modern displays, look at using a Commodore cable, connected to
+                                an S-Video to HDMI converter.</para>
+                        </listitem>
+                        <listitem>
+                            <para><emphasis role="bold">Disk Drive:</emphasis> PLATOTerm is
+                                distributed in D64 disk image format and must be transferred either
+                                to a device that can directly read D64 files, such as a SD2IEC, or
+                                it must be written to a floppy disk to be used in a Commodore 1541
+                                or compatible disk drive. A Fast-Load cartridge, or ROM replacement
+                                like JiffyDOS is recommended for a fast loading experience.</para>
+                        </listitem>
+                        <listitem>
+                            <para><emphasis role="bold">Internet connectivity hardware</emphasis>:
+                                Since the current PLATO systems are connected to the Internet, your
+                                Commodore computer will need a wifi modem or Ethernet cartridge
+                                connected to an Internet accessible network. As of version 1.0,
+                                PLATOTerm64 supports the following devices:<itemizedlist>
+                                    <listitem>
+                                        <para>An <emphasis>ESP8266</emphasis> or similar
+                                            WIFI/Ethernet modem connected to the user port, such as
+                                            the ZiModem or commodore4ever WIFI modem. This uses the
+                                                <emphasis>up2400</emphasis> driver, and will connect
+                                            at 2400bps.</para>
+                                    </listitem>
+                                    <listitem>
+                                        <para>A TCP or WIFI Modem connected via a
+                                                <emphasis>Swiftlink-232</emphasis>, or compatible
+                                            cartridge. This allows a transmission speed of up to
+                                            38400bps.</para>
+                                    </listitem>
+                                    <listitem>
+                                        <para>An ethernet cartridge supported by IP65, such as
+                                            RRNet, or 64NIC+.</para>
+                                    </listitem>
+                                    <listitem>
+                                        <para>The up2400 and swiftlink drivers can also connect to a
+                                            device running a serial bridge program such as tcpser,
+                                            or a Lantronix UDS device.</para>
+                                    </listitem>
+                                </itemizedlist></para>
+                        </listitem>
+                    </itemizedlist></para>
+            </sect1>
+            <sect1>
+                <title>Loading PLATOTerm64</title>
+                <para>PLATOTerm64 is loaded like most Commodore software. The first file on the disk
+                    is the PLATOTERM software, and if you load the * file, you will load the
+                    PLATOTerm program.</para>
+                <para>To load the PLATOTerm software, insert the disk into your drive. If you're
+                    using an SD2IEC or similar, you can either any built in loaders to select the
+                    disk image, or you can choose to enter the commands to mount the disk from
+                    BASIC.</para>
+                <para>Once you've mounted the disk, you can load the software with the following
+                    command:<screen>LOAD"*",8,1</screen></para>
+                <para>And then the PLATOTerm64 splash screen will become visible, and wait for you
+                    to enter your first command.</para>
+                <figure>
+                    <title>Initial Splash Screen</title>
+                    <mediaobject>
+                        <imageobject>
+                            <imagedata fileref="images/platoterm_splash.png" scalefit="1" scale="50" align="center"/>
+                        </imageobject>
+                    </mediaobject>
+                </figure>
+            </sect1>
+            <sect1>
+                <title>PLATOTerm64 Disk Contents</title>
+                <para>The PLATOTerm64 disk directory can be accessed in the expected way, by typing
+                    the following command:<screen>LOAD"$",8</screen></para>
+                <para>After the load, the contents can be displayed, with the following
+                    command:<screen>LIST</screen></para>
+                <para>Which will display the directory of the disk.</para>
+                <figure>
+                    <title>Contents of PLATOTerm64 Disk</title>
+                    <mediaobject>
+                        <imageobject>
+                            <imagedata scalefit="1" scale="50" align="center" fileref="images/platoterm_directory.png"/>
+                        </imageobject>
+                    </mediaobject>
+                </figure>
+                <para>The PLATOTerm64 disk contains the following files:<itemizedlist>
+                        <listitem>
+                            <para><filename>PLATOTERM</filename> - This is the main program, and
+                                since it is the first entry in the directory, is what's loaded when
+                                you load via a wildcard filename, as specified in the above
+                                instructions.</para>
+                        </listitem>
+                        <listitem>
+                            <para><filename>GPL-3.0</filename> - This is a runnable program which
+                                displays the GPL-3.0 license, which is the license under which the
+                                program is distributed. It utilizes a soft 80 column display, in
+                                order to display the license cleanly on screen, so it is recommended
+                                that you have an appropriate monitor. It will probably not display
+                                properly on television displays connected via an RF
+                                modulator.</para>
+                        </listitem>
+                        <listitem>
+                            <para><filename>MOU-1351</filename> - This is the touch screen driver
+                                for the Commodore 1351 mouse and compatible devices.The mouse is
+                                expected to be connected to joystick port 0 (the port closest to the
+                                front of the machine.) The MOU drivers are CC65 loadable modules
+                                utilizing its mouse API.</para>
+                        </listitem>
+                        <listitem>
+                            <para><filename>MOU-INKWELL</filename> - This is a touchscreen driver
+                                for an Inkwell light pen. The light pen is expected to be connected
+                                to port 1 (the port closest to the back of the machine), and as with
+                                all light pens, you should only use this device with a cathode ray
+                                tube (CRT) monitor such as a Commodore 1702 or similar. LCD monitors
+                                will not work properly with an Inkwell device.</para>
+                        </listitem>
+                        <listitem>
+                            <para><filename>MOU-JOY</filename> - This is a touchscreen driver for
+                                joysticks and mice that behave like joysticks (such as a Commodore
+                                1350 mouse, or a standard 9-pin joystick or trackball.) It is
+                                expected that the joystick device be plugged into port 1 (the port
+                                closest to the back of the machine.)</para>
+                        </listitem>
+                        <listitem>
+                            <para><filename>MOU-POT</filename> - This is a touchscreen driver for
+                                potentiometer based devices, such as paddles or a Koala Pad
+                                connected to port 1 (the port closest to the back)</para>
+                        </listitem>
+                        <listitem>
+                            <para><filename>SER-SWLINK</filename> - This is the serial driver for a
+                                Swiftlink-232 cartridge, or one of its clones. These cartridges use
+                                a 6551 ACIA chip to provide RS-232 functions, and as such can
+                                transmit and receive baud rates up to 38,400.</para>
+                        </listitem>
+                        <listitem>
+                            <para><filename>SER-UP2400</filename> - This is the serial driver for
+                                user port RS-232 devices. It is currently locked at a maximum rate
+                                of 2400 bits per second.</para>
+                        </listitem>
+                        <listitem>
+                            <para><filename>CONFIG</filename> - The CONFIG file is a sequential file
+                                storing the PLATOTerm64 preferences. It is created upon the first
+                                boot-up of PLATOTerm64, and is written to every time preferences are
+                                explicitly saved. It is loaded each time the program starts.</para>
+                        </listitem>
+                    </itemizedlist></para>
+            </sect1>
+        </chapter>
+        <chapter>
+            <title>Setting up</title>
+            <para>Once PLATOTerm64 has been loaded for the first time, it must be conifgured to
+                match your particular hardware setup.</para>
+            <sect1>
+                <title>Default Settings</title>
+                <para>As shipped on the disk image, PLATOTerm has the following default settings:<itemizedlist>
+                        <listitem>
+                            <para>Interface: Serial (also known as RS-232)</para>
+                        </listitem>
+                        <listitem>
+                            <para>Driver: UP2400 (User Port running at 2400 bits per second)</para>
+                        </listitem>
+                        <listitem>
+                            <para>Baud Rate: 2400 bits per second</para>
+                        </listitem>
+                        <listitem>
+                            <para>Touch Interface: Commodore 1351 Mouse</para>
+                        </listitem>
+                        <listitem>
+                            <para>Colors: Light blue on dark blue, with light blue border, like the
+                                Commodore 64 BASIC colors.</para>
+                        </listitem>
+                    </itemizedlist></para>
+            </sect1>
+            <sect1>
+                <title>Setting Colors</title>
+                <para>PLATOTerm64 allows you to set desired colors for foreground and background
+                    utilizing any of the 16 available colors in the Commodore palette. For
+                    reference, a visual representation of the color palette is provided, below:
+                    (This chart comes from the MONTEST program, and is representative of output from
+                    an NTSC machine, PAL machines have slightly different colors):<figure>
+                        <title>Commodore Color Palette</title>
+                        <mediaobject>
+                            <imageobject>
+                                <imagedata align="center" scalefit="1" fileref="images/commodore_color_palette.png"/>
+                            </imageobject>
+                        </mediaobject>
+                    </figure></para>
+                <para>Pressing any of the following keys, will change the background, text, or
+                    border colors to the next position on the above color palette. Once the light
+                    grey color has been reached, the subsequent press of the key will select the
+                    black color from the palette.<itemizedlist>
+                        <listitem>
+                            <para>To select the backgrouind color, press the <keycap>F1</keycap>
+                                key.</para>
+                        </listitem>
+                        <listitem>
+                            <para>To select the text color, press the <keycap>F2</keycap> key by
+                                holding down <keycap>SHIFT</keycap> and the <keycap>F1</keycap>
+                                key.</para>
+                        </listitem>
+                        <listitem>
+                            <para>To select the border color, hold down the
+                                    <keycap>COMMODORE</keycap> key, and press the
+                                    <keycap>F1</keycap> key.</para>
+                        </listitem>
+                    </itemizedlist></para>
+                <para>Colors can also be selected using these keys, while in the Preferences
+                    menu.</para>
+                <para>Once the desired color palette has been selected, it can be saved using the
+                    S)AVE option in the preferences menu, as described below.</para>
+            </sect1>
+            <sect1>
+                <title>Setting Preferences</title>
+                <para>If for some reason, the default preferences aren't correct, such as needing to
+                    use a SWLink232 cartridge, or an IP65 supported Ethernet cartridge such as a
+                    64NIC+, then you need to access the preferences menu, to change your settings to
+                    match your hardware configuration.</para>
+                <para>To access the preferences menu, press the <keycap>F3</keycap> key. The
+                    preferences menu appears at the bottom of the PLATOTerm screen. Since the
+                    default setting specifies a serial interface, the preferences menu looks
+                    like:<screen>I)NTERFACE D)RIVER B)AUD T)OUCH S)AVE E)XIT:</screen></para>
+                <para>To select an option, press its letter, indicated to the left of each paren,
+                    such as D to select the serial driver. The following subsections give a quick
+                    description of each option and its affect on configuring the program:</para>
+                <sect2>
+                    <title>I)NTERFACE</title>
+                    <para>I)NTERFACE presents a sub-menu to allow you to select either a serial or
+                        ethernet based interface. Each selection changes the main menu that displays
+                        when the <keycap>F3</keycap> key is
+                        pressed.<screen>INTERFACE - E)THERNET S)ERIAL B)ACK:</screen></para>
+                    <para>If E)THERNET is selected, then the main menu will change
+                        to:<screen>I)NTERFACE D)HCP P)IP N)ETMASK G)ATEWAY W)DNS S)AVE E)XIT:</screen></para>
+                </sect2>
+                <sect2>
+                    <title>Serial Interface Preferences</title>
+                    <para>The following items are available from the main menu, if S)ERIAL interface
+                        is selected:</para>
+                    <sect3>
+                        <title>D)RIVER</title>
+                        <para>D)RIVER presents a sub-menu to allow you to specify the driver to use
+                            for serial (RS-232) communication. This is needed because Commodore
+                            machines have multiple options for connecting RS-232 serial devices,
+                            each with their own advantages and disadvantages.<screen>DRIVER - S)WIFTLINK232 U)SERPORT2400 B)ACK:</screen><itemizedlist>
+                                <listitem>
+                                    <para>If you have a Swiftlink-232 RS-232 cartridge that you wish
+                                        to use, press <keycap>S</keycap></para>
+                                </listitem>
+                                <listitem>
+                                    <para>If you have a user port based device you wish to use at
+                                        2400bps, press <keycap>U</keycap></para>
+                                </listitem>
+                            </itemizedlist></para>
+                    </sect3>
+                    <sect3>
+                        <title>B)AUD</title>
+                        <para>RS-232 devices connected via the Swiftlink-232 cartridge or user port
+                            require that the correct baud rate for your device is set. The most
+                            common baud rates are displayed to be selected.
+                            <screen>BAUD - 3)00 1)200 2)400 9)600 Q)19200 W)38400 B)ACK:</screen></para>
+                        <para>If there is a baud rate that isn't available here, feel free to
+                            contact the author, or submit a patch for your desired baud rate to
+                            GitHub.</para>
+                        <para>While the Swiftlink can use any baud rate selectable, the UP2400
+                            driver is currently locked at 2400 bits per second, and the B)AUD
+                            setting has no effect. (this may change to allow baud rates from 300 to
+                            2400 bps.)</para>
+                    </sect3>
+                </sect2>
+                <sect2>
+                    <title>Ethernet Interface Preferences</title>
+                    <para>The following items are available from the main menu, if E)THERNET
+                        interface is selected:</para>
+                    <sect3>
+                        <title>D)HCP</title>
+                        <para>This determines whether to use the Dynamic Host Configuration Protocol
+                            (DHCP), a protocol commonly used to configure TCP/IP devices on a
+                            network. If selected, and a DHCP host is found, PLATOTerm will enquire
+                            for an IP address, a netmask, a gateway, and a DNS server, and thus
+                            automatically set the manual parameters specified throughout the rest of
+                            the Ethernet Interface Preferences section.<screen>DHCP - Y)ES N)O</screen><itemizedlist>
+                                <listitem>
+                                    <para>If you can utilize DHCP (most networks), press
+                                            <keycap>Y</keycap> to automatically enquire for network
+                                        settings.</para>
+                                </listitem>
+                                <listitem>
+                                    <para>If you need to set network settings manually, also known
+                                        as static configuration, press <keycap>N</keycap></para>
+                                </listitem>
+                            </itemizedlist></para>
+                        <important>
+                            <para>If DHCP is selected, any information entered into the manual
+                                (static) configuration options below are also saved, but ignored
+                                while DHCP is set to <keycap>Y</keycap></para>
+                        </important>
+                    </sect3>
+                    <sect3>
+                        <title>P)IP</title>
+                        <para>This menu option is used to set the desired IP address that PLATOTerm
+                            will use to identify itself to the network. This information is
+                            dependent on your network configuration, so first determine if you need
+                            this option. If you do need this option, be sure that the IP address you
+                            choose is both a valid address for your network, and that it is
+                            available.</para>
+                        <para> Once selected, PLATOTerm64 will ask you to input the desired IP
+                            address:<screen>IP ADDRESS (X.X.X.X) OR RETURN FOR NONE:</screen></para>
+                        <para>Valid characters are numbers and the period '<keycap>.</keycap>'
+                            character, such as: <userinput>192.168.1.2</userinput>, This is an
+                            address belonging to a private class C network. </para>
+                        <para>If you do not wish to enter a value here, or to erase the previous
+                            value, press <keycap>RETURN</keycap>.</para>
+                        <para>Once your IP address has been entered, press the
+                                <keycap>RETURN</keycap> key to accept the selection. PLATOTerm64
+                            will respond with the message: <screen>OK</screen></para>
+                    </sect3>
+                    <sect3>
+                        <title>N)ETMASK</title>
+                        <para>The N)ETMASK menu option is used to specify the required N)ETMASK for
+                            the IP address that is configured using the P)IP menu option. This value
+                            is used by the underlying TCP/IP stack (IP65) to determine which
+                            addresses belong to the local network, versus which addresses need to be
+                            routed out the gateway address, which is specified using the G)ATEWAY
+                            option.</para>
+                        <para>Once selected, PLATOTerm64 will ask you to input the desired
+                            netmask:<screen>NETMASK (X.X.X.X) OR RETURN FOR NONE:</screen></para>
+                        <para>Valid characters are numbers and the period '<keycap>.</keycap>'
+                            character, such as: <userinput>255.255.255.0</userinput>, which
+                            specifies a netmask belonging to a class C network.</para>
+                        <para>If you do not wish to enter a value here, or to erase the previous
+                            value, press <keycap>RETURN</keycap>.</para>
+                        <para>Once your netmask has been entered, press the <keycap>RETURN</keycap>
+                            key to accept the selection, PLATOTerm64 will respond with the
+                            message:<screen>OK</screen></para>
+                    </sect3>
+                    <sect3>
+                        <title>G)ATEWAY</title>
+                        <para>The G)ATEWAY menu option is use to specify the required G)ATEWAY to
+                            send traffic that is not destined for the local network. If the PLATO
+                            service you are connecting to is not on your local network, this option
+                            will need to be set to the IP address of your nearest router.</para>
+                        <para>As with the N)ETMASK and P)IP address options, ensure that the values
+                            entered here are valid. If you are not sure, check other computers on
+                            your network for this value.</para>
+                        <para>Once selected, PLATOTerm64 will ask you to input the desired
+                            gateway:<screen>GATEWAY (X.X.X.X) OR RETURN FOR NONE:</screen></para>
+                        <para>Valid characters are numbers and the period '<keycap>.</keycap>'
+                            character, such as: <userinput>192.168.1.1</userinput>, this is an
+                            address belonging to a private class C network, and is a very common
+                            valuie for a gateway address, such as a home internet router.</para>
+                        <para>If you do not wish to enter a value here, or to erase the previous
+                            value, press <keycap>RETURN</keycap>.</para>
+                        <para>Once your gatway address has been entered, press the
+                                <keycap>RETURN</keycap> key to accept the selection. PLATOTerm64
+                            will respond with the message:<screen>OK</screen></para>
+                    </sect3>
+                    <sect3>
+                        <title>W)DNS</title>
+                        <para>The W)DNS menu option is use to specify the required domain name
+                            server to resolve host names to their respective IP addresses, while
+                            connecting to your desired PLATO host. This information is usually the
+                            same for all hosts on a network, and can be acquired by looking at the
+                            network information from other devices on the network, if needed.</para>
+                        <para>As with the G)ATEWAY, N)ETMASK, and P)IP address options, ensure that
+                            the values entered here are valid. If you are not sure, check other
+                            computers on your network for this value.</para>
+                        <para>Once selected, PLATOTerm64 will ask you to input the desired DNS
+                            server:<screen>DNS (X.X.X.X) OR RETURN FOR NONE:</screen></para>
+                        <para>Valid characters are numbers and the period '<keycap>.</keycap>'
+                            character, such as: <userinput>192.168.1.1</userinput>, this is an
+                            address belonging to a private class C network, and is a very common
+                            valuie for a DNS address that is also the gatway, such as a home
+                            internet router.</para>
+                        <para>If you do not wish to enter a value here, or to erase the previous
+                            value, press <keycap>RETURN</keycap>.</para>
+                        <para>Once your DNS address has been entered, press the
+                                <keycap>RETURN</keycap> key to accept the selection. PLATOTerm64
+                            will respond with the message:<screen>OK</screen></para>
+                    </sect3>
+                </sect2>
+                <sect2>
+                    <title>T)OUCH</title>
+                    <para>The Touch sub-menu shows a list of supported devices that the Commodore
+                        can use to simulate PLATO's
+                        touchscreen.<screen>TOUCH - 1)351 I)NKWELL J)OY K)OALA B)ACK:</screen></para>
+                    <itemizedlist>
+                        <listitem>
+                            <para>If you have a Commodore 1351 mouse, press
+                                <keycap>1</keycap></para>
+                        </listitem>
+                        <listitem>
+                            <para>If you have an Inkwell light pen, press <keycap>I</keycap></para>
+                        </listitem>
+                        <listitem>
+                            <para>If you have a Joystick, or Commodore 1350 "rolling joystick"
+                                mouse, press <keycap>J</keycap></para>
+                        </listitem>
+                        <listitem>
+                            <para>If you have a Koala pad, or other potentiometer device, such as
+                                paddles, press <keycap>K</keycap></para>
+                        </listitem>
+                    </itemizedlist>
+                    <para>With the exception of the 1351 mouse, most of these devices should be
+                        connected to port 1, which is the controller port closest to the back of
+                        your Commodore computer.</para>
+                </sect2>
+                <sect2>
+                    <title>S)AVE</title>
+                    <para>Pressing <keycap>S</keycap> will save the currently selected preferences,
+                        including the currently selected color palette, to the
+                            <filename>CONFIG</filename> file on the disk.</para>
+                </sect2>
+                <sect2>
+                    <title>E)XIT</title>
+                    <para>Pressing <keycap>E</keycap> will apply and use the currently selected preferences.<important>
+                            <para>E)XIT will close all currently loaded drivers, regardless of
+                                whether they were reset or not. It is a good idea to set preferences
+                                    <emphasis role="bold">BEFORE</emphasis> attempting to connect to
+                                your desired PLATO service, as any serial or ethernet connections
+                                currently opened will be closed as a result of reinitializing the
+                                various drivers.</para>
+                        </important>
+                    </para>
+                    <note>
+                        <para>Although there is not an explicit menu option to set colors in
+                            preferences, they can be selected in the preferences menu using the
+                                <keycap>F1</keycap>, <keycap>F2</keycap> and
+                                <keycap>COMMODORE-F1</keycap> keys, and they will be saved with the
+                            S)AVE command.</para>
+                    </note>
+                </sect2>
+            </sect1>
+            <sect1>
+                <title>Configuring Your Connectivity Device</title>
+                <para>The following subsections describe configuration tips for various devices, and
+                    how best to configure them. If you have a suggested configuration that you think
+                    should go into this documetation, either contact the author with a full
+                    description of the suggested configuration, or check out a copy of this
+                    documentation from GitHuh, and add it. </para>
+                <sect2>
+                    <title>About Serial (RS-232) Devices</title>
+                    <para>This class of devices connect via an RS-232 interface, and typically act
+                        like a Hayes™ compatible MODEM, using AT commands to specify not only
+                        operating parameters, but to connect to the desired host, as well as to
+                        terminate the connection. </para>
+                    <para>It does this by taking care of all the TCP/IP duties itself, and providing
+                        the resulting extracted data from each TCP/IP packet, over the serial
+                        connection. Thus, these serial devices are very beneficial if you wish to
+                        use existing terminal programs to connect to hosts on the Internet, without
+                        requiring special terminal software. They are also very inexpensive and easy
+                        to obtain. </para>
+                    <para>Some examples of Serial devices:<itemizedlist>
+                            <listitem>
+                                <para>ESP8266 devices, these can connect either directly to the user
+                                    port, or via a high speed RS-232 interface such as the
+                                    Swiftlink-232. These devices utilize a microcontroller to
+                                    provide the TCP/IP stack.<itemizedlist>
+                                        <listitem>
+                                            <para><link xlink:href="https://ebay.to/2N548wC">commodore4ever ESP8266 WIFI Modem</link></para>
+                                        </listitem>
+                                        <listitem>
+                                            <para><link xlink:href="https://bit.ly/2N3tYkw">Jim
+                                                  Drew's WiModem</link>, also ESP8266 based.</para>
+                                        </listitem>
+                                        <listitem>
+                                            <para>Jamming Signal's <link xlink:href="https://bit.ly/2tzPXrf">Commodore WIFI
+                                                  Modem</link></para>
+                                        </listitem>
+                                    </itemizedlist></para>
+                            </listitem>
+                            <listitem>
+                                <para>An actual analog modem, connecting over telephone to a TCP/IP
+                                    gateway service. (TODO: Ask Michael Lee to help add some
+                                    information here!)</para>
+                            </listitem>
+                        </itemizedlist></para>
+                </sect2>
+                <sect2>
+                    <title>About Ethernet (TCP/IP) Devices</title>
+                    <para>While Serial devices behave like a Hayes™ compatible MODEM, TCP/IP
+                        operation in PLATOTerm works with the IP65 library (courtesy of Oliver
+                        Schmidt), to interface to a number of ethernet cartridges for the Commodore
+                        computer, such as: <itemizedlist>
+                            <listitem>
+                                <para><link xlink:href="http://store.go4retro.com/64nic/">RETRO
+                                        Innovations' 64NIC+</link></para>
+                            </listitem>
+                            <listitem>
+                                <para><link xlink:href="https://bit.ly/2MnOzi4">RR-NET</link></para>
+                            </listitem>
+                        </itemizedlist></para>
+                    <para>Unlike the serial interfaces, PLATOTerm64 will provide a mechanism to
+                        select the desired PLATO host.</para>
+                </sect2>
+                <sect2>
+                    <title>Configuring the commodore4ever WIFI MODEM v2.1</title>
+                    <para>The commodore4ever WIFI MODEM, by default is configured to respond at 300
+                        baud. Thus, PLATOTerm must have its data rate, initially set to this speed,
+                        in order to do its initial configuration. </para>
+                    <para>With each step of the procedure, either PLATOTerm will report OK, if the
+                        preference setting was successful, or the MODEM will report OK, when the
+                        MODEM command is successful. If you see ERROR, please try re-typing the
+                        command, and possibly checking your network configuration to ensure it is
+                        working correctly.</para>
+                    <para>The following procedure will configure your MODEM to work with
+                        PLATOTerm64, as well as other terminal programs that can properly support
+                        user port modems: <procedure>
+                            <title>How to configure the commodore4ever WIFI Modem 2.1</title>
+                            <step>
+                                <title>Access the Preferences menu.</title>
+                                <para>Press <keycap>F3</keycap> to access the Preferences
+                                    menu.</para>
+                            </step>
+                            <step>
+                                <title>Access the D)RIVER submenu.</title>
+                                <para>Press <keycap>D</keycap> to select the D)RIVER submenu.</para>
+                            </step>
+                            <step>
+                                <title>Select the UP2400 driver.</title>
+                                <para>Press <keycap>U</keycap> to specify the UP2400 driver.</para>
+                            </step>
+                            <step>
+                                <title>Select the Baud submenu.</title>
+                                <para>Press <keycap>B</keycap> to select the B)AUD submenu.</para>
+                            </step>
+                            <step>
+                                <title>Select 300 baud.</title>
+                                <para>Press <keycap>3</keycap> to select 300 baud.</para>
+                            </step>
+                            <step>
+                                <title>Exit preferences.</title>
+                                <para>Press <keycap>E</keycap> to exit preferences, and return to
+                                    the terminal.</para>
+                            </step>
+                            <step>
+                                <title>Wake up the MODEM.</title>
+                                <para>Once back in the terminal, press <keycap>RETURN</keycap> to
+                                    wake up the modem. You will see the greeting from the
+                                    MODEM.</para>
+                            </step>
+                            <step>
+                                <title>Set the WIFI SSID.</title>
+                                <para>Type the following,
+                                        <userinput>AT$SSID=&lt;your_wifi_ssid></userinput> and press
+                                        <keycap>RETURN</keycap>, replacing
+                                        <userinput>&lt;your_ssid></userinput> with the SSID of your
+                                    access point.</para>
+                            </step>
+                            <step>
+                                <title>Optional: Set the WIFI Password.</title>
+                                <para>If your WIFI network requires a password, type
+                                        <userinput>AT$PASS=&lt;your_wifi_password></userinput>, and
+                                    press <keycap>RETURN</keycap> replacing
+                                        <userinput>&lt;your_wifi_password></userinput> with the
+                                    password of your access point.</para>
+                            </step>
+                            <step>
+                                <title>Connect to your WIFI network.</title>
+                                <para>Once these parameters have been set, test the connection to
+                                    the WIFI network by typing <userinput>ATC1</userinput> and
+                                    pressing <keycap>RETURN</keycap> The modem will indicate that it
+                                    is attempting to connect to the network, and indicate whether it
+                                    was successful by returning OK.</para>
+                            </step>
+                            <step>
+                                <title>Set the MODEM to disable handshaking.</title>
+                                <para>Type the following command, <userinput>AT&amp;K0</userinput>,
+                                    and press <keycap>RETURN</keycap> to disable handshaking.</para>
+                            </step>
+                            <step>
+                                <title>Set the Baud Rate</title>
+                                <para>Type the following to set the operational baud rate for the
+                                    modem: <userinput>AT&amp;SB=2400</userinput> and press
+                                        <keycap>RETURN</keycap> to change the baud rate immediately
+                                    to 2400.</para>
+                            </step>
+                            <step>
+                                <title>Access the Preferences menu, once more.</title>
+                                <para>Press the <keycap>F3</keycap> key to access the preferences
+                                    menu.</para>
+                            </step>
+                            <step>
+                                <title>Select the Baud submenu.</title>
+                                <para>Press the <keycap>B</keycap> key to access the B)AUD
+                                    submenu.</para>
+                            </step>
+                            <step>
+                                <title>Select 2400 baud.</title>
+                                <para>Press the <keycap>2</keycap> key to select 2400 baud.</para>
+                            </step>
+                            <step>
+                                <title>Save your preferences.</title>
+                                <para>Press the <keycap>S</keycap> key to save your preferences to
+                                    disk.</para>
+                            </step>
+                            <step>
+                                <title>Exit the preferences menu.</title>
+                                <para>Press the <keycap>E</keycap> key to exit preferences, and
+                                    return to the terminal.</para>
+                            </step>
+                            <step>
+                                <title>Write the configuration to the MODEM</title>
+                                <para>To ensure that the MODEM remembers these settings each time
+                                    the computer is turned on, type <userinput>AT&amp;W</userinput>
+                                    and press <keycap>RETURN</keycap> to write the configuration to
+                                    the non-volatile RAM of the MODEM.</para>
+                            </step>
+                        </procedure>The modem is now configured to connect to one of the PLATO
+                        services.</para>
+                </sect2>
+                <sect2>
+                    <title>Configuring the WiMODEM (user port version)</title>
+                    <para>The WiMODEM WIFI MODEM, by default is configured to respond at 300 baud.
+                        Thus, PLATOTerm must have its data rate, initially set to this speed, in
+                        order to do its initial configuration. </para>
+                    <para>With each step of the procedure, either PLATOTerm will report OK, if the
+                        preference setting was successful, or the MODEM will report OK, when the
+                        MODEM command is successful. If you see ERROR, please try re-typing the
+                        command, and possibly checking your network configuration to ensure it is
+                        working correctly.</para>
+                    <para>The following procedure will configure your MODEM to work with
+                        PLATOTerm64, as well as other terminal programs that can properly support
+                        user port modems: <procedure>
+                            <title>How to configure the WiMODEM</title>
+                            <step>
+                                <title>Access the Preferences menu.</title>
+                                <para>Press <keycap>F3</keycap> to access the Preferences
+                                    menu.</para>
+                            </step>
+                            <step>
+                                <title>Access the D)RIVER submenu.</title>
+                                <para>Press <keycap>D</keycap> to select the D)RIVER submenu.</para>
+                            </step>
+                            <step>
+                                <title>Select the UP2400 driver.</title>
+                                <para>Press <keycap>U</keycap> to specify the UP2400 driver.</para>
+                            </step>
+                            <step>
+                                <title>Select the Baud submenu.</title>
+                                <para>Press <keycap>B</keycap> to select the B)AUD submenu.</para>
+                            </step>
+                            <step>
+                                <title>Select 300 baud.</title>
+                                <para>Press <keycap>3</keycap> to select 300 baud.</para>
+                            </step>
+                            <step>
+                                <title>Exit preferences.</title>
+                                <para>Press <keycap>E</keycap> to exit preferences, and return to
+                                    the terminal.</para>
+                            </step>
+                            <step>
+                                <title>Wake up the MODEM.</title>
+                                <para>Once back in the terminal, type <userinput>ATI</userinput> and
+                                    press <keycap>RETURN</keycap>. You will see the following output
+                                    from the
+                                    MODEM:<screen>WiModem – (C)2015-17 By Jim Drew
+Firmware:v2.00-12/24/17
+Baud:300
+Outgoing Port:1541
+Incoming Port: 6400
+SSID:No Router!
+MAC:xx:xx:xx:xx:xx:xx
+IP:0.0.0.0
+FCC ID: 2AHMR-ESP12F</screen></para>
+                            </step>
+                            <step>
+                                <title>Configure the WIFI Network</title>
+                                <para>The WiModem provides three methods for selecting a Wifi
+                                    Network, (a) Using your router's WPS button, (b) Interactively
+                                    scanning the network and entering a passphrase, if needed, or (
+                                    c ) Manually specifying your network's SSID and Password, in a
+                                    manner similar to the commodore4ever WIFI modem. Pick a
+                                    particular method from this list, and follow the appropriate procedure:<procedure>
+                                        <step>
+                                            <title>Using your router's WPS feature.</title>
+                                            <substeps>
+                                                <step>
+                                                  <title>Press your Router's WPS button.</title>
+                                                  <para>Press the WPS button on your router. Follow
+                                                  your router's instructions on engaging the WPS
+                                                  feature.</para>
+                                                </step>
+                                                <step>
+                                                  <title>Ask the MODEM to respond to WPS.</title>
+                                                  <para>Type the command
+                                                  <userinput>AT*WPS</userinput> and press the
+                                                  <keycap>RETURN</keycap> key.</para>
+                                                </step>
+                                                <step>
+                                                  <title>Ensure the modem connects to WPS.</title>
+                                                  <para>The modem will respond
+                                                  with:<screen>WPS ACTIVATED</screen></para>
+                                                  <para>After a few moments, the MODEM will either
+                                                  respond with a successful connection to the WIFI
+                                                  network with the following
+                                                  message:<screen>Connected to: &lt;your_ssid></screen></para>
+                                                  <para>If the connection wasn't successful, you
+                                                  will instead
+                                                  see:<screen>No Router Located!</screen></para>
+                                                  <para>If this happens, please check your router
+                                                  configuration, or use one of the other methods to
+                                                  connect to your wireless network.</para>
+                                                </step>
+                                            </substeps>
+                                        </step>
+                                        <step>
+                                            <title>Interactively select the wireless network and
+                                                enter password.</title>
+                                            <substeps>
+                                                <step>
+                                                  <title>Ask the MODEM to scan for wireless
+                                                  networks.</title>
+                                                  <para>Type the command <userinput>AT*N</userinput>
+                                                  and press <keycap>RETURN</keycap>. After a few
+                                                  moments, you'll see output similar to the
+                                                  following:<screen>Scanning available networks:
+Networks available: 2
+0 – NETGEAR24 (-51 dBm), WPA2
+1 – NETGEAR24-Guest (-52 dBm), Auto</screen></para>
+                                                </step>
+                                                <step>
+                                                  <title>Associate to the wireless network via its
+                                                  number.</title>
+                                                  <para>Type the following to associate to a
+                                                  particular open network:
+                                                  <userinput>AT*NSx</userinput>, or</para>
+                                                  <para>Type the following to associate to a
+                                                  particular secure network:
+                                                  <userinput>AT*NSx,password</userinput></para>
+                                                  <para>and press <keycap>RETURN</keycap>.</para>
+                                                  <note>
+                                                  <para>Be sure to replace <userinput>x</userinput>
+                                                  with the desired network number reported during
+                                                  the scan, and replace
+                                                  <userinput>password</userinput> with the
+                                                  appropriate password for the given network.
+                                                  </para>
+                                                  </note>
+                                                  <para>The MODEM should respond
+                                                  with:<screen>Looking for router...</screen></para>
+                                                  <para>Followed
+                                                  by:<screen>Connected to &lt;network_name></screen></para>
+                                                  <para>If there is a problem, the MODEM will
+                                                  respond
+                                                  with:<screen>No Router Located!</screen></para>
+                                                  <para>If this happens, please check your router
+                                                  configuration, or use one of the other methods to
+                                                  connect to your wireless network.</para>
+                                                </step>
+                                            </substeps>
+                                        </step>
+                                        <step>
+                                            <title>Manually associate with a wireless
+                                                network</title>
+                                            <substeps>
+                                                <step>
+                                                  <title>Ensure WIFI is working, by scanning for
+                                                  wireless networks</title>
+                                                  <para>Type the command <userinput>AT*N</userinput>
+                                                  and press <keycap>RETURN</keycap>. After a few
+                                                  moments, you'll see output similar to the
+                                                  following:<screen>Scanning available networks:
+Networks available: 2
+0 – NETGEAR24 (-51 dBm), WPA2
+1 – NETGEAR24-Guest (-52 dBm), Auto</screen></para>
+                                                </step>
+                                                <step>
+                                                  <title>Set the desired wireless network
+                                                  name.</title>
+                                                  <para>Type the following to associate to a
+                                                  particular open network: <userinput>AT*SSID
+                                                  &lt;your_ssid></userinput>, or</para>
+                                                  <para>Type the following to associate to a
+                                                  particular secure network: <userinput>AT*SSID
+                                                  &lt;your_ssid>,password</userinput></para>
+                                                  <para>and press <keycap>RETURN</keycap>.</para>
+                                                  <note>
+                                                  <para>Be sure to replace
+                                                  <userinput>&lt;your_ssid></userinput> with the
+                                                  desired network SSID, and replace
+                                                  <userinput>password</userinput> with the
+                                                  appropriate password for the given network.
+                                                  </para>
+                                                  </note>
+                                                  <para>The MODEM should respond
+                                                  with:<screen>Looking for router...</screen></para>
+                                                  <para>Followed
+                                                  by:<screen>Connected to &lt;network_name></screen></para>
+                                                  <para>If there is a problem, the MODEM will
+                                                  respond
+                                                  with:<screen>No Router Located!</screen></para>
+                                                  <para>If this happens, please check your router
+                                                  configuration, or use one of the other methods to
+                                                  connect to your wireless network.</para>
+                                                </step>
+                                            </substeps>
+                                        </step>
+                                    </procedure></para>
+                            </step>
+                            <step>
+                                <title>Set the MODEM to disable handshaking.</title>
+                                <para>Type the following command, <userinput>AT&amp;K0</userinput>,
+                                    and press <keycap>RETURN</keycap> to disable handshaking.</para>
+                            </step>
+                            <step>
+                                <title>Set the Baud Rate</title>
+                                <para>Type the following to set the operational baud rate for the
+                                    modem: <userinput>AT*B2400</userinput> and press
+                                        <keycap>RETURN</keycap> to change the baud rate immediately
+                                    to 2400.</para>
+                            </step>
+                            <step>
+                                <title>Access the Preferences menu, once more.</title>
+                                <para>Press the <keycap>F3</keycap> key to access the preferences
+                                    menu.</para>
+                            </step>
+                            <step>
+                                <title>Select the Baud submenu.</title>
+                                <para>Press the <keycap>B</keycap> key to access the B)AUD
+                                    submenu.</para>
+                            </step>
+                            <step>
+                                <title>Select 2400 baud.</title>
+                                <para>Press the <keycap>2</keycap> key to select 2400 baud.</para>
+                            </step>
+                            <step>
+                                <title>Save your preferences.</title>
+                                <para>Press the <keycap>S</keycap> key to save your preferences to
+                                    disk.</para>
+                            </step>
+                            <step>
+                                <title>Exit the preferences menu.</title>
+                                <para>Press the <keycap>E</keycap> key to exit preferences, and
+                                    return to the terminal.</para>
+                            </step>
+                            <step>
+                                <title>Write the configuration to the MODEM</title>
+                                <para>To ensure that the MODEM remembers these settings each time
+                                    the computer is turned on, type <userinput>AT&amp;W</userinput>
+                                    and press <keycap>RETURN</keycap> to write the configuration to
+                                    the non-volatile RAM of the MODEM.</para>
+                            </step>
+                        </procedure>The modem is now configured to connect to one of the PLATO
+                        services.</para>
+                </sect2>
+                <sect2>
+                    <title>Configuring the Jamming Signal WIFI Modem</title>
+                    <para>The Commodore WIFI Modem from Jamming Signal works differently from the
+                        commodore4ever and WiModem devices, in that it also contains an OLED
+                        MicroView screen and hardware buttons on which the basic WIFI and modem
+                        configuration can be performed. </para>
+                    <para>This modem is configured with the following default parameters:<itemizedlist>
+                            <listitem>
+                                <para>2400 Baud</para>
+                            </listitem>
+                            <listitem>
+                                <para>No handshaking</para>
+                            </listitem>
+                            <listitem>
+                                <para>8 data bits</para>
+                            </listitem>
+                            <listitem>
+                                <para>1 stop bit</para>
+                            </listitem>
+                            <listitem>
+                                <para>No parity bit.</para>
+                            </listitem>
+                        </itemizedlist></para>
+                    <para>This means that this modem will work with PLATOTerm64 as it comes from the
+                        distribution disk, as all of the default preferences match exactly.</para>
+                    <para>(TODO: Add setup instructions for Ethernet, once available.)</para>
+                </sect2>
+            </sect1>
+        </chapter>
+    </part>
+    <part>
+        <title>Using PLATOTerm64</title>
+        <chapter>
+            <title>Using IRATA.ONLINE</title>
+            <para>Once your MODEM or Ethernet cartridge is configured, you can log onto <link xlink:href="https://www.irata.online/">IRATA.ONLINE</link>.</para>
+            <para>If you haven't done so already, you need to have signed up for an account using
+                the <link xlink:href="http://www.irata.online/users/new">sign-up page</link> and
+                have received a reply email indicating that your account is now ready.</para>
+            <sect1>
+                <title>Using a Serial Device</title>
+                <para>If you are using a serial device, you need to send a command to your MODEM, to
+                    "dial" IRATA.ONLINE. For all of the known internet MODEMs, the following command
+                    is sufficient:<userinput>ATDTirata.online:8005</userinput>. This tells the MODEM
+                    to connect to the hostname <userinput>irata.online</userinput> port number
+                        <userinput>8005</userinput>. When connected, you will see the NOS banner
+                    from the IRATA.ONLINE system, shortly before switching into PLATO mode, similar
+                    to:<screen>Connecting to host - please wait ...
+
+Connected
+
+WELCOME TO THE NOS SOFTWARE SYSTEM.
+COPYRIGHT CONTROL DATA SYSTEMS INC. 1994.
+90/06/27. 17.37.37. TE21
+ NOS CYBIS SYSTEM - CYBDEV. 1.          NOS 2.8.7 871/871</screen></para>
+            </sect1>
+            <sect1>
+                <title>Logging in</title>
+                <para>After a few moments, you will see the following output:</para>
+                <figure>
+                    <title>Login Screen</title>
+                    <mediaobject>
+                        <imageobject>
+                            <imagedata fileref="images/irata_login.PNG" scalefit="1" align="center"/>
+                        </imageobject>
+                    </mediaobject>
+                </figure>
+                <para> The system will ask you for your sign-on
+                    name:<screen>Enter your user name, and then press NEXT.</screen></para>
+                <para>Enter the user name that you requested during sign-up, such as
+                        <userinput>sam</userinput> and press the <keycap>RETURN</keycap> key, as it
+                    is mapped to PLATO's NEXT key (see the keyboard chart)</para>
+                <para>The system will then ask you for your user
+                    group:<screen>Enter your user group, and then press NEXT.</screen></para>
+                <para>Enter the user group that you requested during sign-up, such as
+                        <userinput>commodor</userinput> and press the <keycap>RETURN</keycap>
+                    key.</para>
+                <para>If this is the first time you've logged onto this account, the system will
+                    clear the screen, and ask you to provide a
+                    password:<screen>Choose a secret PASSWORD that you will 
+remember. Do not tell anyone what it is.
+
+As you type your password, several X's will
+appear so that nobody can see what you are
+typing.
+
+Enter the password and press NEXT.
+> </screen></para>
+                <para>If you have already logged on and provided a password, previously, the system
+                    will instead ask you for your password. It will also provide the following
+                    reminder:<screen>Remember to press SHIFT-STOP when you want to sign off.
+
+Enter your password, then press NEXT to continue,
+or press LAB for additional options.</screen></para>
+                <para>You will then be logged onto the system, and placed into the Main Menu.</para>
+            </sect1>
+            <sect1>
+                <title>The PLATO Keyboard</title>
+                <para>PLATO terminals feature a keyboard with many special keys, primarily to aid
+                    navigation, but also to access additional special characters that go beyond the
+                    standard American character set (such as greek letters and mathematical
+                    symbols.) The following chart demonstrates the keyboard mapping shows how the
+                    keys on the PLATO keyboard are mapped to keys on the Commodore keyboard. A
+                    larger version of this chart is in Appendix A.</para>
+                <figure>
+                    <title>PLATO Keys on the Commodore Keyboard</title>
+                    <mediaobject>
+                        <imageobject>
+                            <imagedata fileref="images/c64-plato-keyboard.png" scalefit="1" scale="50" align="center"/>
+                        </imageobject>
+                    </mediaobject>
+                </figure>
+                <para>The normal keys are of course in the center, with the shifted keys appearing
+                    on top, for the numeric keys, just as in a traditional alphanumeric keyboard.
+                    The symbol keys have been shifted to match their Commodore equivalents, where
+                    possible, and special keys have been placed around the edges of each keycap in
+                    the chart:<itemizedlist>
+                        <listitem>
+                            <para>The lower left symbols are accessed by pressing the
+                                    <keycap>COMMODORE</keycap> key, along with the desired
+                                key.</para>
+                        </listitem>
+                        <listitem>
+                            <para>The upper left symbols, by pressing the <keycap>COMMODORE</keycap>
+                                and <keycap>SHIFT</keycap> keys, along with the desired key.</para>
+                        </listitem>
+                        <listitem>
+                            <para>The lower right symbols, by pressing the <keycap>CTRL</keycap>
+                                key, along with the desired key, and</para>
+                        </listitem>
+                        <listitem>
+                            <para>The upper right symbols, by pressing the <keycap>CTRL</keycap> and
+                                    <keycap>SHIFT</keycap> keys, along with the desired key.</para>
+                        </listitem>
+                    </itemizedlist></para>
+                <para>Since Commodore keyboards have a <keycap>STOP</keycap> key, it is very handily
+                    mapped to PLATO's <keycap>STOP</keycap> key.<note>
+                        <para>Each of the special PLATO keys, such as ANS, BACK, etc. are mapped
+                            mnemonically to the equivalent <keycap>COMMODORE</keycap>
+                            keycombination, and pressing <keycap>SHIFT</keycap> also engages the
+                            shifted key combinations for those special keys, such as
+                                <keycap>SHIFT-BACK</keycap></para>
+                    </note></para>
+            </sect1>
+            <sect1>
+                <title>The Main Menu</title>
+                <para>Once you log into the system, you will be presented with IRATA.ONLINE's menu
+                    system, which was designed as an easy way to navigate this PLATO system for new
+                    users. It is extremely consistent, and the keys and touch actions work
+                    consistently across its sub-menus.</para>
+                <figure>
+                    <title>IRATA.ONLINE Main Menu</title>
+                    <mediaobject>
+                        <imageobject>
+                            <imagedata fileref="images/irata_main_menu.PNG" align="center" scalefit="1"/>
+                        </imageobject>
+                        <caption>
+                            <para>Going Clockwise from the top: The status display, Menu label, Menu
+                                Logo, Common Navigation Items, Navigation keys, and current menu
+                                items.</para>
+                        </caption>
+                    </mediaobject>
+                </figure>
+                <sect2>
+                    <title>Menu layout</title>
+                    <itemizedlist>
+                        <listitem>
+                            <para>On the top left of the screen, is the <emphasis role="bold">status
+                                    display</emphasis>. This will display the current date, time,
+                                and any system messages that need to be displayed for the user, such
+                                as whether the user has any personal notes available in his personal
+                                notesfile from other users.</para>
+                        </listitem>
+                        <listitem>
+                            <para>The top right of the display, contains the <emphasis role="bold">menu label</emphasis>, such as MAIN MENU, or NOTES, in order to
+                                indicate where the user is within the menu system.</para>
+                        </listitem>
+                        <listitem>
+                            <para>The lower right of the display contains a logo which changes
+                                depending on where the user is in the menu system. For the Main
+                                Menu, company logos are drawn here which are shown randomly.</para>
+                        </listitem>
+                        <listitem>
+                            <para>The footer of the display contains a set of common menu items,
+                                which are visible from each and every menu, including:<itemizedlist>
+                                    <listitem>
+                                        <para><emphasis role="bold">Go</emphasis> - Type a lesson
+                                            name to quickly jump to anywhere in the system.</para>
+                                    </listitem>
+                                    <listitem>
+                                        <para><emphasis role="bold">Help</emphasis> - Help lessons
+                                            to aid users.</para>
+                                    </listitem>
+                                    <listitem>
+                                        <para><emphasis role="bold">Talk</emphasis> - Access the
+                                            talk-o-matic multi-room chatting feature, to talk to
+                                            other users.</para>
+                                    </listitem>
+                                    <listitem>
+                                        <para><emphasis role="bold">Users</emphasis> - Show the
+                                            currently logged on users.</para>
+                                    </listitem>
+                                    <listitem>
+                                        <para><emphasis role="bold">Exit</emphasis> - Provide an
+                                            opportunity to log off the system.</para>
+                                    </listitem>
+                                </itemizedlist></para>
+                        </listitem>
+                        <listitem>
+                            <para>To the left of the logo, is the navigation legend. This shows the
+                                navigation keys that can be used on a particular page of the menu,
+                                to indicate whether a user can traverse sub-pages, or go back to a
+                                previous page.</para>
+                        </listitem>
+                        <listitem>
+                            <para>Finally, the menu items themselves are visible, each menu item
+                                accessible with letters ranging from <keycap>a</keycap> to
+                                    <keycap>f</keycap>. Pressing a letter, or touching an entry
+                                (e.g. with the mouse) will select the menu item.</para>
+                        </listitem>
+                    </itemizedlist>
+                </sect2>
+                <sect2>
+                    <title>Bulletins</title>
+                    <para>The Bulletins screen shows system announcements that are meant for all
+                        system users. Once displayed, pressing any key, such as NEXT, will return
+                        the user back to the main menu.</para>
+                    <figure>
+                        <title>Bulletins</title>
+                        <mediaobject>
+                            <imageobject>
+                                <imagedata fileref="images/irata_bulletins.PNG" align="center" scalefit="1"/>
+                            </imageobject>
+                        </mediaobject>
+                    </figure>
+                </sect2>
+                <sect2>
+                    <title>Catalog</title>
+                    <para>The CYBIS lesson catalog contains over 16,000 lessons, on a wide range of
+                        subjects. The catalog allows a user to traverse these lessons, and to try
+                        them.</para>
+                </sect2>
+            </sect1>
+        </chapter>
+        <appendix>
+            <title>Keyboard Chart</title>
+            <figure>
+                <title>PLATO to Commodore Keyboard</title>
+            <mediaobject>
+                <imageobject>
+                    <imagedata fileref="images/c64-plato-keyboard-vert.png" align="center"
+                            scalefit="1" scale="75"/>
+                </imageobject>
+            </mediaobject>
+            </figure>
+        </appendix>
+    </part>
+</book>
