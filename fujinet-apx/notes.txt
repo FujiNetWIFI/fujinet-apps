@@ -1,0 +1,19 @@
+Table layout
+
+CREATE TABLE disk
+(
+	id INTEGER AUTO_INCREMENT NOT NULL,
+	title CHAR(80),
+	author CHAR(80),
+	description CHAR(256),
+	PRIMARY KEY(id)
+);
+
+CREATE TABLE image
+(
+	disk_id INTEGER NOT NULL,
+	force_slot INTEGER,
+	path CHAR(128),
+	load_instructions CHAR(128),
+	FOREIGN KEY(disk_id) REFERENCES disk(id)
+);
