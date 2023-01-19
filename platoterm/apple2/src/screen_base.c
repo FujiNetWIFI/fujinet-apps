@@ -29,11 +29,12 @@ unsigned char current_background=COLOR_BLACK;
 
 extern uint8_t xoff_enabled; /* io.c */
 extern padBool FastText; /* protocol.c */
-extern uint8_t recv_buffer[384];
 extern uint8_t font[];
 extern uint8_t fontm23[];
 extern uint8_t FONT_SIZE_X;
 extern uint8_t FONT_SIZE_Y;
+
+extern unsigned char sp_payload[1024];
 
 /**
  * screen_init() - Set up the screen
@@ -61,10 +62,10 @@ void screen_splash(void)
 
   fp=fopen("splash.bin","r");
 
-  while (len=fread(recv_buffer,sizeof(unsigned char),384,fp))
-    ShowPLATO((padByte *)recv_buffer,len);
+  while (len=fread(sp_payload,sizeof(unsigned char),512,fp))
+    ShowPLATO((padByte *)sp_payload,len);
 
-  memset(recv_buffer,0,sizeof(recv_buffer));
+  memset(sp_payload,0,sizeof(sp_payload));
   
   fclose(fp);
 }

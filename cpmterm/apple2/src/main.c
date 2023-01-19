@@ -14,27 +14,47 @@
 
 unsigned char cpm;
 
+#define MAX_SIZE 8192
+
+unsigned char buf[MAX_SIZE];
+
 void in()
 {
   unsigned short bw; // Bytes waiting
-  unsigned short i;
+  unsigned short b,i,j;
   
   sp_status(cpm,'S');
 
-  bw = (unsigned short)sp_payload[0];
+  bw  = sp_payload[0] & 0xFF;
+  bw |= sp_payload[1] << 8;
 
   if (bw==0)
     return;
-  if (bw > sizeof(sp_payload))
-    bw = sizeof(sp_payload);
+  if (bw > MAX_SIZE)
+    bw = MAX_SIZE;
 
   memset(sp_payload,0,sizeof(sp_payload));
-  
-  sp_read(cpm,bw);
 
-  for (i=0;i<bw;i++)
-    if (sp_payload[i]!='\r')
-      putchar(sp_payload[i]);
+  i=0;
+  
+  while (bw > 0)
+    {
+      if (bw > 512)
+	b = 512;
+      else
+	b = bw;
+      
+      sp_read(cpm,b);
+      
+      memcpy(&buf[i],&sp_payload[0],b);
+
+      i += b;
+      bw -= b;
+    }
+  
+  for (j=0;j<i;j++)
+    if (buf[j]!='\r')
+      putchar(buf[j]);
 }
 
 void out()

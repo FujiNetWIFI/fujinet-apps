@@ -306,7 +306,7 @@ vpath %.a65 $(SRCDIR)/$(TARGETLIST) $(SRCDIR)
 $(TARGETOBJDIR)/%.o: %.a65 | $(TARGETOBJDIR)
 	$(CC) -t $(CC65TARGET) -c --create-dep $(@:.o=.d) $(ASFLAGS) -o $@ $<
  
-$(PROGRAM): $(CONFIG) $(OBJECTS) $(LIBS)
+$(PROGRAM): $(CONFIG) $(OBJECTS) obj/apple2/sp.o $(LIBS)
 	$(CC) -t $(CC65TARGET) $(LDFLAGS) -o $@ $(patsubst %.cfg,-C %.cfg,$^)
  
 test: $(PROGRAM)

@@ -49,4 +49,7 @@
 #define RS  0x1E
 #define US  0x1F
 
+/* Terminal entry point */
+void vt100(char __c);
+
 #endif /* VT100_H */

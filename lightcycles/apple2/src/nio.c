@@ -8,6 +8,7 @@
  * @license gpl v. 3
  */
 
+#include <stdio.h>
 #include <string.h>
 #include "nio.h"
 #include "die.h"

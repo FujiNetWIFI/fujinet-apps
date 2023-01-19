@@ -10,6 +10,7 @@
  * @license gpl v. 3
  */
 
+#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include "vt100.h"
@@ -255,7 +256,7 @@ void tbc(void)
  */
 void dsr(void)
 {
-  unsigned char r,c;
+  unsigned char r,c,i;
   char report[8];
   
   switch (_pv[0])

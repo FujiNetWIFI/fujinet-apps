@@ -13,16 +13,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 #include <conio.h>
 #include "nio.h"
 #include "die.h"
 #include "sp.h"
 
 unsigned char net; /* SmartPort Network Device ID */
-char my_name[12], other_name[12], hostname[64];
+char my_name[12], other_name[12], hostname[64], url[64];
+int my_score, other_score;
 unsigned short bw; /* bytes waiting to read */
 unsigned char error; /* network error code */
-bool connected; /* Are we connected? */
+bool connected=false; /* Are we connected? */
+bool listening=false; /* Are we listening? (server) */
+char my_points[800], other_points[800]; /* Every player position since start, used to recolor for dying */
 
 /**
  * @brief setup graphics
@@ -112,14 +116,19 @@ void get_host(void)
  */
 void listen(void)
 {
-  if (nopen(1,"N:TCP://:6502/",0x0C,0x00))
+  if (nopen(net,"N:TCP://:6502/",0x0C,0x00))
     die("COULD NOT OPEN LISTENING CONNECTION");
 
   printf("LISTENING ON PORT 6502...");
   
   while (!connected)
-    nstatus(1,&bw,&connected,&error);
-  
+    nstatus(net,&bw,&connected,&error);
+
+  // We have a connection, accept it.
+  if (ncontrol(net,'A',NULL,0))
+    die("COULD NOT ACCEPT CONNECTION");
+
+  listening=true;
 }
 
 /**
@@ -127,6 +136,49 @@ void listen(void)
  */
 void connect(void)
 {
+  /* Build N:TCP://hostname:6502 */
+  strcat(url,"N:TCP://");
+  strcat(url,hostname);
+  strcat(url,":6502/");
+
+  printf("CONNECTING TO:\n%s",url);
+  
+  if (nopen(net,url,0x0C,0x00))
+    die("COULD NOT MAKE CONNECTION");  
+}
+
+/**
+ * @brief Get player name s
+ */
+void get_names(void)
+{
+  /* Send my name, and ATASCII EOL */
+  /* This could be \r\n if trans = 3, or just \n if trans = 2, or just \r if trans = 1 */
+  nwrite(net,my_name,strlen(my_name));
+  nwrite(net,"\x9b",1);
+
+  bw=0;
+  
+  /* Get opponent name, and strip away EOL */
+  while (bw==0)
+    nstatus(net,&bw,&connected,&error);
+  nread(net,other_name,bw);
+  other_name[strlen(other_name)-1]='\0';
+}
+
+void game(void)
+{
+  unsigned char lx,ly,rx,ry;
+
+  lx=4;
+  rx=35;
+  ly=9;
+  ry=9;
+  
+  printf("      ME:%12s %2d\n",my_name,my_score);
+  printf("OPPONENT:%12s %2d\n",other_name,other_score);
+
+  
 }
 
 void main(void)
@@ -141,6 +193,22 @@ void main(void)
     listen();
   else
     connect();
+
+  printf("CONNECTED!\n");
+
+  get_names();
+
+  while (connected==1)
+    {
+      draw_board();
+      game();
+      nstatus(net,&bw,&connected,&error);
+    }
+
+  if (listening)
+    ncontrol(net,'c',NULL,0); /* Close the client connection. */
   
-  for(;;);
+  nclose(net); /* Close the network adapter */
+
+  die("PRESS ANY KEY TO EXIT");
 }
