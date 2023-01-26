@@ -25,7 +25,7 @@ void in()
   unsigned short bw; // Bytes waiting
   unsigned short b,i,j;
 
-  for (i=0;i<400;i++);
+  for (i=0;i<2000;i++);
   
   sp_status(CPM,'S');
 
@@ -75,6 +75,8 @@ void out()
 
 void main(void)
 {
+  int i;
+  
   videomode(VIDEOMODE_80x24);
   sp_init();
   CPM = sp_find_cpm();
@@ -82,6 +84,8 @@ void main(void)
   clrscr();
 
   sp_control(CPM,'B');
+
+  for (i=0;i<8000;i++);
   
   printf("CPM DEVICE IS %u\nTERMINAL READY.\n\n",CPM);
 
