@@ -1,5 +1,5 @@
 /**
- * #FujiNet CP/M terminal for Apple2
+ * #FujiNet CPM terminal for Apple2
  *
  * @author  Thomas Cherryhomes
  * @email   thom dot cherryhomes at gmail dot com
@@ -10,20 +10,24 @@
 #include <stdio.h>
 #include <conio.h>
 #include <string.h>
+#include <peekpoke.h>
 #include "sp.h"
-
-unsigned char cpm;
 
 #define MAX_SIZE 8192
 
+unsigned char CPM;
+
 unsigned char buf[MAX_SIZE];
+unsigned short len=0;
 
 void in()
 {
   unsigned short bw; // Bytes waiting
   unsigned short b,i,j;
+
+  for (i=0;i<400;i++);
   
-  sp_status(cpm,'S');
+  sp_status(CPM,'S');
 
   bw  = sp_payload[0] & 0xFF;
   bw |= sp_payload[1] << 8;
@@ -44,7 +48,7 @@ void in()
       else
 	b = bw;
       
-      sp_read(cpm,b);
+      sp_read(CPM,b);
       
       memcpy(&buf[i],&sp_payload[0],b);
 
@@ -59,37 +63,31 @@ void in()
 
 void out()
 {
+  len=0;
+  
   if (kbhit())
     {
-      memset(sp_payload,0,sizeof(sp_payload));
-      sp_payload[0]=1;
-      sp_payload[1]=0;
-      sp_payload[2]=cgetc();
-      sp_control(cpm,'W');
+      while (kbhit())
+	sp_payload[len++]=cgetc();
+      sp_write(CPM,len);
     }
 }
 
 void main(void)
-{  
-  unsigned short i;
-
+{
   videomode(VIDEOMODE_80x24);
   sp_init();
-  cpm = sp_find_cpm();
+  CPM = sp_find_cpm();
 
   clrscr();
-  
-  printf("CP/M DEVICE IS %u\n\n",cpm);
 
-  printf("STARTING CP/M, PLEASE WAIT...\r\n");
-
-  sp_control(cpm,'B'); // Boot.
+  sp_control(CPM,'B');
   
+  printf("CPM DEVICE IS %u\nTERMINAL READY.\n\n",CPM);
+
   while(1)
     {
-      cursor(1);
       in();
-      for (i=0;i<8192;i++);
       out();
     }
 }
