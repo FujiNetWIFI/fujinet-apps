@@ -12,9 +12,7 @@
 
 
 #include "sp.h"
-#include <conio.h>
-#include <stdio.h>
-#include <apple2enh.h>
+#include <apple2.h>
 #include <peekpoke.h>
 
 #define SP_CMD_STATUS 0
@@ -244,10 +242,10 @@ spCmdListHigh:
   return sp_err;
 }
 
-int8_t sp_find_modem()
+int8_t sp_find_cpm()
 {
-  const char modem[5] = "MODEM";
-  const uint8_t modem_len = sizeof(modem);
+  const char cpm[3] = "cpm";
+  const uint8_t cpm_len = sizeof(cpm);
   int8_t err, num, i, j;
 
   err = sp_status(0x00, 0x00); // get number of devices
@@ -262,17 +260,15 @@ int8_t sp_find_modem()
     {
       err = sp_status(i, 0x03); // get DIB
 
-      if (sp_payload[4] == modem_len)
+      if (sp_payload[4] == cpm_len)
 	{
-	  for (j = 0; j < modem_len; j++)
-	    if (modem[j]!=sp_payload[5+j])
+	  for (j = 0; j < cpm_len; j++)
+	    if (cpm[j]!=sp_payload[5+j])
 	      return 0;
 
 	  return i;
 	}
     }
-  printf("MODEM NOT FOUND");
-  cgetc();
   return 0;
 }
 
@@ -325,8 +321,6 @@ void sp_init(void)
   slot = sp_find_slot();
   if (slot)
     sp_dispatch = sp_dispatch_address(slot);
-  else
-    cprintf("No SmartPort Firmware Found!");
 }
 
 #endif /* BUILD_APPLE2 */

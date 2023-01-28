@@ -14,6 +14,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "vt100.h"
+#include "screen.h" // temporary!
 
 /**
  * @brief the current terminal state
@@ -37,7 +38,7 @@ static char _c;
 /**
  * @brief The current parameter index (0-10)
  */
-static char _pi;
+static char _pi=0;
 
 /**
  * @brief Parameter values array [0-9]
@@ -45,8 +46,8 @@ static char _pi;
 static char _pv[10];
 
 /**
- * @brief The current parameter string (one digit at a time), 3 digits max.
- */
+  * @brief The current parameter string (one digit at a time), 3 digits max.
+  */
 static char _ps[4];
 
 /**
@@ -66,10 +67,15 @@ static char _ps[4];
 
 /*********************************************************************/
 
+/* Hooks before/after doing terminal processing */
+extern void use(void);
+extern void unuse(void);
+
 /* response injection */
 extern void sendback(char c);
 
 /* Character commands */
+extern void bel(void);
 extern void bs(void);
 extern void tab(void);
 extern void lf(void);
@@ -116,6 +122,26 @@ extern void printer_off(void);
 extern void printer_on(void);
 
 /*********************************************************************/
+
+/**
+ * @brief called to clean up parameters and reset parameter index
+ */
+static void _vt100_cleanup(void)
+{
+  _pi=
+    _ps[0]=
+    _pv[0]=
+    _pv[1]=
+    _pv[2]=
+    _pv[3]=
+    _pv[4]=
+    _pv[5]=
+    _pv[6]=
+    _pv[7]=
+    _pv[8]=
+    _pv[9]=0;
+  vt100_state=CHAR;
+}
 
 /**
  * @brief wrap cursor commands to handle repeat
@@ -298,7 +324,7 @@ static void _vt100_command(void)
       break;
     }
   
-  vt100_state=CLEANUP;
+  _vt100_cleanup();
 }
 
 /**
@@ -306,6 +332,8 @@ static void _vt100_command(void)
  */
 static void _vt100_bracketcommand(void)
 {
+  char tmp[5] = {0,0,0,0,0};
+  
   switch(_c)
     {
     case 'A': /* CURSOR UP */
@@ -337,7 +365,7 @@ static void _vt100_bracketcommand(void)
       break;
     }
   
-  vt100_state=CLEANUP;
+  _vt100_cleanup();
 }
 
 /**
@@ -346,31 +374,14 @@ static void _vt100_bracketcommand(void)
 static void _vt100_parameter(void)
 {
   char cs[2];
-
+  
   cs[0]=_c;
   cs[1]=0;
   
   if (strlen(_ps) < 4)
     strcat(_ps,cs);
-}
 
-/**
- * @brief called to clean up parameters and reset parameter index
- */
-static void _vt100_cleanup(void)
-{
-  _pi=
-    _ps[0]=
-    _pv[0]=
-    _pv[1]=
-    _pv[2]=
-    _pv[3]=
-    _pv[4]=
-    _pv[5]=
-    _pv[6]=
-    _pv[7]=
-    _pv[8]=
-    _pv[9]=0;  
+  vt100_state=BRACKET;
 }
 
 /**
@@ -387,19 +398,21 @@ static void _vt100_bracket(void)
     {
       _pv[_pi] = atoi(_ps); /* Store finished parameter value */
 
-      if (_pv[_pi])         /* if value is 0, e.g. skipped via ; */
-	_pv[_pi] = 1;       /* Then assume value is 1. not perfect but should be ok. */
-
+      memset(_ps,0,sizeof(_ps));
       _pi++;                 /* Finally increment to next parameter */
     }
   else if (IS_COMMAND(_c))
     {
+      _pv[_pi] = atoi(_ps); /* Store finished parameter value */
+
+      memset(_ps,0,sizeof(_ps));
+      _pi++;                 /* Finally increment to next parameter */
+
       vt100_state=BRACKETCOMMAND;
       _vt100_bracketcommand();
     }
   else
     {
-      vt100_state=CHAR;
       _vt100_cleanup();
     }
 }
@@ -424,6 +437,9 @@ static void _vt100_char(void)
 {
   switch (_c)
     {
+    case BEL:
+      bel();
+      break;
     case BS:
       bs();
       break;
@@ -459,8 +475,9 @@ static void _vt100_char(void)
  */
 void vt100(char __c)
 {
+  use();
   _c = __c;
-  
+
   switch(vt100_state)
     {
     case CHAR:
@@ -485,4 +502,5 @@ void vt100(char __c)
       _vt100_cleanup();
       break;
     }
+  unuse();
 }
