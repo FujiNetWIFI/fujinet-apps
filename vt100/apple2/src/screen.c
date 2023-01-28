@@ -94,8 +94,7 @@ void screen_bell(void)
  */
 void screen_bs(void)
 {
-  screen_cursor_toggle();
-
+  
   _col--;
   if (_col==255)
     {
@@ -107,7 +106,7 @@ void screen_bs(void)
     }
   
   screen_putcxy(_col,_row,0x20);
-  screen_cursor_toggle();
+  
 }
 
 /**
@@ -115,15 +114,17 @@ void screen_bs(void)
  */
 void screen_lf(void)
 {
+  
   if (_row==23) /* At bottom, do scroll. */
     {
-      screen_cursor_toggle();
       screen_scroll_up();
       _row=23;
-      screen_cursor_toggle();
+      return;
     }
   else
     screen_cursor_down(1);
+
+  
 }
 
 /**
@@ -131,9 +132,9 @@ void screen_lf(void)
  */
 void screen_cr(void)
 {
-  screen_cursor_toggle();
+  
   _col=0;
-  screen_cursor_toggle();
+  
 }
 
 /**
@@ -220,9 +221,13 @@ unsigned short screen_addr(unsigned char x, unsigned char y)
 void screen_clear_line(unsigned char x, unsigned char y, unsigned char n)
 {
   unsigned char i;
+
+  
   
   for (i=0;i<n;i++)
     screen_putcxy(x+i,y,' ');
+
+  
 }
 
 /**
@@ -234,6 +239,7 @@ void screen_clear(void)
 
   for (i=0;i<24;i++)
     screen_clear_line(0,i,80);
+
 }
 
 /**
@@ -253,10 +259,8 @@ void screen_cursor_toggle(void)
  */
 void screen_set_pos(unsigned char x, unsigned char y)
 {
-  screen_cursor_toggle();
   _col = x;
   _row = y;
-  screen_cursor_toggle();
 }
 
 /**
@@ -330,13 +334,15 @@ void screen_cursor_right(unsigned char n)
 {
   unsigned char i;
 
+  
+
   for (i=0;i<n;i++)
     {
-      screen_cursor_toggle();
       _col++;
       screen_cursor_wrap();
-      screen_cursor_toggle();
     }
+
+  
 }
 
 /**
@@ -347,13 +353,16 @@ void screen_cursor_left(unsigned char n)
 {
   unsigned char i;
 
+  
+  
   for (i=0;i<n;i++)
-    {
-      screen_cursor_toggle();
+    {    
       _col--;
       screen_cursor_wrap();
-      screen_cursor_toggle();
+      
     }
+
+  
 }
 
 /**
@@ -364,13 +373,15 @@ void screen_cursor_up(unsigned char n)
 {
   unsigned char i;
 
+  
+  
   for (i=0;i<n;i++)
     {
-      screen_cursor_toggle();
       _row--;
       screen_cursor_wrap();
-      screen_cursor_toggle();
     }
+
+  
 }
 
 /**
@@ -381,13 +392,15 @@ void screen_cursor_down(unsigned char n)
 {
   unsigned char i;
 
+  
+
   for (i=0;i<n;i++)
     {
-      screen_cursor_toggle();
       _row++;
-      screen_cursor_wrap();
-      screen_cursor_toggle();
+      screen_cursor_wrap();      
     }
+  
+  
 }
 
 /**
@@ -412,8 +425,7 @@ void screen_normal(void)
  */
 void screen_putc(unsigned char c)
 {
-  screen_cursor_toggle();
-
+  
   screen_putcxy(_col,_row,c);
 
   if (_col==80)
@@ -423,6 +435,7 @@ void screen_putc(unsigned char c)
       if (_row==23)
 	{
 	  screen_scroll_up();
+	  return;
 	}
       else
 	_row++;
@@ -432,7 +445,6 @@ void screen_putc(unsigned char c)
       _col++;
     }
   
-  screen_cursor_toggle();
 }
 
 /**
@@ -452,5 +464,5 @@ void screen_init(void)
 {
   SWITCH_80COL=SWITCH_80STORE=SWITCH_ALTCHAR=true;
   screen_clear();
-  screen_cursor_toggle();
+  
 }

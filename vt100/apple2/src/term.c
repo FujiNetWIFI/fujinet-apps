@@ -46,7 +46,11 @@ void bs(void)
 
 void tab(void)
 {
-  // Dunno yet.
+  unsigned char t = _col % 8;
+  unsigned char i;
+
+  for (i=0;i<t;i++)
+    screen_putc(' ');
 }
 
 void lf(void)
