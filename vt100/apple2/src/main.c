@@ -28,12 +28,21 @@ unsigned short len=0;
 #define SWITCH_80STORE (*(unsigned char *)0xC001)
 #define SWITCH_RDMAINRAM (*(unsigned char *)0xC002)
 
+void die(const char *s)
+{
+  screen_puts(s);
+  screen_puts("PRESS ANY KEY TO RETURN TO PRODOS ");
+  cgetc();
+  exit(1);
+}
+
 void in()
 {
   unsigned short bw; // Bytes waiting
   unsigned short b,i,j;
 
-  sp_status(cpm,'S');
+  if (sp_status(cpm,'S')==SP_ERR_IOERROR)
+    die("STATUS I/O ERROR. ");
 
   bw  = sp_payload[0] & 0xFF;
   bw |= sp_payload[1] << 8;
@@ -53,8 +62,9 @@ void in()
 	b = 512;
       else
 	b = bw;
-      
-      sp_read(cpm,b);
+
+      if (sp_read(cpm,b) == SP_ERR_IOERROR)
+	die("READ I/O ERROR. ");
       
       memcpy(&buf[i],&sp_payload[0],b);
 
@@ -95,11 +105,10 @@ void main(void)
   
   sp_control(cpm,'B');
 
-  for (i=0;i<2000;i++);
+  for (i=0;i<16384;i++);
   
   while(1)
     {
-      for (i=0;i<512;i++);
       in();
       out();
     }

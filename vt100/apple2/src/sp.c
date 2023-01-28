@@ -54,6 +54,8 @@ int8_t sp_status(uint8_t dest, uint8_t statcode)
 
 
   // store cmd list
+  __asm__ volatile ("lda $C002");
+  __asm__ volatile ("lda $C004");
   __asm__ volatile ("lda #%b", SP_CMD_STATUS);
   __asm__ volatile ("sta %g", spCmd); // store status command # 
   __asm__ volatile ("lda %v", sp_cmdlist_low);
@@ -92,6 +94,8 @@ int8_t sp_control(uint8_t dest, uint8_t ctrlcode)
   sp_cmdlist_high = (uint8_t)((uint16_t)&sp_cmdlist >> 8) & 0xFF;
 
   // store cmd list
+  __asm__ volatile ("lda $C002");
+  __asm__ volatile ("lda $C004");
   __asm__ volatile ("lda #%b", SP_CMD_CONTROL);
   __asm__ volatile ("sta %g", spCmd); // store status command #
   __asm__ volatile ("lda %v", sp_cmdlist_low);
@@ -123,6 +127,8 @@ int8_t sp_open(uint8_t dest)
   sp_cmdlist_high = (uint8_t)((uint16_t)&sp_cmdlist >> 8) & 0xFF;
 
   // store cmd list
+  __asm__ volatile ("lda $C002");
+  __asm__ volatile ("lda $C004");
   __asm__ volatile ("lda #%b", SP_CMD_OPEN);
   __asm__ volatile ("sta %g", spCmd); // store status command #
   __asm__ volatile ("lda %v", sp_cmdlist_low);
@@ -154,6 +160,8 @@ int8_t sp_close(uint8_t dest)
   sp_cmdlist_high = (uint8_t)((uint16_t)&sp_cmdlist >> 8) & 0xFF;
 
   // store cmd list
+  __asm__ volatile ("lda $C002");
+  __asm__ volatile ("lda $C004");
   __asm__ volatile ("lda #%b", SP_CMD_CLOSE);
   __asm__ volatile ("sta %g", spCmd); // store status command #
   __asm__ volatile ("lda %v", sp_cmdlist_low);
@@ -189,6 +197,8 @@ int8_t sp_read(uint8_t dest, uint16_t len)
   sp_cmdlist_high = (uint8_t)((uint16_t)&sp_cmdlist >> 8) & 0xFF;
 
   // store cmd list
+  __asm__ volatile ("lda $C002");
+  __asm__ volatile ("lda $C004");
   __asm__ volatile ("lda #%b", SP_CMD_READ);
   __asm__ volatile ("sta %g", spCmd); // store status command #
   __asm__ volatile ("lda %v", sp_cmdlist_low);
@@ -223,6 +233,8 @@ int8_t sp_write(uint8_t dest, uint16_t len)
   sp_cmdlist_high = (uint8_t)((uint16_t)&sp_cmdlist >> 8) & 0xFF;
 
   // store cmd list
+  __asm__ volatile ("lda $C002");
+  __asm__ volatile ("lda $C004");
   __asm__ volatile ("lda #%b", SP_CMD_WRITE);
   __asm__ volatile ("sta %g", spCmd); // store status command #
   __asm__ volatile ("lda %v", sp_cmdlist_low);

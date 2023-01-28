@@ -264,6 +264,16 @@ void screen_set_pos(unsigned char x, unsigned char y)
 }
 
 /**
+ * @brief  Set new cursor_position (row)
+ * @param  x column
+ * @param  y row
+ */
+void screen_set_pos_row(unsigned char y)
+{
+  _row = y;
+}
+
+/**
  * @brief Set character at position
  * @param x Column
  * @param y Row
@@ -455,6 +465,27 @@ void screen_puts(const char *c)
 {
   while (*c)
     screen_putc(*c++);
+}
+
+/**
+ * @brief  Insert a line above cursor row
+ * @param  n Number of lines 
+ */
+void screen_insert_line(unsigned char n)
+{
+  unsigned char b = (_inverse ? 0x20 : 0xA0);
+  unsigned char r=23;
+
+  while (r>_row)
+    {
+      SWITCH_PAGE1=true;
+      memcpy((unsigned char *)screen_addr_row[r],(unsigned char *)screen_addr_row[r-1],40);
+      SWITCH_PAGE2=true;
+      memcpy((unsigned char *)screen_addr_row[r],(unsigned char *)screen_addr_row[r-1],40);
+      r--;
+    }
+
+  screen_clear_line(0,_row,80);	 
 }
 
 /**

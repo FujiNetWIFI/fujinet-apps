@@ -110,6 +110,11 @@ void cup(unsigned char r, unsigned char c)
   screen_set_pos(c-1,r-1);
 }
 
+void cupr(unsigned char r)
+{
+  screen_set_pos_row(r);
+}
+
 void ind(void)
 {
 }
@@ -221,3 +226,8 @@ void printer_on(void)
 {
 }
 
+/* Insert/delete */
+void insert_line(unsigned char n)
+{
+  screen_insert_line(n);
+}

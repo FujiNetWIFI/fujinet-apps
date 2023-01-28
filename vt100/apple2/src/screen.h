@@ -168,4 +168,17 @@ void screen_puts(const char *c);
  */
 void screen_set_pos(unsigned char x, unsigned char y);
 
+/**
+ * @brief  Set new cursor_position (row)
+ * @param  x column
+ * @param  y row
+ */
+void screen_set_pos_row(unsigned char y);
+
+/**
+ * @brief  Insert a line above cursor row
+ * @param  n Number of lines 
+ */
+void screen_insert_line(unsigned char n);
+
 #endif /* SCREEN_H */

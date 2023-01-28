@@ -93,10 +93,14 @@ extern void cud(void);
 extern void cur(void);
 extern void cul(void);
 extern void cup(unsigned char r, unsigned char c);
+extern void cupr(unsigned char r);
 extern void ind(void);
 extern void ri(void);
 extern void nel(void);
 extern void whereami(unsigned char *r, unsigned char *c);
+
+/* insert/delete */
+extern void insert_line(unsigned char n);
 
 /* Tab control */
 extern void hts(void);
@@ -172,6 +176,17 @@ void _vt100_bracketcommand_cursor(void)
 	  break;
 	}
     }
+}
+
+/**
+ * @brief insert line
+ */
+void il(void)
+{
+  if (_pv[0]==0)
+    _pv[0]=1;
+
+  insert_line(_pv[0]);
 }
 
 /**
@@ -348,6 +363,9 @@ static void _vt100_bracketcommand(void)
     case 'H': /* CURSOR POS */
       cup(_pv[0],_pv[1]);
       break;
+    case 'f': /* CURSOR POS HORIZ */
+      cupr(_pv[0]);
+      break;
     case 'm': /* SET ATTRIBUTES */
       sgr();
       break;
@@ -356,6 +374,9 @@ static void _vt100_bracketcommand(void)
       break;
     case 'K': /* ERASE IN LINE */
       el();
+      break;
+    case 'L': /* INSERT LINE(s) */
+      il();
       break;
     case 'g': /* TAB CLEAR */
       tbc();
