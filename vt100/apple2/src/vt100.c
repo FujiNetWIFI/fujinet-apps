@@ -71,6 +71,9 @@ static char _ps[4];
 extern void use(void);
 extern void unuse(void);
 
+/* Hook to toggle cursor */
+extern void cursor_toggle(void);
+
 /* response injection */
 extern void sendback(char c);
 
@@ -476,6 +479,7 @@ static void _vt100_char(void)
 void vt100(char __c)
 {
   use();
+  cursor_toggle();
   _c = __c;
 
   switch(vt100_state)
@@ -503,4 +507,5 @@ void vt100(char __c)
       break;
     }
   unuse();
+  cursor_toggle();
 }

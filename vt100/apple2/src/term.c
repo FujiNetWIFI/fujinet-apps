@@ -17,6 +17,11 @@ unsigned char tabs[8]={8,16,24,32,40,48,56,64};
 extern unsigned char _row;
 extern unsigned char _col;
 
+void cursor_toggle(void)
+{
+  screen_cursor_toggle();
+}
+
 void use(void)
 {
   screen_use();
