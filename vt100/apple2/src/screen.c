@@ -19,6 +19,9 @@
 #define SWITCH_40STORE (*(unsigned char *)0xC000)
 #define SWITCH_80STORE (*(unsigned char *)0xC001)
 #define SWITCH_RDMAINRAM (*(unsigned char *)0xC002)
+#define SWITCH_RDCARDRAM (*(unsigned char *)0xC003)
+#define SWITCH_WRMAINRAM (*(unsigned char *)0xC004)
+#define SWITCH_WRCARDRAM (*(unsigned char *)0xC005)
 #define SWITCH_40COL   (*(unsigned char *)0xC00C)
 #define SWITCH_80COL   (*(unsigned char *)0xC00D)
 #define SWITCH_NORCHAR (*(unsigned char *)0xC00E)
@@ -75,7 +78,8 @@ void screen_use(void)
  */
 void screen_unuse(void)
 {
-  SWITCH_80STORE=SWITCH_RDMAINRAM=false;
+  SWITCH_PAGE1=true;
+  SWITCH_40STORE=true;
 }
 
 /**
@@ -201,6 +205,8 @@ void screen_clear_current_line(void)
  */
 unsigned short screen_addr(unsigned char x, unsigned char y)
 {
+  SWITCH_80STORE=true;
+    
   /* Go ahead and flip soft-switch for correct bank */
   if (x % 2 == 0)
     SWITCH_PAGE2=true;
@@ -304,6 +310,8 @@ void screen_putcxy(unsigned char x, unsigned char y, unsigned char c)
 void screen_scroll_up(void)
 {
   unsigned char i=0;
+
+  SWITCH_80STORE=true;
 
   while (i<24)
     {
@@ -475,6 +483,8 @@ void screen_insert_line(unsigned char n)
 {
   unsigned char b = (_inverse ? 0x20 : 0xA0);
   unsigned char r=23;
+
+  SWITCH_80STORE=true;
 
   while (r>_row)
     {
