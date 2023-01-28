@@ -135,10 +135,8 @@ void screen_lf(void)
  * @brief do carriage return
  */
 void screen_cr(void)
-{
-  
-  _col=0;
-  
+{  
+  _col=0; 
 }
 
 /**

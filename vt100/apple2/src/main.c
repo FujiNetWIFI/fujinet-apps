@@ -42,7 +42,7 @@ void in()
   unsigned short b,i,j;
 
   if (sp_status(cpm,'S')==SP_ERR_IOERROR)
-    die("STATUS I/O ERROR. ");
+    return;
 
   bw  = sp_payload[0] & 0xFF;
   bw |= sp_payload[1] << 8;
@@ -64,7 +64,7 @@ void in()
 	b = bw;
 
       if (sp_read(cpm,b) == SP_ERR_IOERROR)
-	die("READ I/O ERROR. ");
+	return;
       
       memcpy(&buf[i],&sp_payload[0],b);
 
