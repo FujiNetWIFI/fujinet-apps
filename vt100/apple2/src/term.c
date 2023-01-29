@@ -74,7 +74,8 @@ void xon(void)
 
 void toscreen(char c)
 {
-  screen_putc(c);
+  if (c > 0x1F)
+    screen_putc(c);
 }
 
 

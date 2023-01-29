@@ -28,7 +28,7 @@ CONFIG  :=
  
 # Additional C compiler flags and options.
 # Default: none
-CFLAGS  = -Os --static-locals -DBUILD_APPLE2
+CFLAGS  = -Oris -DBUILD_APPLE2
  
 # Additional assembler flags and options.
 # Default: none

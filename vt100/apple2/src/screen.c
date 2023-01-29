@@ -325,6 +325,12 @@ void screen_set_pos_row(unsigned char y)
 void screen_putcxy(unsigned char x, unsigned char y, unsigned char c)
 {
   unsigned char o;
+
+  // Prevent screen hole writes.
+  if (x>79)
+    return;
+  else if (y>23)
+    return;
   
   if (_inverse)
     {
@@ -480,7 +486,6 @@ void screen_normal(void)
  */
 void screen_putc(unsigned char c)
 {
-  
   screen_putcxy(_col,_row,c);
 
   if (_col==80)
