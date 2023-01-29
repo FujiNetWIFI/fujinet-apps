@@ -102,6 +102,25 @@ void main(void)
   
   screen_init();
 
+  sp_status(cpm,'B');
+
+  if (sp_payload[0]==1)
+    {
+      screen_puts("CP/M Terminal Already Running.");
+      screen_cr();
+      screen_lf();
+      screen_puts("Press RETURN.");
+    }
+  else
+    {
+      screen_puts("Booting CP/M");
+    }
+
+  screen_cr();
+  screen_lf();
+  screen_cr();
+  screen_lf();
+  
   sp_payload[0]=1;
   sp_payload[1]=0;
   sp_payload[2]=0;

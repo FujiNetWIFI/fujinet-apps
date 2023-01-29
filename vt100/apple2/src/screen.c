@@ -177,13 +177,10 @@ void screen_clear_cursor_to_end(void)
 {
   unsigned char r;
 
-  if ((_row-1) > 0)
-    {
-      for (r=_row;r<24;r++)
-	screen_clear_line(0,r,80);
-    }
+  for (r=_row+1;r<24;r++)
+    screen_clear_line(0,r,80);
 
-  screen_clear_to_end_of_line();
+  screen_clear_line(_col,_row,80-_col);
 }
 
 /**
@@ -239,24 +236,41 @@ unsigned short screen_addr(unsigned char x, unsigned char y)
  */
 void screen_clear_line(unsigned char x, unsigned char y, unsigned char n)
 {
-  // This causes a mess in wordstar, see why, because it's fast.
-  /* unsigned char o = _inverse ? 0x20 : 0xA0; */
+      unsigned char i;
 
+      /* Less efficient, but works. */
+      for (i=0;i<n;i++)
+	screen_putcxy(x+i,y,' ');
+
+  /* Can someone debug this and see why it fails in certain cases? -Thom */
+  /* unsigned char o = _inverse ? 0x20 : 0xA0; */
+  /* unsigned char m = n % 2; */
+
+  /* if (!m) */
+  /*   { */
   /* n >>= 1; */
   /* x >>= 1; */
 
-  /* SWITCH_80STORE=true; */
+  /* if (n > 40) */
+  /*   n=40; */
   
+  /* if (x > 40) */
+  /*   x=40; */
+
+  /* SWITCH_80STORE=true; */
+    
   /* SWITCH_PAGE2=true; */
   /* memset((unsigned char *)screen_addr_row[y]+x,o,n-x); */
   /* SWITCH_PAGE1=true; */
-  /* memset((unsigned char *)screen_addr_row[y]+x,o,n-x); */
-
-  unsigned char i;
-
-  /* Less efficient, but works. */
-  for (i=0;i<n;i++)
-    screen_putcxy(x+i,y,' ');
+  /* memset((unsigned char *)screen_addr_row[y]+x,o,n-x-m); */
+  /*   } */
+  /* else */
+  /*   { */
+  /*     unsigned char i; */
+  /*     /\* Less efficient, but works. *\/ */
+  /*     for (i=0;i<n;i++) */
+  /* 	screen_putcxy(x+i,y,' '); */
+  /*   } */
 }
 
 /**
