@@ -42,6 +42,11 @@ void screen_lf(void);
 void screen_cr(void);
 
 /**
+ * @brief go to next TAB
+ */
+void screen_tab(void);
+
+/**
  * @brief clear from current pos to end of screen
  */
 void screen_clear_cursor_to_end(void);

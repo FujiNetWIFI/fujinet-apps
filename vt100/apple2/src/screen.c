@@ -30,6 +30,9 @@
 #define SWITCH_PAGE2   (*(unsigned char *)0xC055)
 #define BLANK_CHAR     0xA0
 
+/* Tabs */
+static const unsigned char _tabs[9] = {8,16,24,32,40,48,56,64,72};
+
 /* Screen row table. Row table */
 static const unsigned short screen_addr_row[24] =
   {
@@ -140,6 +143,18 @@ void screen_cr(void)
 }
 
 /**
+ * @brief go to next TAB
+ */
+void screen_tab(void)
+{
+  unsigned char i=0;
+  
+  while(_col > _tabs[i++]);
+
+  _col = _tabs[--i];
+}
+
+/**
  * @brief clear to end of line
  */
 void screen_clear_to_end_of_line(void)
@@ -224,14 +239,24 @@ unsigned short screen_addr(unsigned char x, unsigned char y)
  */
 void screen_clear_line(unsigned char x, unsigned char y, unsigned char n)
 {
+  // This causes a mess in wordstar, see why, because it's fast.
+  /* unsigned char o = _inverse ? 0x20 : 0xA0; */
+
+  /* n >>= 1; */
+  /* x >>= 1; */
+
+  /* SWITCH_80STORE=true; */
+  
+  /* SWITCH_PAGE2=true; */
+  /* memset((unsigned char *)screen_addr_row[y]+x,o,n-x); */
+  /* SWITCH_PAGE1=true; */
+  /* memset((unsigned char *)screen_addr_row[y]+x,o,n-x); */
+
   unsigned char i;
 
-  
-  
+  /* Less efficient, but works. */
   for (i=0;i<n;i++)
     screen_putcxy(x+i,y,' ');
-
-  
 }
 
 /**

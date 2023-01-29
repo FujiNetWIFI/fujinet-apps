@@ -41,6 +41,8 @@ void in()
   unsigned short bw; // Bytes waiting
   unsigned short b,i,j;
 
+  screen_unuse();
+  
   if (sp_status(cpm,'S')==SP_ERR_IOERROR)
     return;
 
@@ -79,7 +81,8 @@ void in()
 void out()
 {
   len=0;
-  
+
+  screen_unuse();
   if (kbhit())
     {
       while (kbhit())

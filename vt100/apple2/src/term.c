@@ -11,8 +11,6 @@
 #include "vt100.h"
 #include "screen.h"
 
-unsigned char tabs[8]={8,16,24,32,40,48,56,64};
-
 /* externs from screen.c */
 extern unsigned char _row;
 extern unsigned char _col;
@@ -51,11 +49,7 @@ void bs(void)
 
 void tab(void)
 {
-  unsigned char t = _col % 8;
-  unsigned char i;
-
-  for (i=0;i<t;i++)
-    screen_putc(' ');
+  screen_tab();
 }
 
 void lf(void)
