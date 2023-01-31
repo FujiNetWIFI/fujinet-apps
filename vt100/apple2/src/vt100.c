@@ -158,6 +158,9 @@ void _vt100_bracketcommand_cursor(void)
   unsigned char i;
   unsigned char r = _pv[0];
 
+  if (r==0)
+    r=1;
+  
   for (i=0;i<r;i++)
     {
       switch(_c)

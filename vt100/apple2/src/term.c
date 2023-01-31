@@ -112,14 +112,21 @@ void cupr(unsigned char r)
 
 void ind(void)
 {
+  lf();
 }
 
 void ri(void)
 {
+  if (_row>0)
+    _row--;
+  else
+    screen_scroll_up();
 }
 
 void nel(void)
 {
+  cr();
+  lf();
 }
 
 void whereami(unsigned char *r, unsigned char *c)

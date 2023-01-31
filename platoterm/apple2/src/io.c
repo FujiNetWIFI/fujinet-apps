@@ -40,6 +40,19 @@ static uint8_t opened=0;
 #define SP_READ_PARAM_COUNT 4
 #define SP_WRITE_PARAM_COUNT 4
 
+// see page 81-82 in Apple IIc ROM reference and Table 7-5 in IIgs firmware ref
+#define SP_ERR_NOERROR 0x00    // no error
+#define SP_ERR_BADCMD 0x01     // invalid command
+#define SP_ERR_BUSERR 0x06     // communications error
+#define SP_ERR_BADCTL 0x21     // invalid status or control code
+#define SP_ERR_BADCTLPARM 0x22 // invalid parameter list
+#define SP_ERR_IOERROR 0x27    // i/o error on device side
+#define SP_ERR_NODRIVE 0x28    // no device connected
+#define SP_ERR_NOWRITE 0x2b    // disk write protected
+#define SP_ERR_BADBLOCK 0x2d   // invalid block number
+#define SP_ERR_DISKSW 0x2e     // media has been swapped - extended calls only
+#define SP_ERR_OFFLINE 0x2f    // device offline or no disk in drive
+
 // extern globals:
 uint8_t sp_payload[1024];
 uint16_t sp_count;
@@ -363,7 +376,8 @@ void io_main(void)
   if (!opened)
     return;
   
-  sp_status(net,'S');
+  if (sp_status(net,'S') != SP_ERR_NOERROR)
+    return;
 
   bw = sp_payload[0];
   bw |= (sp_payload[1] << 8);
@@ -375,7 +389,8 @@ void io_main(void)
   if (bw==0)
     return;
 
-  sp_read(net,bw);
+  if (sp_read(net,bw) != SP_ERR_NOERROR)
+    return;
 
   ShowPLATO(sp_payload,bw);
   memset(&sp_payload[0],0,512);

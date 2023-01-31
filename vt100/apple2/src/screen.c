@@ -393,17 +393,8 @@ void screen_cursor_wrap(void)
  */
 void screen_cursor_right(unsigned char n)
 {
-  unsigned char i;
-
-  
-
-  for (i=0;i<n;i++)
-    {
-      _col++;
-      screen_cursor_wrap();
-    }
-
-  
+  _col++;
+  screen_cursor_wrap();
 }
 
 /**
@@ -412,18 +403,8 @@ void screen_cursor_right(unsigned char n)
  */
 void screen_cursor_left(unsigned char n)
 {
-  unsigned char i;
-
-  
-  
-  for (i=0;i<n;i++)
-    {    
-      _col--;
-      screen_cursor_wrap();
-      
-    }
-
-  
+  _col--;
+  screen_cursor_wrap();
 }
 
 /**
@@ -432,17 +413,8 @@ void screen_cursor_left(unsigned char n)
  */
 void screen_cursor_up(unsigned char n)
 {
-  unsigned char i;
-
-  
-  
-  for (i=0;i<n;i++)
-    {
-      _row--;
-      screen_cursor_wrap();
-    }
-
-  
+  _row--;
+  screen_cursor_wrap();
 }
 
 /**
@@ -451,17 +423,8 @@ void screen_cursor_up(unsigned char n)
  */
 void screen_cursor_down(unsigned char n)
 {
-  unsigned char i;
-
-  
-
-  for (i=0;i<n;i++)
-    {
-      _row++;
-      screen_cursor_wrap();      
-    }
-  
-  
+  _row++;
+  screen_cursor_wrap();      
 }
 
 /**

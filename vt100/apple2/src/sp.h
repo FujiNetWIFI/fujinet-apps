@@ -34,6 +34,7 @@ int8_t sp_close(uint8_t dest);
 int8_t sp_read(uint8_t dest, uint16_t len);
 int8_t sp_write(uint8_t dest, uint16_t len);
 int8_t sp_find_cpm(void);
+int8_t sp_find_modem(void);
 uint8_t sp_find_slot(void);
 uint16_t sp_dispatch_address(uint8_t slot);
 void sp_init(void);

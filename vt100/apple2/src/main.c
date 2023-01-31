@@ -20,21 +20,14 @@
 
 #define MAX_SIZE 8192
 
-unsigned char cpm;
+unsigned char cpm, modem, dev;
 
 unsigned char buf[MAX_SIZE];
 unsigned short len=0;
 
+#define SWITCH_40STORE (*(unsigned char *)0xC000)
 #define SWITCH_80STORE (*(unsigned char *)0xC001)
 #define SWITCH_RDMAINRAM (*(unsigned char *)0xC002)
-
-void die(const char *s)
-{
-  screen_puts(s);
-  screen_puts("PRESS ANY KEY TO RETURN TO PRODOS ");
-  cgetc();
-  exit(1);
-}
 
 void in()
 {
@@ -43,7 +36,7 @@ void in()
 
   screen_unuse();
   
-  if (sp_status(cpm,'S')==SP_ERR_IOERROR)
+  if (sp_status(dev,'S')==SP_ERR_IOERROR)
     return;
 
   bw  = sp_payload[0] & 0xFF;
@@ -51,6 +44,8 @@ void in()
 
   if (bw==0)
     return;
+  else if (bw==65535)
+    exit(0);
   if (bw > MAX_SIZE)
     bw = MAX_SIZE;
 
@@ -65,7 +60,7 @@ void in()
       else
 	b = bw;
 
-      if (sp_read(cpm,b) == SP_ERR_IOERROR)
+      if (sp_read(dev,b) == SP_ERR_IOERROR)
 	return;
       
       memcpy(&buf[i],&sp_payload[0],b);
@@ -87,48 +82,51 @@ void out()
     {
       while (kbhit())
 	sp_payload[len++]=cgetc();
-      sp_write(cpm,len);
+      sp_write(dev,len);
     }
 }
 
 void main(void)
 {
   int i;
-  
-  SWITCH_80STORE=SWITCH_RDMAINRAM=false;
-  
+  char c;
+
+  SWITCH_40STORE=SWITCH_RDMAINRAM=true;
+
   sp_init();
-  cpm = 3;
-  
+  cpm = sp_find_cpm();
+  modem = sp_find_modem();
+
   screen_init();
 
-  sp_status(cpm,'B');
-
-  if (sp_payload[0]==1)
+  screen_puts("#FUJINET VT100 - C)P/M, or M)ODEM? ");
+  while (true)
     {
-      screen_puts("CP/M Terminal Already Running.");
-      screen_cr();
-      screen_lf();
-      screen_puts("Press RETURN.");
+      c=cgetc();
+      if (c == 'C' || c == 'c')
+	{
+	  screen_putc('C');
+	  dev = cpm;
+	  sp_payload[0]=1;
+	  sp_payload[1]=0;
+	  sp_payload[2]=0;
+	  sp_control(dev,'B');
+	  for (i=0;i<16384;i++);
+	  break;
+	}
+      else if (c == 'M' || c == 'm')
+	{
+	  screen_putc('M');
+	  dev = modem;
+	  break;
+	}      
     }
-  else
-    {
-      screen_puts("Booting CP/M");
-    }
-
+  
   screen_cr();
   screen_lf();
   screen_cr();
   screen_lf();
-  
-  sp_payload[0]=1;
-  sp_payload[1]=0;
-  sp_payload[2]=0;
-  
-  sp_control(cpm,'B');
-
-  for (i=0;i<16384;i++);
-  
+      
   while(1)
     {
       in();
