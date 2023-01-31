@@ -233,3 +233,9 @@ void insert_line(unsigned char n)
 {
   screen_insert_line(n);
 }
+
+/* Insert/delete */
+void delete_line(unsigned char n)
+{
+  screen_delete_line(n);
+}

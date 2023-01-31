@@ -101,6 +101,7 @@ extern void whereami(unsigned char *r, unsigned char *c);
 
 /* insert/delete */
 extern void insert_line(unsigned char n);
+extern void delete_line(unsigned char n);
 
 /* Tab control */
 extern void hts(void);
@@ -380,6 +381,9 @@ static void _vt100_bracketcommand(void)
       break;
     case 'L': /* INSERT LINE(s) */
       il();
+      break;
+    case 'M': /* DELETE LINE(s)*/
+      delete_line(_pv[0]);
       break;
     case 'g': /* TAB CLEAR */
       tbc();

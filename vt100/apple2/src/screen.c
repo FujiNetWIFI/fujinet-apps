@@ -504,6 +504,26 @@ void screen_insert_line(unsigned char n)
 }
 
 /**
+ * @brief Delete line
+ */
+void screen_delete_line(unsigned char n)
+{
+  unsigned char i=_row+1;
+
+  SWITCH_80STORE=true;
+
+  while (i<24)
+    {
+      SWITCH_PAGE1=true;
+      memcpy((unsigned char *)screen_addr_row[i-1],(unsigned char *)screen_addr_row[i],40);
+      SWITCH_PAGE2=true;
+      memcpy((unsigned char *)screen_addr_row[i-1],(unsigned char *)screen_addr_row[i],40);
+      i++;
+    }
+  screen_clear_line(0,23,80);
+}
+
+/**
  * @brief Initialize 80 column text screen
  */
 void screen_init(void)

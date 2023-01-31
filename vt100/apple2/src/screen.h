@@ -186,4 +186,10 @@ void screen_set_pos_row(unsigned char y);
  */
 void screen_insert_line(unsigned char n);
 
+/**
+ * @brief  Delete a line
+ * @param  n Number of lines 
+ */
+void screen_delete_line(unsigned char n);
+
 #endif /* SCREEN_H */
