@@ -315,8 +315,8 @@ test: $(PROGRAM)
 	$(POSTEMUCMD)
 
 dist: $(PROGRAM)
-	     cp dist.apple2/bootable.po dist.apple2/dist.po
-	     java -jar dist.apple2/ac.jar -as dist.apple2/dist.po testsp.system sys <testsp
+	     cp dist.apple2/bootable.po dist.apple2/testsp.po
+	     java -jar dist.apple2/ac.jar -as dist.apple2/testsp.po testsp.system sys <testsp
 
 clean:
 	$(call RMFILES,$(OBJECTS))
