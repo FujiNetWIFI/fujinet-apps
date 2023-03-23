@@ -247,8 +247,8 @@ endif
 .SUFFIXES:
 .PHONY: all test clean zap love
  
-all: $(PROGRAM)
- 
+all: clean $(PROGRAM) dist
+  
 -include $(DEPENDS)
 -include $(STATEFILE)
  

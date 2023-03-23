@@ -16,7 +16,7 @@ void banner(void)
 {
   clrscr();
   revers(1);
-  cprintf(" WELCOME TO NETCAT");
+  cprintf(" WELCOME TO NETCAT ");
   revers(0);
   cprintf("\r\n\r\n");
 }

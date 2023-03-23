@@ -15,7 +15,7 @@
 
 #define MAX_SIZE 8192
 
-unsigned char CPM;
+int8_t CPM;
 
 unsigned char buf[MAX_SIZE];
 unsigned short len=0;
@@ -34,6 +34,7 @@ void in()
 
   if (bw==0)
     return;
+
   if (bw > MAX_SIZE)
     bw = MAX_SIZE;
 
@@ -44,9 +45,9 @@ void in()
   while (bw > 0)
     {
       if (bw > 512)
-	b = 512;
+	      b = 512;
       else
-	b = bw;
+	      b = bw;
       
       sp_read(CPM,b);
       
@@ -68,7 +69,7 @@ void out()
   if (kbhit())
     {
       while (kbhit())
-	sp_payload[len++]=cgetc();
+	      sp_payload[len++]=cgetc();
       sp_write(CPM,len);
     }
 }
@@ -79,6 +80,8 @@ void main(void)
   
   videomode(VIDEOMODE_80x24);
   sp_init();
+  sp_list_devs();
+
   CPM = sp_find_cpm();
 
   clrscr();

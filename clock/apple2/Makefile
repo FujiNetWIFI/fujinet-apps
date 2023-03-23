@@ -247,7 +247,7 @@ endif
 .SUFFIXES:
 .PHONY: all test clean zap love
  
-all: $(PROGRAM)
+all: clean $(PROGRAM) dist
  
 -include $(DEPENDS)
 -include $(STATEFILE)
@@ -315,10 +315,10 @@ test: $(PROGRAM)
 	$(POSTEMUCMD)
  
 dist: $(PROGRAM)
-	     cp dist.apple2/bootable.po dist.apple2/dist.po
-	     java -jar dist.apple2/ac.jar -p dist.apple2/dist.po fn.clock.system sys <dist.apple2/fn.clock.system
-	     java -jar dist.apple2/ac.jar -p dist.apple2/dist.po clock.system sys <dist.apple2/clock.system
-	     java -jar dist.apple2/ac.jar -as dist.apple2/dist.po clock bin <clock
+	     cp dist.apple2/bootable.po dist.apple2/clock.po
+	     java -jar dist.apple2/ac.jar -p dist.apple2/clock.po fn.clock.system sys <dist.apple2/fn.clock.system
+	     java -jar dist.apple2/ac.jar -p dist.apple2/clock.po clock.system sys <dist.apple2/clock.system
+	     java -jar dist.apple2/ac.jar -as dist.apple2/clock.po clock bin <clock
 
 clean:
 	$(call RMFILES,$(OBJECTS))

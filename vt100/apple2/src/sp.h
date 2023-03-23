@@ -9,20 +9,7 @@
 
 #include <stdint.h>
 
-// see page 81-82 in Apple IIc ROM reference and Table 7-5 in IIgs firmware ref
-#define SP_ERR_NOERROR 0x00    // no error
-#define SP_ERR_BADCMD 0x01     // invalid command
-#define SP_ERR_BUSERR 0x06     // communications error
-#define SP_ERR_BADCTL 0x21     // invalid status or control code
-#define SP_ERR_BADCTLPARM 0x22 // invalid parameter list
-#define SP_ERR_IOERROR 0x27    // i/o error on device side
-#define SP_ERR_NODRIVE 0x28    // no device connected
-#define SP_ERR_NOWRITE 0x2b    // disk write protected
-#define SP_ERR_BADBLOCK 0x2d   // invalid block number
-#define SP_ERR_DISKSW 0x2e     // media has been swapped - extended calls only
-#define SP_ERR_OFFLINE 0x2f    // device offline or no disk in drive
-
-extern uint8_t sp_payload[2048];
+extern uint8_t sp_payload[1024];
 extern uint16_t sp_count, sp_dispatch;
 extern uint8_t sp_dest;
 extern uint8_t sp_error;
@@ -33,10 +20,37 @@ int8_t sp_open(uint8_t dest);
 int8_t sp_close(uint8_t dest);
 int8_t sp_read(uint8_t dest, uint16_t len);
 int8_t sp_write(uint8_t dest, uint16_t len);
-int8_t sp_find_cpm(void);
+
+int8_t sp_find_fuji(void);
+int8_t sp_find_network(void);
+int8_t sp_find_clock(void);
+int8_t sp_find_modem();
+int8_t sp_find_cpm();
+int8_t sp_find_printer();
+
 uint8_t sp_find_slot(void);
 uint16_t sp_dispatch_address(uint8_t slot);
-void sp_init(void);
+uint8_t sp_init(void);
+
+void sp_list_devs();
+
+#define SP_ERR_OK (0x00)
+#define SP_ERR_BAD_CMD (0x01)
+#define SP_ERR_BAD_PCNT (0x02)      //    ; BAD CALL PARAMETER COUNT
+#define SP_ERR_BUS_ERR (0x06)       //    ; bus error in IWM chip
+#define SP_ERR_BAD_UNIT (0x11)      //    ; UNIT NUMBER $00 WAS USED
+#define SP_ERR_BAD_CTRL (0x21)      //    ; CTRL OR STATUS CODE WAS NOT SUPPORTED
+#define SP_ERR_BAD_CTRL_PARM (0x22) //    ; CTRL PARAMTER LIST CONTAINS INVALID INFO
+#define SP_ERR_IO_ERROR (0x27)      //    ; CAN'T ACCESS DEVICE OR DEVICE ERROR
+#define SP_ERR_NO_DRIVE (0x28)      //    ; DEVICE IS NOT CONNECTED
+#define SP_ERR_NO_WRITE (0x2B)      //    ; MEDIUM IS WRITE PROTECTED
+#define SP_ERR_BAD_BLOCK (0x2D)     //    ; BLOCK NUMBER IS OUTSIDE OF RANGE
+#define SP_ERR_DISK_SW (0x2E)       //    ; DISK SWITCH TOOK PLACE
+#define SP_ERR_OFFLINE (0x2F)       //    ; DEVICE OFFLINE OR NO DISK IN DRIVE
+#define SP_ERR_DEV_SPEC0 (0x30)     //    ; DEVICE SPECIFIC ERRORS
+#define SP_ERR_DEV_SPECF (0x3F)     //    ; DEVICE SPECIFIC ERRORS
+// SP_ERR_RESERVED $40-$4F
+#define SP_ERR_NON_FATAL50 (0x50) //    ; DEVICE SPECIFIC WARNING
+#define SP_ERR_NON_FATAL7F (0x7F) //    ; DEVICE SPECIFIC WARNING
 
 #endif /* SP_H */
-

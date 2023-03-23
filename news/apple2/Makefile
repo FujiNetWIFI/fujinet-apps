@@ -247,7 +247,7 @@ endif
 .SUFFIXES:
 .PHONY: all test clean zap love
  
-all: $(PROGRAM)
+all: clean $(PROGRAM) dist
  
 -include $(DEPENDS)
 -include $(STATEFILE)
@@ -315,9 +315,9 @@ test: $(PROGRAM)
 	$(POSTEMUCMD)
  
 dist: $(PROGRAM)
-	     cp dist.apple2/bootable.po dist.apple2/dist.po
-	     java -jar dist.apple2/ac.jar -p dist.apple2/dist.po news.system sys <dist.apple2/news.system
-	     java -jar dist.apple2/ac.jar -as dist.apple2/dist.po news bin <news
+	     cp dist.apple2/bootable.po dist.apple2/news.po
+	     java -jar dist.apple2/ac.jar -p dist.apple2/news.po news.system sys <dist.apple2/news.system
+	     java -jar dist.apple2/ac.jar -as dist.apple2/news.po news bin <news
 
 clean:
 	$(call RMFILES,$(OBJECTS))

@@ -10,7 +10,7 @@
 # Space or comma separated list of cc65 supported target platforms to build for.
 # Default: c64 (lowercase!)
 TARGETS := apple2enh
- 
+
 # Name of the final, single-file executable.
 # Default: name of the current dir with target name appended
 PROGRAM := dumbtype
@@ -247,7 +247,7 @@ endif
 .SUFFIXES:
 .PHONY: all test clean zap love
  
-all: $(PROGRAM)
+all: clean $(PROGRAM) dist
  
 -include $(DEPENDS)
 -include $(STATEFILE)
@@ -315,8 +315,8 @@ test: $(PROGRAM)
 	$(POSTEMUCMD)
  
 dist: $(PROGRAM)
-	     cp dist.apple2/bootable.po dist.apple2/dist.po
-	     java -jar dist.apple2/ac.jar -as dist.apple2/dist.po dumbtype.system sys <dumbtype
+	     cp dist.apple2/bootable.po dist.apple2/dumbtype.po
+	     java -jar dist.apple2/ac.jar -as dist.apple2/dumbtype.po dumbtype.system sys <dumbtype
 
 clean:
 	$(call RMFILES,$(OBJECTS))
