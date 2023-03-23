@@ -247,7 +247,7 @@ endif
 .SUFFIXES:
 .PHONY: all test clean zap love
  
-all: $(PROGRAM)
+all: clean $(PROGRAM) dist
  
 -include $(DEPENDS)
 -include $(STATEFILE)
@@ -308,15 +308,15 @@ $(TARGETOBJDIR)/%.o: %.a65 | $(TARGETOBJDIR)
  
 $(PROGRAM): $(CONFIG) $(OBJECTS) $(LIBS)
 	$(CC) -t $(CC65TARGET) $(LDFLAGS) -o $@ $(patsubst %.cfg,-C %.cfg,$^)
- 
+
 test: $(PROGRAM)
 	$(PREEMUCMD)
 	$(EMUCMD) $<
 	$(POSTEMUCMD)
  
 dist: $(PROGRAM)
-	     cp dist.apple2/bootable.po dist.apple2/dist.po
-	     java -jar dist.apple2/ac.jar -as dist.apple2/dist.po netcat.system sys <netcat
+	     cp dist.apple2/bootable.po dist.apple2/netcat.po
+	     java -jar dist.apple2/ac.jar -as dist.apple2/netcat.po netcat.system sys <netcat
 
 clean:
 	$(call RMFILES,$(OBJECTS))
