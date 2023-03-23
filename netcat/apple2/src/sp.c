@@ -28,16 +28,22 @@
 #define SP_READ_PARAM_COUNT 4
 #define SP_WRITE_PARAM_COUNT 4
 
+
+
 // extern globals:
-uint8_t sp_payload[1024];
+uint8_t  sp_payload[1024];
 uint16_t sp_count;
-uint8_t sp_dest;
-uint16_t sp_dispatch;
-uint8_t sp_error;
+uint8_t  sp_dest;
+uint16_t sp_dispatch = 0;
+
+uint8_t  sp_error;
 
 static uint8_t sp_cmdlist[10];
 static uint8_t sp_cmdlist_low, sp_cmdlist_high;
 static uint8_t sp_err, sp_rtn_low, sp_rtn_high;
+static uint8_t sp_dispatch_addr_low, sp_dispatch_addr_high;
+
+
 
 int8_t sp_status(uint8_t dest, uint8_t statcode)
 {
@@ -49,21 +55,60 @@ int8_t sp_status(uint8_t dest, uint8_t statcode)
   sp_cmdlist[3] = (uint8_t)((uint16_t)&sp_payload >> 8) & 0xFF;
   sp_cmdlist[4] = statcode;
 
-  sp_cmdlist_low = (uint8_t)((uint16_t)&sp_cmdlist & 0x00FF);
-  sp_cmdlist_high = (uint8_t)((uint16_t)&sp_cmdlist >> 8) & 0xFF;
-
-
   // store cmd list
-  __asm__ volatile ("lda #%b", SP_CMD_STATUS);
-  __asm__ volatile ("sta %g", spCmd); // store status command # 
-  __asm__ volatile ("lda %v", sp_cmdlist_low);
-  __asm__ volatile ("sta %g", spCmdListLow); // store status command #
-  __asm__ volatile ("lda %v", sp_cmdlist_high);
-  __asm__ volatile ("sta %g", spCmdListHigh); // store status command #
-  
-  __asm__ volatile ("jsr $C50D"); // to do - find SP entry point using algorithm from firmware reference
-spCmd:
-  __asm__ volatile ("nop");
+
+  // ********* PRELOADER ********************
+  __asm__ volatile("lda #$20"); // JSR
+  __asm__ volatile("sta %g", spJsr);
+  __asm__ volatile("lda %v", sp_dispatch_addr_low);
+  __asm__ volatile("sta %g", var_addr_low1);
+  __asm__ volatile("sta %g", var_addr_low2);
+  __asm__ volatile("lda %v", sp_dispatch_addr_high);
+  __asm__ volatile("sta %g", var_addr_high1);
+  __asm__ volatile("sta %g", var_addr_high2);
+
+  __asm__ volatile("lda #$BD"); // lda addr,x
+  __asm__ volatile("sta %g", ldax1);
+  __asm__ volatile("sta %g", ldax2);
+
+  __asm__ volatile("ldx #$00");
+ldax1:
+  __asm__ volatile("nop"); // $BD lda addr,x
+var_addr_low1:
+  __asm__ volatile("nop");
+var_addr_high1: 
+  __asm__ volatile("nop");
+
+  __asm__ volatile("sta %g", spDispatch_addr_low);
+
+  __asm__ volatile("inx");
+
+ldax2:
+  __asm__ volatile("nop"); // $BD lda addr,x
+var_addr_low2:
+  __asm__ volatile("nop");
+var_addr_high2: 
+  __asm__ volatile("nop");
+  __asm__ volatile("sta %g", spDispatch_addr_high);
+
+  // ********* PRELOADER END ********************
+
+  __asm__ volatile("lda #%b", SP_CMD_STATUS);
+  __asm__ volatile("sta %g", spCmd); // store status command #
+  __asm__ volatile("lda %v", sp_cmdlist_low);
+  __asm__ volatile("sta %g", spCmdListLow); // store status command #
+  __asm__ volatile("lda %v", sp_cmdlist_high);
+  __asm__ volatile("sta %g", spCmdListHigh); // store status command #
+
+spJsr:
+  __asm__ volatile("nop"); // JSR
+spDispatch_addr_low:
+  __asm__ volatile("nop");
+spDispatch_addr_high:
+  __asm__ volatile("nop");
+
+spCmd: 
+__asm__ volatile("nop");
 spCmdListLow:
   __asm__ volatile ("nop");
 spCmdListHigh:
@@ -88,18 +133,60 @@ int8_t sp_control(uint8_t dest, uint8_t ctrlcode)
   sp_cmdlist[3] = (uint8_t)((uint16_t)&sp_payload >> 8) & 0xFF;
   sp_cmdlist[4] = ctrlcode;
 
-  sp_cmdlist_low = (uint8_t)((uint16_t)&sp_cmdlist & 0x00FF);
-  sp_cmdlist_high = (uint8_t)((uint16_t)&sp_cmdlist >> 8) & 0xFF;
 
   // store cmd list
-  __asm__ volatile ("lda #%b", SP_CMD_CONTROL);
+
+  // ********* PRELOADER ********************
+  __asm__ volatile("lda #$20"); // JSR
+  __asm__ volatile("sta %g", spJsr);
+  __asm__ volatile("lda %v", sp_dispatch_addr_low);
+  __asm__ volatile("sta %g", var_addr_low1);
+  __asm__ volatile("sta %g", var_addr_low2);
+  __asm__ volatile("lda %v", sp_dispatch_addr_high);
+  __asm__ volatile("sta %g", var_addr_high1);
+  __asm__ volatile("sta %g", var_addr_high2);
+
+  __asm__ volatile("lda #$BD"); // lda addr,x
+  __asm__ volatile("sta %g", ldax1);
+  __asm__ volatile("sta %g", ldax2);
+
+  __asm__ volatile("ldx #$00");
+ldax1:
+  __asm__ volatile("nop"); // $BD lda addr,x
+var_addr_low1:
+  __asm__ volatile("nop");
+var_addr_high1:
+  __asm__ volatile("nop");
+
+  __asm__ volatile("sta %g", spDispatch_addr_low);
+
+  __asm__ volatile("inx");
+
+ldax2:
+  __asm__ volatile("nop"); // $BD lda addr,x
+var_addr_low2:
+  __asm__ volatile("nop");
+var_addr_high2:
+  __asm__ volatile("nop");
+  __asm__ volatile("sta %g", spDispatch_addr_high);
+
+  // ********* PRELOADER END ********************
+
+  __asm__ volatile("lda #%b", SP_CMD_CONTROL);
   __asm__ volatile ("sta %g", spCmd); // store status command #
   __asm__ volatile ("lda %v", sp_cmdlist_low);
   __asm__ volatile ("sta %g", spCmdListLow); // store status command #
   __asm__ volatile ("lda %v", sp_cmdlist_high);
   __asm__ volatile ("sta %g", spCmdListHigh); // store status command #
-  
-  __asm__ volatile ("jsr $C50D"); // to do - find entry point and used it instead of hardcoded address
+
+spJsr:
+  __asm__ volatile("nop"); // JSR
+spDispatch_addr_low:
+  __asm__ volatile("nop");
+spDispatch_addr_high:
+  __asm__ volatile("nop");
+
+
 spCmd:
   __asm__ volatile ("nop");
 spCmdListLow:
@@ -119,20 +206,60 @@ int8_t sp_open(uint8_t dest)
   sp_cmdlist[0] = SP_OPEN_PARAM_COUNT; 
   sp_cmdlist[1] = dest; // set before calling sp_status();
 
-  sp_cmdlist_low = (uint8_t)((uint16_t)&sp_cmdlist & 0x00FF);
-  sp_cmdlist_high = (uint8_t)((uint16_t)&sp_cmdlist >> 8) & 0xFF;
-
   // store cmd list
+
+  // ********* PRELOADER ********************
+  __asm__ volatile("lda #$20"); // JSR
+  __asm__ volatile("sta %g", spJsr);
+  __asm__ volatile("lda %v", sp_dispatch_addr_low);
+  __asm__ volatile("sta %g", var_addr_low1);
+  __asm__ volatile("sta %g", var_addr_low2);
+  __asm__ volatile("lda %v", sp_dispatch_addr_high);
+  __asm__ volatile("sta %g", var_addr_high1);
+  __asm__ volatile("sta %g", var_addr_high2);
+
+  __asm__ volatile("lda #$BD"); // lda addr,x
+  __asm__ volatile("sta %g", ldax1);
+  __asm__ volatile("sta %g", ldax2);
+
+  __asm__ volatile("ldx #$00");
+ldax1:
+  __asm__ volatile("nop"); // $BD lda addr,x
+var_addr_low1:
+  __asm__ volatile("nop");
+var_addr_high1:
+  __asm__ volatile("nop");
+
+  __asm__ volatile("sta %g", spDispatch_addr_low);
+
+  __asm__ volatile("inx");
+
+ldax2:
+  __asm__ volatile("nop"); // $BD lda addr,x
+var_addr_low2:
+  __asm__ volatile("nop");
+var_addr_high2:
+  __asm__ volatile("nop");
+  __asm__ volatile("sta %g", spDispatch_addr_high);
+
+  // ********* PRELOADER END ********************
+
   __asm__ volatile ("lda #%b", SP_CMD_OPEN);
   __asm__ volatile ("sta %g", spCmd); // store status command #
   __asm__ volatile ("lda %v", sp_cmdlist_low);
   __asm__ volatile ("sta %g", spCmdListLow); // store status command #
   __asm__ volatile ("lda %v", sp_cmdlist_high);
   __asm__ volatile ("sta %g", spCmdListHigh); // store status command #
-  
-  __asm__ volatile ("jsr $C50D"); // to do - find entry point and used it instead of hardcoded address
-spCmd:
-  __asm__ volatile ("nop");
+
+spJsr:
+  __asm__ volatile("nop"); // JSR
+spDispatch_addr_low:
+  __asm__ volatile("nop");
+spDispatch_addr_high:
+  __asm__ volatile("nop");
+
+spCmd: 
+  __asm__ volatile("nop");
 spCmdListLow:
   __asm__ volatile ("nop");
 spCmdListHigh:
@@ -153,19 +280,58 @@ int8_t sp_read(uint8_t dest, uint16_t len)
   sp_cmdlist[3] = (uint8_t)((uint16_t)&sp_payload >> 8) & 0xFF;
   sp_cmdlist[4] = len & 0xFF;
   sp_cmdlist[5] = len >> 8;
-  
-  sp_cmdlist_low = (uint8_t)((uint16_t)&sp_cmdlist & 0x00FF);
-  sp_cmdlist_high = (uint8_t)((uint16_t)&sp_cmdlist >> 8) & 0xFF;
 
   // store cmd list
-  __asm__ volatile ("lda #%b", SP_CMD_READ);
+  // ********* PRELOADER ********************
+  __asm__ volatile("lda #$20"); // JSR
+  __asm__ volatile("sta %g", spJsr);
+  __asm__ volatile("lda %v", sp_dispatch_addr_low);
+  __asm__ volatile("sta %g", var_addr_low1);
+  __asm__ volatile("sta %g", var_addr_low2);
+  __asm__ volatile("lda %v", sp_dispatch_addr_high);
+  __asm__ volatile("sta %g", var_addr_high1);
+  __asm__ volatile("sta %g", var_addr_high2);
+
+  __asm__ volatile("lda #$BD"); // lda addr,x
+  __asm__ volatile("sta %g", ldax1);
+  __asm__ volatile("sta %g", ldax2);
+
+  __asm__ volatile("ldx #$00");
+ldax1:
+  __asm__ volatile("nop"); // $BD lda addr,x
+var_addr_low1:
+  __asm__ volatile("nop");
+var_addr_high1:
+  __asm__ volatile("nop");
+
+  __asm__ volatile("sta %g", spDispatch_addr_low);
+
+  __asm__ volatile("inx");
+
+ldax2:
+  __asm__ volatile("nop"); // $BD lda addr,x
+var_addr_low2:
+  __asm__ volatile("nop");
+var_addr_high2:
+  __asm__ volatile("nop");
+  __asm__ volatile("sta %g", spDispatch_addr_high);
+
+  // ********* PRELOADER END ********************
+
+  __asm__ volatile("lda #%b", SP_CMD_READ);
   __asm__ volatile ("sta %g", spCmd); // store status command #
   __asm__ volatile ("lda %v", sp_cmdlist_low);
   __asm__ volatile ("sta %g", spCmdListLow); // store status command #
   __asm__ volatile ("lda %v", sp_cmdlist_high);
   __asm__ volatile ("sta %g", spCmdListHigh); // store status command #
-  
-  __asm__ volatile ("jsr $C50D"); // to do - find entry point and used it instead of hardcoded address
+
+spJsr:
+  __asm__ volatile("nop"); // JSR
+spDispatch_addr_low:
+  __asm__ volatile("nop");
+spDispatch_addr_high:
+  __asm__ volatile("nop");
+
 spCmd:
   __asm__ volatile ("nop");
 spCmdListLow:
@@ -181,27 +347,66 @@ int8_t sp_write(uint8_t dest, uint16_t len)
 {
   sp_error = 0;
   // build the command list
-  sp_cmdlist[0] = SP_READ_PARAM_COUNT; 
+  sp_cmdlist[0] = SP_WRITE_PARAM_COUNT; 
   sp_cmdlist[1] = dest; // set before calling sp_status();
   sp_cmdlist[2] = (uint8_t)((uint16_t)&sp_payload & 0x00FF);
   sp_cmdlist[3] = (uint8_t)((uint16_t)&sp_payload >> 8) & 0xFF;
   sp_cmdlist[4] = len & 0xFF;
   sp_cmdlist[5] = len >> 8;
-  
-  sp_cmdlist_low = (uint8_t)((uint16_t)&sp_cmdlist & 0x00FF);
-  sp_cmdlist_high = (uint8_t)((uint16_t)&sp_cmdlist >> 8) & 0xFF;
 
   // store cmd list
+  // ********* PRELOADER ********************
+  __asm__ volatile("lda #$20"); // JSR
+  __asm__ volatile("sta %g", spJsr);
+  __asm__ volatile("lda %v", sp_dispatch_addr_low);
+  __asm__ volatile("sta %g", var_addr_low1);
+  __asm__ volatile("sta %g", var_addr_low2);
+  __asm__ volatile("lda %v", sp_dispatch_addr_high);
+  __asm__ volatile("sta %g", var_addr_high1);
+  __asm__ volatile("sta %g", var_addr_high2);
+
+  __asm__ volatile("lda #$BD"); // lda addr,x
+  __asm__ volatile("sta %g", ldax1);
+  __asm__ volatile("sta %g", ldax2);
+
+  __asm__ volatile("ldx #$00");
+ldax1:
+  __asm__ volatile("nop"); // $BD lda addr,x
+var_addr_low1:
+  __asm__ volatile("nop");
+var_addr_high1:
+  __asm__ volatile("nop");
+
+  __asm__ volatile("sta %g", spDispatch_addr_low);
+
+  __asm__ volatile("inx");
+
+ldax2:
+  __asm__ volatile("nop"); // $BD lda addr,x
+var_addr_low2:
+  __asm__ volatile("nop");
+var_addr_high2:
+  __asm__ volatile("nop");
+  __asm__ volatile("sta %g", spDispatch_addr_high);
+
+  // ********* PRELOADER END ********************
+
   __asm__ volatile ("lda #%b", SP_CMD_WRITE);
   __asm__ volatile ("sta %g", spCmd); // store status command #
   __asm__ volatile ("lda %v", sp_cmdlist_low);
   __asm__ volatile ("sta %g", spCmdListLow); // store status command #
   __asm__ volatile ("lda %v", sp_cmdlist_high);
   __asm__ volatile ("sta %g", spCmdListHigh); // store status command #
-  
-  __asm__ volatile ("jsr $C50D"); // to do - find entry point and used it instead of hardcoded address
-spCmd:
-  __asm__ volatile ("nop");
+
+spJsr:
+  __asm__ volatile("nop"); // JSR
+spDispatch_addr_low:
+  __asm__ volatile("nop");
+spDispatch_addr_high:
+  __asm__ volatile("nop");
+
+spCmd : 
+  __asm__ volatile("nop");
 spCmdListLow:
   __asm__ volatile ("nop");
 spCmdListHigh:
@@ -252,7 +457,7 @@ int8_t sp_find_network()
     return -err;
 
   num = sp_payload[0];
-  num+=2;
+  num++;
 
   for (i = 1; i < num; i++)
     {
@@ -282,7 +487,7 @@ void sp_list_devs()
 
   err = sp_status(0x00, 0x00); // get number of devices
   num = sp_payload[0];
-  num += 2;
+  num++;
   for (i = 1; i < num; i++)
   {
     cprintf("UNIT #%d NAME: ", i);
@@ -309,7 +514,7 @@ uint8_t sp_find_slot(void)
 {
   uint8_t s=0;
 
-  for (s=7; s-- > 0;)
+  for (s=7; s > 0; s--)
     {
       uint16_t a = 0xc000 + (s * 0x100);
       if ((PEEK(a+1) == 0x20) &&
@@ -330,20 +535,65 @@ uint8_t sp_find_slot(void)
  */
 uint16_t sp_dispatch_address(uint8_t slot)
 {
-  uint16_t a = (slot * 0x100) + 0xC000;
-  uint8_t j = PEEK(a+0xFF);
+  uint16_t a = 0xC000 + (slot * 0x100);
+  uint8_t j = PEEK(a+0xFF) & 0xFF;
 
   return a + j + 3;
 }
 
+int8_t sp_find_clock()
+{
+  const char name[8] = "FN_CLOCK";
+  const uint8_t name_len = sizeof(name);
+  int8_t err, num, i, j;
+
+  err = sp_status(0x00, 0x00); // get number of devices
+
+  if (err)
+      return -err;
+
+  num = sp_payload[0];
+  num++;
+
+  for (i = 1; i < num; i++)
+  {
+      err = sp_status(i, 0x03); // get DIB
+
+      if (sp_payload[4] == name_len)
+      {
+        for (j = 0; j < name_len; j++)
+        {
+      if (name[j] != sp_payload[5 + j])
+        return 0;
+        }
+        printf("CLOCK FOUND");
+        return i;
+      }
+  }
+  printf("CLOCK NOT FOUND");
+  cgetc();
+  return 0;
+}
+
 void sp_init(void)
 {
+  char address[10];
+
   uint8_t slot, f;
   slot = sp_find_slot();
   if (slot)
     sp_dispatch = sp_dispatch_address(slot);
+
   else
     cprintf("No SmartPort Firmware Found!");
+
+  sp_cmdlist_low = (uint8_t)((uint16_t)&sp_cmdlist & 0x00FF);
+  sp_cmdlist_high = (uint8_t)((uint16_t)&sp_cmdlist >> 8) & 0xFF;
+
+  sp_dispatch_addr_low = (uint8_t)((uint16_t)&sp_dispatch & 0x00FF);
+  sp_dispatch_addr_high = (uint8_t)((uint16_t)&sp_dispatch >> 8) & 0xFF;
+
+
   sp_list_devs();
   f = sp_find_fuji();
   if (f < 1)
