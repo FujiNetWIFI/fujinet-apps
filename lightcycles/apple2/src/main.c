@@ -31,7 +31,7 @@
 #define OTHER_COLOR  TGI_COLOR_GREEN
 #define BORDER_COLOR TGI_COLOR_BLUE
 
-unsigned char net; /* SmartPort Network Device ID */
+int8_t net; /* SmartPort Network Device ID */
 char my_name[12], other_name[12], hostname[64], url[64];
 int my_score, other_score;
 unsigned short bw; /* bytes waiting to read */

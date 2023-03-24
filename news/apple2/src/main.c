@@ -15,7 +15,7 @@
 #include "articles.h"
 #include "article.h"
 
-SPDevice net;
+int net;
 
 State state;
 

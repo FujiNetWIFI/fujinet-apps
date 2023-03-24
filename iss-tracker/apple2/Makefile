@@ -247,7 +247,7 @@ endif
 .SUFFIXES:
 .PHONY: all test clean zap love
  
-all: $(PROGRAM)
+all: clean $(PROGRAM) dist
  
 -include $(DEPENDS)
 -include $(STATEFILE)
@@ -315,10 +315,10 @@ test: $(PROGRAM)
 	$(POSTEMUCMD)
  
 dist: $(PROGRAM)
-	     cp dist.apple2/bootable.po dist.apple2/dist.po
-	     java -jar dist.apple2/ac.jar -p dist.apple2/dist.po iss.system sys <dist.apple2/iss.system
-	     java -jar dist.apple2/ac.jar -as dist.apple2/dist.po iss bin <iss
-	     java -jar dist.apple2/ac.jar -p dist.apple2/dist.po MAP.HGR bin <gfx/MAP.HGR
+	     cp dist.apple2/bootable.po dist.apple2/iss.po
+	     java -jar dist.apple2/ac.jar -p dist.apple2/iss.po iss.system sys <dist.apple2/iss.system
+	     java -jar dist.apple2/ac.jar -as dist.apple2/iss.po iss bin <iss
+	     java -jar dist.apple2/ac.jar -p dist.apple2/iss.po MAP.HGR bin <gfx/MAP.HGR
 
 clean:
 	$(call RMFILES,$(OBJECTS))
