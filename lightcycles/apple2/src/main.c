@@ -135,14 +135,13 @@ void listen(void)
   if (nopen(net,"N:TCP://:6502/",0x0C,0x00))
     die("COULD NOT OPEN LISTENING CONNECTION");
 
-
   printf("LISTENING ON PORT 6502...");
   
   while (!connected)
     nstatus(net,&bw,&connected,&error);
 
   // We have a connection, accept it.
-  if (ncontrol(net,'A',NULL,3))
+  if (ncontrol(net,'A',NULL,0))
     die("COULD NOT ACCEPT CONNECTION");
 
   listening=true;
@@ -388,9 +387,6 @@ void instructions(void)
 
 void main(void)
 {
-  uint8_t sp_init();
-
-  setup();
   instructions();
   get_player();
   get_host();
@@ -403,7 +399,7 @@ void main(void)
   printf("CONNECTED!\n");
 
   get_names();
-
+  setup();  
 
   while (connected==1)
     {
