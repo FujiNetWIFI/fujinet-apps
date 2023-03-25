@@ -388,9 +388,12 @@ void instructions(void)
 void main(void)
 {
   instructions();
+
   get_player();
   get_host();
 
+  setup();
+  
   if (hostname[0]=='\0')
     listen();
   else
@@ -399,7 +402,7 @@ void main(void)
   printf("CONNECTED!\n");
 
   get_names();
-  setup();  
+ 
 
   while (connected==1)
     {
