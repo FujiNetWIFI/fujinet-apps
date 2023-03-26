@@ -28,11 +28,14 @@ int8_t sp_find_modem();
 int8_t sp_find_cpm();
 int8_t sp_find_printer();
 
-uint8_t sp_find_slot(void);
+uint8_t  sp_find_slot(void);
 uint16_t sp_dispatch_address(uint8_t slot);
-uint8_t sp_init(void);
+uint8_t  sp_init(void);
 
-void sp_list_devs();
+void     sp_list_devs();
+int16_t  sp_bytes_waiting(uint8_t dest);
+int8_t   sp_is_connected(uint8_t dest);
+uint8_t  sp_accept(uint8_t dest);
 
 #define SP_ERR_OK (0x00)
 #define SP_ERR_BAD_CMD (0x01)
@@ -50,7 +53,7 @@ void sp_list_devs();
 #define SP_ERR_DEV_SPEC0 (0x30)     //    ; DEVICE SPECIFIC ERRORS
 #define SP_ERR_DEV_SPECF (0x3F)     //    ; DEVICE SPECIFIC ERRORS
 // SP_ERR_RESERVED $40-$4F
-#define SP_ERR_NON_FATAL50 (0x50) //    ; DEVICE SPECIFIC WARNING
-#define SP_ERR_NON_FATAL7F (0x7F) //    ; DEVICE SPECIFIC WARNING
+#define SP_ERR_NON_FATAL50 (0x50)   //    ; DEVICE SPECIFIC WARNING
+#define SP_ERR_NON_FATAL7F (0x7F)   //    ; DEVICE SPECIFIC WARNING
 
 #endif /* SP_H */

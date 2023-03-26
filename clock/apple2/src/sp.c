@@ -42,12 +42,20 @@ static uint8_t sp_cmdlist_low, sp_cmdlist_high;
 static uint8_t sp_err, sp_rtn_low, sp_rtn_high;
 static uint8_t sp_dispatch_addr_low, sp_dispatch_addr_high;
 
+/*************************************************************/
+
+/**
+ * Returns the status of a specified device
+ * @param dest unit to query
+ * @param statcode type of status code 
+ * @return 0: no error occured, otherwise the smartport error code.
+ */
 int8_t sp_status(uint8_t dest, uint8_t statcode)
 {
   sp_error = 0;
   // build the command list
   sp_cmdlist[0] = SP_STATUS_PARAM_COUNT;
-  sp_cmdlist[1] = dest; // set before calling sp_status();
+  sp_cmdlist[1] = dest; 
   sp_cmdlist[2] = (uint8_t)((uint16_t)&sp_payload & 0x00FF);
   sp_cmdlist[3] = (uint8_t)((uint16_t)&sp_payload >> 8) & 0xFF;
   sp_cmdlist[4] = statcode;
@@ -119,13 +127,23 @@ spCmdListHigh:
   return sp_err;
 }
 
+/*****************************************************/
+
+/**
+ * Issues a control to the specified device.
+ * NOTE: values within sp_payload must be set prior to
+ * calling this routine.
+ * @param dest unit to query
+ * @param ctrlcode type of status code
+ * @return 0: no error occured, otherwise the smartport error code.
+ */
 int8_t sp_control(uint8_t dest, uint8_t ctrlcode)
 {
   sp_error = 0;
   // sp_dest = 5; // need to search
   // build the command list
   sp_cmdlist[0] = SP_CONTROL_PARAM_COUNT;
-  sp_cmdlist[1] = dest; // set before calling sp_status();
+  sp_cmdlist[1] = dest; 
   sp_cmdlist[2] = (uint8_t)((uint16_t)&sp_payload & 0x00FF);
   sp_cmdlist[3] = (uint8_t)((uint16_t)&sp_payload >> 8) & 0xFF;
   sp_cmdlist[4] = ctrlcode;
@@ -193,13 +211,20 @@ spCmdListHigh:
   return sp_err;
 }
 
+/*************************************************/
+
+/**
+ * Open smartport device
+ * @param dest unit to query
+ * @return 0: no error occured, otherwise the smartport error code.
+ */
 int8_t sp_open(uint8_t dest)
 {
   sp_error = 0;
   // sp_dest = 5; // need to search
   // build the command list
   sp_cmdlist[0] = SP_OPEN_PARAM_COUNT;
-  sp_cmdlist[1] = dest; // set before calling sp_status();
+  sp_cmdlist[1] = dest; 
 
   // store cmd list
 
@@ -264,13 +289,20 @@ spCmdListHigh:
   return sp_err;
 }
 
+/*************************************************/
+
+/**
+ * Close the specified device
+ * @param dest unit to query
+ * @return 0: no error occured, otherwise the smartport error code.
+ */
 int8_t sp_close(uint8_t dest)
 {
   sp_error = 0;
   // sp_dest = 5; // need to search
   // build the command list
   sp_cmdlist[0] = SP_CLOSE_PARAM_COUNT;
-  sp_cmdlist[1] = dest; // set before calling sp_status();
+  sp_cmdlist[1] = dest; 
 
   sp_cmdlist_low = (uint8_t)((uint16_t)&sp_cmdlist & 0x00FF);
   sp_cmdlist_high = (uint8_t)((uint16_t)&sp_cmdlist >> 8) & 0xFF;
@@ -336,17 +368,27 @@ spCmdListHigh:
   sp_error = sp_err;
   return sp_err;
 }
+
+/******************************************************/
+
+/**
+ * Read the specified number of bytes from the specified device
+ * and store them in the sp_payload array
+ * @param dest unit to query
+ * @param len the number of bytes to collect
+ * @return 0: no error occured, otherwise the smartport error code.
+ */
+
 int8_t sp_read(uint8_t dest, uint16_t len)
 {
   sp_error = 0;
-  // sp_dest = 5; // need to search
   // build the command list
   sp_cmdlist[0] = SP_READ_PARAM_COUNT;
-  sp_cmdlist[1] = dest; // set before calling sp_status();
+  sp_cmdlist[1] = dest; 
   sp_cmdlist[2] = (uint8_t)((uint16_t)&sp_payload & 0x00FF);
   sp_cmdlist[3] = (uint8_t)((uint16_t)&sp_payload >> 8) & 0xFF;
-  sp_cmdlist[4] = len & 0xFF;
-  sp_cmdlist[5] = len >> 8;
+  sp_cmdlist[4] = (uint8_t)(len & 0x00FF);
+  sp_cmdlist[5] = (uint8_t)((len >> 8) & 0xFF);
 
   // store cmd list
   // ********* PRELOADER ********************
@@ -410,18 +452,84 @@ spCmdListHigh:
   return sp_err;
 }
 
-int8_t sp_write(uint8_t dest, uint16_t len)
+/*
+int8_t sp_read(uint8_t dest, uint16_t len)
 {
   sp_error = 0;
+  // sp_dest = 5; // need to search
   // build the command list
-  sp_cmdlist[0] = SP_WRITE_PARAM_COUNT;
+  sp_cmdlist[0] = SP_READ_PARAM_COUNT;
   sp_cmdlist[1] = dest; // set before calling sp_status();
   sp_cmdlist[2] = (uint8_t)((uint16_t)&sp_payload & 0x00FF);
   sp_cmdlist[3] = (uint8_t)((uint16_t)&sp_payload >> 8) & 0xFF;
   sp_cmdlist[4] = len & 0xFF;
   sp_cmdlist[5] = len >> 8;
 
+  sp_cmdlist_low = (uint8_t)((uint16_t)&sp_cmdlist & 0x00FF);
+  sp_cmdlist_high = (uint8_t)((uint16_t)&sp_cmdlist >> 8) & 0xFF;
+
   // store cmd list
+  __asm__ volatile("lda #%b", SP_CMD_READ);
+  __asm__ volatile("sta %g", spCmd); // store status command #
+  __asm__ volatile("lda %v", sp_cmdlist_low);
+  __asm__ volatile("sta %g", spCmdListLow); // store status command #
+  __asm__ volatile("lda %v", sp_cmdlist_high);
+  __asm__ volatile("sta %g", spCmdListHigh); // store status command #
+
+  __asm__ volatile("jsr $C50D"); // to do - find entry point and used it instead of hardcoded address
+spCmd:
+  __asm__ volatile("nop");
+spCmdListLow:
+  __asm__ volatile("nop");
+spCmdListHigh:
+  __asm__ volatile("nop");
+  __asm__ volatile("sta %v", sp_err);
+  sp_error = sp_err;
+  return sp_err;
+}
+
+*/
+
+
+
+/***************************************************************/
+/**
+ * Write the specified bytes from the sp_payload array to the specified device
+ * @param dest unit to query
+ * @param len number of bytes to write
+ * @return 0: no error occured, otherwise the smartport error code.
+ */
+
+int8_t sp_write(uint8_t dest, uint16_t len)
+{
+  sp_error = 0;
+
+  /*
+    LDA #SP_WRITE_PARAM_COUNT
+    STA CMD_LIST                    ; PARAMETER COUNT
+    STX CMD_LIST+1                  ; DESTINATION DEVICE
+    LDA SP_PAYLOAD_ADDR
+    STA CMD_LIST+2                  ; DATA BUFFER
+    LDA SP_PAYLOAD_ADDR+1
+    STY CMD_LIST+4                  ; Y=LENGTH LO
+    LDA #$00
+    STA CMD_LIST+5                  ; LENGTH HI
+    STA CMD_LIST+6                  ; ADDRESS POINTER LOW
+    STA CMD_LIST+7                  ; ADDRESS POINTER MID
+    STA CMD_LIST+8                  ; ADDRESS POINTER HI
+  */
+
+  // build the command list
+  sp_cmdlist[0] = SP_WRITE_PARAM_COUNT;
+  sp_cmdlist[1] = dest; 
+  sp_cmdlist[2] = (uint8_t)((uint16_t)&sp_payload & 0x00FF);
+  sp_cmdlist[3] = (uint8_t)((uint16_t)&sp_payload >> 8) & 0xFF;
+  sp_cmdlist[4] = (uint8_t)(len & 0x00FF);
+  sp_cmdlist[5] = (uint8_t)((len >> 8) & 0xFF);
+  sp_cmdlist[6] = 0;
+  sp_cmdlist[7] = 0;
+  sp_cmdlist[8] = 0;
+
   // ********* PRELOADER ********************
   __asm__ volatile("lda #$20"); // JSR
   __asm__ volatile("sta %g", spJsr);
@@ -435,6 +543,27 @@ int8_t sp_write(uint8_t dest, uint16_t len)
   __asm__ volatile("lda #$BD"); // lda addr,x
   __asm__ volatile("sta %g", ldax1);
   __asm__ volatile("sta %g", ldax2);
+
+
+// first we have to get the addresses set so
+// we find the address where the dispatch address
+// is stored, then we can get the actual values
+// using this address
+// 
+//                  LDX #$00
+//                  LDA &sp_dispatch low
+//                  STA ..
+//                  LDA &sp_dispatch high
+//                  STA ..
+//
+//                  LDX #$00
+//  ..              LDA *sp_dispatch,X
+//                  STA dispatch address low
+//                  INX
+//  ..              LDA *sp_dispatch,X
+//                  STA dispatch address high
+
+
 
   __asm__ volatile("ldx #$00");
 ldax1:
@@ -458,13 +587,14 @@ var_addr_high2:
 
   // ********* PRELOADER END ********************
 
+
   __asm__ volatile("lda #%b", SP_CMD_WRITE);
-  __asm__ volatile("sta %g", spCmd); // store status command #
+  __asm__ volatile("sta %g", spCmd);              // store status command #
   __asm__ volatile("lda %v", sp_cmdlist_low);
   __asm__ volatile("sta %g", spCmdListLow); // store status command #
   __asm__ volatile("lda %v", sp_cmdlist_high);
   __asm__ volatile("sta %g", spCmdListHigh); // store status command #
-
+    
 spJsr:
   __asm__ volatile("nop"); // JSR
 spDispatch_addr_low:
@@ -483,7 +613,45 @@ spCmdListHigh:
   return sp_err;
 }
 
+/*
+int8_t sp_write(uint8_t dest, uint16_t len)
+{
+  sp_error = 0;
+  // build the command list
+  sp_cmdlist[0] = SP_READ_PARAM_COUNT;
+  sp_cmdlist[1] = dest; // set before calling sp_status();
+  sp_cmdlist[2] = (uint8_t)((uint16_t)&sp_payload & 0x00FF);
+  sp_cmdlist[3] = (uint8_t)((uint16_t)&sp_payload >> 8) & 0xFF;
+  sp_cmdlist[4] = len & 0xFF;
+  sp_cmdlist[5] = len >> 8;
+
+  sp_cmdlist_low = (uint8_t)((uint16_t)&sp_cmdlist & 0x00FF);
+  sp_cmdlist_high = (uint8_t)((uint16_t)&sp_cmdlist >> 8) & 0xFF;
+
+  // store cmd list
+  __asm__ volatile("lda #%b", SP_CMD_WRITE);
+  __asm__ volatile("sta %g", spCmd); // store status command #
+  __asm__ volatile("lda %v", sp_cmdlist_low);
+  __asm__ volatile("sta %g", spCmdListLow); // store status command #
+  __asm__ volatile("lda %v", sp_cmdlist_high);
+  __asm__ volatile("sta %g", spCmdListHigh); // store status command #
+
+  __asm__ volatile("jsr $C50D"); // to do - find entry point and used it instead of hardcoded address
+spCmd:
+  __asm__ volatile("nop");
+spCmdListLow:
+  __asm__ volatile("nop");
+spCmdListHigh:
+  __asm__ volatile("nop");
+  __asm__ volatile("sta %v", sp_err);
+  sp_error = sp_err;
+  return sp_err;
+}
+*/
+
+/**********************/
 /**** FIND DEVICES ****/
+/**********************/
 
 int8_t sp_find_device(const char *name, int8_t name_len)
 {
@@ -551,6 +719,7 @@ int8_t sp_find_fuji()
 
   return unit;
 }
+
 int8_t sp_find_printer()
 {
   const char name[] = "PRINTER";
@@ -578,6 +747,7 @@ int8_t sp_find_network()
 
   return unit;
 }
+
 int8_t sp_find_clock()
 {
   const char name[] = "FN_CLOCK";
@@ -619,8 +789,9 @@ int8_t sp_find_cpm()
 
   return unit;
 }
-
+/**************************/
 /**** END OF FIND DEVICES */
+/**************************/
 
 void sp_list_devs()
 {
@@ -631,7 +802,7 @@ void sp_list_devs()
   num++;
   for (i = 1; i < num; i++)
   {
-    cprintf("UNIT #%d NAME: ", i);
+    cprintf("UNIT #%2d NAME: ", i);
     err = sp_status(i, 0x03);
     for (j = 0; j < sp_payload[4]; j++)
       cputc(sp_payload[5 + j]);
@@ -682,6 +853,10 @@ uint16_t sp_dispatch_address(uint8_t slot)
   return a + j + 3;
 }
 
+/**
+ * Initialize the smartport routines
+ * 
+ */
 uint8_t sp_init(void)
 {
   uint8_t slot, f;
@@ -706,6 +881,54 @@ uint8_t sp_init(void)
   }
 
   return 1;
+}
+
+/**
+ * Determine the number of bytes waiting from the specified device
+ * @param dest unit to query
+ * @return negative a smartport error has occured. 0 or more: the number of bytes waiting
+ */
+int16_t sp_bytes_waiting(uint8_t dest)
+{
+  uint16_t bw;
+  int8_t err;
+
+  err = sp_status(dest, 'S');
+  if (err)
+    return -err;
+
+  bw = sp_payload[0] & 0xFF;
+  bw |= sp_payload[1] << 8;
+
+  return bw;
+}
+
+/**
+ * Returns if the current unit is connected
+ * @param dest unit to query
+ * @return negative a smartport error has occured. 0: not connected; non-zero connected
+ */
+int8_t sp_is_connected(uint8_t dest)
+{
+  uint8_t err;
+
+  err = sp_status(dest, 'S');
+  if (err)
+    return -err;
+  
+  return sp_payload[2];
+}
+
+/**
+ * Accept the incoming connection
+ * @param dest unit to query
+ * @return 0: no error occured, otherwise the smartport error code.
+ */
+uint8_t sp_accept(uint8_t dest)
+{
+  sp_payload[0] = 0;
+  sp_payload[1] = 0;
+  return sp_control(dest, 'A');
 }
 
 #endif /* BUILD_APPLE2 */
