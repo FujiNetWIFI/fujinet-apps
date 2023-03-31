@@ -12,6 +12,7 @@
 #include <tgi.h>
 #include <time.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include "map.h"
 #include "fetch.h"
 #include "osd.h"
@@ -28,24 +29,19 @@ void main(void)
   tgi_install(c64_hi_tgi);
   tgi_init();
   tgi_clear();
-
+  
   while(true)
     {
-      tm.tv_sec=0;
-      tm.tv_nsec=0;
+      tm.tv_sec = tm.tv_nsec = 0;
       clock_settime(CLOCK_REALTIME,&tm);
 
       map();
-      
       fetch(&lon,&lat,lon_s,lat_s,&ts);
       osd(lon_s,lat_s,ts);
       satellite(lon,lat);
-      
-      while (tm.tv_sec<60)
-	{
-	  clock_gettime(CLOCK_REALTIME,&tm);
-	  // Process keys
-	}
+
+      while (tm.tv_sec < 60)
+	clock_gettime(CLOCK_REALTIME,&tm);
     }
   
 }

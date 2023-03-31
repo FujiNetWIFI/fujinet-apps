@@ -14,6 +14,8 @@
 #include <time.h>
 #include "text.h"
 
+static char tmp[80];
+
 /**
  * @brief Update lower 4 lines of display
  * @param lon_s string of longitude
@@ -22,15 +24,12 @@
  */
 void osd(char *lon_s, char *lat_s, unsigned long ts)
 {
-  char tmp[80];
-
   graphics_gotoxy(0,21);
-  sprintf(tmp,"      ** current iss position **\r\n");
-  text(tmp,true);
+  text("      ** CURRENT ISS POSITION **        ",true);
   graphics_gotoxy(0,23);
-  sprintf(tmp," lon: %-14s lat: %-14s",lon_s,lat_s);
+  sprintf(tmp,"  LON: %-14s LAT: %-14s",lon_s,lat_s);
   text(tmp,false);
   graphics_gotoxy(0,24);
-  sprintf(tmp,"  as of: %s",ctime(&ts));
+  sprintf(tmp,"   as of: %s",ctime(&ts));
   text(tmp,false);
 }

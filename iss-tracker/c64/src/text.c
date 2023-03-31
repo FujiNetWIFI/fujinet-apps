@@ -19,8 +19,8 @@
 /**
  * @brief Location of character ROM
  */
-#define CHROM ((unsigned char *)0xD000)
-#define IHROM ((unsigned char *)0xD400)
+#define CHROM ((unsigned char *)0xD800)
+#define IHROM ((unsigned char *)0xDC00)
 
 /**
  * @brief Location of bitmap display as set up by TGI
