@@ -33,7 +33,7 @@ static const char *topicNames[] =
 
 extern const char *urlBase;
 extern char url[256];
-extern SPDevice net;
+extern int net;
 extern unsigned char selectedTopic;
 extern State state;
 extern unsigned char buf[4096];

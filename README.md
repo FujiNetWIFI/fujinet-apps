@@ -28,10 +28,12 @@ your Atari (hold `[OPTION]` on XL and XE models).
 #### `adm3a`
 This is a simple version of netcat with ADM-3A terminal emulation
 (see https://en.wikipedia.org/wiki/ADM-3A)
+![Atari adm3a](images/atari/adm3a.png)
 
 #### `netcat-action`, `netcat-asm`
 Netcat examples in Action! and 6502 assembly (see also `netcat`, below).
 (similar to the idea of https://en.wikipedia.org/wiki/Netcat)
+![Atari netcat](images/atari/netcat.png)
 
 #### `vt100` (Work in Progress)
 DEC VT100 emulator that uses N:
@@ -54,8 +56,14 @@ A handler that can be loaded at boot in any Atari DOS, to redirect
 the screen editor (E:) device output to also go to #FujiNet's built-in
 S.A.M. speech synthesizer, essentially giving you a screen reader
 
-#### `RA8`, `RA8KEY`, `RA8-win`
-Remote Atari 8-bit (**FIXME:** Needs a clearer description)
+#### `RA8`, `RA8KEY`, `RA8-win` (Work in progress)
+Remote Atari 8-bit 
+A poor man equivalent of remote desktop on windows, but for the Atari 8-bit system.
+RA8KEY - allows you to type on the Atari using your Windows machine
+RA8    - allows you to type and display the text screen on your windows machine
+RA8-win- Windows user interface
+
+![Remote Atari](images/atari/RA8.png)
 
 ### Atari 8-bit Games
 
@@ -103,6 +111,7 @@ News reader client and "FujiNews", news article fetch & store server for FujiNet
 Small C program to demonstrate how to access the FujiNet RTC directly or via
 the ProDOS driver
 
+![Apple Clock](images/apple/clock.jpg)
 ----------------------------------------------------------------------
 
 ## Cross-Platform
@@ -114,6 +123,9 @@ Netcat example in C
 (similar to the idea of https://en.wikipedia.org/wiki/Netcat)
 
 Platforms: Atari 8-bit, Apple II
+
+![Atari netcat](images/atari/netcat.png)
+![Apple netcat](images/apple/netcat.jpg)
 
 #### `PLATOTERM`
 A version of the PLATO terminal for IRATA.ONLINE, pre-configured to connect to IRATA.ONLINE.
@@ -131,12 +143,16 @@ people are in space, and who they are.
 
 Platforms: Atari 8-bit, ADAM, Apple II, Lynx
 
+![Atari ISS](images/atari/iss.png)
+
 #### `mastodon`
 A client to connect to a Mastodon microblogging (Twitter-like)
 service.
 (See https://en.wikipedia.org/wiki/Mastodon_(software))
 
 Platforms: Atari 8-bit, ADAM
+
+![Apple Mastodon](images/apple/mastodon.jpg)
 
 #### `wiki`
 FujiNet Wikipedia Article Viewer.  This app uses a custom API on top of
@@ -150,6 +166,20 @@ Platforms: Atari 8-bit, ADAM
 Connect-Four game for two players over a network.
 
 Platforms: Atari 8-bit, ADAM
+
+#### `lightcycles`
+Tron inspired game, try and get your opponent to crash into the wall 
+you created.
+
+Platforms: Atari 8-bit, Apple II
+![Atari lightcycles](images/atari/cycles.png)
+![Apple lightcycles](images/apple/cycles.png)
+
+#### `reversi`
+Classic game
+
+Platforms: Atari 8-bit, Apple II
+
 
 ### Cross-Platform Apps
 

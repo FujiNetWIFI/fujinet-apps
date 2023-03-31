@@ -31,21 +31,18 @@ unsigned short len=0;
 
 void in()
 {
-  unsigned short bw; // Bytes waiting
-  unsigned short b,i,j;
+           short bw; // Bytes waiting
+  unsigned short b,i,j,err;
 
-  screen_unuse();
+  for(j=0; j<2000;j++);
   
-  if (sp_status(dev,'S')==SP_ERR_IOERROR)
+  screen_unuse();
+
+  bw = sp_bytes_waiting(cpm);
+
+  if (bw<=0)
     return;
 
-  bw  = sp_payload[0] & 0xFF;
-  bw |= sp_payload[1] << 8;
-
-  if (bw==0)
-    return;
-  else if (bw==65535)
-    exit(0);
   if (bw > MAX_SIZE)
     bw = MAX_SIZE;
 
@@ -54,20 +51,22 @@ void in()
   i=0;
   
   while (bw > 0)
-    {
-      if (bw > 512)
-	b = 512;
-      else
-	b = bw;
+  {
+    if (bw > 512)
+      b = 512;
+    else
+      b = bw;
 
-      if (sp_read(dev,b) == SP_ERR_IOERROR)
-	return;
-      
+    if ((err=sp_read(cpm, b)) != SP_ERR_OK)
+    {
+      printf("\r\nREAD ERROR $%x\r\n", err);
+      break;
+    } else
       memcpy(&buf[i],&sp_payload[0],b);
 
-      i += b;
-      bw -= b;
-    }
+    i += b;
+    bw -= b;
+  }
   
   for (j=0;j<i;j++)
     vt100(buf[j]);
@@ -78,29 +77,31 @@ void out()
   len=0;
 
   screen_unuse();
-  if (kbhit())
-    {
-      while (kbhit())
-	sp_payload[len++]=cgetc();
-      sp_write(dev,len);
-    }
+
+  while (kbhit())
+    sp_payload[len++]=cgetc();  
+
+  if (len > 0)
+    sp_write(cpm, len);
+
 }
 
 void main(void)
 {
-  int i;
-  char c;
-
-  SWITCH_40STORE=SWITCH_RDMAINRAM=true;
-
+  int i,bw;
+  int booted = 0;
+  
+  SWITCH_80STORE=SWITCH_RDMAINRAM=false;
+  
   sp_init();
-  cpm = sp_find_cpm();
-  modem = sp_find_modem();
-
+  
   screen_init();
 
-  screen_puts("#FUJINET VT100 - C)P/M, or M)ODEM? ");
-  while (true)
+  cpm = sp_find_cpm();
+
+  sp_status(cpm,'B');
+
+  if (sp_payload[0]==1)
     {
       c=cgetc();
       if (c == 'C' || c == 'c')
@@ -126,8 +127,16 @@ void main(void)
   screen_lf();
   screen_cr();
   screen_lf();
-      
-  while(1)
+  
+  sp_payload[0]=1;
+  sp_payload[1]=0;
+  sp_payload[2]=0;
+  
+  sp_control(cpm,'B');
+
+  for (i=0;i<16384;i++);
+
+    while (1)
     {
       in();
       out();

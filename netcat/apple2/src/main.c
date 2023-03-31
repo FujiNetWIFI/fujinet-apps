@@ -23,6 +23,7 @@ void banner(void)
 
 bool getURL(void)
 {
+  
   cprintf("ENTER NETWORK URL:\r\n>> ");
   gets(url);
 
@@ -67,7 +68,7 @@ void connect(void)
 bool isConnected(void)
 {
   sp_status(net,'S');
-  return sp_payload[2] & 0x02; // Bit 2 = Connected?
+  return sp_payload[2]; 
 }
 
 void in()
@@ -112,10 +113,12 @@ bool done(void)
 void main(void)
 {
   videomode(VIDEOMODE_80x24);
+
+  banner();
+
   sp_init();
   net = sp_find_network();
 
-  banner();
   
   cprintf("NET DEV IS %d\r\n",net);
   
@@ -125,7 +128,9 @@ void main(void)
   
   connect();
 
-  cprintf("CONNECTED.\n");
+  cprintf("CONNECTED to ");
+  cprintf(url);
+  cprintf(".\n");
   
   do 
     {
