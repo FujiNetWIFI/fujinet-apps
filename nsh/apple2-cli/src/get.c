@@ -10,100 +10,149 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <apple2.h>
+#include <apple2_filetype.h>
+#include <conio.h>
+#include "sp.h"
 #include "input.h"
 #include "network.h"
-#include "wait_for_connect.h"
 
 #define CONNECTED 2
-#define READ 4
+#define MODE_READ 4
 #define NO_TRANSLATION 0
 
-extern unsigned char buf[1024];
+extern unsigned char buf[8192];
+
+static char source[256];
+static char dest[24];
+static char tmp[5];
+
+#define NERR_EOF 136
 
 void get(char *s, char *t, char *u, char *v)
 {
-  char source[128], dest[24], type[2], aux[4];
-  FILE *fp = NULL;
-  unsigned long total=0;
-  
-  memset(source,0,128);
-  memset(dest,0,24);
-  
-  if (s == NULL)
-    {
-      printf("SOURCE URL: ");
-      s=source;
-      input(s);
+  unsigned char err=0, nerr=1;
+  FILE *fp;
+  unsigned short bw=0;
+  unsigned char len;
+  unsigned long bt=0;
 
-      if (s[0]==0x00)
+  memset(buf,0,sizeof(buf));
+  
+  if (!s)
+    {
+      printf("URL: ");
+      input(source);
+
+      if (source[0]==0x00)
 	return;
     }
+  else
+    strcpy(source,s);
 
-  if (t == NULL)
+  if (!t)
     {
-      printf("DESTINATION FILE: ");
-      t=dest;
-      input(t);
+      printf("FILENAME: ");
+      input(dest);
 
-      if (t[0]==0x00)
+      if (dest[0]==0x00)
 	return;
     }
+  else
+    strcpy(dest,t);
 
-  if (u == NULL)
+  if (!u)
     {
-      printf("TYPE CODE $");
-      u=type;
-      input(u);
+      printf("TYPE (HEX) $");
+      input(tmp);
+
+      if (tmp[0]==0x00)
+	return;
+    }
+  else
+    strcpy(tmp,u);
+
+  sscanf(tmp,"%02X",_filetype);
+
+  if (!v)
+    {
+      printf("AUX (HEX) $");
+      input(tmp);
+
+      if (tmp[0]==0x00)
+	return;
+    }
+  else
+    strcpy(tmp,v);
+
+  sscanf(tmp,"%04X",_auxtype);
+
+  if ((err = network_open(source,MODE_READ,NO_TRANSLATION)) != SP_ERR_NOERROR)
+    {
+      printf("OPEN ERROR: %u\n\n",err);
+      network_close();
+      return;
     }
 
-  sscanf(u,"%02x\n",_filetype);
+  fp = fopen(dest,"wb");
 
-  if (v == NULL)
+  if (!fp)
     {
-      printf("AUX CODE $");
-      v=aux;
-      input(v);
+      printf("DESTINATION OPEN ERROR: %u\n\n",ferror(fp));
+      network_close();
+      return;
     }
-
-  sscanf(v,"%04x\n",_auxtype);
-
-  network_open(s,READ,NO_TRANSLATION);
-
-  if (!wait_for_connect())
-    goto bye;
-
-  fp = fopen(t,"wb");
-
-  if (fp == NULL)
-    {
-      printf("COULD NOT OPEN DESTINATION FILE %s\n",t);
-      goto bye;
-    }
-
-  while (1)
-    {
-      unsigned short l = network_read((char *)buf,sizeof(buf));
-
-      if (fwrite(buf,sizeof(char),l,fp) != l)
+  
+  while (nerr != NERR_EOF)
+    {      
+      if ((err = network_status(&bw,NULL,&nerr)) != SP_ERR_NOERROR)
 	{
-	  printf("COULD NOT WRITE TO DEST FILE. ABORTING.\n");
-	  goto bye;
+	  printf("STATUS ERROR: %u\n\n",err);
+	  network_close();
+	  return;
 	}
 
-      total += l;
-      
-      printf("%8lu BYTES TRANSFERRED.\r",total);
-      
-      if (!(network_statusbyte() & CONNECTED))
+      if (bw>sizeof(buf))
+	bw==sizeof(buf);
+
+      if ((err = network_read(&buf[0],bw)) != SP_ERR_NOERROR)
 	{
-	  l = network_read((char *)buf,sizeof(buf));
-	  fwrite(buf,sizeof(char),l,fp);
-	  printf("\n\nDONE.\n");
-	  break;
+	  printf("READ ERROR: %u\n\n",err);
+	  network_close();
+	  return;
 	}
+
+      fwrite(&buf[0],sizeof(unsigned char),bw,fp);
+      
+      bt += bw;
+      
+      cprintf("%8lu BYTES TRANSFERRED\r",bt);
     }
 
- bye:
-  network_close();
+  if ((err = network_status(&bw,NULL,&nerr)) != SP_ERR_NOERROR)
+    {
+      printf("STATUS ERROR: %u\n\n",err);
+      network_close();
+      return;
+    }
+  
+  if (bw>sizeof(buf))
+    bw==sizeof(buf);
+  
+  if ((err = network_read(&buf[0],bw)) != SP_ERR_NOERROR)
+    {
+      printf("READ ERROR: %u\n\n",err);
+      network_close();
+      return;
+    }
+  
+  fwrite(&buf[0],sizeof(unsigned char),bw,fp);
+    
+  bt += bw;
+  
+  cprintf("%8lu BYTES TRANSFERRED\r",bt);
+  
+  printf("\x07\nDONE\n");
+
   fclose(fp);
+  network_close();
 }

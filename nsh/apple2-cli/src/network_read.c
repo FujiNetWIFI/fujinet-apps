@@ -3,7 +3,7 @@
  *
  * @param buf Buffer
  * @param len length
- * @return adamnet status code
+ * @return smartport error code (e.g. SP_ERR_NOERROR)
  */
 
 #include <string.h>
@@ -12,26 +12,29 @@
 
 extern unsigned char net;
 
-unsigned short network_read(char *buf, unsigned short len)
-{  
-  unsigned short offset=0;
+#define MAX_READ_SIZE 512
 
-  memset(buf,0,len);
+unsigned char network_read(unsigned char *b, unsigned short len)
+{
+  unsigned char err = SP_ERR_NOERROR;
+  unsigned short o = 0;
   
-  while (len>0)
+  while (len > 0)
     {
-      unsigned short i=len;
+      unsigned short l=MAX_READ_SIZE;
 
-      if (len>sizeof(sp_payload))
-	i=sizeof(sp_payload);
-
-      sp_read(net,i);
-
-      memcpy((char *)&buf[offset],sp_payload,i);
+      if (len < MAX_READ_SIZE)
+	l=len;
       
-      len -= i;
-      offset += i;
+      err = sp_read(net,l); // Data is in sp_payload[]
+      
+      if (err != SP_ERR_NOERROR)
+	return err;
+
+      memcpy(b,&sp_payload[o],l);
+      o += l;
+      len -= l;
     }
   
-  return offset;
+  return SP_ERR_NOERROR;
 }

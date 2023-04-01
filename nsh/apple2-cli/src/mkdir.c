@@ -13,7 +13,7 @@
 #include "input.h"
 #include "sp.h"
 
-extern unsigned char buf[1024];
+extern unsigned char buf[8192];
 extern unsigned char net;
 
 void mkdir(char *s)

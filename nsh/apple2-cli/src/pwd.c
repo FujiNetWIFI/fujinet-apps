@@ -16,6 +16,7 @@ extern unsigned char net;
 
 void pwd(void)
 {
+  memset(sp_payload,0,sizeof(sp_payload));
   sp_status(net,'0');
   printf("%s\n",sp_payload);
 }

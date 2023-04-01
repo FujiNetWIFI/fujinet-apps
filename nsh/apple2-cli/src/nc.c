@@ -10,13 +10,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <conio.h>
+#include <stdbool.h>
 #include "dir.h"
 #include "network.h"
-#include "wait_for_connect.h"
 #include "input.h"
 #include "sp.h"
 
-extern unsigned char buf[1024];
+extern unsigned char buf[8192];
 extern unsigned char net;
 unsigned char txbuf[64];
 
@@ -58,7 +58,7 @@ void out(void)
 
 bool check_for_disconnect(void)
 {
-  return !(network_statusbyte() & CONNECTED);
+  return 0;
 }
 
 void nc(char *s)

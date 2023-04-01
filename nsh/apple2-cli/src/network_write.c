@@ -1,43 +1,39 @@
 /**
- * Write to channel 
+ * Write to network 
  *
- * @param buf Pointer to buffer, should have +1 more than number of bytes to write.
- * @param len number of actual bytes to write
- * @return number of bytes written
- * @return status
+ * @param buf Buffer
+ * @param len length
+ * @return smartport error code (e.g. SP_ERR_NOERROR)
  */
 
 #include <string.h>
-#include <conio.h>
 #include "network.h"
 #include "sp.h"
 
 extern unsigned char net;
 
-unsigned char network_write(char *buf, unsigned short len)
+#define MAX_WRITE_SIZE 512
+
+unsigned char network_write(unsigned char *b, unsigned short len)
 {
-  unsigned short offset=2;
+  unsigned char err = SP_ERR_NOERROR;
+  unsigned short o = 0;
   
-  while (len>0)
+  while (len > 0)
     {
-      unsigned short i=len;
+      unsigned short l=MAX_WRITE_SIZE;
+
+      if (len < MAX_WRITE_SIZE)
+	l=len;
       
-      memset(sp_payload,0,sizeof(sp_payload));
+      memcpy(&sp_payload[o],b,l);
+      o += l;
 
-      if (i>sizeof(sp_payload))
-	i=sizeof(sp_payload)-2;
-
-      memcpy(&sp_payload[offset],buf,i);
-
-      sp_payload[0]=i & 0xFF;
-      sp_payload[1]=i >> 8;
-
-      sp_control(net,'W');
+      err = sp_write(net,l); // Data is now in sp_payload[]
       
-      offset += i+2;
-      len -= i;
+      if (err != SP_ERR_NOERROR)
+	return err;
     }
-
-  return offset;
+  
+  return SP_ERR_NOERROR;
 }
-

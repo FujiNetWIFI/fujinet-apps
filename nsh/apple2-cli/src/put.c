@@ -11,7 +11,6 @@
 #include <stdlib.h>
 #include "input.h"
 #include "network.h"
-#include "wait_for_connect.h"
 
 #define CONNECTED 2
 #define WRITE 8

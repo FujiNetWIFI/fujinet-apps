@@ -13,19 +13,22 @@
 #include "input.h"
 #include "sp.h"
 
-extern unsigned char buf[1024];
+extern unsigned char buf[8192];
 extern unsigned char net;
 
 void era(char *s)
 {
   if (s==NULL)
     {
+      s=(char *)&buf[0];
       printf("URL: ");
       input(s);
     }
 
   if (s==NULL)
     return;
+
+  printf("DELETING: %s\n",s);
   
   memset(sp_payload,0,sizeof(sp_payload));
   
@@ -35,6 +38,6 @@ void era(char *s)
   if (s!=NULL)
     strncpy((char *)&sp_payload[2],s,256);
 
-  if (sp_control(net,'!'))
+  if (sp_control(net,'!') == SP_ERR_NOERROR)
     printf("ERROR\n\n");
 }

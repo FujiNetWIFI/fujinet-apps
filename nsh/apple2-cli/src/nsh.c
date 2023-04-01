@@ -26,6 +26,8 @@ void nsh(void)
 
   input(cmdline);
 
-  if (parse() == false)
+  if (cmdline[0]==0x00)
+    return;
+  else if (parse() == false)
     printf("%s?\n\n",cmdline);
 }

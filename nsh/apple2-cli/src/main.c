@@ -11,7 +11,7 @@
 #include "nsh.h"
 #include "sp.h"
 
-unsigned char buf[1024];
+unsigned char buf[8192];
 unsigned char net;
 
 void banner(void)

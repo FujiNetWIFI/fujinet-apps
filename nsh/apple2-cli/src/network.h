@@ -11,8 +11,8 @@
 
 unsigned char network_open(char *url, unsigned char mode, unsigned char translation);
 unsigned char network_close(void);
-unsigned char network_statusbyte(void);
-unsigned short network_read(char *buf, unsigned short len);
-unsigned char network_write(char *buf, unsigned short len);
+unsigned char network_status(unsigned short *bw, unsigned char *c, unsigned char *nerr);
+unsigned char network_read(unsigned char *b, unsigned short len);
+unsigned char network_write(unsigned char *b, unsigned short len);
 
 #endif /* NETWORK_H */

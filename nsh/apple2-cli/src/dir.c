@@ -12,36 +12,83 @@
 #include "dir.h"
 #include "sp.h"
 #include "network.h"
-#include "wait_for_connect.h"
 
 #define DIRECTORY 6
 #define LONG_DIRECTORY 128
-#define CONNECTED 2
+#define NERR_EOF 136
 #define ATASCII_EOL 0x9B
 
-extern unsigned char buf[1024];
+extern unsigned char buf[8192];
 
 void dir(char *s)
 {
-  if (s == NULL)
-    network_open("N:",DIRECTORY,LONG_DIRECTORY);
-  else
-    network_open(s,DIRECTORY,LONG_DIRECTORY);
+  char default_path[3] = "N:";
+  unsigned char err;
+  unsigned char nerr=1;
+  unsigned short bw;
+  unsigned char *p;
 
-  if (!wait_for_connect())
-    goto bye;
+  if (!s)
+    s=&default_path[0];
+
+  if ((err = network_open(s,DIRECTORY,LONG_DIRECTORY)) != SP_ERR_NOERROR)
+    {
+      printf("OPEN ERROR: %u\n\n",err);
+      network_close();
+      return;
+    }
 
   do
     {
-      unsigned short l = network_read((char *)buf,sizeof(buf));
-      int i;
-      
-      for (i=0;i<l;i++)
-	putchar(buf[i]==ATASCII_EOL ? 0x0A : buf[i]);
-      
-    } while (network_statusbyte() & CONNECTED);
+      memset(buf,0,sizeof(buf));
   
+      if (err = network_status(&bw,NULL,&nerr))
+	{
+	  printf("STATUS ERROR: %u\n\n",nerr);
+	  network_close();
+	  return;
+	}
+      
+      if ((err = network_read(buf,bw)) != SP_ERR_NOERROR)
+	{
+	  printf("READ ERROR: %u\n\n",err);
+	  network_close();
+	  return;
+	}
+
+      p = &buf[0];
+
+      while (bw--)
+	{
+	  if (*p==0x9B) // convert EOL to Line feed for putchar.
+	    *p=0x0A;
+
+	  putchar(*p++);
+	}
+    } while (nerr != 136);
+
+  if (err = network_status(&bw,NULL,&nerr))
+    {
+      printf("STATUS ERROR: %u\n\n",nerr);
+      network_close();
+      return;
+    }
+
+  if ((err = network_read(buf,bw)) != SP_ERR_NOERROR)
+    {
+      printf("READ ERROR: %u\n\n",err);
+      network_close();
+      return;
+    }
   
- bye:
-  network_close();
+  p = &buf[0];
+  
+  while (bw--)
+    {
+      if (*p==0x9B) // convert EOL to Line feed for putchar.
+	*p=0x0A;
+      
+      putchar(*p++);
+    }
+  
 }

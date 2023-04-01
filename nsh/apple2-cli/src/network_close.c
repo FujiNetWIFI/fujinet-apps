@@ -12,7 +12,6 @@
 extern unsigned char net;
 
 unsigned char network_close(void)
-{
-  sp_control(net,'C');
-  return sp_close(net);
+{  
+  return sp_control(net,'C');
 }
