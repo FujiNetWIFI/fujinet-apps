@@ -393,8 +393,16 @@ void screen_cursor_wrap(void)
  */
 void screen_cursor_right(unsigned char n)
 {
-  _col++;
-  screen_cursor_wrap();
+  unsigned char i;
+
+  if (n==0)
+    n=1;
+  
+  for (i=0;i<n;i++)
+    {
+      _col++;
+      screen_cursor_wrap();
+    }
 }
 
 /**
@@ -403,8 +411,16 @@ void screen_cursor_right(unsigned char n)
  */
 void screen_cursor_left(unsigned char n)
 {
-  _col--;
-  screen_cursor_wrap();
+  unsigned char i;
+
+  if (n==0)
+    n=1;
+  
+  for (i=0;i<n;i++)
+    {
+      _col--;
+      screen_cursor_wrap();
+    }
 }
 
 /**
@@ -413,8 +429,16 @@ void screen_cursor_left(unsigned char n)
  */
 void screen_cursor_up(unsigned char n)
 {
-  _row--;
-  screen_cursor_wrap();
+  unsigned char i;
+
+  if (n==0)
+    n=1;
+  
+  for (i=0;i<n;i++)
+    {
+      _row--;
+      screen_cursor_wrap();
+    }
 }
 
 /**
@@ -423,8 +447,16 @@ void screen_cursor_up(unsigned char n)
  */
 void screen_cursor_down(unsigned char n)
 {
-  _row++;
-  screen_cursor_wrap();      
+  unsigned char i;
+
+  if (n==0)
+    n=1;
+  
+  for (i=0;i<n;i++)
+    {
+      _row++;
+      screen_cursor_wrap();
+    }
 }
 
 /**
@@ -488,19 +520,26 @@ void screen_insert_line(unsigned char n)
 {
   unsigned char b = (_inverse ? 0x20 : 0xA0);
   unsigned char r=23;
-
+  unsigned char j;
+  
+  if (n==0)
+    n=1;
+  
   SWITCH_80STORE=true;
 
-  while (r>_row)
+  for (j=0;j<n;j++)
     {
-      SWITCH_PAGE1=true;
-      memcpy((unsigned char *)screen_addr_row[r],(unsigned char *)screen_addr_row[r-1],40);
-      SWITCH_PAGE2=true;
-      memcpy((unsigned char *)screen_addr_row[r],(unsigned char *)screen_addr_row[r-1],40);
-      r--;
+      while (r>_row)
+	{
+	  SWITCH_PAGE1=true;
+	  memcpy((unsigned char *)screen_addr_row[r],(unsigned char *)screen_addr_row[r-1],40);
+	  SWITCH_PAGE2=true;
+	  memcpy((unsigned char *)screen_addr_row[r],(unsigned char *)screen_addr_row[r-1],40);
+	  r--;
+	}
+      
+      screen_clear_line(0,_row,80);
     }
-
-  screen_clear_line(0,_row,80);	 
 }
 
 /**
@@ -509,18 +548,25 @@ void screen_insert_line(unsigned char n)
 void screen_delete_line(unsigned char n)
 {
   unsigned char i=_row+1;
+  unsigned char j;
 
+  if (n==0)
+    n=1;
+  
   SWITCH_80STORE=true;
 
-  while (i<24)
+  for (j=0;j<n;j++)
     {
-      SWITCH_PAGE1=true;
-      memcpy((unsigned char *)screen_addr_row[i-1],(unsigned char *)screen_addr_row[i],40);
-      SWITCH_PAGE2=true;
-      memcpy((unsigned char *)screen_addr_row[i-1],(unsigned char *)screen_addr_row[i],40);
-      i++;
+      while (i<24)
+	{
+	  SWITCH_PAGE1=true;
+	  memcpy((unsigned char *)screen_addr_row[i-1],(unsigned char *)screen_addr_row[i],40);
+	  SWITCH_PAGE2=true;
+	  memcpy((unsigned char *)screen_addr_row[i-1],(unsigned char *)screen_addr_row[i],40);
+	  i++;
+	}
+      screen_clear_line(0,23,80);
     }
-  screen_clear_line(0,23,80);
 }
 
 /**
