@@ -1,0 +1,96 @@
+jsontest-basic.txt
+
+A test program showing how to use the JSON parsing functions to traverse
+live data from e.g. HTTPS, for the Atari 8-bit, from BASIC.
+
+Based on atari/jsontest.c by Bill Kendrick, with help from
+Thomas Cherryhomes, and MASTODON.BAS by Thomas Cherryhomes.
+
+Bill Kendrick <bill@newbreedsoftware.com>
+Thomas Cherryhomes <thom dot cherryhomes at gmail dot com>
+
+License: v. 3, see LICENSE.md for details
+
+
+2022-06-01 - 2022-06-01
+
+
+
+Space to store query strings and responses
+
+  10 DIM Q$(256),A$(256)
+
+How many items to request from our test (Mastodon) endpoint? (max 10 in this demo)
+
+  20 N=3
+
+Construct the JSON endpoint URL to fetch
+
+  30 Q$="N:HTTPS://oldbytes.space/api/v1/timelines/public?limit=":Q$(LEN(Q$)+1)=STR$(N)
+
+Open the JSON URL (in read (4) / write (8) mode = 12)
+
+  40 OPEN #1,12,0,Q$
+
+Change channel mode (252 aka 0xFC) to JSON (1)
+
+  50 XIO 252,#1,12,1,"N:"
+
+Ask the #FujiNet to read the results of the request and
+parse it:
+
+  60 XIO ASC("P"),#1,12,0,"N:"
+
+Loop over the result array in the JSON we got back:
+
+  70 FOR I=0 TO N-1
+
+Construct a query, and...
+
+  80 Q$="N:/_/account/display_name":Q$(4,4)=CHR(ASC("0")+I)
+
+...ask #FujiNet to return that part of the JSON
+
+  90 XIO ASC("Q"),#1,12,0,Q$
+
+Read the result, and show it on the screen
+
+  100 INPUT #1,A$:? "Name: ";A$
+
+Construct another query, make the query, and read/display it:
+
+  110 Q$="N:/_/created_at":Q$(4,4)=CHR$(ASC("0")+I)
+  120 XIO ASC("Q"),#1,12,0,$Q
+  130 INPUT #1,A$:? "Created: ";A$
+
+And construct another query string, and query the JSON...
+
+  140 Q$="N:/_/content":Q$(4,4)=CHR$(ASC("0")+I)
+  150 XIO ASC("Q"),#1,12,0,Q$
+
+This particular piece of data from the example JSON can easily be larger
+than an INPUT-able record size (we could get an ERROR 137), so let's
+GET it one byte at a time, until we run out of data (EOF: End of File,
+ERROR 136):
+
+  160 TRAP 180
+  170 GET #1,N:? CHR$(N);:GOTO 170
+
+Wrap up the FOR loop:
+
+  180 NEXT I
+
+Close the channel and end the program!
+
+  190 CLOSE #1:END
+
+
+FIXME: This example program does not do anything to handle
+error situations.  They would be handled by TRAP commands,
+and/or checking the status of each request to the N: device
+(i.e., if opening the URL fails, don't bother asking #FujiNet
+to parse the JSON; if JSON parsing fails, don't bother trying
+to query parts of the JSON; if a given query fails (e.g., the
+element does not exist), don't bother trying to read (INPUT/GET)
+the results; etc.)
+
