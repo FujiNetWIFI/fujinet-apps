@@ -119,7 +119,6 @@ DefSprPatTable  EQU     3800h
 
 char board[768];
 
-#define printf cprintf
 #endif
 
 
@@ -507,9 +506,33 @@ void set_adam_graphics()
 {
 	int i, l, c;
 
+	i = 0;
+	l = 1;
+
+	// 0 = Transparent
+	// 1 = Black
+	// 2 = Medium Green
+	// 3 = Light Green
+	// 4 = Dark Blue
+	// 5 = Light Blue
+	// 6 = Dark Red
+	// 7 = Cyan
+	// 8 = Medium Red
+	// 9 = Light Red
+	// A = Dark Yellow
+	// B = Light Yellow
+	// C = Dark Green
+	// D = Magenta
+	// E = Gray
+	// F = White
+
 	l = 0x10; // black transparent
 	for (c = 0; c < 256; c++)
 	{
+		if (true)
+		{
+			if (c == ' ')
+				l = 0x10; // black transparent
 			if (c == WHITE_TOP_LEFT)
 				l = 0xfc; // white, dark green
 			if (c == BLACK_TOP_LEFT)
@@ -518,9 +541,11 @@ void set_adam_graphics()
 				l = 0x10; // black transparent
 			if (c == DARK_GREEN_BLOCK)
 				l = 0x1c; // black dark green
-
+		}
 		character_color[c] = l;
 	}
+
+
 	i=0;
 	for (c = 0; c < 256; c++)
 	{
@@ -690,12 +715,8 @@ void prtbrd(char b[64])
 int prtscr(char b[64])
 {
 	int i,j;
-#ifdef BUILD_ADAM
-	cprintf
-#else
-	printf
-#endif
-	("%u-%u",i = cntbrd(b,his), j=cntbrd(b,mine));
+
+	printf("%u-%u",i = cntbrd(b,his), j=cntbrd(b,mine));
 
 	return i-j;
 }
@@ -712,20 +733,10 @@ char getmov(int *i, int *j)
 		selfplay = ' ';
 		getchar();
 	}
-#ifdef BUILD_ADAM
-	cprintf
-#else
-	printf
-#endif
-		("Move: ");
+	printf("Move: ");
 	while(1) switch (c=skipbl()) {
 		case '\n':
-#ifdef BUILD_ADAM
-				cprintf
-#else
-				printf
-#endif
-				("Move?  ");
+				printf("Move?  ");
 				continue;
 		case 'G': if ((c = skipbl()) != '\n')
 				goto flush;
@@ -759,12 +770,7 @@ char getmov(int *i, int *j)
 char ask()
 {
 	char a,c;
-#ifdef BUILD_ADAM
-	cprintf
-#else
-	printf
-#endif
-	("Another game? ");
+	printf("Another game? ");
 	a=skipbl();
 	while (c != '\n' && c != 4) c= getchar();
 	return a;
@@ -919,7 +925,124 @@ int my_mov(char b[64], char p,char o,char e,int *m,int *n)
 }
 
 
+#ifdef BUILD_ADAM
+int game(char b[64], int n)
+{
+	char c;
+	int ff;
+	int i, j;
+	handicap = 0;
+	selfplay = ' ';
+	ff = 0;
 
+	if (mefirst)
+	{
+		mine = BLACK;
+		his = WHITE;
+		printf("They go first:\n");
+	}
+	else
+	{
+		mine = WHITE;
+		his = BLACK;
+		printf("You go first:\n");
+	}
+
+	while (1)
+	{
+		if (cntbrd(b, EMPTY) == 0)
+						return 'D';
+		if (cntbrd(b, EMPTY) == 60 && mine == BLACK)
+						goto Istart;
+		if (chkmvs(b, his) == 0)
+		{
+						cprintf(!mefirst ? "Forfeit" : "   ...Forfeit\n");
+						ff |= 1;
+		}
+		else
+						switch (c = getmov(&i, &j))
+						{
+						case 'B':
+			prtbrd(b);
+			continue;
+						case 'S':
+			i = prtscr(b);
+			if (i > 0)
+				printf(" You're winning\n");
+			else if (i < 0)
+				printf(" You're losing!\n");
+			// else
+			// putchar('\n');
+			continue;
+						case 'Q':
+						case 4:
+			return c;
+
+						case 'H':
+			if (n > (unsigned int)(handicap) + 4)
+				printf("Illegal!\n");
+			else
+				for (j = 0; i != 0; j++)
+				{
+					b[h[j * 2] * 8 + h[j * 2 + 2]] = i > 0 ? BLACK : WHITE;
+					handicap += i > 0 ? 1 : -1;
+					++n;
+					i += i > 0 ? -1 : 1;
+				}
+			prtbrd(b);
+			continue;
+						case 'A':
+			analyze(b, his, mine, EMPTY);
+			continue;
+						case 'G':
+			my_mov(b, his, mine, EMPTY, &i, &j);
+						case 'M':
+			if (chkmov(b, his, i, j) > 0)
+			{
+				printf(!mefirst ? "%u-%u" : "   ...%u-%u\n",
+					   i + 1, j + 1);
+				putmov(b, his, i, j);
+			}
+			else
+			{
+				printf("Illegal!\n");
+				continue;
+			}
+			break;
+						case 'F':
+			if (n > (unsigned int)(handicap) + 4)
+			{
+				printf("Illegal!\n");
+				continue;
+			}
+			else
+				printf(!mefirst ? "Forfeit" : "   ...Forfeit\n");
+						}
+	Istart:
+		if (cntbrd(b, EMPTY) == 0)
+						return 'D';
+		if (chkmvs(b, mine) == 0)
+		{
+						printf(!mefirst ? "...Forfeit\n" : "Forfeit...\n");
+						ff |= 2;
+		}
+		else
+		{
+						my_mov(b, mine, his, EMPTY, &i, &j);
+						printf(!mefirst ? "...%u-%u\n" : "%u-%u...\n",
+							   i + 1, j + 1);
+						putmov(b, mine, i, j);
+						++n;
+		}
+		if (ff == 3 || n > 64)
+						return 'D';
+		if (!(ff & 1))
+						prtbrd(b);
+		ff = 0;
+	}
+}
+
+#else
 int game(char b[64],int n)
 {
 	char c;
@@ -931,21 +1054,11 @@ int game(char b[64],int n)
 	
 	if (mefirst) {
 		mine = BLACK; his = WHITE;
-#ifdef BUILD_ADAM
-		cprintf
-#else
-		printf
-#endif 
-		("I go first:\n");
+		printf("I go first:\n");
 	}
 	else {
 		mine = WHITE; his = BLACK;
-#ifdef BUILD_ADAM
-		cprintf
-#else
-		printf
-#endif 
-		("You go first:\n");
+		printf("You go first:\n");
 	}
 
 
@@ -953,44 +1066,24 @@ int game(char b[64],int n)
 		if (cntbrd(b,EMPTY)==0) return 'D';
 		if (cntbrd(b,EMPTY)==60 && mine == BLACK) goto Istart;
 		if (chkmvs(b,his)==0) {
-#ifdef BUILD_ADAM	
-		cprintf
-#else
-		printf
-#endif
-			(!mefirst ? "Forfeit" : "   ...Forfeit\n");
+                printf(!mefirst ? "Forfeit" : "   ...Forfeit\n");
 							ff |= 1;
 		}
 		else switch (c = getmov(&i,&j)) {
 		case 'B': prtbrd(b); continue;
 		case 'S': i= prtscr(b);
 			if (i>0)
-#ifdef BUILD_ADAM
-				cprintf
-#else
-				printf
-#endif
-				(" You're winning\n");
+		printf(" You're winning\n");
 			else 
 				if (i < 0)
-#ifdef BUILD_ADAM
-					cprintf
-#else
-					printf
-#endif
-					(" You're losing!\n");
+		printf(" You're losing!\n");
 				//else 
 				//putchar('\n');
 			continue;
 		case 'Q': case 4: return c;
 
 		case 'H': if (n>(unsigned int)(handicap)+4)
-#ifdef BUILD_ADAM
-					cprintf
-#else
-					printf
-#endif
-					("Illegal!\n");
+		printf("Illegal!\n");
 						else for (j = 0; i != 0; j++)
 					{
 						b[h[j * 2] * 8 + h[j * 2 + 2]] = i > 0 ? BLACK : WHITE;
@@ -1003,61 +1096,31 @@ int game(char b[64],int n)
 			continue;
 		case 'G': my_mov(b,his,mine,EMPTY,&i,&j);
 		case 'M': if (chkmov(b,his,i,j)>0) {
-#ifdef BUILD_ADAM
-			cprintf
-#else
-			printf
-#endif
-			(!mefirst ? "%u-%u" : "   ...%u-%u\n",
+		printf(!mefirst ? "%u-%u" : "   ...%u-%u\n",
 				i+1,j+1);
 	putmov(b, his, i, j);
 			}
 			else {
-#ifdef BUILD_ADAM
-				cprintf
-#else
-				printf
-#endif
-				("Illegal!\n");
+		printf("Illegal!\n");
 				continue;
 			}
 			break;
 		case 'F': if (n>(unsigned int)(handicap)+4) {
-#ifdef BUILD_ADAM
-				cprintf
-#else
-				printf
-#endif
-				("Illegal!\n");
+		printf("Illegal!\n");
 				continue;
 			}
 			else
-#ifdef BUILD_ADAM
-				cprintf
-#else
-				printf
-#endif
-				(!mefirst ? "Forfeit":
+		printf(!mefirst ? "Forfeit":
 						 "   ...Forfeit\n");
 		}
 Istart:		if (cntbrd(b,EMPTY) == 0) return 'D';
 		if (chkmvs(b,mine)==0) {
-#ifdef BUILD_ADAM
-			cprintf
-#else
-			printf
-#endif
-			(!mefirst ? "...Forfeit\n" : "Forfeit...\n");
+		printf(!mefirst ? "...Forfeit\n" : "Forfeit...\n");
 			ff |= 2;
 		}
 		else {
 			my_mov(b,mine,his,EMPTY,&i,&j);
-#ifdef BUILD_ADAM
-		cprintf
-#else
-		printf
-#endif
-			(!mefirst ? "...%u-%u\n" : "%u-%u...\n",
+		printf(!mefirst ? "...%u-%u\n" : "%u-%u...\n",
 				i+1,j+1);
 	putmov(b, mine, i, j);
 	++n;
@@ -1067,6 +1130,7 @@ Istart:		if (cntbrd(b,EMPTY) == 0) return 'D';
 		ff = 0;
 	}
 }
+#endif
 
 
 int main()
@@ -1166,17 +1230,19 @@ int main()
 
 		do {
 		clrbrd(b);
-		cprintf("\n");
+#ifndef BUILD_ADAM
+		printf("\n");
+#endif
 		prtbrd(b);
 		i = game(b,4);
 		mefirst = !mefirst;
 		if (i==4) break;
 		if (i=='Q') continue;
-		cprintf("\n");
+		printf("\n");
 		i = prtscr(b);
-		if (i>0) cprintf(" You won by %u\n",i);
-		else if (i<0) cprintf(" You lost by %u\n",-i);
-		else cprintf(" A draw\n");
+		if (i>0) printf(" You won by %u\n",i);
+		else if (i<0) printf(" You lost by %u\n",-i);
+		else printf(" A draw\n");
 	} while (ask()=='Y');
 }
 
