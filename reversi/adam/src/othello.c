@@ -562,8 +562,38 @@ void newbrd()
 void prtbrd(char b[64])
 {
 	unsigned int addr;
-
+	int white_start, black_start,x,y, pos, x_offset, y_offset;
+	x_offset = 8;
+	y_offset = 3*32;
 	addr = NameTable;
+
+
+	for (x=0; x<8; x++)
+	{
+		for(y=0; y<8; y++)
+		{
+
+			pos = y*64+x*2 + y_offset + x_offset;
+
+			switch(b[y*8+x])
+			{
+				case BLACK:
+					board[pos] 		= BLACK_TOP_LEFT;
+					board[pos + 1] 	= BLACK_TOP_RIGHT;
+					board[pos + 32] = BLACK_BOTTOM_LEFT;
+					board[pos + 33] = BLACK_BOTTOM_RIGHT;
+					break;
+				case WHITE:
+					board[pos] 		= WHITE_TOP_LEFT;
+					board[pos + 1]  = WHITE_TOP_RIGHT;
+					board[pos + 32] = WHITE_BOTTOM_LEFT;
+					board[pos + 33] = WHITE_BOTTOM_RIGHT;
+					break;
+				default:
+					break;
+			}
+		}
+	}
 
 	msx_vwrite(board, addr, 768);
 }
@@ -926,6 +956,18 @@ int my_mov(char b[64], char p,char o,char e,int *m,int *n)
 
 
 #ifdef BUILD_ADAM
+
+void status_update(char *message, int x, int y)
+{
+	int x,y,c;
+	int pos = y * 32 + x;
+	unsigned int addr;
+
+	addr = NameTable + pos;
+
+	msx_vwrite(message, addr, strlen(message));
+}
+
 int game(char b[64], int n)
 {
 	char c;
@@ -939,13 +981,13 @@ int game(char b[64], int n)
 	{
 		mine = BLACK;
 		his = WHITE;
-		printf("They go first:\n");
+		status_update("They go first:", 12,22);
 	}
 	else
 	{
 		mine = WHITE;
 		his = BLACK;
-		printf("You go first:\n");
+		status_update("You go first:",12,22);
 	}
 
 	while (1)
