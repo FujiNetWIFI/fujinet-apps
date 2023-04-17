@@ -98,6 +98,7 @@ commands may be typed:
 #include "board.h"
 #include "charset.h"
 #include "nhandler.h"
+#include "spriteset.h"
 
 
 /*
@@ -122,6 +123,8 @@ char url[255];
 char host[255];
 char board[768];
 
+SPRITE_ATTRIBUTE sprite_attrib[12];
+
 #define LINE_START  7
 #define LINE_STOP  17
 #define LINE_WIDTH  6
@@ -130,15 +133,33 @@ int white_line = LINE_START;
 int black_line = LINE_START;
 #define WHITE_START_X  0
 #define BLACK_START_X  25
+#define TOTAL_SPRITES 12
+
+#define BOARD_START_X 8
+#define BOARD_START_Y 3
+
+#define CURSOR_TOP_LEFT      0
+#define CURSOR_MIDDLE_LEFT   1
+#define CURSOR_BOTTOM_LEFT   2
+
+#define CURSOR_TOP_MIDDLE    3
+#define CURSOR_MIDDLE_MIDDLE 4
+#define CURSOR_BOTTOM_MIDDLE 5
+
+#define CURSOR_TOP_RIGHT     6
+#define CURSOR_MIDDLE_RIGHT  7
+#define CURSOR_BOTTOM_RIGHT  8
+
 int status_y = 22;
 
 int line = 0;
 
 int trace_on = 0;
+int trig=1;
 
 int print_trace(char *message);
 int delay(int d);
-
+void movsprite(int x, int y, int trig);
 
 #endif
 
@@ -478,17 +499,16 @@ int chkmv1( char b[64], char p, int x, int y, int m, int n )
 int chkmov( char b[64], char p, int x, int y )
 {
 	if (b[x*8+y] != EMPTY) return 0;
-	return	chkmv1(b,p,x,y,0,1) + chkmv1(b,p,x,y,1,0) +
-		chkmv1(b,p,x,y,0,-1)+ chkmv1(b,p,x,y,-1,0)+
-		chkmv1(b,p,x,y,1,1) + chkmv1(b,p,x,y,1,-1)+
-		chkmv1(b,p,x,y,-1,1)+ chkmv1(b,p,x,y,-1,-1);
+	return	chkmv1(b,p,x,y, 0, 1) + chkmv1(b,p,x,y, 1, 0) +
+		    chkmv1(b,p,x,y, 0,-1) + chkmv1(b,p,x,y,-1, 0) +
+			chkmv1(b,p,x,y, 1, 1) + chkmv1(b,p,x,y, 1,-1) +
+			chkmv1(b,p,x,y,-1, 1) + chkmv1(b,p,x,y,-1,-1);
 }
 
 
 int chkmvs( char b[64], char p )
 {
 	int i,j,k;
-
 
 	k=0;
 	for (i=0; i<8; i++) for (j=0; j<8; j++)
@@ -717,6 +737,20 @@ void set_adam_graphics()
 		i += 8;
 	}
 
+	for (c = 0; c < TOTAL_SPRITES; c++)
+	{
+		sprite_attrib[c].x = 0;
+		sprite_attrib[c].y = 0;
+		sprite_attrib[c].sprite_pattern = c;
+		sprite_attrib[c].color_code = 0xf;
+		sprite_attrib[c].reserved = 0;
+		sprite_attrib[c].early_clock = 0;
+	}
+
+
+	vdp_vwrite(sprite_attrib, SprAttrTable, TOTAL_SPRITES * sizeof(SPRITE_ATTRIBUTE));
+	vdp_vwrite(sprite_set, SprPatTable, TOTAL_SPRITES * 8);
+	movsprite(7,7,0);
 }
 
 void newbrd()
@@ -728,14 +762,18 @@ void prtbrd(char b[64])
 {
 	unsigned int addr;
 	int white_start, black_start,x,y, pos, x_offset, y_offset;
-	x_offset = 8;
-	y_offset = 3*32;
-	
-	for (x=0; x<8; x++)
+	char black_count[3], white_count[3];
+	sprintf(black_count, "%2d", cntbrd(b, BLACK));
+	sprintf(white_count, "%2d", cntbrd(b, WHITE));
+
+	print(WHITE_START_X + 2, LINE_STOP+1, white_count);
+	print(BLACK_START_X + 2, LINE_STOP+1, black_count);
+
+	for (x = 0; x < 8; x++)
 	{
 		for(y=0; y<8; y++)
 		{
-			pos = y*64+x*2 + y_offset + x_offset;
+			pos = y*64+x*2 + BOARD_START_Y*32 + BOARD_START_X;
 
 			switch(b[y*8+x])
 			{
@@ -910,10 +948,12 @@ void prtbrd(char b[64])
 int prtscr(char b[64])
 {
 	int i, j;
-	char message[20];
-	sprintf(message, "%u-%u", i = cntbrd(b, his), j = cntbrd(b, mine));
-	print_info(message);
+	//char message[20];
+	//sprintf(message, "%u-%u", i = cntbrd(b, his), j = cntbrd(b, mine));
+	//print_info(message);
 
+	i = cntbrd(b, his);
+	j = cntbrd(b, mine); 
 	return i - j;
 }
 
@@ -984,7 +1024,7 @@ char getmov(int *i, int *j)
 char ask()
 {
 	char a, c;
-	print_no_clear(status_y, "Another game? ");
+	print_info("Another game? (Y/N)");
 	a = skipbl();
 	while (c != '\n' && c != 4)
 		c = getchar();
@@ -1215,6 +1255,29 @@ int my_mov(char b[64], char p,char o,char e,int *m,int *n)
 
 
 
+void movsprite(int x,int y, int trig)
+{
+	int x1, y1, sprite;
+
+	x1 = x*16 + BOARD_START_X*8;
+	y1 = y*16 + BOARD_START_Y*8 - 1;
+
+	sprite = 0;
+	for(x = x1; x < x1+32; x += 8)
+	{
+		for (y=y1; y < y1 + 32; y += 8)
+		{
+			sprite_attrib[sprite].x = x;
+			sprite_attrib[sprite].y = y;
+			sprite++;
+		}
+		y1 -= 15;
+
+	}
+	
+	vdp_vwrite(sprite_attrib, SprAttrTable, TOTAL_SPRITES * sizeof(SPRITE_ATTRIBUTE));
+}
+
 int game(char b[64], int n)
 {
 	char c;
@@ -1251,7 +1314,7 @@ int game(char b[64], int n)
 		if (chkmvs(b, his) == 0)
 		{
 			// problem here - black gets stuck
-			sprintf(temp, !mefirst ? "Forfeit." : "Forfeit");
+			sprintf(temp, !mefirst ? "Forfeit" : "Forfeit");
 			print_info(temp);
 			if (his == BLACK)
 				print_black_line(temp);
@@ -1259,6 +1322,7 @@ int game(char b[64], int n)
 				print_white_line(temp);
 
 			ff |= 1;
+			goto Istart;
 		}
 		else
 		{
@@ -1309,12 +1373,25 @@ int game(char b[64], int n)
 				print_trace("case M");
 				if (chkmov(b, his, i, j) > 0)
 				{
+					int x,y;
+					if (!mefirst)
+					{
+						x = j;
+						y = i;
+					}
+					else
+					{
+						x = i;
+						y = j;
+					}
+					movsprite(x,y,trig);
 					sprintf(temp, !mefirst ? "%u-%u" : "%u-%u", i + 1, j + 1);
 					if (his == BLACK)
 						print_black_line(temp);
 					else
 						print_white_line(temp);
 					putmov(b, his, i, j);
+					prtbrd(b);
 				}
 				else
 				{
@@ -1331,7 +1408,7 @@ int game(char b[64], int n)
 				}
 				else
 				{
-					sprintf(temp, !mefirst ? "Forfeit" : "   ...Forfeit");
+					sprintf(temp, !mefirst ? "Forfeit" : "Forfeit");
 					if(mine == BLACK)
 						print_black_line(temp);
 					else
@@ -1345,7 +1422,6 @@ int game(char b[64], int n)
 
 			if (chkmvs(b, mine) == 0)
 			{
-
 				sprintf(temp, !mefirst ? "Forfeit" : "Forfeit");
 				if (mine == BLACK) 
 					print_black_line(temp);
@@ -1356,7 +1432,22 @@ int game(char b[64], int n)
 			}
 			else
 			{
+				int x, y;
+
 				my_mov(b, mine, his, EMPTY, &i, &j);
+				
+				if (!mefirst)
+				{
+					x = j;
+					y = i;
+				}
+				else
+				{
+					x = i;
+					y = j;
+				}
+				movsprite(x, y, trig);
+
 				sprintf(temp, !mefirst ? "%u-%u" : "%u-%u", i + 1, j + 1);
 				if (mine == BLACK)
 					print_black_line(temp);
@@ -1465,6 +1556,7 @@ Istart:		if (cntbrd(b,EMPTY) == 0) return 'D';
 }
 #endif
 
+#ifdef BUILD_ADAM
 void translate_from_atari(char *atari_input, int *x, int *y, int *trig)
 {
 	char message[32];
@@ -1474,6 +1566,13 @@ void translate_from_atari(char *atari_input, int *x, int *y, int *trig)
 	sprintf(message, "x:%d y:%d trig:%d",*x,*y,*trig);
 	print_no_clear(status_y-1,message);
 }
+
+void sprite_to(x,y)
+{
+	
+}
+#endif
+
 
 int main()
 {
@@ -1629,23 +1728,17 @@ int main()
 		i = prtscr(b);
 
 #ifdef BUILD_ADAM
+
 		if (i>0) 
-		{
 			sprintf(message, "You won by %u", i);
-			print_no_clear(status_y-1, message);
-		}
 		else 
-		{
 			if (i < 0)
-			{
 				sprintf(message, "You lost by %u", -i);
-				print_no_clear(status_y-1, message);
-			}
 			else 
-			{
-				print_no_clear(status_y-1, "A draw");
-			}
-		}
+				sprintf(message, " A draw");
+
+		print(16 - strlen(message) / 2, 12, message);
+
 #else
 		if (i > 0)
 			printf(" You won by %u\n", i);

@@ -61,8 +61,29 @@ def convert_char_mag_line_to_c(mag_line, binary=True):
         
         
     return c_line
-        
+
 def convert_colour_mag_line_to_c(mag_line, binary=True):
+    c_line = ""
+    tag = "CC:"
+    data = mag_line.find(tag)
+    mag_line = mag_line[data+len(tag):].strip()
+    
+    bar = mag_line.find("|")
+    foreground = int(mag_line[:bar])
+    background = int(mag_line[bar+1:])
+    
+    value = foreground << 4 | background
+
+    if binary:
+        c_line = c_line + format(value, '#010b')
+    else:
+        c_line = c_line + format(value, '#04x')
+
+    c_line = c_line + "," 
+        
+    return c_line
+        
+def convert_colour_mag_line_to_c_2(mag_line, binary=True):
     c_line = ""
     tag = "CO:"
     data = mag_line.find(tag)
@@ -378,7 +399,7 @@ if __name__ == "__main__":
     c_contents = replace_c_with_mag_char(  c_contents, "//  space character", mag_contents, "* CHAR DEFS", binary_output)
     
     print("Adding character colours...")
-    c_contents = replace_c_with_mag_colour(c_contents, "//  space color",    mag_contents,  "* CHAR COLORS")
+    c_contents = replace_c_with_mag_colour(c_contents, "//  space color",    mag_contents,  "* COLORSET")
     write_file(c_charset_out, c_contents)
     print()
 

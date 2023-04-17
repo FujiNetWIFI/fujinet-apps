@@ -278,7 +278,7 @@ unsigned char character_set[8*256] =
     
 
 unsigned char character_color[] =
-    {
+{
         0x10, //  space color
         0x10, //  !
         0x10, //  "
