@@ -973,7 +973,7 @@ char getmov(int *i, int *j)
 		selfplay = ' ';
 		getchar();
 	}
-	print_info("Your Move");
+	
 	while (1)
 		switch (c = skipbl())
 		{
@@ -1394,6 +1394,11 @@ int game(char b[64], int n)
 					else
 						print_white_line(temp);
 					putmov(b, his, i, j);
+					if (his == BLACK)
+						print_info("White's Turn");
+					else
+						print_info("Black's Turn");
+
 					prtbrd(b);
 				}
 				else
@@ -1448,6 +1453,11 @@ int game(char b[64], int n)
 					print_white_line(temp);
 				putmov(b, mine, i, j);
 				++n;
+
+				if (mine == BLACK)
+					print_info("White's Turn");
+				else
+					print_info("Black's Turn");
 			}
 			if (ff == 3 || n > 64)
 				return 'D';
