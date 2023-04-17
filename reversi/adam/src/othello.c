@@ -797,6 +797,7 @@ void prtbrd(char b[64])
 
 	addr = NameTable;
 	msx_vwrite(board, addr, 768);
+	delay(2);
 }
 #else
 
@@ -1384,6 +1385,8 @@ int game(char b[64], int n)
 						x = i;
 						y = j;
 					}
+					x = j;
+					y = i;
 					movsprite(x,y,trig);
 					sprintf(temp, !mefirst ? "%u-%u" : "%u-%u", i + 1, j + 1);
 					if (his == BLACK)
@@ -1436,17 +1439,7 @@ int game(char b[64], int n)
 
 				my_mov(b, mine, his, EMPTY, &i, &j);
 				
-				if (!mefirst)
-				{
-					x = j;
-					y = i;
-				}
-				else
-				{
-					x = i;
-					y = j;
-				}
-				movsprite(x, y, trig);
+				movsprite(j, i, trig);
 
 				sprintf(temp, !mefirst ? "%u-%u" : "%u-%u", i + 1, j + 1);
 				if (mine == BLACK)
@@ -1737,7 +1730,7 @@ int main()
 			else 
 				sprintf(message, " A draw");
 
-		print(16 - strlen(message) / 2, 12, message);
+		print(16 - strlen(message) / 2, 11, message);
 
 #else
 		if (i > 0)
