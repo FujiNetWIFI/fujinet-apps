@@ -1,4 +1,22 @@
-TARGET_EXEC ?= othello
+# set these environment variables in your .basrc or windows environment
+# to automagically copy the FUJIAPPLE.po file to the TNFS server
+
+# .bashrc
+# TNFS_SERVER="192.168.2.21"
+# TNFS_SHARE="tnfs/apple"
+# export TNFS_SERVER
+# export TNFS_SHARE
+#
+# windows
+# SET TNFS_SERVER=tnfs
+# SET TNFS_SHARE=tnfs\apple
+
+TNFS_SERVER = $(shell echo $$TNFS_SERVER)
+TNFS_SHARE  = $(shell echo $$TNFS_SHARE)
+OS          = $(shell echo $$OS)
+
+
+TARGET_EXEC ?= reversi
 
 BUILD_DIR ?= ./build
 SRC_DIRS ?= ./src
@@ -38,14 +56,35 @@ $(BUILD_DIR)/%.asm.o: %.asm
 	$(MKDIR_P) $(dir $@)
 	$(AS) $(ASFLAGS) -c $< -o $@
 
+
 .PHONY: clean
 
 clean:
 	$(RM) -r $(TARGET_EXEC)* $(BUILD_DIR)
+
 go:
 #    @echo "We make things go"
-	/home/ndavie/Documents/ADAM/ColEm/colem -ntsc -adam othello.ddp
+	/home/ndavie/Documents/ADAM/ColEm/colem -ntsc -adam $(TARGET_EXEC).ddp
+
+
+tnfs: $(TARGET_EXEC).ddp 
+ifneq ('$(TNFS_SERVER)','')
+
+ifneq ('$(OS)','')
+    cp reversi.ddp //$(TNFS_SERVER)/$(TNFS_SHARE)
+else
+	cp reversi.ddp /run/user/1000/gvfs/smb-share:server=$(TNFS_SERVER),share=$(TNFS_SHARE)
+endif
+
+else
+	$(info ***********************************************)
+	$(info *** No TNFS server environment variable set ***)
+	$(info ***********************************************)
+endif
+
 
 -include $(DEPS)
 
 MKDIR_P ?= mkdir -p
+
+

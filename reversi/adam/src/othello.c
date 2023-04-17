@@ -97,6 +97,7 @@ commands may be typed:
 #include <eos.h>
 #include "board.h"
 #include "charset.h"
+#include "nhandler.h"
 
 
 /*
@@ -117,7 +118,10 @@ DefSprPatTable  EQU     3800h
 // graphics mode 1
 // 32 x 24
 
+char url[255];
+char host[255];
 char board[768];
+
 #define LINE_START  7
 #define LINE_STOP  17
 #define LINE_WIDTH  6
@@ -134,6 +138,7 @@ int trace_on = 0;
 
 int print_trace(char *message);
 int delay(int d);
+
 
 #endif
 
@@ -607,6 +612,8 @@ int print_info(char *message)
 
 	print(x, y, message);
 
+	delay(2);
+
 }
 
 int print_no_clear(int y, char *message)
@@ -630,7 +637,7 @@ int print_white_line(char *message)
 			for (x = WHITE_START_X; x < WHITE_START_X + LINE_WIDTH; x++)
 			{
 				pos = y * 32 + x;
-				board[pos] = ' ';				
+				board[pos] = DARK_GREEN_BLOCK;
 			}
 		}
 		white_line = LINE_START;
@@ -649,7 +656,7 @@ int print_black_line(char *message)
 			for (x = BLACK_START_X; x < BLACK_START_X + LINE_WIDTH; x++)
 			{
 				pos = y * 32 + x;
-				board[pos] = ' ';
+				board[pos] = DARK_GREEN_BLOCK;
 			}
 		}
 		black_line = LINE_START;
@@ -702,13 +709,14 @@ void set_adam_graphics()
 		character_color[c] = l;
 	}
 
-
 	i=0;
 	for (c = 0; c < 256; c++)
 	{
 		vdp_set_char(c, &character_set[i], NULL, character_color[c], place_all);
+		
 		i += 8;
 	}
+
 }
 
 void newbrd()
@@ -1195,7 +1203,7 @@ int my_mov(char b[64], char p,char o,char e,int *m,int *n)
 	qsort (t, k, sizeof(struct mt), cmpmov);
 	for (i=1; i<k; i++)
 		if (t[i].s != t[0].s || t[i].c != t[0].c)
-						break;
+			break;
 	k = rand() % i;
 	*m = t[k].x;
 	*n = t[k].y;
@@ -1233,6 +1241,7 @@ int game(char b[64], int n)
 
 	while (1)
 	{
+		print_info(" ");
 		if (cntbrd(b, EMPTY) == 0)
 			return 'D';
 
@@ -1242,9 +1251,9 @@ int game(char b[64], int n)
 		if (chkmvs(b, his) == 0)
 		{
 			// problem here - black gets stuck
-			sprintf(temp, !mefirst ? "Forfeit." : ".Forfeit");
+			sprintf(temp, !mefirst ? "Forfeit." : "Forfeit");
 			print_info(temp);
-			if (mefirst)
+			if (his == BLACK)
 				print_black_line(temp);
 			else
 				print_white_line(temp);
@@ -1253,7 +1262,6 @@ int game(char b[64], int n)
 		}
 		else
 		{
-
 			c = getmov(&i, &j);
 			switch (c)
 			{
@@ -1302,8 +1310,10 @@ int game(char b[64], int n)
 				if (chkmov(b, his, i, j) > 0)
 				{
 					sprintf(temp, !mefirst ? "%u-%u" : "%u-%u", i + 1, j + 1);
-					print_white_line(temp);
-					print_info(temp);
+					if (his == BLACK)
+						print_black_line(temp);
+					else
+						print_white_line(temp);
 					putmov(b, his, i, j);
 				}
 				else
@@ -1322,11 +1332,10 @@ int game(char b[64], int n)
 				else
 				{
 					sprintf(temp, !mefirst ? "Forfeit" : "   ...Forfeit");
-					if (mefirst)
+					if(mine == BLACK)
 						print_black_line(temp);
 					else
 						print_white_line(temp);
-					print_error(temp);
 				}
 			}
 			Istart:
@@ -1336,12 +1345,12 @@ int game(char b[64], int n)
 
 			if (chkmvs(b, mine) == 0)
 			{
+
 				sprintf(temp, !mefirst ? "Forfeit" : "Forfeit");
-				if (mefirst)
+				if (mine == BLACK) 
 					print_black_line(temp);
 				else
 					print_white_line(temp);
-				print_error(temp);
 
 				ff |= 2;
 			}
@@ -1349,10 +1358,10 @@ int game(char b[64], int n)
 			{
 				my_mov(b, mine, his, EMPTY, &i, &j);
 				sprintf(temp, !mefirst ? "%u-%u" : "%u-%u", i + 1, j + 1);
-				print_black_line(temp);
-				
-
-				print_info(temp);
+				if (mine == BLACK)
+					print_black_line(temp);
+				else
+					print_white_line(temp);
 				putmov(b, mine, i, j);
 				++n;
 			}
@@ -1364,7 +1373,7 @@ int game(char b[64], int n)
 		}
 	}
 }
-}
+
 
 #else
 int game(char b[64],int n)
@@ -1456,6 +1465,15 @@ Istart:		if (cntbrd(b,EMPTY) == 0) return 'D';
 }
 #endif
 
+void translate_from_atari(char *atari_input, int *x, int *y, int *trig)
+{
+	char message[32];
+	sscanf(atari_input, "%d,%d,%d", x,y,trig);
+
+	print_info(atari_input);
+	sprintf(message, "x:%d y:%d trig:%d",*x,*y,*trig);
+	print_no_clear(status_y-1,message);
+}
 
 int main()
 {
@@ -1507,22 +1525,20 @@ int main()
 
 	vdp_set_mode(mode_2);
 	printf(
-		"************ REVERSI ***********\n"
+		"#FUJINET REVERSI - ADAM EDITION\n"
 		"  Adapted for the Coleco ADAM\n"
-		"  and Fujinet by Norman Davie\n"
-		"\n"
-		" Reversi is an abstract strategy"
-		"board game invented during the\n"
-		"Victorian era.  The goal for\n"
-		"each player is to make the\n"
+		"  and Fujinet by Norman Davie\n\n"
+		" Reversi is a strategy game\n"
+		"invented during the Victorian\n"
+		"era.  The goal: to have the\n"
 		"majority of pieces on the board\n"
-		"their own colour at the end of\n"
-		"the game.\n"
-		" Pieces are changed to your\n"
-		"colour by trapping them between\n"
-		"pieces of your colour.\n"
-		"\n"
-		"BLACK is always the FIRST player\n");
+		"your own colour.  Trapping\n"
+		"opposing pieces between your\n"
+		"coloured pieces converts them\n"
+		"to your colour."
+		"\n\n"
+		"HOST/BLACK is always the FIRST\n"
+		"player\n");
 #else
 #ifdef ANSITEXT
 	printf("%c\nWelcome to the %c[7m OTHELLO %c[27m program!\n",12,27,27);
@@ -1533,11 +1549,39 @@ int main()
 #endif
 #endif
 
+#ifdef BUILD_ADAM
+
+	printf("Be sure to forward TCP port 6502.\n\n");
+	printf("Type hostname or press ENTER to host\n");
+	gets(host);
+
+	host[strlen(host)-1] = '\0';
+	sprintf(url, "TCP://%s:6502/", host);
+	
+	vdp_color(1, 3, 3);
+
+	vdp_set_mode(mode_2);
+	
+	printf("Opening %s\n", url);
+	if (strcmp(host, "") == 0)
+	{
+		printf("WAITING FOR CONNECTION...");
+		mefirst = 0;
+	}
+	else
+	{
+		mefirst = 1;
+	}
+
+	
+#else
 	printf("Do you want to go first? ");
 	if (toupper(getchar()) == 'Y') 
 		mefirst = 0;
 	else
 		mefirst = 1;
+
+#endif
 
 #ifdef BUILD_ADAM
 	set_adam_graphics();
@@ -1564,12 +1608,12 @@ int main()
 #ifdef BUILD_ADAM
 		if (mefirst)
 		{
-			print(WHITE_START_X + LINE_WIDTH / 2 - strlen(your_name)/2 , LINE_START - 2, your_name);
+			print(WHITE_START_X + LINE_WIDTH / 2 - strlen(your_name)  / 2, LINE_START - 2, your_name);
 			print(BLACK_START_X + LINE_WIDTH / 2 - strlen(their_name) / 2, LINE_START - 2, their_name);
 		} else
 		{
 			print(WHITE_START_X + LINE_WIDTH / 2 - strlen(their_name) / 2, LINE_START - 2, their_name);
-			print(BLACK_START_X + LINE_WIDTH / 2 - strlen(your_name) / 2, LINE_START - 2, your_name);
+			print(BLACK_START_X + LINE_WIDTH / 2 - strlen(your_name)  / 2, LINE_START - 2, your_name);
 		}
 
 #else
@@ -1577,13 +1621,13 @@ int main()
 #endif
 		prtbrd(b);
 
-
 		i = game(b,4);
 		mefirst = !mefirst;
 		if (i==4) break;
 		if (i=='Q') continue;
 		//printf("\n");
 		i = prtscr(b);
+
 #ifdef BUILD_ADAM
 		if (i>0) 
 		{

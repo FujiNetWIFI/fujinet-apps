@@ -1,4 +1,4 @@
-TARGET_EXEC ?= othello
+TARGET_EXEC ?= reversi-text
 
 BUILD_DIR ?= ./build
 SRC_DIRS ?= ./src
@@ -44,8 +44,23 @@ clean:
 	$(RM) -r $(TARGET_EXEC)* $(BUILD_DIR)
 go:
 #    @echo "We make things go"
-	/home/ndavie/Documents/ADAM/ColEm/colem -ntsc -adam othello.ddp
+	/home/ndavie/Documents/ADAM/ColEm/colem -ntsc -adam $(TARGET_EXEC).ddp
 
 -include $(DEPS)
 
 MKDIR_P ?= mkdir -p
+
+tnfs: $(TARGET_EXEC).ddp 
+ifneq ('$(TNFS_SERVER)','')
+
+ifneq ('$(OS)','')
+    cp $(TARGET_EXEC).ddp //$(TNFS_SERVER)/$(TNFS_SHARE)
+else
+	cp $(TARGET_EXEC).ddp /run/user/1000/gvfs/smb-share:server=$(TNFS_SERVER),share=$(TNFS_SHARE)
+endif
+
+else
+	$(info ***********************************************)
+	$(info *** No TNFS server environment variable set ***)
+	$(info ***********************************************)
+endif

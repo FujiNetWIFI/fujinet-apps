@@ -92,6 +92,12 @@ commands may be typed:
 
 /* z88dk specific opt */
 #pragma printf = "%c %u"
+
+int getk()
+{
+	return 1;
+}
+
 #ifdef SCCZ80
 void prtbrd(char b[64]) __z88dk_fastcall;
 int prtscr(char b[64]) __z88dk_fastcall;
