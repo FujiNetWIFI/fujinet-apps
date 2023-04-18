@@ -99,6 +99,7 @@ commands may be typed:
 #include "charset.h"
 #include "nhandler.h"
 #include "spriteset.h"
+#include "joystick.h"
 
 
 /*
@@ -109,13 +110,6 @@ DefColorTable   EQU     2000h
 DefSprPatTable  EQU     3800h
 */
 
-#define PatternTable 0x0  // 2048 The generator table
-#define NameTable 0x1800  // 768 bytes The screen
-#define ColorTable 0x2000 // 32 bytesColor Table
-
-#define SprAttrTable 0x1b00 // Sprite Attribute
-#define SprPatTable 0x3800	// Sprite Pattern
-
 // graphics mode 1
 // 32 x 24
 
@@ -123,7 +117,7 @@ char url[255];
 char host[255];
 char board[768];
 
-SPRITE_ATTRIBUTE sprite_attrib[12];
+
 
 #define LINE_START  7
 #define LINE_STOP  17
@@ -133,7 +127,7 @@ int white_line = LINE_START;
 int black_line = LINE_START;
 #define WHITE_START_X  0
 #define BLACK_START_X  25
-#define TOTAL_SPRITES 12
+
 
 #define BOARD_START_X 8
 #define BOARD_START_Y 3
@@ -688,7 +682,7 @@ int print_black_line(char *message)
 
 void set_adam_graphics()
 {
-	int i, l, c;
+	int i, l, c,x;
 
 	i = 0;
 	l = 1;
@@ -710,30 +704,12 @@ void set_adam_graphics()
 	// E = Gray
 	// F = White
 
-	l = 0x10; // black transparent
-	for (c = 0; c < 256; c++)
-	{
-		if (true)
-		{
-			if (c == ' ')
-				l = 0x10; // black transparent
-			if (c == WHITE_TOP_LEFT)
-				l = 0xfc; // white, dark green
-			if (c == BLACK_TOP_LEFT)
-				l = 0x1c; // black dark green
-			if (c == THICK_TOP_LEFT)
-				l = 0x10; // black transparent
-			if (c == DARK_GREEN_BLOCK)
-				l = 0x1c; // black dark green
-		}
-		character_color[c] = l;
-	}
 
-	i=0;
+	i = 0;
 	for (c = 0; c < 256; c++)
 	{
-		vdp_set_char(c, &character_set[i], NULL, character_color[c], place_all);
-		
+		vdp_set_char(c, &character_set[i], NULL, character_color[c/8], place_all);
+
 		i += 8;
 	}
 
@@ -958,12 +934,89 @@ int prtscr(char b[64])
 	return i - j;
 }
 
+
+char getmov_local(int *x, int *y)
+{
+	int joy = 0;
+	int trig = 1;
+	int c;
+	long joytimer = 0;
+
+	movsprite(*x, *y, trig);
+
+	while(true)
+	{
+		if (joytimer > 1000)
+		{
+			joytimer = 0;
+
+			joy = read_joystick(&trig);
+
+			if (joy & UP)
+				(*y)--;
+			if (joy & DOWN)
+				(*y)++;
+			if (joy & LEFT)
+				(*x)--;
+			if (joy & RIGHT)
+				(*x)++;
+		} else
+			joytimer++;
+
+		c = 0;
+
+		//c = toupper(getchar());
+		switch(c)
+		{
+			case 'I':
+				(*y)--;
+				break;
+			case 'K':
+				(*y)++;
+				break;
+			case 'J':
+				(*x)--;
+				break;
+			case 'L':
+				(*x)++;
+				break;
+			case 13:
+				trig = 0;
+				break;
+			default:
+				break;
+		}
+
+		if (*x < 0)
+			*x = 7;
+
+		if (*x > 7)
+			*x = 0;
+
+		if (*y < 0)
+			*y = 7;
+
+		if (*y > 7)
+			*y = 0;
+
+		movsprite(*x, *y, trig);
+
+		if (trig == 0)
+		{
+			break;
+		}
+	}
+
+	return 'M';
+}
+
 char getmov(int *i, int *j)
 {
 	char a, c;
 	char temp[32];
 
-	return 'G';
+	return getmov_local(i, j);
+
 
 	//selfplay = 'G';
 	if (selfplay == 'G')
@@ -1258,10 +1311,31 @@ int my_mov(char b[64], char p,char o,char e,int *m,int *n)
 
 void movsprite(int x,int y, int trig)
 {
-	int x1, y1, sprite;
+	int x1, y1, z, sprite;
 
 	x1 = x*16 + BOARD_START_X*8;
 	y1 = y*16 + BOARD_START_Y*8 - 1;
+
+	char colors[] = { 3,2,5,4,0xb,0xa, 0xf };
+
+	// 0 = Transparent
+	// 1 = Black
+	// 2 = Medium Green
+	// 3 = Light Green
+	// 4 = Dark Blue
+	// 5 = Light Blue
+	// 6 = Dark Red
+	// 7 = Cyan
+	// 8 = Medium Red
+	// 9 = Light Red
+	// A = Dark Yellow
+	// B = Light Yellow
+	// C = Dark Green
+	// D = Magenta
+	// E = Gray
+	// F = White
+
+
 
 	sprite = 0;
 	for(x = x1; x < x1+32; x += 8)
@@ -1270,20 +1344,37 @@ void movsprite(int x,int y, int trig)
 		{
 			sprite_attrib[sprite].x = x;
 			sprite_attrib[sprite].y = y;
+			sprite_attrib[sprite].color_code = 0xF;
 			sprite++;
 		}
 		y1 -= 15;
-
 	}
 	
 	vdp_vwrite(sprite_attrib, SprAttrTable, TOTAL_SPRITES * sizeof(SPRITE_ATTRIBUTE));
+
+	if (trig == 0)
+	{
+		for (x=0; x<sizeof(colors); x++)
+		{
+			for (y=0; y<sizeof(colors); y++)
+			{
+				sprite_attrib[sprite].color_code = colors[y];
+
+				vdp_vwrite(sprite_attrib, SprAttrTable, TOTAL_SPRITES * sizeof(SPRITE_ATTRIBUTE));
+
+				for (z=0; z<1000; z++)
+					;
+			}
+		}
+	}
+
 }
 
 int game(char b[64], int n)
 {
 	char c;
 	int ff;
-	int i, j;
+	int i=7, j=7;
 	char temp[32];
 	handicap = 0;
 	selfplay = ' ';

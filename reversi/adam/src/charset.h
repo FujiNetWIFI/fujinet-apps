@@ -1,6 +1,11 @@
 #ifndef _NWD_CHARSET_H
 #define _NWD_CHARSET_H
 
+#define PatternTable 0x0000  // 2048 The generator table
+#define NameTable    0x1800  // 768 bytes The screen
+#define ColorTable   0x2000  // 32 bytesColor Table
+
+
 #define THICK_TOP_LEFT          0
 #define THICK_TOP_ACROSS        THICK_TOP_LEFT+1
 #define THICK_TOP_RIGHT         THICK_TOP_LEFT+2

@@ -1,6 +1,28 @@
 #include "spriteset.h"
-unsigned char sprite_set[] =
+
+SPRITE_ATTRIBUTE sprite_attrib[TOTAL_SPRITES];
+
+void init_adam_sprites()
 {
+int c;
+
+for (c = 0; c < TOTAL_SPRITES; c++)
+{
+sprite_attrib[c].x = 0;
+sprite_attrib[c].y = 0;
+sprite_attrib[c].sprite_pattern = c;
+sprite_attrib[c].color_code = 0xf;
+sprite_attrib[c].reserved = 0;
+sprite_attrib[c].early_clock = 0;
+}
+
+vdp_vwrite(sprite_attrib, SprAttrTable, TOTAL_SPRITES * sizeof(SPRITE_ATTRIBUTE));
+vdp_vwrite(sprite_set, SprPatTable, TOTAL_SPRITES * 8);
+movsprite(7, 7, 0);
+}
+
+unsigned char sprite_set[] =
+{ // START SPRITES
 	0b11111111,
 	0b10000000,
 	0b10000000,

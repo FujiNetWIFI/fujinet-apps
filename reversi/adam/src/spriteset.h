@@ -12,6 +12,12 @@ typedef struct
 
 } SPRITE_ATTRIBUTE;
 
+#define TOTAL_SPRITES 12
+
+extern SPRITE_ATTRIBUTE sprite_attrib[TOTAL_SPRITES];
+
+#define SprAttrTable 0x1b00  // Sprite Attribute
+#define SprPatTable  0x3800  // Sprite Pattern
 
 extern unsigned char sprite_set[];
 extern unsigned char sprite_color[];
