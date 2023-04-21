@@ -10,9 +10,6 @@
 
 #define TIMEOUT 0x1f /* approx 30 seconds */
 
-/* set by intr.s */
-unsigned char trip=false;
-
 unsigned char nunit(char* devicespec)
 {
   unsigned char unit=1;
