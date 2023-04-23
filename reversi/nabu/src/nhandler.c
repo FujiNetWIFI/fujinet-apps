@@ -1,7 +1,8 @@
 
-#include <eos.h>
+
 #include "nhandler.h"
 #include "network.h"
+#include <string.h>
 
 
 char eol = 13;
@@ -13,6 +14,7 @@ int translate_adam_error_to_nhandler_error(unsigned char error_in)
 {
     return (int) error_in;
 }
+
 void nopen(int basic_unit, int rw_mode, int trans, char *url)
 {
     unsigned char adam_error;
@@ -76,19 +78,7 @@ void nctrl(int basic_unit, int command, char *buffer)
 
 void naccept(int basic_unit)
 {
-    unsigned char adam_error;
 
-    struct
-    {
-        char cmd;
-        char aux1;
-        char aux2;
-    } a;
-
-    a.cmd = 'A';
-    a.aux1 = FN_READ | FN_WRITE;
-    a.aux2 = 0;
-    eos_write_character_device(NET_DEV, (char *)a, sizeof(a));
 }
 
 void nseteol(int new_eol)

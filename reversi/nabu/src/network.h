@@ -14,6 +14,21 @@
 
 #define NET_DEV 0x09
 
+typedef struct
+{
+    unsigned short rxBytesWaiting;
+    bool connected;
+    unsigned char error;
+} NetStatus;
+
+unsigned char network_open(char *url, unsigned char mode, unsigned char translation);
+unsigned char network_close(void);
+unsigned char network_status(NetStatus *ns);
+unsigned short network_read(char *buf, unsigned short len);
+unsigned char network_write(unsigned char *buf, unsigned short len);
+
+extern unsigned char response[1024];
+
 #define NET_ERR_READY_TMOUT     1
 #define NET_ERR_RTS_COM_ERR     2
 #define NET_ERR_SEND_TMOUT      3
@@ -45,13 +60,6 @@
 #define NET_ERR_BAD_ORFE       30
 
 #define NET_ERR_OK             0x80
-
-typedef struct
-{
-    unsigned short rxBytesWaiting;
-    bool connected;
-    unsigned char error;
-} NetStatus;
 
 unsigned char  network_open(char *url, unsigned char mode, unsigned char translation);
 unsigned char  network_close(void);

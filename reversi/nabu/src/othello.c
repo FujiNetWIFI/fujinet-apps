@@ -102,7 +102,6 @@ commands may be typed:
 
 #ifdef ADAM_OR_NABU
 #include <msx.h>
-#include <input.h>
 #include <graphics.h>
 #include <games.h>
 #include "board.h"
@@ -941,10 +940,7 @@ char getmov_local(int *x, int *y)
 			joytimer++;
 
 		//c = in_Inkey();
-
-		//c = toupper(getchar());
 		c = 0;
-		
 		switch(c)
 		{
 			case 'I':
@@ -1379,7 +1375,20 @@ int game(char b[64], int n)
 				print_trace("case M");
 				if (chkmov(b, his, i, j) > 0)
 				{
-					movsprite(j,i,trig);
+					int x,y;
+					if (!mefirst)
+					{
+						x = j;
+						y = i;
+					}
+					else
+					{
+						x = i;
+						y = j;
+					}
+					x = j;
+					y = i;
+					movsprite(x,y,trig);
 					sprintf(temp, !mefirst ? "%u-%u" : "%u-%u", i + 1, j + 1);
 					if (his == BLACK)
 						print_black_line(temp);
@@ -1645,7 +1654,12 @@ int main()
 #ifdef ADAM_OR_NABU
 
 		printf("Be sure to forward TCP port 6502.\n\n");
+#ifdef BUILD_ADAM
 		printf("Type hostname or press ENTER to host\n");
+#else
+		printf("  Type hostname or press GO\n      to host\n");
+#endif
+
 		gets(host);
 
 		host[strlen(host) - 1] = '\0';
