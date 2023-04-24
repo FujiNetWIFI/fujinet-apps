@@ -1,30 +1,36 @@
 #include <stdio.h>
-#include <eos.h>
+#include <msx.h>
+#include <games.h>
 #include "joystick.h"
 
-static GameControllerData cont;
-static unsigned char joystick = 0;
-static unsigned char button = 0;
-static unsigned char keypad = 0;
 
 
 
 int read_joystick(int *fire)
 {
+    int r, button,fire_button, pos;
 
-    int fire_button;
+    r = joystick(1) & 0xFF;
+
+    button = r >= 16;
+    r = r & 0x0F;
     
-    fire_button = 1;
+    pos = 0;
+    if (r & 8)
+        pos |= UP;
 
-    eos_read_game_controller(READ_CONTROLLER_1 | READ_CONTROLLER_2, &cont);
-    joystick = cont.joystick1 | cont.joystick2; // use value from either joystick
-    button = cont.joystick1_button_left | cont.joystick1_button_right | cont.joystick2_button_left | cont.joystick2_button_right;
-    keypad = cont.joystick1_keypad;
+    if (r & 4)
+        pos |= DOWN;
 
-    if (button)
-        fire_button = 0;
+    if (r & 2)
+        pos |= LEFT;
+
+    if (r & 1)
+        pos |= RIGHT;
+
+    fire_button = ! button;
 
     *fire = fire_button;
 
-    return joystick;
+    return pos;
 }

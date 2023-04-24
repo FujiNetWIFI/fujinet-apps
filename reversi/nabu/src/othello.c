@@ -155,7 +155,7 @@ int status_y = 22;
 
 int line = 0;
 
-int trace_on = 0;
+int trace_on = 1;
 int trig=1;
 
 int print_trace(char *message);
@@ -635,7 +635,6 @@ int print_info(char *message)
 
 	print(x, y, message);
 
-	delay(2);
 	return 0;
 
 }
@@ -656,6 +655,7 @@ int print_no_clear(int y, char *message)
 int print_white_line(char *message)
 {
 	int x,y,pos;
+	char c;
 	if (white_line > LINE_STOP)
 	{
 		for(y=LINE_START; y<LINE_STOP+1; y++)
@@ -668,6 +668,20 @@ int print_white_line(char *message)
 		}
 		white_line = LINE_START;
 	}
+
+	for (x = 0; x < strlen(message); x++)
+	{
+		c = message[x];
+		if (c >= '1' && c <= '8')
+		{
+			c = c - '0';
+			c = white_numbers[c];
+		}
+		else if (c == '-')
+			c = white_numbers[0];
+		message[x] = c;
+	}
+
 	print(WHITE_START_X +(LINE_WIDTH/2)-strlen(message)/2, white_line, message);
 	white_line++;
 
@@ -677,6 +691,7 @@ int print_white_line(char *message)
 int print_black_line(char *message)
 {
 	int x, y, pos;
+	char c;
 	if (black_line > LINE_STOP)
 	{
 		for (y = LINE_START; y < LINE_STOP + 1; y++)
@@ -690,13 +705,26 @@ int print_black_line(char *message)
 		black_line = LINE_START;
 	}
 
+	for(x=0; x<strlen(message); x++)
+	{
+		c = message[x];
+		if (c>='1' && c<='8')
+		{
+			c = c - '0';
+			c = black_numbers[c];
+		} else
+			if (c == '-')
+				c = black_numbers[0];
+		message[x] = c;
+	}
+
 	print(BLACK_START_X + (LINE_WIDTH / 2) - strlen(message) / 2, black_line, message);
 	black_line++;
 
 	return 0;
 }
 
-void set_adam_graphics()
+void set_msx_graphics()
 {
 	init_character_set();
 
@@ -730,16 +758,16 @@ void prtbrd(char b[64])
 			switch(b[y*8+x])
 			{
 				case BLACK:
-					board[pos] 		= (char) BLACK_TOP_LEFT;
-					board[pos + 1]  = (char) BLACK_TOP_RIGHT;
-					board[pos + 32] = (char) BLACK_BOTTOM_LEFT;
-					board[pos + 33] = (char) BLACK_BOTTOM_RIGHT;
+					board[pos] 		= (char) (BLACK_TOP_LEFT     & 0xFF);
+					board[pos + 1]  = (char) (BLACK_TOP_RIGHT    & 0xFF);
+					board[pos + 32] = (char) (BLACK_BOTTOM_LEFT  & 0xFF);
+					board[pos + 33] = (char) (BLACK_BOTTOM_RIGHT & 0xFF);
 					break;
 				case WHITE:
-					board[pos] 		= (char) WHITE_TOP_LEFT;
-					board[pos + 1]  = (char) WHITE_TOP_RIGHT;
-					board[pos + 32] = (char) WHITE_BOTTOM_LEFT;
-					board[pos + 33] = (char) WHITE_BOTTOM_RIGHT;
+					board[pos] 		= (char) (WHITE_TOP_LEFT     & 0xFF);
+					board[pos + 1]  = (char) (WHITE_TOP_RIGHT    & 0xFF);
+					board[pos + 32] = (char) (WHITE_BOTTOM_LEFT  & 0xFF);
+					board[pos + 33] = (char) (WHITE_BOTTOM_RIGHT & 0xFF);
 					break;
 				default:
 					break;
@@ -749,7 +777,6 @@ void prtbrd(char b[64])
 
 	addr = NameTable;
 	msx_vwrite(board, addr, 768);
-	delay(2);
 }
 #else
 
@@ -911,17 +938,18 @@ int prtscr(char b[64])
 }
 
 
-char getmov_local(int *x, int *y)
+char getmov_local(int *i, int *j)
 {
 	int joy = 0;
 	int trig = 1;
-	int c;
+//	int c;
 	long joytimer = 0;
 
-	movsprite(*x, *y, trig);
+	movsprite(*i, *j, MOVING_COLOR);
 
 	while(true)
 	{
+		joy = read_joystick(&trig);
 		if (joytimer > JOYSTICK_DELAY)
 		{
 			joytimer = 0;
@@ -929,17 +957,18 @@ char getmov_local(int *x, int *y)
 			joy = read_joystick(&trig);
 
 			if (joy & UP)
-				(*y)--;
+				(*i)--;
 			if (joy & DOWN)
-				(*y)++;
+				(*i)++;
 			if (joy & LEFT)
-				(*x)--;
+				(*j)--;
 			if (joy & RIGHT)
-				(*x)++;
+				(*j)++;
 		} else
 			joytimer++;
 
 		//c = in_Inkey();
+		/*
 		c = 0;
 		switch(c)
 		{
@@ -961,26 +990,27 @@ char getmov_local(int *x, int *y)
 			default:
 				break;
 		}
+*/
+		if (*j < 0)
+			*j = 7;
 
-		if (*x < 0)
-			*x = 7;
+		if (*j > 7)
+			*j = 0;
 
-		if (*x > 7)
-			*x = 0;
+		if (*i < 0)
+			*i = 7;
 
-		if (*y < 0)
-			*y = 7;
+		if (*i > 7)
+			*i = 0;
 
-		if (*y > 7)
-			*y = 0;
-
-		movsprite(*x, *y, trig);
+		movsprite(*i, *j, MOVING_COLOR);
 
 		if (trig == 0)
 		{
 			break;
 		}
 	}
+	movsprite(*i, *j, SELECTED_COLOR);
 
 	return 'M';
 }
@@ -988,9 +1018,6 @@ char getmov_local(int *x, int *y)
 char getmov(int *i, int *j)
 {
 	char a, c;
-
-	return getmov_local(i, j);
-
 
 	//selfplay = 'G';
 	if (selfplay == 'G')
@@ -1285,187 +1312,119 @@ int game(char b[64], int n)
 	char c;
 	int ff;
 	int i=7, j=7;
+	int BlacksTurn = true;
+	int blacks_moves, whites_moves;
 	char temp[32];
 	handicap = 0;
 	selfplay = ' ';
 	ff = 0;
 
+
+
 	if (mefirst)
 	{
 		mine = BLACK;
 		his = WHITE;
-		print_info("Opponent goes first");
-		delay(3);
+		print_info("You go first");
+		delay(2);
 	}
 	else
 	{
 		mine = WHITE;
 		his = BLACK;
-		print_info("You go first");
+		print_info("Opponent goes first");
+		delay(2);
 	}
 
 	while (1)
 	{
-		print_info(" ");
-		if (cntbrd(b, EMPTY) == 0)
-			return 'D';
+		blacks_moves = chkmvs(b, BLACK);
+		whites_moves = chkmvs(b, WHITE);
 
-		if (cntbrd(b, EMPTY) == 60 && mine == BLACK)
-			goto Istart;
-
-		if (chkmvs(b, his) == 0)
+		if (blacks_moves + whites_moves == 0)
+			break;
+		
+		// black
+		if (BlacksTurn)
 		{
-			// problem here - black gets stuck
-			sprintf(temp, !mefirst ? "Forfeit" : "Forfeit");
-			print_info(temp);
-			if (his == BLACK)
-				print_black_line(temp);
-			else
-				print_white_line(temp);
+			print(TITLE_X, TITLE_Y,  black_reversi);
+			print(TITLE_X, TITLE_Y+1,mirror_white_reversi);
 
-			ff |= 1;
-			goto Istart;
-		}
-		else
-		{
-			c = getmov(&i, &j);
-			switch (c)
+			print_info("Black's Turn");
+
+			if (blacks_moves == 0)
 			{
-			case 'B':
-				print_trace("case B");
-				prtbrd(b);
-				continue;
-			case 'S':
-				print_trace("case S");
-				i = prtscr(b);
-				if (i > 0)
-					print_info(" You're winning");
-				else if (i < 0)
-						print_info(" You're losing!");
-						// else
-						// putchar('\n');
-				continue;
-			case 'Q':
-			case 4:
-				print_trace("case Q");
-				return c;
+				print_black_line("Forfeit");
+			} else
+			{
+				if (mine == BLACK)
+				{
+					print_info("Your (Black) Move");
+					c = getmov_local(&i,&j);
+				} else
+				{
+					print_info("Computer (Black) Move");
+					c = my_mov(b, his, mine, EMPTY, &i, &j);
+				}
 
-			case 'H':
-				print_trace("case H");
-				if (n > (unsigned int)(handicap) + 4)
-					print_error("Illegal!");
-				else
-					for (j = 0; i != 0; j++)
-					{
-						b[h[j * 2] * 8 + h[j * 2 + 2]] = i > 0 ? BLACK : WHITE;
-						handicap += i > 0 ? 1 : -1;
-						++n;
-						i += i > 0 ? -1 : 1;
-					}
-				prtbrd(b);
-				continue;
-			case 'A':
-				print_trace("case A");
-				analyze(b, his, mine, EMPTY);
-				continue;
-			case 'G':
-				print_trace("case G");
-				my_mov(b, his, mine, EMPTY, &i, &j);
-			case 'M':
-				print_trace("case M");
-				if (chkmov(b, his, i, j) > 0)
+				if (chkmov(b, BLACK, i, j) > 0)
 				{
-					int x,y;
-					if (!mefirst)
-					{
-						x = j;
-						y = i;
-					}
-					else
-					{
-						x = i;
-						y = j;
-					}
-					x = j;
-					y = i;
-					movsprite(x,y,trig);
-					sprintf(temp, !mefirst ? "%u-%u" : "%u-%u", i + 1, j + 1);
-					if (his == BLACK)
-						print_black_line(temp);
-					else
-						print_white_line(temp);
-					putmov(b, his, i, j);
-					if (his == BLACK)
-						print_info("White's Turn");
-					else
-						print_info("Black's Turn");
+					sprintf(temp, "%u-%u", i + 1, j + 1);
+					print_black_line(temp);
 
-					prtbrd(b);
-				}
-				else
+					movsprite(i, j, SELECTED_COLOR);
+					putmov(b, BLACK, i, j);
+				} else
 				{
-					print_error("Illegal!");
+					print_info("Illegal");
+					delay(2);
 					continue;
-				}
-				break;
-			case 'F':
-				print_trace("case F");
-				if (n > (unsigned int)(handicap) + 4)
-				{
-					print_error("Illegal!");
-					continue;
-				}
-				else
-				{
-					sprintf(temp, !mefirst ? "Forfeit" : "Forfeit");
-					if(mine == BLACK)
-						print_black_line(temp);
-					else
-						print_white_line(temp);
 				}
 			}
-			Istart:
+		} else
+		{
+			print(TITLE_X, TITLE_Y, white_reversi);
+			print(TITLE_X, TITLE_Y + 1, mirror_black_reversi);
 
-			if (cntbrd(b, EMPTY) == 0)
-				return 'D';
+			print_info("White's Turn");
 
-			if (chkmvs(b, mine) == 0)
+			if (whites_moves == 0)
 			{
-				sprintf(temp, !mefirst ? "Forfeit" : "Forfeit");
-				if (mine == BLACK) 
-					print_black_line(temp);
-				else
-					print_white_line(temp);
-
-				ff |= 2;
+				print_white_line("Forfeit");
 			}
 			else
 			{
-
-				my_mov(b, mine, his, EMPTY, &i, &j);
-				
-				movsprite(j, i, trig);
-
-				sprintf(temp, !mefirst ? "%u-%u" : "%u-%u", i + 1, j + 1);
-				if (mine == BLACK)
-					print_black_line(temp);
+				if (mine == WHITE)
+				{
+					print_info("Your (WHITE) move");
+					c = getmov_local(&i, &j);
+				}
 				else
+				{
+					print_info("Computer (WHITE) move");
+					c = my_mov(b, his, mine, EMPTY, &i, &j);
+				}
+				if (chkmov(b, WHITE, i, j) > 0)
+				{
+					sprintf(temp, "%u-%u", i + 1, j + 1);
 					print_white_line(temp);
-				putmov(b, mine, i, j);
-				++n;
 
-				if (mine == BLACK)
-					print_info("White's Turn");
+					movsprite(i, j, SELECTED_COLOR);
+					putmov(b, WHITE, i, j);
+				}
 				else
-					print_info("Black's Turn");
+				{
+					print_info("Illegal");
+					delay(2);
+					continue;
+				}
 			}
-			if (ff == 3 || n > 64)
-				return 'D';
-			if (!(ff & 1))
-				prtbrd(b);
-			ff = 0;
-		}
-	}
+		} // if BlacksTurn
+		prtbrd(b);
+		BlacksTurn = ! BlacksTurn;
+	} // while
+
+	return 0;
 }
 
 
@@ -1653,9 +1612,9 @@ int main()
 
 #ifdef ADAM_OR_NABU
 
-		printf("Be sure to forward TCP port 6502.\n\n");
+		printf("Forward TCP port 6502.\n\n");
 #ifdef BUILD_ADAM
-		printf("Type hostname or press ENTER to host\n");
+		printf("Type hostname or press\n           ENTER to host\n");
 #else
 		printf("  Type hostname or press GO\n      to host\n");
 #endif
@@ -1673,25 +1632,25 @@ int main()
 		if (strcmp(host, "") == 0)
 		{
 		printf("WAITING FOR CONNECTION...");
-		mefirst = 0;
+		mefirst = 1;
 	}
 	else
 	{
-		mefirst = 1;
+		mefirst = 0;
 	}
 
 	
 #else
 	printf("Do you want to go first? ");
 	if (toupper(getchar()) == 'Y') 
-		mefirst = 0;
-	else
 		mefirst = 1;
+	else
+		mefirst = 0;
 
 #endif
 
 #ifdef ADAM_OR_NABU
-	set_adam_graphics();
+	set_msx_graphics();
 	newbrd();
 #endif
 
@@ -1715,12 +1674,13 @@ int main()
 #ifdef ADAM_OR_NABU
 		if (mefirst)
 		{
-			print(WHITE_START_X + LINE_WIDTH / 2 - strlen(your_name)  / 2, LINE_START - 2, your_name);
-			print(BLACK_START_X + LINE_WIDTH / 2 - strlen(their_name) / 2, LINE_START - 2, their_name);
-		} else
-		{
 			print(WHITE_START_X + LINE_WIDTH / 2 - strlen(their_name) / 2, LINE_START - 2, their_name);
-			print(BLACK_START_X + LINE_WIDTH / 2 - strlen(your_name)  / 2, LINE_START - 2, your_name);
+			print(BLACK_START_X + LINE_WIDTH / 2 - strlen(your_name) / 2, LINE_START - 2, your_name);
+		}
+		else
+		{
+			print(WHITE_START_X + LINE_WIDTH / 2 - strlen(your_name) / 2, LINE_START - 2, your_name);
+			print(BLACK_START_X + LINE_WIDTH / 2 - strlen(their_name) / 2, LINE_START - 2, their_name);
 		}
 
 #else
@@ -1745,7 +1705,7 @@ int main()
 			else 
 				sprintf(message, " A draw");
 
-		print(16 - strlen(message) / 2, 11, message);
+		print_info(message);
 
 #else
 		if (i > 0)

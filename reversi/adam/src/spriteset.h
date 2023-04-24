@@ -17,6 +17,25 @@ typedef struct
 #define BOARD_START_X 8
 #define BOARD_START_Y 3
 
+// 0 = Transparent
+// 1 = Black
+// 2 = Medium Green
+// 3 = Light Green
+// 4 = Dark Blue
+// 5 = Light Blue
+// 6 = Dark Red
+// 7 = Cyan
+// 8 = Medium Red
+// 9 = Light Red
+// A = Dark Yellow
+// B = Light Yellow
+// C = Dark Green
+// D = Magenta
+// E = Gray
+// F = White
+
+#define SELECTED_COLOR 0x0B
+#define MOVING_COLOR   0x0E
 
 extern SPRITE_ATTRIBUTE sprite_attrib[TOTAL_SPRITES];
 

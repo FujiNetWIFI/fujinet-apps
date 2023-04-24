@@ -9,6 +9,6 @@
 
 #define FIRE (16384)
 
-#define JOYSTICK_DELAY 10
+#define JOYSTICK_DELAY 20
 
 int read_joystick(int *fire);

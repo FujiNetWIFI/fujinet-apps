@@ -66,10 +66,26 @@
 #define BLACK_BOTTOM_LEFT       BLACK_TOP_LEFT+2
 #define BLACK_BOTTOM_RIGHT      BLACK_TOP_LEFT+3
 
+#define TITLE_X 12
+#define TITLE_Y  0
+
+extern char white_reversi[];
+extern char black_reversi[];
+extern char mirror_white_reversi[];
+extern char mirror_black_reversi[];
 
 extern unsigned char character_set[];
 extern unsigned char character_color[];
 
+extern char black_numbers[];
+extern char white_numbers[];
+
 void init_character_set();
+
+#define WHITE_NUMBERS 208
+#define BLACK_NUMBERS 216
+#define WHITE_SEPARATOR 167
+#define BLACK_SEPARATOR 159
+
 
 #endif

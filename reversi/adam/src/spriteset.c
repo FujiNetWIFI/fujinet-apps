@@ -5,37 +5,39 @@ SPRITE_ATTRIBUTE sprite_attrib[TOTAL_SPRITES];
 
 void init_adam_sprites()
 {
-	int c;
+	int s;
 
-	for (c = 0; c < TOTAL_SPRITES; c++)
+	for (s = 0; s < TOTAL_SPRITES; s++)
 	{
-		sprite_attrib[c].x = 0;
-		sprite_attrib[c].y = 0;
-		sprite_attrib[c].sprite_pattern = c;
-		sprite_attrib[c].color_code = 0xf;
-		sprite_attrib[c].reserved = 0;
-		sprite_attrib[c].early_clock = 0;
+		sprite_attrib[s].x = 0;
+		sprite_attrib[s].y = 0;
+		sprite_attrib[s].sprite_pattern = s;
+		sprite_attrib[s].color_code = 0xf;
+		sprite_attrib[s].reserved = 0;
+		sprite_attrib[s].early_clock = 1;
 	}
 
 	vdp_vwrite(sprite_attrib, SprAttrTable, TOTAL_SPRITES * sizeof(SPRITE_ATTRIBUTE));
 	vdp_vwrite(sprite_set, SprPatTable, TOTAL_SPRITES * 8);
-	movsprite(-1, -1, 0);
+
+	movsprite(-1, -1, 0x0f);
 }
 
-void movsprite(int x, int y, int trig)
+void movsprite(int i, int j, int color)
 {
-	int x1, y1, sprite;
-	char early_clock = 0;
+	int x1, y1, sprite,s, c, x,y;
+	char early_clock;
 
-	if ((x == -1) || (x == -1))
+	if ((i == -1) || (j == -1))
 	{
 		x1 = 0;
 		y1 = 0;
 		early_clock = 1;
 	} else
 	{
-		x1 = x * 16 + BOARD_START_X * 8;
-		y1 = y * 16 + BOARD_START_Y * 8 - 1;
+		x1 = j * 16 + BOARD_START_X * 8;
+		y1 = i * 16 + BOARD_START_Y * 8 - 1;
+		early_clock = 0;
 	}
 	char colors[] = {3, 2, 5, 4, 0xb, 0xa, 0xf};
 
@@ -63,7 +65,7 @@ void movsprite(int x, int y, int trig)
 		{
 			sprite_attrib[sprite].x = x;
 			sprite_attrib[sprite].y = y;
-			sprite_attrib[sprite].color_code = 0xF;
+			sprite_attrib[sprite].color_code = color;
 			sprite_attrib[sprite].early_clock = early_clock;
 			sprite++;
 		}
@@ -72,18 +74,6 @@ void movsprite(int x, int y, int trig)
 
 	vdp_vwrite(sprite_attrib, SprAttrTable, TOTAL_SPRITES * sizeof(SPRITE_ATTRIBUTE));
 
-	if (trig == 0)
-	{
-		for (x = 0; x < sizeof(colors); x++)
-		{
-			for (y = 0; y < sizeof(colors); y++)
-			{
-				sprite_attrib[sprite].color_code = colors[y];
-
-				vdp_vwrite(sprite_attrib, SprAttrTable, TOTAL_SPRITES * sizeof(SPRITE_ATTRIBUTE));
-			}
-		}
-	}
 }
 
 unsigned char sprite_set[] =
@@ -94,11 +84,11 @@ unsigned char sprite_set[] =
 	0b10000000,
 	0b10000000,
 	0b10000000,
-	0b10000000,
-	0b10000000,
-	0b10000000,
-	0b10000000,
-	0b10000000,
+	0b10000011,
+	0b10000111,
+	0b10000111,
+	0b10000111,
+	0b10000011,
 	0b10000000,
 	0b10000000,
 	0b10000000,
@@ -119,17 +109,17 @@ unsigned char sprite_set[] =
 	0b00000000,
 	0b00000000,
 	0b00000000,
-	0b00000000, // line 2347
+	0b00000000, // line 2349
 	0b00000000,
 	0b00000000,
 	0b00000000,
 	0b00000000,
 	0b00000000,
-	0b00000000,
-	0b00000000,
-	0b00000000,
-	0b00000000,
-	0b00000000,
+	0b00000001,
+	0b00000001,
+	0b00000001,
+	0b00000001,
+	0b00000001,
 	0b00000000,
 	0b00000000,
 	0b00000000,
@@ -141,17 +131,17 @@ unsigned char sprite_set[] =
 	0b00000001,
 	0b00000001,
 	0b00000001,
+	0b10000001,
+	0b11000001,
+	0b11000001,
+	0b11000001,
+	0b10000001,
 	0b00000001,
 	0b00000001,
 	0b00000001,
 	0b00000001,
 	0b00000001,
-	0b00000001,
-	0b00000001,
-	0b00000001,
-	0b00000001,
-	0b00000001,
-	0b11111111, // line 2348
+	0b11111111, // line 2350
 	0b00000000,
 	0b00000000,
 	0b00000000,
@@ -183,5 +173,5 @@ unsigned char sprite_set[] =
 	0b00000000,
 	0b00000000,
 	0b00000000,
-	0b00000000  // line 2349
+	0b00000000  // line 2351
 };
