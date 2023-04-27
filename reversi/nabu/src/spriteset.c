@@ -25,7 +25,7 @@ void init_adam_sprites()
 
 void movsprite(int i, int j, int color)
 {
-	int x1, y1, sprite,s, c, x,y;
+	int x1, y1, sprite,x,y;
 	char early_clock;
 
 	if ((i == -1) || (j == -1))

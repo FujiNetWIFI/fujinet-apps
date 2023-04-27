@@ -100,8 +100,8 @@ void nprint(int basic_unit, char *buffer)
 {
     unsigned char adam_error;
 
-    nwrite(basic_unit, (unsigned char *) buffer, strlen(buffer));
-    nwrite(basic_unit, (unsigned char *) &eol, 1);
+    nwrite(basic_unit, buffer, strlen(buffer));
+    nwrite(basic_unit, &eol, 1);
 
 }
 

@@ -20,6 +20,12 @@
 
 PROJECT_DEVICE := nabu
 
+ifeq ('$(PROJECT_DEVICE)', 'adam')
+	EXTENSION := .ddp
+else
+	EXTENSION := 
+endif
+
 ifeq ('$(OS)','')
 	WINE_REQUIRED := wine
 else
@@ -105,9 +111,9 @@ tnfs: $(TARGET_EXEC)
 	cp $(TARGET_EXEC) $(NABU_CACHE)/000001.nabu 
 ifneq ('$(TNFS_SERVER)','')
 ifneq ('$(OS)','')
-	cp $(TARGET_EXEC) //$(TNFS_SERVER)/$(TNFS_SHARE)/$(TNFS_DIR)
+	cp $(TARGET_EXEC)$(EXTENSION) //$(TNFS_SERVER)/$(TNFS_SHARE)/$(TNFS_DIR)
 else
-	cp $(TARGET_EXEC) /run/user/1000/gvfs/smb-share:server=$(TNFS_SERVER),share=$(TNFS_SHARE)/$(TNFS_DIR)
+	cp $(TARGET_EXEC)$(EXTENSION) /run/user/1000/gvfs/smb-share:server=$(TNFS_SERVER),share=$(TNFS_SHARE)/$(TNFS_DIR)
 endif
 else
 	$(info ***********************************************)

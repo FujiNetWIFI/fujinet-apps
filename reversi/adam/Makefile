@@ -20,6 +20,12 @@
 
 PROJECT_DEVICE := adam
 
+ifeq ('$(PROJECT_DEVICE)', 'adam')
+	EXTENSION := .ddp
+else
+	EXTENSION := 
+endif
+
 ifeq ('$(OS)','')
 	WINE_REQUIRED := wine
 else
@@ -104,9 +110,9 @@ tnfs: $(TARGET_EXEC).ddp
 ifneq ('$(TNFS_SERVER)','')
 
 ifneq ('$(OS)','')
-	cp $(TARGET_EXEC).ddp //$(TNFS_SERVER)/$(TNFS_SHARE)
+	cp $(TARGET_EXEC)$(EXTENSION). //$(TNFS_SERVER)/$(TNFS_SHARE)/$(TNFS_DIR)
 else
-	cp $(TARGET_EXEC).ddp /run/user/1000/gvfs/smb-share:server=$(TNFS_SERVER),share=$(TNFS_SHARE)
+	cp $(TARGET_EXEC)$(EXTENSION) /run/user/1000/gvfs/smb-share:server=$(TNFS_SERVER),share=$(TNFS_SHARE)/$(TNFS_DIR)
 endif
 else
 	$(info ***********************************************)

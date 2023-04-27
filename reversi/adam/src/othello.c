@@ -593,7 +593,7 @@ int print(int x, int y, char *message)
 
 int print_down(int x, int y, char *message)
 {
-	int i, pos = y * 32 + x;
+	int pos = y * 32 + x;
 	unsigned int addr;
 
 	for (x = 0; x < strlen(message); x++)
@@ -1691,10 +1691,11 @@ int main()
 #ifdef ADAM_OR_NABU
 
 	printf("\nThis program uses TCP port 6502.\n\n");
+
 #ifdef BUILD_ADAM
 
 	sound_mode_change();
-	printf("Make your selection:\n");
+
 	smartkeys_display("1 Player\n  Local", "2 Player\n  Local", "  Host\n  Game", " Remote\n  Host", NULL, "  QUIT");
 
 	game_type = 0;
@@ -1726,10 +1727,7 @@ int main()
 		}
 	}
 
-	vdp_color(BACKGROUND_COLOUR_TEXT);
-
-	vdp_set_mode(mode_2);
-
+	smartkeys_display(NULL, NULL, NULL, NULL, NULL, NULL);
 #else
 
 	printf("Press any key to continue");
@@ -1745,7 +1743,6 @@ int main()
 	printf("(3) 2 Players, I will host (You will be Black)\n");
 	printf("(4) 2 Players, They will host (They will be Black)\n");
 	printf("(5) Quit\n");
-
 
 	game_type = 0;
 	while (game_type == 0)
@@ -1778,8 +1775,48 @@ int main()
 
 #endif
 
+#if BUILD_ADAM
+	if ((game_type == HOSTING_GAME) || (game_type == OTHER_HOSTED))
+	{
+
+		if (game_type == OTHER_HOSTED)
+		{
+
+			smartkeys_status("Enter the IP of the host computer:");
+			gets(host);
+			host[strlen(host) - 1] = '\0';
+		}
+		sprintf(url, "TCP://%s:6502/", host);
+
+		vdp_color(BACKGROUND_COLOUR_GRAPHICS);
+
+		vdp_set_mode(mode_2);
+
+		smartkeys_status("WAITING FOR CONNECTION...");
+
+		if (strcmp(host, "") == 0)
+		{
+			waiting = 0;
+			connection = false;
+			while (!connection)
+			{
+				printf("%c%c", waitingstr[waiting], 8);
+				connection = true;
+				waiting++;
+				if (waiting > 4)
+					waiting = 0;
+			}
+			mefirst = 1;
+		}
+		else
+		{
+			mefirst = 0;
+		}
+	}
+#else
 	if ((game_type == HOSTING_GAME) || (game_type == OTHER_HOSTED))	
 	{
+
 		if (game_type == OTHER_HOSTED)
 		{
 			
@@ -1816,6 +1853,7 @@ int main()
 			mefirst = 0;
 		}
 	}
+#endif
 	
 #else
 	printf("Do you want to go first? ");
@@ -1827,6 +1865,58 @@ int main()
 #endif
 
 #ifdef ADAM_OR_NABU
+#ifdef BUILD_ADAM
+
+	strcpy(their_name, "Computer");
+	if (game_type == LOCAL_OPPONENT)
+	{
+		smartkeys_display(NULL, NULL, NULL, NULL, NULL, NULL);
+		smartkeys_status("What is the name of Player 1?");
+		gets(my_name);
+		my_name[strlen(my_name) - 1] = '\0';
+		my_name[8] = '\0';
+
+		smartkeys_display(NULL, NULL, NULL, NULL, NULL, NULL);
+		smartkeys_status("What is the name of Player 2?");
+		gets(their_name);
+		their_name[strlen(their_name) - 1] = '\0';
+		their_name[8] = '\0';
+	}
+	else
+	{
+		smartkeys_status("What is your name?");
+		gets(my_name);
+		my_name[strlen(my_name) - 1] = '\0';
+		my_name[8] = '\0';
+
+		strcpy(their_name, "Remote");
+	}
+
+	if ((game_type == LOCAL_OPPONENT) || (game_type == COMPUTER_OPPONENT))
+	{
+		char temp[32];
+		sprintf(temp, "\n  Does %s want to play first?", my_name);
+		smartkeys_display(NULL, NULL, NULL, NULL,"YES","NO");
+		smartkeys_status(temp);
+		key = eos_read_keyboard();
+
+		while(1)
+		{
+			if (key == SMARTKEY_V)
+			{
+				mefirst = 1;
+				break;
+			}
+			if (key == SMARTKEY_VI)
+			{
+				mefirst = 0;
+				break;
+			}
+		}
+
+	}
+
+#else
 	printf("\n");
 	strcpy(their_name, "Computer");
 	if (game_type == LOCAL_OPPONENT)
@@ -1858,10 +1948,10 @@ int main()
 		mefirst = (toupper(getchar()) == 'Y');
 
 	}
+
+#endif
 	init_msx_graphics();
 	newbrd();
-
-
 #endif
 
 #ifdef ZX81_DKTRONICS
