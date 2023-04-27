@@ -90,6 +90,8 @@ commands may be typed:
 */
 //#define BUILD_ADAM
 
+int my_mov(char b[64], char p, char o, char e, int *m, int *n);
+
 #ifdef BUILD_ADAM
   #define ADAM_OR_NABU
   //#error ADAM build selected.
@@ -109,17 +111,23 @@ commands may be typed:
 #include "nhandler.h"
 #include "spriteset.h"
 #include "joystick.h"
+#include "sound.h"
 
-/*
-DefPatternTable EQU     0h
-DefNameTable    EQU     1800h
-DefSprAttrTable EQU     1b00h
-DefColorTable   EQU     2000h
-DefSprPatTable  EQU     3800h
-*/
+#ifdef BUILD_ADAM
+#include "smartkeys.h"
+#include "eos.h"
+#endif
 
-// graphics mode 1
-// 32 x 24
+	/*
+	DefPatternTable EQU     0h
+	DefNameTable    EQU     1800h
+	DefSprAttrTable EQU     1b00h
+	DefColorTable   EQU     2000h
+	DefSprPatTable  EQU     3800h
+	*/
+
+	// graphics mode 1
+	// 32 x 24
 
 char url[255];
 char host[255];
@@ -161,6 +169,13 @@ int trig=1;
 int print_trace(char *message);
 int delay(int d);
 
+char my_name[16];
+char their_name[16];
+
+#define COMPUTER_OPPONENT 1
+#define LOCAL_OPPONENT	  2
+#define OTHER_HOSTED      3
+#define HOSTING_GAME	  4
 
 #endif
 
@@ -576,6 +591,27 @@ int print(int x, int y, char *message)
 	return 0;
 }
 
+int print_down(int x, int y, char *message)
+{
+	int i, pos = y * 32 + x;
+	unsigned int addr;
+
+	for (x = 0; x < strlen(message); x++)
+	{
+		if (y > 20)
+			break;
+
+		board[pos] = message[x];
+		pos += 32;
+		y++;
+
+	}
+
+	addr = NameTable;
+	msx_vwrite(board, addr, 768);
+	return 0;
+}
+
 int print_trace(char *message)
 {
 	int x,y, pos;
@@ -724,7 +760,7 @@ int print_black_line(char *message)
 	return 0;
 }
 
-void set_msx_graphics()
+void init_msx_graphics()
 {
 	init_character_set();
 
@@ -1012,6 +1048,12 @@ char getmov_local(int *i, int *j)
 	}
 	movsprite(*i, *j, SELECTED_COLOR);
 
+	return 'M';
+}
+
+char getmov_remote(char b[64], int *i, int *j) 
+{
+	my_mov(b, his, mine, EMPTY, i, j);
 	return 'M';
 }
 
@@ -1307,7 +1349,7 @@ int my_mov(char b[64], char p,char o,char e,int *m,int *n)
 
 #ifdef ADAM_OR_NABU
 
-int game(char b[64], int n)
+int game(char b[64], int game_type)
 {
 	char c;
 	int ff;
@@ -1325,15 +1367,11 @@ int game(char b[64], int n)
 	{
 		mine = BLACK;
 		his = WHITE;
-		print_info("You go first");
-		delay(2);
 	}
 	else
 	{
 		mine = WHITE;
 		his = BLACK;
-		print_info("Opponent goes first");
-		delay(2);
 	}
 
 	while (1)
@@ -1359,24 +1397,39 @@ int game(char b[64], int n)
 			{
 				if (mine == BLACK)
 				{
-					print_info("Your (Black) Move");
+					sprintf(temp, "%s's Move", my_name);
+					print_info(temp);
 					c = getmov_local(&i,&j);
 				} else
 				{
-					print_info("Computer (Black) Move");
-					c = my_mov(b, his, mine, EMPTY, &i, &j);
+					sprintf(temp, "%s's Move", their_name);
+					print_info(temp);
+					switch(game_type)
+					{
+						case COMPUTER_OPPONENT:
+							c = my_mov(b, his, mine, EMPTY, &i, &j);
+							break;
+						case LOCAL_OPPONENT:
+							c = getmov_local(&i, &j);
+							break;
+						case OTHER_HOSTED:
+						case HOSTING_GAME:
+							c = getmov_remote(b, &i, &j);
+							break;
+					}
 				}
 
 				if (chkmov(b, BLACK, i, j) > 0)
 				{
-					sprintf(temp, "%u-%u", i + 1, j + 1);
+					sprintf(temp, "%u-%u", j + 1, i + 1);
 					print_black_line(temp);
 
 					movsprite(i, j, SELECTED_COLOR);
 					putmov(b, BLACK, i, j);
 				} else
 				{
-					print_info("Illegal");
+					print_info("***Illegal Move ***");
+					sound_negative_beep();
 					delay(2);
 					continue;
 				}
@@ -1396,17 +1449,32 @@ int game(char b[64], int n)
 			{
 				if (mine == WHITE)
 				{
-					print_info("Your (WHITE) move");
+					sprintf(temp, "%s's Move", my_name);
+					print_info(temp);
 					c = getmov_local(&i, &j);
 				}
 				else
 				{
-					print_info("Computer (WHITE) move");
-					c = my_mov(b, his, mine, EMPTY, &i, &j);
+
+					sprintf(temp, "%s's Move", their_name);
+					print_info(temp);
+					switch (game_type)
+					{
+					case COMPUTER_OPPONENT:
+							c = my_mov(b, his, mine, EMPTY, &i, &j);
+							break;
+					case LOCAL_OPPONENT:
+							c = getmov_local(&i, &j);
+							break;
+					case OTHER_HOSTED:
+					case HOSTING_GAME:
+							c = getmov_remote(b, &i, &j);
+							break;
+					}
 				}
 				if (chkmov(b, WHITE, i, j) > 0)
 				{
-					sprintf(temp, "%u-%u", i + 1, j + 1);
+					sprintf(temp, "%u-%u", j + 1, i + 1);
 					print_white_line(temp);
 
 					movsprite(i, j, SELECTED_COLOR);
@@ -1414,7 +1482,8 @@ int game(char b[64], int n)
 				}
 				else
 				{
-					print_info("Illegal");
+					print_info("*** Illegal Move ***");
+					sound_negative_beep();
 					delay(2);
 					continue;
 				}
@@ -1536,10 +1605,13 @@ int main()
 {
 	char b[64];
 	int i;
+	char key;
 	char message[32];
-	char your_name[16];
-	char their_name[16];
-
+	int  game_type;
+	int  waiting;
+	int  connection = 0;
+	char waitingstr[] = {"|/-\\"};
+	
 
 /*
 	h[0][0] = h[0][1] = h[2][0] = h[3][1] = 0;
@@ -1581,6 +1653,12 @@ int main()
 		vdp_color(BACKGROUND_COLOUR_TEXT);
 
 		vdp_set_mode(mode_2);
+
+#ifdef BUILD_ADAM
+		smartkeys_set_mode();
+		smartkeys_sound_init();
+#endif
+
 		printf(
 #ifdef BUILD_ADAM
 			"#FUJINET REVERSI - ADAM EDITION\n"
@@ -1612,16 +1690,103 @@ int main()
 
 #ifdef ADAM_OR_NABU
 
-		printf("Forward TCP port 6502.\n\n");
+	printf("\nThis program uses TCP port 6502.\n\n");
 #ifdef BUILD_ADAM
-		printf("Type hostname or press\n           ENTER to host\n");
+
+	sound_mode_change();
+	printf("Make your selection:\n");
+	smartkeys_display("1 Player\n  Local", "2 Player\n  Local", "  Host\n  Game", " Remote\n  Host", NULL, "  QUIT");
+
+	game_type = 0;
+	while (game_type == 0)
+	{
+		key = eos_read_keyboard();
+
+		switch (key)
+		{
+		case SMARTKEY_I:
+			game_type = COMPUTER_OPPONENT;
+			break;
+		case SMARTKEY_II:
+			game_type = LOCAL_OPPONENT;
+			break;
+		case SMARTKEY_III:
+			game_type = HOSTING_GAME;
+			strcpy(host, "");
+			break;
+		case SMARTKEY_IV:
+			game_type = OTHER_HOSTED;
+			break;
+		case SMARTKEY_VI:
+			game_type = 0;
+			break;
+		default:
+			sound_negative_beep();
+			break;
+		}
+	}
+
+	vdp_color(BACKGROUND_COLOUR_TEXT);
+
+	vdp_set_mode(mode_2);
+
 #else
-		printf("  Type hostname or press GO\n      to host\n");
+
+	printf("Press any key to continue");
+	getchar();
+
+	vdp_color(BACKGROUND_COLOUR_TEXT);
+	vdp_set_mode(mode_2);
+
+	sound_mode_change();
+	printf("\nPress Number to make your\nselection:\n");
+	printf("(1) 1 Player vs Computer\n");
+	printf("(2) 2 Players locally\n");
+	printf("(3) 2 Players, I will host (You will be Black)\n");
+	printf("(4) 2 Players, They will host (They will be Black)\n");
+	printf("(5) Quit\n");
+
+
+	game_type = 0;
+	while (game_type == 0)
+	{
+		key = getchar();
+
+		switch (key)
+		{
+		case '1':
+			game_type = COMPUTER_OPPONENT;
+			break;
+		case '2':
+			game_type = LOCAL_OPPONENT;
+			break;
+		case '3':
+			game_type = HOSTING_GAME;
+			strcpy(host, "");
+			break;
+		case '4':
+			game_type = OTHER_HOSTED;
+			break;
+		case '5':
+			game_type = 0;
+			break;
+		default:
+			sound_negative_beep();
+			break;
+		}
+	}
+
 #endif
 
-		gets(host);
-
-		host[strlen(host) - 1] = '\0';
+	if ((game_type == HOSTING_GAME) || (game_type == OTHER_HOSTED))	
+	{
+		if (game_type == OTHER_HOSTED)
+		{
+			
+			printf("Enter the IP of the host:\n");
+			gets(host);
+			host[strlen(host)-1] = '\0';
+		}
 		sprintf(url, "TCP://%s:6502/", host);
 
 		vdp_color(BACKGROUND_COLOUR_GRAPHICS);
@@ -1629,16 +1794,28 @@ int main()
 		vdp_set_mode(mode_2);
 
 		printf("Opening %s\n", url);
+
+		printf("WAITING FOR CONNECTION... ");
+		
 		if (strcmp(host, "") == 0)
 		{
-		printf("WAITING FOR CONNECTION...");
-		mefirst = 1;
+			waiting = 0;
+			connection = false;
+			while(! connection)
+			{
+				printf("%c%c", waitingstr[waiting], 8);
+				connection = true;
+				waiting++;
+				if (waiting > 4)
+					waiting = 0;
+			}
+			mefirst = 1;
+		}
+		else
+		{
+			mefirst = 0;
+		}
 	}
-	else
-	{
-		mefirst = 0;
-	}
-
 	
 #else
 	printf("Do you want to go first? ");
@@ -1650,8 +1827,41 @@ int main()
 #endif
 
 #ifdef ADAM_OR_NABU
-	set_msx_graphics();
+	printf("\n");
+	strcpy(their_name, "Computer");
+	if (game_type == LOCAL_OPPONENT)
+	{
+		printf("What is the name of Player 1?\n");
+		gets(my_name);
+		my_name[strlen(my_name)-1] = '\0';
+		my_name[8] = '\0';
+
+		printf("What is the name of Player 2?\n");
+		gets(their_name);
+		their_name[strlen(their_name) - 1] = '\0';
+		their_name[8] = '\0';
+
+	}
+	else
+	{
+		printf("What is your name?\n");
+		gets(my_name);
+		my_name[strlen(my_name) - 1] = '\0';
+		my_name[8] = '\0';
+
+		strcpy(their_name, "Remote");
+	}
+
+	if ((game_type == LOCAL_OPPONENT) || (game_type == COMPUTER_OPPONENT))
+	{
+		printf("Does %s want to play first? (Y/N)", my_name);
+		mefirst = (toupper(getchar()) == 'Y');
+
+	}
+	init_msx_graphics();
 	newbrd();
+
+
 #endif
 
 #ifdef ZX81_DKTRONICS
@@ -1665,22 +1875,18 @@ int main()
 
 		// srand( (unsigned)clock() );
 
-	strncpy(your_name, "You", 15);
-	strncpy(their_name,"Them",15);
-	your_name[15]='\0';
-	their_name[15]='\0';
 	do {
 		clrbrd(b);
 #ifdef ADAM_OR_NABU
 		if (mefirst)
 		{
-			print(WHITE_START_X + LINE_WIDTH / 2 - strlen(their_name) / 2, LINE_START - 2, their_name);
-			print(BLACK_START_X + LINE_WIDTH / 2 - strlen(your_name) / 2, LINE_START - 2, your_name);
+			print_down(0,  LINE_START + 1, their_name);
+			print_down(31, LINE_START + 1, my_name);
 		}
 		else
 		{
-			print(WHITE_START_X + LINE_WIDTH / 2 - strlen(your_name) / 2, LINE_START - 2, your_name);
-			print(BLACK_START_X + LINE_WIDTH / 2 - strlen(their_name) / 2, LINE_START - 2, their_name);
+			print_down(0,  LINE_START + 1, my_name);
+			print_down(31, LINE_START + 1, their_name);
 		}
 
 #else
@@ -1688,7 +1894,13 @@ int main()
 #endif
 		prtbrd(b);
 
-		i = game(b,4);
+#ifdef ADAM_OR_NABU
+		i = game(b, game_type);
+#else
+		i = game(b, 4);
+#endif
+
+
 		mefirst = !mefirst;
 		if (i==4) break;
 		if (i=='Q') continue;

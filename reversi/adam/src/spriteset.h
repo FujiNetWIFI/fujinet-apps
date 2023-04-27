@@ -34,8 +34,8 @@ typedef struct
 // E = Gray
 // F = White
 
-#define SELECTED_COLOR 0x0B
-#define MOVING_COLOR   0x0E
+#define SELECTED_COLOR 0x06
+#define MOVING_COLOR   0x05
 
 extern SPRITE_ATTRIBUTE sprite_attrib[TOTAL_SPRITES];
 

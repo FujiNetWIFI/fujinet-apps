@@ -104,9 +104,9 @@ tnfs: $(TARGET_EXEC).ddp
 ifneq ('$(TNFS_SERVER)','')
 
 ifneq ('$(OS)','')
-	cp reversi.ddp //$(TNFS_SERVER)/$(TNFS_SHARE)
+	cp $(TARGET_EXEC).ddp //$(TNFS_SERVER)/$(TNFS_SHARE)
 else
-	cp reversi.ddp /run/user/1000/gvfs/smb-share:server=$(TNFS_SERVER),share=$(TNFS_SHARE)
+	cp $(TARGET_EXEC).ddp /run/user/1000/gvfs/smb-share:server=$(TNFS_SERVER),share=$(TNFS_SHARE)
 endif
 else
 	$(info ***********************************************)
