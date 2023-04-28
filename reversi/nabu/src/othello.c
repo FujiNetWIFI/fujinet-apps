@@ -1118,15 +1118,62 @@ char getmov(int *i, int *j)
 		}
 }
 
+#ifdef BUILD_ADAM
+
 char ask()
 {
-	char a, c=0;
-	print_info("Another game? (Y/N)");
-	a = skipbl();
-	while (c != '\n' && c != 4)
-		c = getchar();
-	return a;
+	char c=0, key;
+
+	smartkeys_set_mode();
+
+	smartkeys_display(NULL, NULL, NULL, NULL, "\n YES", "\n  NO");
+	smartkeys_status("\n  Play again?");
+	while (c == 0)
+	{
+		key = eos_read_keyboard();
+
+		switch (key)
+		{
+		case SMARTKEY_V:
+			c = 'Y';
+			break;
+		case SMARTKEY_VI:
+			c = 'N';
+			break;
+		default:
+			sound_negative_beep();
+			break;
+		}
+	}
+
+	smartkeys_display(NULL, NULL, NULL, NULL, NULL, NULL);
+
+	return c;
 }
+
+#endif
+
+#ifdef BUILD_NABU
+
+char ask()
+{
+	char c;
+
+	vdp_color(BACKGROUND_COLOUR_TEXT);
+
+	vdp_set_mode(mode_2);
+	printf("Another game? (Y/N)");
+	while (1)
+	{
+		c = toupper(getchar());
+		if ((c == 'Y') || (c == 'N'))
+			break;
+	}
+	return c;
+}
+
+#endif
+
 
 #else
 
@@ -1650,6 +1697,7 @@ int main()
 #endif
 
 #ifdef ADAM_OR_NABU
+
 		vdp_color(BACKGROUND_COLOUR_TEXT);
 
 		vdp_set_mode(mode_2);
@@ -1740,8 +1788,8 @@ int main()
 	printf("\nPress Number to make your\nselection:\n");
 	printf("(1) 1 Player vs Computer\n");
 	printf("(2) 2 Players locally\n");
-	printf("(3) 2 Players, I will host (You will be Black)\n");
-	printf("(4) 2 Players, They will host (They will be Black)\n");
+	//printf("(3) 2 Players, I will host (You will be Black)\n");
+	//printf("(4) 2 Players, They will host (They will be Black)\n");
 	printf("(5) Quit\n");
 
 	game_type = 0;
@@ -1867,7 +1915,6 @@ int main()
 #ifdef ADAM_OR_NABU
 #ifdef BUILD_ADAM
 
-	strcpy(their_name, "Computer");
 	if (game_type == LOCAL_OPPONENT)
 	{
 		smartkeys_display(NULL, NULL, NULL, NULL, NULL, NULL);
@@ -1889,7 +1936,14 @@ int main()
 		my_name[strlen(my_name) - 1] = '\0';
 		my_name[8] = '\0';
 
-		strcpy(their_name, "Remote");
+		if (game_type == COMPUTER_OPPONENT)
+		{
+			strcpy(their_name, "Computer");
+		}
+		else
+		{
+			strcpy(their_name, "Remote");
+		}
 	}
 
 	if ((game_type == LOCAL_OPPONENT) || (game_type == COMPUTER_OPPONENT))
@@ -1939,19 +1993,23 @@ int main()
 		my_name[strlen(my_name) - 1] = '\0';
 		my_name[8] = '\0';
 
-		strcpy(their_name, "Remote");
+		if (game_type == COMPUTER_OPPONENT)
+		{
+			strcpy(their_name, "Computer");
+		}
+		else
+		{
+			strcpy(their_name, "Remote");
+		}
 	}
 
 	if ((game_type == LOCAL_OPPONENT) || (game_type == COMPUTER_OPPONENT))
 	{
 		printf("Does %s want to play first? (Y/N)", my_name);
 		mefirst = (toupper(getchar()) == 'Y');
-
 	}
 
 #endif
-	init_msx_graphics();
-	newbrd();
 #endif
 
 #ifdef ZX81_DKTRONICS
@@ -1965,7 +2023,13 @@ int main()
 
 		// srand( (unsigned)clock() );
 
-	do {
+	do 
+	{
+#ifdef ADAM_OR_NABU
+		init_msx_graphics();
+		newbrd();
+#endif
+
 		clrbrd(b);
 #ifdef ADAM_OR_NABU
 		if (mefirst)
@@ -1999,15 +2063,17 @@ int main()
 
 #ifdef ADAM_OR_NABU
 
+
 		if (i>0) 
-			sprintf(message, "You won by %u", i);
+			sprintf(message, "You lost by %u", i);
 		else 
 			if (i < 0)
-				sprintf(message, "You lost by %u", -i);
+				sprintf(message, "You won by %u", -i);
 			else 
 				sprintf(message, " A draw");
 
 		print_info(message);
+		delay(5);
 
 #else
 		if (i > 0)
