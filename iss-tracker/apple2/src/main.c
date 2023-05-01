@@ -23,38 +23,39 @@ unsigned long ts;
 
 void main(void)
 {
+  clrscr();
   sp_init();
   net = sp_find_network();
+  map();
   tgi_install(tgi_static_stddrv);
   tgi_init();
   tgi_apple2_mix(true);
-  tgi_clear();
 
   while (1)
     {
       timer=524088;
       clrscr();
       satellite_fetch(&lon,&lat,lon_s,lat_s,&ts);
-      map();
       osd(lon_s,lat_s,ts);
-      satellite(lon,lat);
+      satellite_draw(lon,lat);
 
       while (timer>0)
-	{
-	  if (kbhit())
-	    switch(cgetc())
-	      {
-	      case 0x1b:
-		return;
-	      case 0x0D:
-	      case 0x0A:
-		timer=0;
-		break;
-	      default:
-		break;
-	      }
+        {
+          if (kbhit())
+            switch(cgetc())
+              {
+              case CH_ESC:
+                return;
+              case CH_ENTER:
+                timer=0;
+                break;
+              default:
+                break;
+              }
 
-	  timer--;
-	}
+          timer--;
+        }
+
+      satellite_erase();
     }
 }
