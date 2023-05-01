@@ -77,4 +77,32 @@ unsigned char nwrite(char* devicespec, unsigned char* buf, unsigned short len);
  */
 unsigned char nlogin(char* devicespec, char* login, char* password);
 
+
+/**
+ * Change the mode of previously-opened Nu:
+ * @param unit the SIO unit number
+ * @param aux1 the AUX1 value (same as what was used to open (read/write/etc.))
+ * @param mode the mode to change to (CHANNELMODE_PROTOCOL or CHANNELMODE_JSON)
+ * @return the error code
+ */
+unsigned char nchanmode(char* devicespec, unsigned char mode);
+
+/**
+ * Opens a connection, retrieves and parses Json, ready to be queried. Call nclose after querying
+ * @param devicespec - an N: device spec, e.g. N:TCP://FOO.COM:1234/
+ * @param translation mode, 0=none, 1=cr, 2=lf, 3=cr/lf
+ * @return error code, or 1 if successful.
+ */
+unsigned char njsonparse(char* devicespec, unsigned char trans);
+
+/**
+ * Query JSON from N:
+ * (Note: the JSON must be parsed first; see njsonparse().
+ * Then the data you've requested should be read; see nread().)
+ * @param devicespec - an N: device spec, e.g. N:TCP://FOO.COM:1234/
+ * @param buf buffer containing the path of JSON data to query
+ * @return the error code
+ */
+unsigned char njsonquery(char* devicespec, char *buf);
+
 #endif /* NIO_H */
