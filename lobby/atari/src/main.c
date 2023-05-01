@@ -305,7 +305,7 @@ void refresh_servers()
       selected_server = server_count-1;
     }
   } else {
-    printf("No servers are online at the moment.");
+    printf("\nNo servers are online at the moment.");
   }
 
   display_servers(-1);
@@ -485,6 +485,7 @@ void event_loop()
 {
   while (true) 
   {
+    // TODO: Use arrow keys and joystick to change selection
     if (CONSOL_SELECT(GTIA_READ.consol)) {
       change_selection(1);
 
