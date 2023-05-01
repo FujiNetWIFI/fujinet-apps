@@ -706,7 +706,7 @@ int8_t sp_find_device(const char *name, int8_t name_len)
     return (int8_t)i;
 }
 
-int8_t sp_find_fuji()
+int8_t sp_find_fuji(void)
 {
   const char name[] = "FUJINET_DISK_0";
   int8_t unit = sp_find_device(name, sizeof(name));
@@ -720,7 +720,7 @@ int8_t sp_find_fuji()
   return unit;
 }
 
-int8_t sp_find_printer()
+int8_t sp_find_printer(void)
 {
   const char name[] = "PRINTER";
   int8_t unit = sp_find_device(name, sizeof(name));
@@ -734,7 +734,7 @@ int8_t sp_find_printer()
   return unit;
 }
 
-int8_t sp_find_network()
+int8_t sp_find_network(void)
 {
   const char name[] = "NETWORK";
   int8_t unit = sp_find_device(name, sizeof(name));
@@ -748,7 +748,7 @@ int8_t sp_find_network()
   return unit;
 }
 
-int8_t sp_find_clock()
+int8_t sp_find_clock(void)
 {
   const char name[] = "FN_CLOCK";
   int8_t unit = sp_find_device(name, sizeof(name));
@@ -762,7 +762,7 @@ int8_t sp_find_clock()
   return unit;
 }
 
-int8_t sp_find_modem()
+int8_t sp_find_modem(void)
 {
   const char name[] = "MODEM";
   int8_t unit = sp_find_device(name, sizeof(name));
@@ -776,7 +776,7 @@ int8_t sp_find_modem()
   return unit;
 }
 
-int8_t sp_find_cpm()
+int8_t sp_find_cpm(void)
 {
   const char name[] = "CPM";
   int8_t unit = sp_find_device(name, sizeof(name));
@@ -793,7 +793,7 @@ int8_t sp_find_cpm()
 /**** END OF FIND DEVICES */
 /**************************/
 
-void sp_list_devs()
+void sp_list_devs(void)
 {
   int8_t err, num, i, j;
 

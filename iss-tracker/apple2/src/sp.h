@@ -24,15 +24,15 @@ int8_t sp_write(uint8_t dest, uint16_t len);
 int8_t sp_find_fuji(void);
 int8_t sp_find_network(void);
 int8_t sp_find_clock(void);
-int8_t sp_find_modem();
-int8_t sp_find_cpm();
-int8_t sp_find_printer();
+int8_t sp_find_modem(void);
+int8_t sp_find_cpm(void);
+int8_t sp_find_printer(void);
 
 uint8_t  sp_find_slot(void);
 uint16_t sp_dispatch_address(uint8_t slot);
 uint8_t  sp_init(void);
 
-void     sp_list_devs();
+void     sp_list_devs(void);
 int16_t  sp_bytes_waiting(uint8_t dest);
 int8_t   sp_is_connected(uint8_t dest);
 uint8_t  sp_accept(uint8_t dest);
