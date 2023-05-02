@@ -22,7 +22,7 @@
 
 extern unsigned char net; // Network device as found by sp_find_network()
 
-const unsigned char _satellite[8] = {
+const unsigned char satellite[8] = {
   0x20, /* ..X.|.... */
   0x50, /* .X.X|.... */
   0xA4, /* X.X.|.X.. */
@@ -32,6 +32,9 @@ const unsigned char _satellite[8] = {
   0x0A, /* ....|X.X. */
   0x04, /* ....|.X.. */
 };
+
+unsigned char x,y;
+unsigned char backup[8][16];
 
 // TODO: These tables are broken, recalculate them!
 
@@ -112,25 +115,40 @@ bool satellite_fetch(int *lon, int *lat, char *lon_s, char *lat_s, unsigned long
   return true; // todo come back here and add error handling.
 }
 
-void satellite(int lon, int lat)
+void satellite_draw(int lon, int lat)
 {
-  unsigned char x = xpos[lon + 180] - CENTER_X;
-  unsigned char y = ypos[lat + 180] - CENTER_Y;
   unsigned char i,j;
-  int8_t b;
+  signed char b;
+  x=xpos[lon+180]-CENTER_X;
+  y=ypos[lat+180]-CENTER_Y;
   
   for (i=0;i<8;i++)
     {
-      b=_satellite[i];
-      for (j=0;j<16;j+=2)
-	{
-	  if (b < 0)
-	    tgi_setcolor(TGI_COLOR_WHITE2);
-	  else
-	    tgi_setcolor(TGI_COLOR_BLACK2);
-	  tgi_setpixel(x+j,y+i);
-	  tgi_setpixel(x+j+1,y+i);
-	  b <<= 1;
-	}
+      b=satellite[i];
+      for (j=0;j<16;j++)
+        {
+          backup[i][j]=tgi_getpixel(x+j,y+i);
+          if (b < 0)
+            tgi_setcolor(TGI_COLOR_WHITE2);
+          else
+            tgi_setcolor(TGI_COLOR_BLACK2);
+          tgi_setpixel(x+j,y+i);
+          if (j & 1)
+            b <<= 1;
+        }
+    }
+}
+
+void satellite_erase(void)
+{
+  unsigned char i,j;
+  
+  for (i=0;i<8;i++)
+    {
+      for (j=0;j<16;j++)
+        {
+          tgi_setcolor(backup[i][j]);
+          tgi_setpixel(x+j,y+i);
+        }
     }
 }

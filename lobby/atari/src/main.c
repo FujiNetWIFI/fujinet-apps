@@ -13,35 +13,77 @@
 #include <string.h>
 #include "appkey.h"
 #include "nio.h"
+#include "fuji.h"
 
 #define CREATOR_ID 0x0001 /* FUJINET  */
 #define APP_ID     0x01   /* LOBBY    */
 #define KEY_ID     0x00   /* USERNAME */
 #define SERVER     "N:TCP://IRATA.ONLINE:1512/"
+#define LOBBY_ENDPOINT "N:HTTP://192.168.2.41:8080/view?platform=atari"
+#define PAGE_SIZE  10   /* # of results to show per page of servers */
+#define SCREEN_WIDTH 40
+
 
 unsigned char username[64];
 void* old_vprced;               // old PROCEED vector, restored on exit.
 bool old_enabled=false;         // were interrupts enabled for old vector
 bool running=false;
 unsigned short bw=0;            // # of bytes waiting.
-unsigned char rx_buf[1024];     // RX buffer.
-unsigned char tx_buf[128];       // TX buffer.
+unsigned char rx_buf[4096];     // RX buffer.
+unsigned char tx_buf[128];      // TX buffer.
 unsigned char txbuflen;         // TX buffer length
 unsigned char i;
 unsigned char trip=0;           // if trip=1, fujinet is asking us for attention.
 bool echo = true;
-
+unsigned char buf[128];         // Temporary buffer use
 extern void ih();               // defined in intr.s
+bool skip_offline_check = false;
+bool skip_server_instructions = false;
+
+unsigned char key;
+unsigned char selected_server = 0;
+unsigned char server_count = 0;
+
+const char error_138[]="FUJINET NOT RESPONDING\x9B";
+const char error_139[]="FUJINET NAK\x9b";
+const char error[]="SIO ERROR\x9b"; 
+
+char host_slots[FUJI_HOST_SLOT_COUNT][FUJI_HOST_SLOT_NAME_LENGTH];
+char instance_endpoint[64];
+
+typedef struct {
+  unsigned char id;
+  unsigned char game_type;
+  char * game;
+  char * server;
+  char * url;
+  char * client_url;
+  char * region;
+  unsigned char online;
+  unsigned char players;
+  unsigned char max_players;
+  unsigned short ping_age;
+} ServerDetails;
+
+ServerDetails serverList[PAGE_SIZE];
+
+void pause(void)
+{ 
+  cputs("\r\nPress ");
+  revers(1);
+  cputs("RETURN");
+  revers(0);
+  cputs(" to continue.");
+  cgetc();
+}
 
 /**
  * @brief The initial banner 
  */
 void banner(void)
 {
-  cursor(1);
-  revers(1);
-  printf(" #FUJINET GAME LOBBY \n");
-  revers(0);
+  clrscr();
+  printf("#FUJINET GAME LOBBY \n\n");
 }
 
 void term(void)
@@ -50,6 +92,8 @@ void term(void)
 
   running = true;
   
+  //printf("\n** Hold OPTION to mount ** \n\n\");
+
   while (running==true)
   {
     if (kbhit())
@@ -103,7 +147,7 @@ void term(void)
 
       // Print the buffer to screen.
       for (i=0;i<bw;i++)
-	putchar(rx_buf[i]);
+	      putchar(rx_buf[i]);
       
       trip=0;
       PIA.pactl |= 1; // Flag interrupt as serviced, ready for next one.
@@ -111,7 +155,7 @@ void term(void)
   } // while running
 }
 
-void connect(void)
+void connectChat(void)
 {
   unsigned char err;
   char login[80];
@@ -136,65 +180,359 @@ void connect(void)
   nwrite(SERVER,(unsigned char *)login,strlen(login));
 }
 
-/**
- * @brief get User appkey, if exists
- * @return true if key fetched and set, otherwise false.
- */
-bool get_user_appkey(void)
+
+void display_servers(int old_server)
 {
-  if (sio_openkey(APPKEY_READ,CREATOR_ID,APP_ID,KEY_ID) != SIO_ERR_SUCCESS)
-    return false;
+  ServerDetails* server;
+  unsigned char j,y;
 
-  if (sio_readkey(username) != SIO_ERR_SUCCESS)
-    return false;
+  for (j=0;j<server_count;j++ ) {
+    // If just moving the selection, only redraw the old and new server
+    if (old_server>=0 && j != old_server && j != selected_server)
+      continue;
 
-  return true;
+    server = &serverList[j];
+    y = 3*j+2;
+
+    // Show the selected server in reverse
+    // Printing full space to overwrite the existing server, a bit convoluted but
+    // prevents flickering. TODO: Use PMG like the config screen.
+    revers(j == selected_server ? 1 : 0);
+
+    cputcxy(0,y,' ');
+    cputs(server->game);
+    
+    cclear(server->online + 37-strlen(server->game)-6);
+    cputs( server->online == 1 ? "ONLINE " : "OFFLINE ");
+
+    cputcxy(0,y+1,' ');
+    cputs(server->server);
+
+    if (server->online == 1) {
+      sprintf(buf, "%i/%i ", server->players, server->max_players);
+      cclear(39-strlen(server->server)-strlen(buf));
+      cputs(buf);
+    } else {
+      cclear(39-strlen(server->server));
+    }
+  }
+  
+  // Reset cursor and reverse
+  revers(0);
+  //gotoxy(0,19);
+
+  if (skip_server_instructions)
+    return;
+
+  cclearxy(0,20,SCREEN_WIDTH*4);
+  gotoxy(0,19);
+  printf("________________________________________");
+  gotoxy(0,21);
+  if (server_count>0) {
+    revers(1); cputs("SELECT"); revers(0);
+    printf(" a server, ");
+    revers(1); cputs("OPTION"); revers(0);
+    printf(" to boot client\n\n");
+  }
+  revers(1); cputs("R"); revers(0);
+  printf("efresh list - ");
+  revers(1); cputs("C"); revers(0);
+  printf("hange your name");
+  
+  skip_server_instructions = true;
 }
+
+void refresh_servers()
+{ 
+  int data_len;
+  char *key, *value;
+  unsigned char i;
+
+  skip_server_instructions = false;
+  
+  cursor(0);
+
+  if (
+    (njsonparse(LOBBY_ENDPOINT, 2)) != SUCCESS ||
+    (njsonquery(LOBBY_ENDPOINT, "N:\x9b")) != SUCCESS ||
+    nstatus(LOBBY_ENDPOINT) > 128 ||
+    (data_len = (OS.dvstat[1] << 8) + OS.dvstat[0]) == 0
+  )
+  {
+      nstatus(LOBBY_ENDPOINT);
+      printf("Could not query Lobby.\nError: %u\n",OS.dvstat[3]);
+      pause();
+      exit(1);
+  }
+  
+  if (data_len>sizeof(rx_buf))
+      data_len=sizeof(rx_buf);
+
+  i = nread(LOBBY_ENDPOINT, rx_buf, data_len);
+  i=-1;
+
+  key = strtok(rx_buf, "\n");
+  
+  while( key != NULL ) {
+      value = strtok(NULL, "\n");
+
+      switch (key[0]) {
+        case 'i': i++; break;
+        case 'g': serverList[i].game = strupper(value); break;
+        case 't': serverList[i].game_type = atoi(value); break;
+        case 's': serverList[i].server = value; break;
+        case 'u': serverList[i].url = value; break;
+        case 'c': serverList[i].client_url = value; break;
+        case 'r': serverList[i].region = value; break;
+        case 'o': serverList[i].online = atoi(value); break;
+        case 'p': serverList[i].players = atoi(value); break;
+        case 'm': serverList[i].max_players = atoi(value); break;
+        case 'a': serverList[i].ping_age = value; break;
+      }
+
+      key = strtok(NULL, "\n");
+  }
+
+  nclose(LOBBY_ENDPOINT);
+  
+  server_count = i+1;
+  
+  banner();
+  cputsxy(40-strlen(username),0, username);
+
+  if (server_count>0) {
+    if (selected_server >= server_count) {
+      selected_server = server_count-1;
+    }
+  } else {
+    printf("\nNo servers are online at the moment.");
+  }
+
+  display_servers(-1);
+
+}
+
 
 /**
  * @brief Get username and set key
  */
-void get_user(void)
+void get_username(bool clearUsername)
 {
-  memset(username,0,sizeof(username));
+
+  if (clearUsername)
+    memset(username,0,sizeof(username));
   
-  while (strlen((const char *)username)<1)
+  while (strlen(username)<1 || strlen(username)>10)
     {
-      printf("Enter a user name, and press RETURN.\n");
+      printf("\nEnter a user name and press RETURN\n");
+
+      // TODO - Discuss imposing limitations like Alpha Numeric only, so 8-Bit clients only have to
+      // support rendering a minimum # of characters, since character sets are limited.
+      // printf("Letters and numbers are acceptable.\n");     
+
+      if (strlen(username)>10)
+        printf("It must be 10 characters or less.\n");
+
+      // TODO - Restrict input to AlphaNumeric only
+      printf(">");
+      
       gets((char *)username);
     }
 
-  sio_openkey(APPKEY_WRITE,CREATOR_ID,APP_ID,KEY_ID);
-  sio_writekey(username);  
+  cursor(0);
+  
+  sio_writekey(CREATOR_ID,APP_ID,KEY_ID, username);  
+  
 }
+
 
 /**
  * @brief Set user name, either from appkey or via input
  */
 void register_user(void)
 {  
-  // Check for existing user
-  if (get_user_appkey())
-    {
-      printf("User name is: %s\nPress C to change,\n any other key to continue.\n",username);
-
-      switch(cgetc())
-	{
-	case 'c':
-	case 'C':
-	  get_user();
-	  break;
-	}
-    }
-  else
-    get_user();
+  sio_readkey(CREATOR_ID,APP_ID,KEY_ID,username);
+  get_username(false);
+  printf("Welcome, %s.\n",username);
 }
+
+
+/**
+ * @brief Mount the selected server's client and reboot
+*/
+void mount()
+{
+  char *client_path, *host, *filename; 
+  int i, host_slot;
+
+  cclearxy(0,20,SCREEN_WIDTH*4);
+  gotoxy(0,20);
+
+  // Sanity check 1 - a server was selected
+  if (server_count==0 || selected_server >= server_count) {
+    return;
+  } 
+
+  // Offline warning
+  if (!skip_offline_check && serverList[selected_server].online != 1) {
+    printf("\nThis server is reportedly offline!\n\nPress ");
+    revers(1);cputs("OPTION");revers(0);
+    cputs(" again to try anyway.");
+    skip_offline_check = true;
+    skip_server_instructions = false;
+    return;
+  }
+
+  // Sanitu check 2 - the game type is greater than 0
+  if (serverList[selected_server].game_type == 0) {
+    printf("ERROR: Invalid client game type. Inform the owner of the server.");
+    skip_server_instructions = false;
+    return;
+  }
+    
+  // Remove the protocol for now, assume TNFS://
+  if (client_path = strstr(serverList[selected_server].client_url, "://"))
+    client_path+=3;
+  else
+    client_path = serverList[selected_server].client_url;
+
+  printf("Mounting:\n%s\n", client_path);
+  
+  
+  // Get the host and filename
+  if (filename = strstr(client_path,"/")) {
+    filename+=1;
+  }
+
+  // Get the host
+  host = strtok(client_path,"/");
+
+  if (filename == NULL && host == NULL) {
+    printf("ERROR: Invalid client file");
+    pause();
+    refresh_servers();
+    return;
+  }
+
+  // Read current list of hosts from FujiNet
+  host_read(host_slots);
+
+  // Pick the host slot to use. Default to the last, but choose an existing slot
+  // if it already has the same host
+  host_slot = 7;
+  for(i=0;i<8;i++) {
+    if (strcasecmp(host, host_slots[i]) == 0) {
+      host_slot = i;
+      break;
+    }
+  }
+  
+  // Update the host slot 7 if needed
+  if (host_slot==7) {
+    strcpy(host_slots[7], host);
+    host_write(host_slots);
+  }
+
+  // Mount host slot (test connectivity)
+  host_mount(host_slot);
+  if (OS.dcb.dstats != 1) {
+    host_unmount(host_slot);
+    printf("ERROR %i: Unable to connect to host", OS.dcb.dstats);
+    
+    // Reset the fujinet to abort the mounting process
+    fujinet_reset();
+    OS.rtclok[1]=OS.rtclok[2]=0;
+    pause();
+
+    // Make sure at least 5 seconds has passed before continuing
+    while (OS.rtclok[1]<1 && OS.rtclok[2] < 50);
+    refresh_servers();
+    return;
+  }
+
+  // Point device slot 0 to the host_slot
+  disk_set_host_slot(0, host_slot, FUJI_DEVICE_MODE_READ);
+
+  // Set and mount the filename in device slot 0
+  set_filename(filename, 0);
+  disk_mount(0, FUJI_DEVICE_MODE_READ);
+
+  // Set the server url in this game type's app key:
+  sio_writekey(CREATOR_ID,APP_ID,serverList[selected_server].game_type, serverList[selected_server].url);  
+
+  // Cold boot the computer after a second
+  OS.rtclok[2]=0;
+  while (OS.rtclok[2] < 60);
+  asm("JMP $E477");
+
+}
+
+void change_selection(char delta) 
+{
+    int old_server = selected_server;
+
+    if (delta<0 && selected_server == 0)
+      selected_server = server_count - 1;
+    else
+      selected_server = (selected_server + delta ) % server_count;
+
+    display_servers(old_server);
+
+    skip_offline_check = false;
+}
+
+void event_loop()
+{
+  while (true) 
+  {
+    // TODO: Use arrow keys and joystick to change selection
+    if (CONSOL_SELECT(GTIA_READ.consol)) {
+      change_selection(1);
+
+      // Wait until SELECT is released
+      while (CONSOL_SELECT(GTIA_READ.consol));
+    } 
+
+    if (CONSOL_OPTION(GTIA_READ.consol)) {
+      mount(); 
+       // Wait until OPTION is released
+      while (CONSOL_OPTION(GTIA_READ.consol));
+    }
+
+    if (kbhit()) {
+      switch (cgetc()) {
+        case 'c':
+        case 'C':
+          cursor(1);
+          clrscr();
+          printf("Your current username is: %s\n", username);
+          get_username(true);
+        case 'r':
+        case 'R':
+          refresh_servers();
+      }
+    }
+
+    
+  }
+}
+
 
 void main(void)
 {
-  clrscr();
+  OS.soundr=0; // Silent noisy SIO
+  cursor(1);
+  bordercolor(0x90);
+  textcolor(0xff);
+  bgcolor(0x90);
+  
   banner();
+  
   register_user();
-  connect();
-  term();
+  printf("\nConnecting..\n");
+
+  refresh_servers();
+  event_loop();
+
+  // term(); TODO: Integrate chatting into lobby
 }

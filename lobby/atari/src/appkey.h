@@ -1,6 +1,6 @@
 /**
  * @brief   App Key Functions
- * @author  Oscar Fowler, Thomas Cherryhomes
+ * @author  Oscar Fowler, Thomas Cherryhomes, Eric Carr
  * @license gpl v. 3
  */
 
@@ -53,25 +53,21 @@ typedef union {
 } appkeyblock;
 
 /**
- * @brief Open a key for reading or writing
- * @param open_mode 0 = read, 1 = write
+ * @brief Read a key into appkey var appkey
  * @param creator_id Key creator ID: ($0000-$FFFF)
  * @param app_id The App ID ($00-$FF)
  * @param key_id The Key ID ($00-$FF)
- * @return error code
- */
-unsigned char sio_openkey(unsigned char open_mode, unsigned int creator_id, unsigned char app_id, unsigned char key_id);
-
-/**
- * @brief Read a key into appkey var appkey
  * @brief Target pointer for appkey data
  */
-unsigned char sio_readkey(unsigned char *data);
+unsigned char sio_readkey(unsigned int creator_id, unsigned char app_id, unsigned char key_id, unsigned char *data);
 
 /**
  * @brief write a key from appkey var appkey
+ * @param creator_id Key creator ID: ($0000-$FFFF)
+ * @param app_id The App ID ($00-$FF)
+ * @param key_id The Key ID ($00-$FF)
  * @param Data to write into key
  */
-unsigned char sio_writekey(unsigned char *data);
+unsigned char sio_writekey(unsigned int creator_id, unsigned char app_id, unsigned char key_id, unsigned char *data);
 
 #endif /* APPKEY_H */
