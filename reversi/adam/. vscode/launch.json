@@ -1,0 +1,16 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "ColEm Launch",
+        "type": "cppdbg",
+        "request": "launch",
+        "program": "/home/ndavie/Documents/ADAM/ColEm/colem",
+        "args": ["-ntsc", "-adam", "${fileWorkspaceFolder}/othello.ddp"],
+        "stopAtEntry": false,
+        "cwd": "${workspaceFolder}",
+        "environment": [],
+        "externalConsole": false
+      }
+    ]
+  }
