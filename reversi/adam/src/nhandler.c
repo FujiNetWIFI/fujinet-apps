@@ -13,6 +13,11 @@ int translate_adam_error_to_nhandler_error(unsigned char error_in)
 {
     return (int) error_in;
 }
+
+void ninit(void)
+{
+}
+
 void nopen(int basic_unit, int rw_mode, int trans, char *url)
 {
     unsigned char adam_error;

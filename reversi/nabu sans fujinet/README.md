@@ -1,6 +1,6 @@
 # Reversi
 
-![Reversi](../images/reversi.png)
+![Reversi](../images/nabu/reversi.png)
 
 The original text based version was found as an example in the
 z88dk examples folder called othello and has been adapted by
@@ -26,12 +26,12 @@ https://fujinet.online
 As per normal practice, you need to tell the IA where to find
 the pak/nabu in settings.
 
-![Interface Adapter - Source](../images/source.png)
+![Interface Adapter - Source](../images/nabu/source.png)
 
 If you're hosting a game, you need to change the IA Port to
 6502 in the RetroNET settings
 
-![Interface Adapter - RetroNet](../images/retronet.png)
+![Interface Adapter - RetroNet](../images/nabu/retronet.png)
 
 Remember to turn on the TCP Server.
 If you recompile the source, remember to clear the PAK cache.
@@ -101,7 +101,7 @@ A:RNCMD IA:REVERSI.COM C:REVERSI.COM
 C:
 REVERSI
 ``
-![CP/M Command](../images/cpm.png)
+![CP/M Command](../images/nabu/cpm.png)
 
 ## Graphics interface
 

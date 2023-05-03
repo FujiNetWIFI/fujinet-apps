@@ -14,11 +14,14 @@
 # TNFS_DIR - the directory within the share
 
 
-# COLEM Coleco vision emulator executible path
-# NABEM NABU emulator executible path
-# APPEM Apple emualtor executible path
+# COLEM_EXEC Coleco vision emulator executible with full path 
+# NABEM_PATH NABU emulator executible path
+# NABEM_EXEC NABU emulator executible name
+# APPEM_EXEC Apple emualtor executible with full path
 
 PROJECT_DEVICE := adam
+
+TARGET_EXEC ?= reversi
 
 ifeq ('$(PROJECT_DEVICE)', 'adam')
 	EXTENSION := .ddp
@@ -48,7 +51,6 @@ APPEM_WINE  := WINE_REQURED
 NABU_CACHE  ?= $(shell echo $$NABU_CACHE)
 NABU_WINE   := WINE_REQURED
 
-TARGET_EXEC ?= reversi
 
 BUILD_DIR ?= ./build
 SRC_DIRS ?= ./src
@@ -58,7 +60,7 @@ AS=zcc
 
 ADDL_DIR1 := ../../../eoslib/src
 ADDL_DIR2 := ../../../smartkeyslib/src
-ADDL_DIR3 := ./src
+ADDL_DIR3 := src
 
 ADDL_LIB1 := ../../../eoslib/eos.lib
 ADDL_LIB2 := ../../../smartkeyslib/smartkeys.lib
@@ -85,7 +87,7 @@ $(BUILD_DIR)/%.c.o: %.c
 # asm source
 $(BUILD_DIR)/%.asm.o: %.asm
 	$(MKDIR_P) $(dir $@)
-	$(AS) $(ASFLAGS) -c $< -o $@
+	$(AS) $(ASFLAGS) -c -o$@  $< 
 
 
 .PHONY: clean

@@ -1,1 +1,0 @@
-extern char newboard[768];
