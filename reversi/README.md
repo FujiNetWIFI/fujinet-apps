@@ -15,7 +15,7 @@ Network play is a work-in-progress
 ![ADAM](images/adam/startscreen.png)
 
 ## NABU
-With multiplayer local or computer opponent
+With multiplayer local or computer opponent<br/>
 ![NABU](images/nabu/reversi.png)
 
 <!--
