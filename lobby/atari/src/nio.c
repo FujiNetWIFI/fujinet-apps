@@ -8,7 +8,11 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-#define TIMEOUT 0x1f /* approx 30 seconds */
+#define TIMEOUT 0x0f /* approx 30 seconds */
+
+#define DSTATS_XFER_NONE 0x00 /* No payload */
+#define DSTATS_XFER_RECV 0x40 /* Atari receives (#FujiNet to Atari) */
+#define DSTATS_XFER_SEND 0x80 /* Atari sends (Atari to #FujiNet) */
 
 unsigned char nunit(char* devicespec)
 {
@@ -23,6 +27,37 @@ unsigned char nunit(char* devicespec)
           unit=1;
 
   return unit;
+}
+
+
+unsigned char nheader(char* devicespec, char* header, unsigned short len)
+{
+  unsigned char unit=nunit(devicespec);
+
+  OS.dcb.ddevic   = DFUJI;      // Fuji Device Identifier
+  OS.dcb.dunit    = unit;       // Unit number integer 1 through 4
+  OS.dcb.dcomnd   = 0x4D;       // Set Header
+  OS.dcb.dstats   = DWRITE;     // sending to to SIO device
+  OS.dcb.dbuf     = 0;          // 
+  OS.dcb.dtimlo   = TIMEOUT;    // approximately 30 second timeout
+  OS.dcb.dbyt     = 0;          // max size of our device spec
+  OS.dcb.daux1    = OUPDATE;    // Read and write
+  OS.dcb.daux2    = 3;          // Add header
+  siov();
+
+  if (OS.dcb.dstats!=SUCCESS)
+  {
+    // something went wrong
+    // do we need to return extended status?
+    if (OS.dcb.dstats==DERROR)
+    {
+      nstatus(devicespec);
+      return OS.dvstat[DVSTAT_EXTENDED_ERROR]; // return extended error.
+    }
+  }
+
+  return nwrite(devicespec, header, len );
+  return OS.dcb.dstats; // Return SIO error or success
 }
 
 unsigned char nopen(char* devicespec, unsigned char trans)
@@ -50,8 +85,10 @@ unsigned char nopen(char* devicespec, unsigned char trans)
       return OS.dvstat[DVSTAT_EXTENDED_ERROR]; // return extended error.
     }
   }
+
   return OS.dcb.dstats; // Return SIO error or success
 }
+
 
 unsigned char nclose(char* devicespec)
 {
@@ -172,6 +209,94 @@ unsigned char nlogin(char* devicespec, char *login, char *password)
   OS.dcb.dcomnd=0xFE;
   OS.dcb.dstats=0x80;
   OS.dcb.dbuf=password;
+  siov();
+
+  if (OS.dcb.dstats!=1)
+    {
+      nstatus(devicespec);
+      return OS.dvstat[DVSTAT_EXTENDED_ERROR]; // return ext err
+    }
+  
+  return OS.dcb.dstats;
+}
+
+
+
+unsigned char nchanmode(char* devicespec, unsigned char mode)
+{
+  unsigned char unit=nunit(devicespec);
+
+  OS.dcb.ddevic = DFUJI;
+  OS.dcb.dunit = unit;
+  OS.dcb.dcomnd = 0xFC;
+  OS.dcb.dstats = DSTATS_XFER_NONE;
+  OS.dcb.dbuf = NULL;
+  OS.dcb.dtimlo = TIMEOUT;
+  OS.dcb.dbyt = 0;
+  OS.dcb.daux1 = OUPDATE;
+  OS.dcb.daux2 = mode;
+  siov();
+
+  if (OS.dcb.dstats!=1)
+    {
+      nstatus(devicespec);
+      return OS.dvstat[DVSTAT_EXTENDED_ERROR]; // return ext err
+    }
+  
+  return OS.dcb.dstats;
+}
+
+unsigned char njsonparse(char* devicespec, unsigned char trans)
+{
+  unsigned char unit=nunit(devicespec);
+  unsigned char err;
+
+  // Open connection
+  if ((err = nopen(devicespec, trans)) != SUCCESS)
+  {
+      return err;
+  }
+
+  // Set channel mode to JSON (1)
+  if ((err = err = nchanmode(devicespec, 1)) != SUCCESS)
+  {
+      return err;
+  }
+
+  // Parse json  
+  OS.dcb.ddevic = DFUJI;
+  OS.dcb.dunit = unit;
+  OS.dcb.dcomnd = 'P';
+  OS.dcb.dstats = DSTATS_XFER_NONE;
+  OS.dcb.dbuf = NULL;
+  OS.dcb.dtimlo = TIMEOUT;
+  OS.dcb.dbyt = 0;
+  OS.dcb.daux1 = OUPDATE;
+  OS.dcb.daux2 = 0;
+  siov();
+
+  if (OS.dcb.dstats!=1)
+    {
+      nstatus(devicespec);
+      return OS.dvstat[DVSTAT_EXTENDED_ERROR]; // return ext err
+    }
+  
+  return OS.dcb.dstats;
+}
+
+unsigned char njsonquery(char* devicespec, char *buf)
+{
+  unsigned char unit=nunit(devicespec);
+
+  OS.dcb.ddevic = DFUJI;
+  OS.dcb.dunit = unit;
+  OS.dcb.dcomnd = 'Q';
+  OS.dcb.dstats = DSTATS_XFER_SEND;
+  OS.dcb.dbuf = buf;
+  OS.dcb.dtimlo = TIMEOUT;
+  OS.dcb.dbyt = 256;
+  OS.dcb.daux1 = OUPDATE;
+  OS.dcb.daux2 = 0;
   siov();
 
   if (OS.dcb.dstats!=1)
