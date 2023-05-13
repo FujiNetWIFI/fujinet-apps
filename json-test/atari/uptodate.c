@@ -9,8 +9,10 @@
  *
  * License: v. 3, see LICENSE.md for details
  *
- * 2022-06-01 - 2022-08-09
+ * 2022-06-01 - 2023-05-11
  */
+
+// #define TEST_MODE
 
 #include <atari.h>
 #include <peekpoke.h>
@@ -42,13 +44,22 @@ void fuji_sio_read_adapter_config()
 {
   OS.dcb.ddevic = 0x70;
   OS.dcb.dunit = 1;
-  OS.dcb.dcomnd = 0xE8; /* Get Adapter Config ($E8) */
+  OS.dcb.dcomnd = 0xE8; /* Get Adapter Config ($E8) "FUJICMD_GET_ADAPTERCONFIG" */
   OS.dcb.dstats = 0x40;
   OS.dcb.dbuf = &adapterConfig;
   OS.dcb.dtimlo = 0x0f;
   OS.dcb.dbyt = sizeof(adapterConfig);
   OS.dcb.daux = 0;
   siov();
+
+  /* `fujinet-platformio/lib/device/sio/fuji.cpp` runs the function
+     `sioFuji::sio_get_adapter_config()` in response to this request.
+
+     As of 2023-05-12 that, in turn, calls `fnSystem.get_fujinet_version(true)`
+     (inside `lib/hardware/fnSystem.cpp`) which, due to `shortVersionOnly`
+     argument being true, simply returns `FN_VERSION_FULL`, which is
+     #define'd in `include/version.h`.
+  */
 }
 
 const char *url = "N:https://fujinet.online/firmware/releases_atari/releases.json";
@@ -192,47 +203,117 @@ char newbuf[256];
 char output[256];
 int last_space_in, last_space_out;
 
+char dlist[36];
+char top_text[160];
+
+void top_show(int y, char * str) {
+  int i, yy;
+  unsigned char c;
+
+  yy = y * 40;
+  for (i = 0; str[i] != '\0'; i++) {
+    c = str[i];
+    if (c == CH_EOL) {
+      continue;
+    }
+    if (c >= 128) {
+      c = c - 128;
+    }
+    if (c < 32) {
+      top_text[yy + i] = c + 64 + 128;
+    } else if (c < 96) {
+      top_text[yy + i] = c - 32 + 128;
+    } else {
+      top_text[yy + i] = c + 128;
+    }
+  }
+}
 
 void main(void) {
   unsigned char err;
   unsigned char i, j, x, n, nn, m;
   int data_len;
 
-  /* Title/credits */
   printf("%c", CH_CLR);
-  sprintf(output, "#FujiNet Up-To-Date Checker\nby Bill Kendrick 2022-08-08\n\n");
-  show(output);
+
+  memset(top_text, 128, 160);
+
+  dlist[0] = DL_BLK8;
+  dlist[1] = DL_BLK8;
+  dlist[2] = DL_BLK8;
+  dlist[3] = DL_LMS(DL_CHR40x8x1);
+  dlist[4] = ((unsigned int) top_text) & 0xFF;
+  dlist[5] = ((unsigned int) top_text) >> 8;
+  dlist[6] = DL_CHR40x8x1;
+  dlist[7] = DL_CHR40x8x1;
+  dlist[8] = DL_CHR40x8x1;
+  dlist[9] = DL_BLK1;
+  dlist[10] = DL_LMS(DL_CHR40x8x1);
+  dlist[11] = ((unsigned int) (OS.savmsc + 160)) & 0xFF;
+  dlist[12] = ((unsigned int) (OS.savmsc + 160)) >> 8;
+  for (i = 13; i < 33; i++) {
+    dlist[i] = DL_CHR40x8x1;
+  }
+  dlist[33] = DL_JVB;
+  dlist[34] = ((unsigned int) dlist) & 0xFF;
+  dlist[35] = ((unsigned int) dlist) >> 8;
+
+  OS.sdlst = dlist;
+
+  /* Title/credits */
+
+  for (i = 0; i < 4; i++) {
+    sprintf(output, "%d\n", i);
+    show(output);
+  }
+
+  strcpy(output, "#FujiNet Up-To-Date Checker");
+  top_show(0, output);
+  strcpy(output, "by Bill Kendrick 2023-05-11");
+  top_show(1, output);
 
   /* Read and display our device's version */
+#ifdef TEST_MODE
+  strcpy(output, "Test mode");
+#else
   fuji_sio_read_adapter_config();
-
-  sprintf(output, "You are running version %s\n\n", adapterConfig.fn_version);
-  show(output);
+  sprintf(output, "You are running version %s\n", adapterConfig.fn_version);
+#endif
+  top_show(3, output);
 
 
   /* Open the JSON file that describes available releases (over the network!) */
 
   sprintf(output, "Contacting fujinet.online...");
   show(output);
+
+#ifndef TEST_MODE
   err = nopen(IO_CHAN, (char *) url, SIO_READ + SIO_WRITE);
   success_or_fail(err);
+#endif
 
 
   /* Switch to JSON mode */
+#ifndef TEST_MODE
   err = nchanmode(IO_CHAN, SIO_READ + SIO_WRITE, CHANNELMODE_JSON);
   success_or_fail(err);
-
+#endif
 
   /* Parse the JSON */
-  sprintf(output, "parsing...");
+  strcpy(output, "parsing...");
   show(output);
+
+#ifndef TEST_MODE
   err = njsonparse(IO_CHAN, SIO_READ + SIO_WRITE);
   success_or_fail(err);
-  sprintf(output, "\n\n");
+#endif
+
+  strcpy(output, "\n\n");
   show(output);
 
   /* Read the elements */
 
+#ifndef TEST_MODE
   for (j = 0; j < 10; j++) {
     for (i = 0; i < NUM_ELEMENTS; i++) {
       sprintf(query, "N1:/releases/%d/%s%c", j, elements[i], CH_EOL);
@@ -300,10 +381,14 @@ void main(void) {
       }
     }
   }
+#endif
 
-  printf("Done!\n");
+  strcpy(output, "Done!\n");
+  show(output);
 
+#ifndef TEST_MODE
   nclose(IO_CHAN);
+#endif
 
   inf_loop();
 }
