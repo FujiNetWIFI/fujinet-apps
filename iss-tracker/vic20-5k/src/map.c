@@ -42,7 +42,8 @@ static const unsigned char mapdata[506]={
  */
 void map(void)
 {
-  VIC.bg_border_color = 0x56;
-  memset(COLR,COLOR_BLUE,sizeof(mapdata));
+  VIC.bg_border_color = 0x6E;
+  memset(COLR,COLOR_GREEN,sizeof(mapdata));
   memcpy(SCRN,&mapdata,sizeof(mapdata));
+  memset(&COLR[418],COLOR_PURPLE,88);
 }

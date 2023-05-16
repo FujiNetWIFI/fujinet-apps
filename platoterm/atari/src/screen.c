@@ -31,8 +31,8 @@ unsigned char Flags;
 unsigned char* GlyphData;
 static short offset;
 
-static const char s1[]="PLATOTERM 1.4 - Joystick 16K";
-static const char s2[]="(C) 2020 IRATA.ONLINE";
+static const char s1[]="PLATOTERM 1.5 - Joystick 16K";
+static const char s2[]="(C) 2023 IRATA.ONLINE";
 static const char s3[]="Press OPTION for help";
 
 extern void *sdlst_save;

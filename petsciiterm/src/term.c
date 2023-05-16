@@ -38,6 +38,8 @@ bool connect(void)
   cprintf("TO DISCONNECT\r\n\r\n");
   cprintf("CONNECTING TO:\r\n%s\r\n\r\n",dial_url);
 
+  cmd_open(LFN,DEV,SAN,dial_url);
+  
   connected = true;
   
   return true;

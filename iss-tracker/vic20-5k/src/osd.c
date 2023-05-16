@@ -19,7 +19,7 @@
 void osd(char *lon_s, char *lat_s)
 {
   gotoxy(0,19);
-  print("\x8e\x12""current  iss  position\x92");
+  print("\x12""\x05""current  iss  position\x92");
   gotoxy(0,21);
   print("lat: ");
   print(lat_s);

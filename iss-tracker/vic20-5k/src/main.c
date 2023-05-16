@@ -24,6 +24,7 @@ void main(void)
   while(true)
     {
       clrscr();
+      print("\x8e"); // font switch to gfx/upper
       map();
       fetch(&lon,&lat,lon_s,lat_s);
       osd(lon_s,lat_s);

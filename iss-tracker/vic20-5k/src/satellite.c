@@ -17,5 +17,5 @@ void satellite(int lon, int lat)
   unsigned char y = Y_CENTER - (unsigned char) ( lat >> 4 );
 
   gotoxy(x,y);
-  print("\x12\x1c\xD1\x1f\x92");
+  print("\x1c\xD1\x1f");
 }

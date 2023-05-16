@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
     }
 
   float x = atof(argv[1]) / 360.0;
-  float y = atof(argv[2]) / 360.0;  
+  float y = atof(argv[2]) / 180.0;  
 
   printf("unsigned char xpos[360] = \n");
   printf("  { ");
@@ -31,13 +31,12 @@ int main(int argc, char *argv[])
 
   printf("  };\n\nunsigned char ypos[360] = \n  { ");
   
-//  for (float i=180.0; i>-180.0; i--)
-    for (float i=-180; i<180.0; i++)
+    
+    for (float i=90.0; i>-90.0; i--)
     {
       printf("%d,",(unsigned char)floor((y*i) + (atof(argv[2]) / 2)));
     }
 
   printf("  };\n");
   
-  return 0;
-}
+  return 0;}
