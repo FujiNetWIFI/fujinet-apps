@@ -6,7 +6,7 @@
  * @license  gpl v. 3
  */
 
-#include <time.h>
+#include <conio.h>
 #include "fetch_post.h"
 #include "show_post.h"
 
@@ -16,16 +16,11 @@ char content[400];
 
 void main(void)
 {
-  unsigned short i;
+  clrscr();
   
   while(1) // Run continuously.
     {
-      fetch_post(display_name,
-		 created_at,
-		 content);
-      
-      show_post(display_name,
-		created_at,
-		content);
+      fetch_post();
+      show_post();
     }
 }

@@ -11,12 +11,7 @@
 
 /**
  * @brief Fetch Mastodon Post
- * @param display_name The name to display
- * @param created_at The created at timestamp to display
- * @param content The content to display
  */
-void fetch_post(char *display_name,
-		char *created_at,
-		char *content);
+void fetch_post(void);
 
 #endif /* FETCH_H */
