@@ -1,0 +1,4 @@
+Because FujiNet networking on #Commodore systems uses the KERNAL, they work everywhere; even on an unexpanded VIC-20, shown here running a version of ISS tracker that runs in 5K of RAM. https://github.com/FujiNetWIFI/fujinet-apps/tree/master/iss-tracker/vic20-5k
+
+Because #FujiNet networking on #Commodore systems uses the KERNAL, they work everywhere; even on an unexpanded #VIC20, shown here running a version of ISS Tracker that runs in 5K of RAM. 
+Code here: https://github.com/FujiNetWIFI/fujinet-apps/tree/master/iss-tracker/vic20-5k
