@@ -61,12 +61,12 @@ void main(void)
   
   clrscr();
 
-  print("\x12 NETCAT \x92\r\nENTER URL\x0D> ");
+  print("\x12 NETCAT \x92\r\nENTER URL\n> ");
   input(buf);
 
-  print("\x0D""CONNECTING TO:\x0d\x0d");
+  print("\nCONNECTING TO:\n\n");
   print(buf);
-  print("\x0d\x0d\x12 F1 \x92 TO QUIT.\x0d\x0d");
+  print("\n\n\x12 F1 \x92 TO QUIT.\n\n");
 
   cbm_open(2,12,2,buf);
 

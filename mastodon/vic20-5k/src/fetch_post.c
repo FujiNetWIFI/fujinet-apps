@@ -38,7 +38,7 @@ void read_into_content(void)
  */
 void fetch_post(void)
 {
-  print("\x13\x12"" FETCHING LATEST POST\x92");
+  print("\x13\x1F\x12"" FETCHING LATEST POST\x92");
 
   POKE(0xCC,0);
 

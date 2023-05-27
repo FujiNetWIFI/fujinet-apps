@@ -28,6 +28,7 @@ int i;
 void article_footer(void)
 {
   // Footer
+  textcolor(COLOR_PURPLE);
   revers(1);
   gotoxy(0,21);
   cprintf("UP/DN PAGE      I INFO_ TITLES      T TOPICS");
@@ -69,7 +70,9 @@ State article(void)
   /* // Display page */
   gotoxy(0,0);
   revers(1);
+  textcolor(COLOR_PURPLE);
   cprintf("%22s",p);
+  textcolor(COLOR_BLACK);
   strcpy(tmp,p); // store for max page calc below
   revers(0);
   

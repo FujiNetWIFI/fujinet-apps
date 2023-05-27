@@ -7,6 +7,7 @@
  */
 
 #include <conio.h>
+#include <vic20.h>
 #include "fetch_post.h"
 #include "show_post.h"
 
@@ -16,6 +17,7 @@ char content[400];
 
 void main(void)
 {
+  VIC.bg_border_color=0x7E;
   clrscr();
   
   while(1) // Run continuously.

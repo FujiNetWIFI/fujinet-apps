@@ -21,10 +21,11 @@ void show_post(void)
   unsigned short i;
 
   clrscr();
-  print("\x12 LATEST MASTODON POST \x92\n");
+  print("\x1F\x12 LATEST MASTODON POST \x92\n\x1C");
   gotoxy(0,2);
   print(display_name);
   gotoxy(0,3);
+  print("\x9C");
   print(created_at);
   print("\n\x90");
   print(content);

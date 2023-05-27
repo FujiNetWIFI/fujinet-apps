@@ -23,17 +23,16 @@ _ihsetup:
 	CLI			; enable interrupts
 	RTS			; Bye.
 	
-_ih:	LDA VIA2IFR		; Check CIA1 interrupt status register
+_ih:	LDA VIA2IER		; Get IER
+	ORA CB1_ENABLE		; Enable CB1
+	STA VIA2IER		; Get it.
+	LDA VIA2IFR		; Check CIA1 interrupt status register
 	AND #CB1_ENABLE		; Did the SRQ pin get wiggled?
 	BEQ _ihd		; no, jump to _ihd
 
 	STA _trip		; yes, set _trip to $10
 
-_ihd:	LDA VIA2IER		; Get IER
-	ORA CB1_ENABLE		; Enable CB1
-	STA VIA2IER		; Get it.
-
-	JMP $EABF		; jump to original ROM IRQ handler
+_ihd:	JMP $EABF		; jump to original ROM IRQ
 
 _ihdone:
 	SEI			; disable interrupts

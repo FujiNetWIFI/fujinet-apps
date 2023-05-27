@@ -23,6 +23,7 @@ void main(void)
   
   while(true)
     {
+      VIC.bg_border_color = 0x7E;
       clrscr();
       print("\x8e"); // font switch to gfx/upper
       map();

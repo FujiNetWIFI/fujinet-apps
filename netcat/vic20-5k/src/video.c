@@ -35,10 +35,13 @@ void input(char *s)
       cursor(1);
       c = cgetc();
 
-      if ((c == 0x08) && i)
+      if ((c == 0x14) && i) // DEL is DC4 ?!
 	i--;
       else if (c==0x0D)
-	break;
+	{
+	  cbm_k_bsout(0x0A);
+	  break;
+	}
       else
 	s[i++] = c;
 

@@ -63,6 +63,8 @@ State topics(void)
 
   VIC.bg_border_color=254;
 
+  textcolor(COLOR_BLUE);
+  
   revers(1);
 
   topics_header();
