@@ -19,8 +19,7 @@ const char *urlBase="http://fujinet.online/8bitnews/news.php?t=lf&ps=21x20&l=4";
  */
 void io_init(void)
 {
-  cbm_open(CMD,DEV,CMD,"");
-  cbm_write(CMD,"settrans,2,4",12);
+  cbm_open(CMD,DEV,CMD,"settrans,2,4");
   cbm_close(CMD);
 }
 
