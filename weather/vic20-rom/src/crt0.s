@@ -46,9 +46,9 @@ reset:
         jsr     INITVIA                 ; initialise I/O registers
         jsr     INITSK                  ; initialise hardware
 
-        jsr     INITVCTRS               ; initialise BASIC vector table
-        jsr     INITBA                  ; initialise BASIC RAM locations
-        jsr     FREMSG                  ; print start up message and initialise memory pointers
+        ;jsr     INITVCTRS               ; initialise BASIC vector table
+        ;jsr     INITBA                  ; initialise BASIC RAM locations
+        ;jsr     FREMSG                  ; print start up message and initialise memory pointers
         cli                             ; enable interrupts
 
         jsr     copydata

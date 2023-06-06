@@ -12,8 +12,9 @@
 #include "defines.h"
 #include "location.h"
 #include "weather.h"
+#include "forecast.h"
 
-State state;
+State state=LOCATION;
 
 void main(void)
 {
@@ -28,6 +29,9 @@ void main(void)
 	  break;
 	case WEATHER:
 	  weather();
+	  break;
+	case FORECAST:
+	  forecast();
 	  break;
 	case EXIT:
 	  exit(0);

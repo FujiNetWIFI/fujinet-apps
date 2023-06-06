@@ -44,15 +44,6 @@ void location_get(void)
   json_done();
 }
 
-void location_test(void)
-{
-  strncpy(l.longitude,"-97.12702178955078",16);
-  strncpy(l.latitude,"33.18891143798828",16);
-  strcpy(l.city,"Denton");
-  strcpy(l.country_code,"US");
-  strcpy(l.region_code,"TX");
-}
-
 void location(void)
 {
   clrscr();
@@ -62,7 +53,7 @@ void location(void)
   print("   FINDING LOCATION        PLEASE  WAIT     ");
   revers(0);
 
-  location_test();
+  location_get();
   
   print("\nLON: ");
   print(l.longitude);

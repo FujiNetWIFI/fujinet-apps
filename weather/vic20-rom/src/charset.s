@@ -3,7 +3,6 @@
 .segment "RODATA"	
 
 _csrom:
-
 ;char data
 .byte  $20,$50,$20,$00,$00,$00,$00,$00
 .byte  $00,$00,$38,$04,$3C,$44,$3A,$00
@@ -134,10 +133,10 @@ _csrom:
 .byte  $C0,$C0,$C0,$00,$00,$00,$00,$00
 .byte  $15,$15,$55,$55,$55,$15,$15,$15
 .byte  $7C,$5C,$5C,$54,$54,$54,$54,$50
-.byte  $FF,$FF,$C7,$FB,$C3,$BB,$C5,$FF
-.byte  $BF,$BF,$A3,$9D,$BD,$9D,$A3,$FF
-.byte  $FF,$FF,$C3,$BD,$BF,$BD,$C3,$FF
-.byte  $FD,$FD,$C5,$B9,$BD,$B9,$C5,$FF
+.byte  $FC,$FC,$FC,$F0,$F0,$C0,$00,$00
+.byte  $00,$00,$56,$55,$76,$54,$54,$00
+.byte  $00,$00,$20,$50,$70,$50,$50,$00
+.byte  $00,$10,$38,$5C,$5C,$7C,$7C,$38
 .byte  $FF,$FF,$C3,$BD,$81,$BF,$C3,$FF
 .byte  $F3,$ED,$EF,$83,$EF,$EF,$EF,$FF
 .byte  $FF,$FF,$C5,$B9,$B9,$C5,$FD,$C3

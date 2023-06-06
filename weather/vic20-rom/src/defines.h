@@ -10,32 +10,37 @@
 #define DEFINES_H
 
 typedef enum _state
-{
-  LOCATION,
-  WEATHER,
-  EXIT
-} State;
+  {
+    LOCATION,
+    WEATHER,
+    FORECAST,
+    EXIT
+  } State;
+
+typedef enum _unit
+  {
+    IMPERIAL,
+    METRIC
+  } Unit;
 
 typedef struct _weatherData
 {
-  char date_txt[32];
-  char sunrise_txt[16];
-  char sunset_txt[16];
-  char time_txt[16];
-  char temp[24];
-  char timezone[16];
-  char feels_like[16];
+  char date_txt[22];
+  char sunrise_txt[10];
+  char sunset_txt[10];
+  char time_txt[10];
+  char feels_like[10];
+  char temp_hi[10];
+  char temp_lo[10];
   unsigned short timezone_offset;
-  char pressure[14];
-  char humidity[16];
-  char dew_point[16];
-  char clouds[16];
-  char visibility[16];
+  char pressure[10];
+  char humidity[10];
+  char dew_point[10];
+  char clouds[5];
+  char visibility[7];
   char wind_speed[16];
-char wind_dir[3];
-  char wind_txt[16];
-  char description[24];
-  char loc[48];
+  char wind_dir[3];
+  char wind_txt[8];
 } WeatherData;
 
 #define LFN 2
@@ -49,5 +54,7 @@ char wind_dir[3];
 #define SCREEN_RAM ((unsigned char *)0x1E00)
 
 #define IP_API "http://api.ipstack.com/check?access_key=d05a249425c32e0b231ba79e3f9af478&fields=ip,region_code,country_code,city,latitude,longitude"
+
+#define WAIT_TIME 65533 // vblanks
 
 #endif /* DEFINES_H */
