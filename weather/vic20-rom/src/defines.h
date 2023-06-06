@@ -32,7 +32,6 @@ typedef struct _weatherData
   char feels_like[10];
   char temp_hi[10];
   char temp_lo[10];
-  unsigned short timezone_offset;
   char pressure[10];
   char humidity[10];
   char dew_point[10];
@@ -40,7 +39,6 @@ typedef struct _weatherData
   char visibility[7];
   char wind_speed[16];
   char wind_dir[3];
-  char wind_txt[8];
 } WeatherData;
 
 #define LFN 2
