@@ -24,10 +24,9 @@ const char page_delim[2] = {'/', 0x00};
 
 void main(void)
 {
-  io_init();
-  
   while(true)
     {
+      io_init();
       switch(state)
 	{
 	case TOPICS:
