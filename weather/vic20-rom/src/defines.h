@@ -13,7 +13,6 @@ typedef enum _state
   {
     LOCATION,
     WEATHER,
-    FORECAST,
     EXIT
   } State;
 
@@ -29,7 +28,7 @@ typedef struct _weatherData
   char sunrise_txt[10];
   char sunset_txt[10];
   char time_txt[10];
-  char feels_like[10];
+  char feels_like[12];
   char temp_hi[10];
   char temp_lo[10];
   char pressure[10];
@@ -38,7 +37,9 @@ typedef struct _weatherData
   char clouds[5];
   char visibility[7];
   char wind_speed[16];
-  char wind_dir[3];
+  char wind_dir[4];
+  char icon[4];
+  char description[20];
 } WeatherData;
 
 #define LFN 2

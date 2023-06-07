@@ -24,7 +24,7 @@
 extern State state;
 extern Location l;
 
-WeatherData wd[3];
+WeatherData wd;
 
 unsigned char x,y; // Screen coords
 unsigned short wait; // vblanks
@@ -58,6 +58,55 @@ void weather_icon_display(const char *s, bool storm)
     }
 }
 
+void weather_icon(const char *s)
+{
+  if (s[0]=='0')
+    {
+      if (s[1]=='1')
+	{
+	  weather_icon_display(i01,false);
+	}
+      else if (s[1]=='2')
+	{
+	  weather_icon_display(i02,false);
+	}
+      else if (s[1]=='3')
+	{
+	  weather_icon_display(i03,false);
+	}
+      else if (s[1]=='4')
+	{
+	  weather_icon_display(i04,false);
+	}
+      else if (s[1]=='9')
+	{
+	  weather_icon_display(i04,true);
+	}
+    }
+  else if (s[0]=='1')
+    {
+      if (s[1]=='0')
+	{
+	  weather_icon_display(i02,true);
+	}
+      else if (s[1]=='1')
+	{
+	  weather_icon_display(i11,true);
+	}
+      else if (s[1]=='3')
+	{
+	  weather_icon_display(i13,false);
+	}
+    }
+  else if (s[0]=='5')
+    {
+      if (s[1]=='0')
+	{
+	  weather_icon_display(i50,false);
+	}
+    }
+}
+
 void weather_set_endpoint(void)
 {
   memset(weather_url,0,sizeof(weather_url));
@@ -66,10 +115,14 @@ void weather_set_endpoint(void)
 
 void weather_set_location(void)
 {
-  if (l.country_code[0] == 'U' && l.country_code[1] == 'S')
+  // seriously, these character translation issues are driving me nuts -thom
+  if (l.country_code[0] == 0x75)
     {
-      units=IMPERIAL;
-      strcat(weather_url,"&units=imperial");
+      if (l.country_code[0] == 0x73)
+	{
+	  units=IMPERIAL;
+	  strcat(weather_url,"&units=imperial");
+	}
     }
   else
     {
@@ -98,72 +151,83 @@ void weather_query(void)
   
   json_query("/current/dt");
   cbm_read(LFN,val,sizeof(val));
-  dt(wd[0].date_txt,"%Y-%m-%d",val);
-  dt(wd[0].time_txt,"%H:%M",val);
+  dt(wd.date_txt,"%Y-%m-%d",val);
+  dt(wd.time_txt,"%H:%M",val);
 
   json_query("/current/sunrise");
   cbm_read(LFN,val,sizeof(val));
-  dt(wd[0].sunrise_txt,"%H:%M",val);
+  dt(wd.sunrise_txt,"%H:%M",val);
 
   json_query("/current/sunset");
   cbm_read(LFN,val,sizeof(val));
-  dt(wd[0].sunset_txt,"%H:%M",val);
+  dt(wd.sunset_txt,"%H:%M",val);
 
   json_query("/current/temp");
-  cbm_read(LFN,wd[0].feels_like,sizeof(wd[0].feels_like));
-  strcat(wd[0].feels_like,"@");
+  cbm_read(LFN,wd.feels_like,sizeof(wd.feels_like));
+  strcat(wd.feels_like,"@");
   if (units==IMPERIAL)
-    strcat(wd[0].feels_like,"F");
+    strcat(wd.feels_like,"F");
   else
-    strcat(wd[0].feels_like,"C");
+    strcat(wd.feels_like,"C");
 
   json_query("/current/pressure");
-  cbm_read(LFN,wd[0].pressure,sizeof(wd[0].pressure));
-  strcat(wd[0].pressure," hPa");
+  cbm_read(LFN,wd.pressure,sizeof(wd.pressure));
+  strcat(wd.pressure," hPa");
 
   json_query("/current/humidity");
-  cbm_read(LFN,wd[0].humidity,sizeof(wd[0].humidity));
-  strcat(wd[0].humidity,"%");
+  cbm_read(LFN,wd.humidity,sizeof(wd.humidity));
+  strcat(wd.humidity,"%");
 
   json_query("/current/dew_point");
-  cbm_read(LFN,wd[0].dew_point,sizeof(wd[0].dew_point));
+  cbm_read(LFN,wd.dew_point,sizeof(wd.dew_point));
 
   json_query("/current/clouds");
-  cbm_read(LFN,wd[0].clouds,sizeof(wd[0].clouds));
-  strcat(wd[0].clouds,"%");
+  cbm_read(LFN,wd.clouds,sizeof(wd.clouds));
+  strcat(wd.clouds,"%");
 
   json_query("/current/visibility");
-  cbm_read(LFN,wd[0].visibility,sizeof(wd[0].visibility));
-  if (strlen(wd[0].visibility)<5)
-    wd[0].visibility[2]=0x00;
+  cbm_read(LFN,wd.visibility,sizeof(wd.visibility));
+  if (strlen(wd.visibility)<5)
+    wd.visibility[2]=0x00;
   else
-    wd[0].visibility[1]=0x00;
-  strcat(wd[0].visibility,"km");
+    wd.visibility[1]=0x00;
+  strcat(wd.visibility,"km");
 
   json_query("/current/wind_speed");
-  cbm_read(LFN,wd[0].wind_speed,sizeof(wd[0].wind_speed));
+  cbm_read(LFN,wd.wind_speed,sizeof(wd.wind_speed));
   if (units==IMPERIAL)
-    strcat(wd[0].wind_speed,"mph");
+    strcat(wd.wind_speed,"mph");
   else
-    strcat(wd[0].wind_speed,"kph");
+    strcat(wd.wind_speed,"kph");
 
   json_query("/current/wind_deg");
-  cbm_read(LFN,wd[0].wind_dir,sizeof(wd[0].wind_dir));
-  deg=atoi(wd[0].wind_dir);
-  weather_deg(wd[0].wind_dir);
+  cbm_read(LFN,wd.wind_dir,sizeof(wd.wind_dir));
+  deg=atoi(wd.wind_dir);
+  weather_deg(wd.wind_dir);
+
+  json_query("/current/weather/0/icon");
+  cbm_read(LFN,wd.icon,sizeof(wd.icon));
+
+  json_query("/current/weather/0/description");
+  cbm_read(LFN,wd.description,sizeof(wd.description));
+}
+
+void weather_clear(void)
+{
+  memset(&wd,0,sizeof(WeatherData));
 }
 
 void weather_get(void)
 {
+  weather_clear();
+  weather_set_endpoint();
   weather_set_location();
+  json_init();
   cbm_open(LFN,DEV,SAN,weather_url);
   json_parse();
   weather_query();
   cbm_close(LFN);
-}
-
-void weather_test(void)
-{
+  json_done();
 }
 
 void weather(void)
@@ -174,16 +238,16 @@ void weather(void)
   
   // Date/time
   gotoxy(1,1);
-  print(wd[0].date_txt);
+  print(wd.date_txt);
   print("  ");
-  print(wd[0].time_txt);
+  print(wd.time_txt);
 
   // Icon
   y=3;
   x=17;
-  weather_icon_display(i02,false);
-  gotoxy(x-4,y);
-  print(wd[0].feels_like);
+  weather_icon(wd.icon);
+  gotoxy(x-7,y);
+  print(wd.feels_like);
 
   // city
   gotoxy(1,y);
@@ -195,38 +259,39 @@ void weather(void)
   
   gotoxy(0,y+4);
 
-  print("  PRESSURE: ");
-  print(wd[0].pressure);
+  print(" PRESSURE: ");
+  print(wd.pressure);
   print("\n\n");
   
-  print("  HUMIDITY: ");
-  print(wd[0].humidity);
+  print(" HUMIDITY: ");
+  print(wd.humidity);
   print("\n\n");
 
-  print("    DEW PT: ");
-  print(wd[0].dew_point);
+  print("   DEW PT: ");
+  print(wd.dew_point);
   print("\n\n");
 
-  print("    CLOUDS: ");
-  print(wd[0].clouds);
+  print("   CLOUDS: ");
+  print(wd.clouds);
   print("\n\n");
 
-  print(" VISIBILTY: ");
-  print(wd[0].visibility);
+  print("VISIBILTY: ");
+  print(wd.visibility);
   print("\n\n");
 
-  print("      WIND: ");
-  print(wd[0].wind_speed);
+  print("     WIND: ");
+  print(wd.wind_speed);
   print(" ");
-  print(wd[0].wind_dir);
+  print(wd.wind_dir);
+
+  gotoxy(0,19);
+
+  print("  SUNRISE: ");
+  print(wd.sunrise_txt);
   print("\n\n");
 
-  print("   SUNRISE: ");
-  print(wd[0].sunrise_txt);
-  print("\n\n");
-
-  print("    SUNSET: ");
-  print(wd[0].sunset_txt);
+  print("   SUNSET: ");
+  print(wd.sunset_txt);
 
   wait=65535;
 
@@ -234,15 +299,8 @@ void weather(void)
     {
       if (kbhit())
 	{
-	  switch (cgetc())
-	    {
-	    case CH_F1:
-	      state=FORECAST;
-	      return;
-	    case CH_F2:
-	      units^=units;
-	      return;
-	    }
+	  cgetc();
+	  return;
 	}
       
       waitvsync();
