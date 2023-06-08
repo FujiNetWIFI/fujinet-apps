@@ -8,6 +8,7 @@
 #include <conio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include "csram.h"
 #include "video.h"
 #include "board.h"
@@ -71,7 +72,7 @@ const char footer[]={0xA0,0xA0,0xA0,0xA3,0x86,0x95,0x8A,0x89,0x8E,0x85,0x94,0xA0
 void board_count(void)
 {
   unsigned char i;
-  char tmp[4];
+
   count_white=
     count_black=0;
   
@@ -87,26 +88,34 @@ void board_count(void)
 }
 
 /**
+ * @brief return disc at board position
+ */
+Disc board_get_disc(Position p)
+{
+  return COLOR_RAM[board_pos[p]] - COLOR_RAM_BIAS;
+}
+
+/**
  * @brief place a piece on board
  * @param i board position to place piece
  * @param d Disc color
  */
-void board_place_disc(unsigned char i, Disc d)
+void board_place_disc(Position i, Disc d)
 {
-  unsigned short p = board_pos[i];
+  unsigned short o = board_pos[i];
   char s[3];
   
   // Set the characters
-  VIDEO_RAM[p]=0x3B;
-  VIDEO_RAM[p+1]=0x3C;
-  VIDEO_RAM[p+22]=0x3D;
-  VIDEO_RAM[p+23]=0x3E;
+  VIDEO_RAM[o]=DISC_CHAR_1;
+  VIDEO_RAM[o+1]=DISC_CHAR_2;
+  VIDEO_RAM[o+22]=DISC_CHAR_3;
+  VIDEO_RAM[o+23]=DISC_CHAR_4;
 
   // Set the color
-  COLOR_RAM[p]=
-    COLOR_RAM[p+1]=
-    COLOR_RAM[p+22]=
-    COLOR_RAM[p+23]=d+7;
+  COLOR_RAM[o]=
+    COLOR_RAM[o+1]=
+    COLOR_RAM[o+22]=
+    COLOR_RAM[o+23]=d+COLOR_RAM_BIAS;
 
   // Update count, and display
   board_count();
@@ -124,6 +133,37 @@ void board_place_disc(unsigned char i, Disc d)
 }
 
 /**
+ * @brief walk board
+ * @param p board position
+ * @param dx delta x
+ * @param dy delta y
+ * @param m my piece
+ * @param o opponent piece
+ * @return true = we can flip, otherwise false.
+ */
+bool walkBoard(Position p, signed char dx, signed char dy, Disc m, Disc o)
+{
+  
+}
+
+/**
+ * @brief check for valid move
+ * @param p board position
+ * @param d Disc piece (WHITE | BLACK)
+ */
+void board_valid_move(Position p, Disc d)
+{
+  Disc opponent=WHITE;
+
+  if (d == WHITE)
+    d = BLACK;
+
+  
+
+  
+}
+
+/**
  * @brief reset the board
  */
 void board_reset(void)
@@ -135,14 +175,14 @@ void board_reset(void)
   memcpy(VIDEO_RAM,board_char,sizeof(board_char));
 
   // Now place initial pieces
-  board_place_disc(27,BLACK);
-  board_place_disc(28,WHITE);
-  board_place_disc(35,WHITE);
-  board_place_disc(36,BLACK);
+  board_place_disc(START_POS_1,BLACK);
+  board_place_disc(START_POS_2,WHITE);
+  board_place_disc(START_POS_3,WHITE);
+  board_place_disc(START_POS_4,BLACK);
 
   // Place footer
-  memcpy(&VIDEO_RAM[484],&footer[0],sizeof(footer));
-  memset(&COLOR_RAM[484],0x00,sizeof(footer));
+  memcpy(&VIDEO_RAM[FOOTER_OFFSET],&footer[0],sizeof(footer));
+  memset(&COLOR_RAM[FOOTER_OFFSET],0x00,sizeof(footer));
 }
 
 void main(void)
@@ -151,8 +191,7 @@ void main(void)
   
   video_setup();
 
-  // VIC.bg_border_color=216; // Light Green / Dark Green
-  VIC.bg_border_color=88;
+  VIC.bg_border_color=88;  // Green with black border
   VIC.volume_color=0x80;   // Orange aux color.
 
   clrscr();
