@@ -71,15 +71,17 @@ const char footer[]={0xA0,0xA0,0xA0,0xA3,0x86,0x95,0x8A,0x89,0x8E,0x85,0x94,0xA0
 void board_count(void)
 {
   unsigned char i;
-
+  char tmp[4];
   count_white=
     count_black=0;
   
-  for (i=0;i<sizeof(board_pos);i++)
+  for (i=0;i<64;i++)
     {
-      if (COLOR_RAM[board_pos[i]]==0x08)
+      unsigned char c = COLOR_RAM[board_pos[i]] & 0x0F; // Color ram is 4 bits wide, upper bits float.
+      
+      if (c==0x08)
 	count_white++;
-      else if (COLOR_RAM[board_pos[i]]==0x09)
+      else if (c==0x09)
 	count_black++;
     }
 }
