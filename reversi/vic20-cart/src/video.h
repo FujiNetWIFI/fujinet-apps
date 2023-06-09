@@ -18,6 +18,13 @@ extern void clrscr();
 void video_setup(void);
 
 /**
+ * @brief read color ram reliably (mask of unused upper nibble)
+ * @param color ram offset
+ * @return color at offset
+ */
+unsigned char video_ram_color(unsigned short o);
+
+/**
  * @brief simple screen print line
  * @param s NULL terminated string to print.
  */

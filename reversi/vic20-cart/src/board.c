@@ -81,12 +81,12 @@ void board_count(void)
   
   for (i=0;i<64;i++)
     {
-      unsigned char c = COLOR_RAM[board_pos[i]] & 0x0F; // Color ram is 4 bits wide, upper bits float.
+      unsigned char c = video_ram_color(board_pos[i]);
       
       if (c==0x08)
-	count_white++;
-      else if (c==0x09)
 	count_black++;
+      else if (c==0x09)
+	count_white++;
     }
 }
 
@@ -95,7 +95,17 @@ void board_count(void)
  */
 Disc board_get_disc(Position p)
 {
-  return COLOR_RAM[board_pos[p]] - COLOR_RAM_BIAS;
+  unsigned char c = video_ram_color(board_pos[p]);
+
+  switch(c)
+    {
+    case 0x08:
+      return BLACK;
+    case 0x09:
+      return WHITE;
+    case 0x0d:
+      return NONE;
+    }
 }
 
 /**
@@ -136,46 +146,6 @@ void board_place_disc(Position p, Disc d)
 }
 
 /**
- * @brief walk board
- * @param p board position
- * @param dx delta x
- * @param dy delta y
- * @param m my piece
- * @param o opponent piece
- * @return true = we can flip, otherwise false.
- */
-bool board_walk(Position p, signed char dx, signed char dy, Disc m, Disc o)
-{
-  int x,y;
-
-  // Convert position to x,y coordinates to make edge checking easier
-  y = p / BOARD_SIZE;
-  x = p % BOARD_SIZE;
-
-  if (board_get_disc(p) == o)
-    {
-      while ((x >= 0) && (x < 8) && (y >= 0) && (y < 8))
-	{
-	  x += dx;
-	  y += dy;
-	  p = dy * BOARD_SIZE + dx;
-	  
-	  if (board_get_disc(p) == NONE)
-	    return false;
-	  else if (board_get_disc(p) == m)
-	    return true;
-	}
-    }
-  else
-    {
-      // Opponent disc, keep walking.
-    }
-
-  // Either no consecutive opponent disc, or hit the edge;
-  return false;
-}
-
-/**
  * @brief assuming valid move, flip discs until there are no more opponent discs in direction.
  * @param p board position
  * @param dx delta x
@@ -201,6 +171,59 @@ void board_flip(Position p, signed char dx, signed char dy, Disc m, Disc o)
 }
 
 /**
+ * @brief are we inside board?
+ * @param x derived X coordinate
+ * @param y derived Y coordinate
+ */
+bool board_inside(int x, int y)
+{
+  bool ix = (x >= 0) && (x < 8);
+  bool iy = (y >= 0) && (y < 8);
+
+  return (ix && iy);
+}
+
+/**
+ * @brief walk board
+ * @param p board position
+ * @param dx delta x
+ * @param dy delta y
+ * @param m my piece
+ * @param o opponent piece
+ * @return true = we can flip, otherwise false.
+ */
+bool board_walk(Position p, int dx, int dy, Disc m, Disc o)
+{
+  int x,y;
+
+  // Convert position to x,y coordinates to make edge checking easier
+  y = p / BOARD_SIZE;
+  x = p % BOARD_SIZE;
+  
+  if (board_get_disc(p) == o)
+    {
+      while (board_inside(x,y))
+	{
+	  x += dx;
+	  y += dy;
+	  p = dy * BOARD_SIZE + dx;
+	  
+	  if (board_get_disc(p) == NONE)
+	    return false;
+	  else if (board_get_disc(p) == m)
+	    return true;
+	}
+    }
+  else
+    {
+      // Opponent disc, keep walking.
+    }
+
+  // Either no consecutive opponent disc, or hit the edge;
+  return false;
+}
+
+/**
  * @brief Check for valid move in all directions, set bit.
  * @param p selected board position
  * @param m color of my piece
@@ -213,35 +236,35 @@ ValidMoves board_check_move(Position p, Disc m, Disc o)
   unsigned char ret = 0;
 
   // Check left
-  if (board_walk(p,-1,0,m,o))
+  if (board_walk(p-1,-1,0,m,o))
     ret |= 0x01;
 
   // Check right
-  if (board_walk(p,-1,0,m,o))
+  if (board_walk(p+1,-1,0,m,o))
     ret |= 0x02;
 
   // Check down
-  if (board_walk(p,-1,0,m,o))
+  if (board_walk(p+BOARD_SIZE,-1,0,m,o))
     ret |= 0x04;
 
   // Check up
-  if (board_walk(p,-1,0,m,o))
+  if (board_walk(p-BOARD_SIZE,-1,0,m,o))
     ret |= 0x08;
 
   // Check down-left
-  if (board_walk(p,-1,0,m,o))
+  if (board_walk(p+BOARD_SIZE-1,-1,0,m,o))
     ret |= 0x10;
 
   // Check down-right
-  if (board_walk(p,-1,0,m,o))
+  if (board_walk(p+BOARD_SIZE+1,-1,0,m,o))
     ret |= 0x20;
 
   // Check up-left
-  if (board_walk(p,-1,0,m,o))
+  if (board_walk(p-BOARD_SIZE-1,-1,0,m,o))
     ret |= 0x40;
 
   // Check up-right
-  if (board_walk(p,-1,0,m,o))
+  if (board_walk(p-BOARD_SIZE+1,-1,0,m,o))
     ret |= 0x80;
 
   return ret;
@@ -316,6 +339,8 @@ void main(void)
   clrscr();
 
   board_reset();
-  
+  COLOR_RAM[0] = 0x00;
+  COLOR_RAM[1] = 0x00;
+  VIDEO_RAM[0]=board_walk(START_POS_2-1,-1,0,BLACK,WHITE);
   while(1);
 }
