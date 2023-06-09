@@ -96,7 +96,7 @@ void board_count(void)
 Disc board_get_disc(Position p)
 {
   unsigned char c = video_ram_color(board_pos[p]);
-
+  VIDEO_RAM[1]=c;
   switch(c)
     {
     case 0x08:
@@ -202,6 +202,7 @@ bool board_walk(Position p, int dx, int dy, Disc m, Disc o)
   
   if (board_get_disc(p) == o)
     {
+      VIDEO_RAM[1]=0x10;
       while (board_inside(x,y))
 	{
 	  x += dx;
@@ -341,6 +342,6 @@ void main(void)
   board_reset();
   COLOR_RAM[0] = 0x00;
   COLOR_RAM[1] = 0x00;
-  VIDEO_RAM[0]=board_walk(START_POS_2-1,-1,0,BLACK,WHITE);
+  VIDEO_RAM[0]=board_walk(START_POS_2+1,-1,0,BLACK,WHITE);
   while(1);
 }
