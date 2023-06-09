@@ -96,7 +96,7 @@ void board_count(void)
 Disc board_get_disc(Position p)
 {
   unsigned char c = video_ram_color(board_pos[p]);
-  VIDEO_RAM[1]=c;
+
   switch(c)
     {
     case 0x08:
@@ -202,12 +202,11 @@ bool board_walk(Position p, int dx, int dy, Disc m, Disc o)
   
   if (board_get_disc(p) == o)
     {
-      VIDEO_RAM[1]=0x10;
       while (board_inside(x,y))
 	{
 	  x += dx;
 	  y += dy;
-	  p = dy * BOARD_SIZE + dx;
+	  p = y * BOARD_SIZE + x;
 	  
 	  if (board_get_disc(p) == NONE)
 	    return false;
@@ -283,10 +282,12 @@ bool board_move(Position p, Disc m, Disc o)
   ValidMoves v;
 
   v = board_check_move(p,m,o);
-
+  
   /* Return if no valid moves */
   if (!v)
     return false;
+  else
+    board_place_disc(p,m);
 
   if (v & 0x01) // left
     board_flip(p-1,-1,0,m,o);
@@ -342,6 +343,6 @@ void main(void)
   board_reset();
   COLOR_RAM[0] = 0x00;
   COLOR_RAM[1] = 0x00;
-  VIDEO_RAM[0]=board_walk(START_POS_2+1,-1,0,BLACK,WHITE);
+  //board_move(START_POS_2+1,BLACK,WHITE);
   while(1);
 }
