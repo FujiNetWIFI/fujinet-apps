@@ -18,7 +18,6 @@
 #include "location.h"
 #include "icons.h"
 #include "video.h"
-#include "color.h"
 #include "dt.h"
 
 extern State state;
@@ -145,15 +144,76 @@ void weather_deg(char *s)
   strcpy(s,d[i]);
 }
 
+void weather_tod(char *val)
+{
+  int hr;
+  char tmp[4];
+
+  dt(tmp,"%H",val);
+  hr = atoi(tmp);
+  
+  switch (hr)
+    {
+    case 0:
+    case 1:
+    case 2:
+    case 3:
+    case 4:
+      VIC.bg_border_color=9;
+      cbm_k_bsout('\x05'); // white  
+      break;
+    case 5:
+    case 6:
+    case 7:
+      VIC.bg_border_color=105;
+      cbm_k_bsout('\x05'); // white  
+      break;
+    case 8:
+    case 9:
+    case 10:
+      VIC.bg_border_color=57;
+      cbm_k_bsout('\x90'); // black 
+      break;
+    case 11:
+    case 12:
+    case 13:
+    case 14:
+    case 15:
+    case 16:
+      VIC.bg_border_color=185;
+      cbm_k_bsout('\x90'); // white  
+      break;
+    case 17:
+    case 18:
+    case 19:
+      VIC.bg_border_color=105;
+      cbm_k_bsout('\x05'); // white  
+      break;
+    case 20:
+    case 21:
+    case 22:
+    case 23:
+      VIC.bg_border_color=9;
+      cbm_k_bsout('\x05'); // white  
+      break;
+    }
+
+  VIC.volume_color=0x90; // aux = yellow
+
+  // Go ahead and pre-paint the color on screen
+  memset(COLOR_RAM,0x01,506);
+}
+
 void weather_query(void)
 {
   char val[32];
   int i;
-  
+
   memset(val,0,sizeof(val));
   
   json_query("/current/dt");
   cbm_read(LFN,val,sizeof(val));
+  weather_tod(val);
   dt(wd.date_txt,"%Y-%m-%d",val);
   dt(wd.time_txt,"%H:%M",val);
 
@@ -240,9 +300,9 @@ void weather_get(void)
 
 void weather(void)
 {
-  weather_get();
   clrscr();
-  color_setup();
+  cbm_k_bsout('\x92');
+  weather_get();
   
   // Date/time
   gotoxy(1,1);
@@ -264,7 +324,8 @@ void weather(void)
   print(l.region_code);
   print(" ");
   print(l.country_code);
-  
+  print("\n ");
+  print(wd.description);
   gotoxy(0,y+4);
 
   print(" PRESSURE: ");
@@ -301,7 +362,7 @@ void weather(void)
   print("   SUNSET: ");
   print(wd.sunset_txt);
 
-  wait=65535;
+  wait=65535U;
 
   while (wait--)
     {
