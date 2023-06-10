@@ -8,6 +8,8 @@
 #include <vic20.h>
 #include <cbm.h>
 #include <string.h>
+#include <conio.h>
+#include <stdbool.h>
 #include "csram.h"
 
 /**
@@ -37,4 +39,33 @@ void print(const char *s)
 {
   while (*s)
     cbm_k_bsout(*s++);
+}
+
+/**
+ * @brief simple line input
+ * @param s pointer to string
+ */
+void input(char *s)
+{
+  unsigned char c,i;
+  
+  c=i=0;
+
+  while (true)
+    {
+      cursor(1);
+      c = cgetc();
+
+      if ((c == 0x14) && i) // DEL is DC4 ?!
+	i--;
+      else if (c==0x0D)
+	{
+	  cbm_k_bsout(0x0A);
+	  break;
+	}
+      else
+	s[i++] = c;
+
+      cbm_k_bsout(c);
+    }
 }

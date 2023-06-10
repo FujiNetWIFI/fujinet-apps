@@ -30,4 +30,10 @@ unsigned char video_ram_color(unsigned short o);
  */
 void print(const char *s);
 
+/**
+ * @brief simple line input
+ * @param s pointer to string
+ */
+void input(char *s);
+
 #endif /* VIDEO_H */

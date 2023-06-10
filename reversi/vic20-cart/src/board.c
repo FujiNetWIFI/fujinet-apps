@@ -330,19 +330,3 @@ void board_reset(void)
   memcpy(&VIDEO_RAM[FOOTER_OFFSET],&footer[0],sizeof(footer));
   memset(&COLOR_RAM[FOOTER_OFFSET],0x00,sizeof(footer));
 }
-
-void main(void)
-{
-  video_setup();
-
-  VIC.bg_border_color=88;  // Green with black border
-  VIC.volume_color=0x80;   // Orange aux color.
-
-  clrscr();
-
-  board_reset();
-  COLOR_RAM[0] = 0x00;
-  COLOR_RAM[1] = 0x00;
-  //board_move(START_POS_2+1,BLACK,WHITE);
-  while(1);
-}
