@@ -1,0 +1,38 @@
+ca65 V2.19 - Git 652949f18
+Main file   : srq.s
+Current file: srq.s
+
+000000r 1               ;;; SRQ handler for BASIC
+000000r 1               
+000000r 1               	.export _ih
+000000r 1               	.export _ihsetup
+000000r 1               	.export _ihdone
+000000r 1               
+000000r 1               	.org $033C		; Use cassette buffer.
+00033C  1               
+00033C  1               _ihsetup:
+00033C  1  78           	SEI			; disable interrupts
+00033D  1  A9 49        	LDA #<_ih		; low byte of ih()
+00033F  1  8D 14 03     	STA $0314		; put in IRQ vector lo
+000342  1  A9 03        	LDA #>_ih		; hi byte of ih()
+000344  1  8D 15 03     	STA $0315		; put in IRQ vector hi
+000347  1  58           	CLI			; enable interrupts
+000348  1  60           	RTS			; Bye.
+000349  1               
+000349  1  AD 0D DC     _ih:	LDA $DC0D		; Check CIA1 interrupt status register
+00034C  1  29 10        	AND #$10		; Did the SRQ pin get wiggled?
+00034E  1  F0 03        	BEQ _ihd		; no, jump to _ihd
+000350  1  8D 63 03     	STA _trip		; yes, set _trip to $10
+000353  1  4C 31 EA     _ihd:	JMP $EA31		; jump to original ROM IRQ handler
+000356  1               
+000356  1               _ihdone:
+000356  1  78           	SEI			; disable interrupts
+000357  1  A9 31        	LDA #$31		; lo byte of original KERNAL IRQ handler
+000359  1  8D 14 03     	STA $0314		; put in IRQ vector lo
+00035C  1  A9 EA        	LDA #$EA		; ...
+00035E  1  8D 15 03     	STA $0315		; ...
+000361  1  58           	CLI			; enable interrupts
+000362  1  60           	RTS			; Bye.
+000363  1               
+000363  1  xx           _trip:	.res 1
+000363  1               
