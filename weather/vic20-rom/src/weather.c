@@ -116,20 +116,22 @@ void weather_set_endpoint(void)
 void weather_set_location(void)
 {
   // seriously, these character translation issues are driving me nuts -thom
-  if (l.country_code[0] == 0x75)
-    {
-      if (l.country_code[0] == 0x73)
-	{
-	  units=IMPERIAL;
-	  strcat(weather_url,"&units=imperial");
-	}
-    }
-  else
-    {
-      units=METRIC;
-      strcat(weather_url,"&units=metric");
-    }
+  /* if (l.country_code[0] == 0x75) */
+  /*   { */
+  /*     if (l.country_code[0] == 0x73) */
+  /* 	{ */
+  /* 	  units=IMPERIAL; */
+  /* 	  strcat(weather_url,"&units=imperial"); */
+  /* 	} */
+  /*   } */
+  /* else */
+  /*   { */
+  /*     units=METRIC; */
+  /*     strcat(weather_url,"&units=metric"); */
+  /*   } */
 
+  units=METRIC;
+  strcat(weather_url,"&units=metric");
   strcat(weather_url,"&lon=");
   strcat(weather_url,l.longitude);
   strcat(weather_url,"&lat=");
@@ -146,6 +148,7 @@ void weather_deg(char *s)
 void weather_query(void)
 {
   char val[32];
+  int i;
   
   memset(val,0,sizeof(val));
   
@@ -180,17 +183,22 @@ void weather_query(void)
 
   json_query("/current/dew_point");
   cbm_read(LFN,wd.dew_point,sizeof(wd.dew_point));
-
+  strcat(wd.dew_point,"@");
+  if (units==IMPERIAL)
+    strcat(wd.dew_point,"F");
+  else
+    strcat(wd.dew_point,"C");
+  
   json_query("/current/clouds");
   cbm_read(LFN,wd.clouds,sizeof(wd.clouds));
   strcat(wd.clouds,"%");
 
+  memset(val,0,sizeof(val));
   json_query("/current/visibility");
-  cbm_read(LFN,wd.visibility,sizeof(wd.visibility));
-  if (strlen(wd.visibility)<5)
-    wd.visibility[2]=0x00;
-  else
-    wd.visibility[1]=0x00;
+  cbm_read(LFN,val,sizeof(val));
+  i = atoi(val);
+  i /= 1000;
+  itoa(i,wd.visibility,10);  
   strcat(wd.visibility,"km");
 
   json_query("/current/wind_speed");
