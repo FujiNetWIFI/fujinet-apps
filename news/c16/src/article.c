@@ -49,7 +49,7 @@ State article(void)
 
   // Set up screen
   clrscr();
-  VIC.bg_border_color = 250; 
+  // VIC.bg_border_color = 250; 
   article_footer();
 
   // Set up URL

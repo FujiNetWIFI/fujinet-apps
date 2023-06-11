@@ -61,7 +61,7 @@ State topics(void)
   clrscr();
   cbm_k_bsout(0x0E); // Go upper/lower charset
 
-  VIC.bg_border_color=254;
+  // VIC.bg_border_color=254;
 
   textcolor(COLOR_BLUE);
   

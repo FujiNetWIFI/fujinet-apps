@@ -58,7 +58,7 @@ State titles(void)
   if (!title_page_num)
     title_page_num=1;
   
-  VIC.bg_border_color=190;
+  // VIC.bg_border_color=190;
   textcolor(COLOR_BLUE);
 
   clrscr();
@@ -120,7 +120,7 @@ State titles(void)
       for (i=0;i<TITLES_MAX;i++)
 	{
 	  revers(selected_article==i);
-	  textcolor(COLOR_PURPLE);
+	  textcolor(COLOR_BLUE);
 	  cprintf("%22s",a[i].date);
 	  textcolor(COLOR_BLACK);
 	  cprintf("%-66s",a[i].title);
