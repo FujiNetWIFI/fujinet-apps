@@ -5,7 +5,7 @@
  * @brief   main
  */
 
-#include <vic20.h>
+#include <c16.h>
 #include <cbm.h>
 #include <conio.h>
 #include <stdbool.h>

@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
-#include <vic20.h>
+#include <c16.h>
 #include <conio.h>
 #include "topics.h"
 

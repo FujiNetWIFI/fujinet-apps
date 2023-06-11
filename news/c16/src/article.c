@@ -5,7 +5,7 @@
  * @brief   article
  */
 
-#include <vic20.h>
+#include <c16.h>
 #include <conio.h>
 #include <string.h>
 #include <stdio.h>
