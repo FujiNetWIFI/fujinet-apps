@@ -1,5 +1,5 @@
 /**
- * @brief   FujiNet News Reader - VIC-20 Cart Version
+ * @brief   FujiNet News Reader - Commodore 16 Version
  * @author  Thomas Cherryhomes
  * @license gpl v. 3
  * @brief   titles
