@@ -12,7 +12,7 @@
 
 extern char buf[BUF_SIZE];
 
-const char *urlBase="http://fujinet.online/8bitnews/news.php?t=lf&ps=21x20&l=4";
+const char *urlBase="http://fujinet.online/8bitnews/news.php?t=lf&ps=39x24&l=5";
 
 /**
  * @brief setup PETSCII translation for SAN

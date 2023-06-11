@@ -17,7 +17,7 @@
 
 extern State state;
 extern long selected_article_id;
-extern char buf[512];
+extern char buf[BUF_SIZE];
 extern const char *urlBase;
 extern char nl_delim[2];
 extern char page_delim[2];
@@ -28,12 +28,10 @@ int i;
 void article_footer(void)
 {
   // Footer
-  textcolor(COLOR_RED);
+  textcolor(BCOLOR_CYAN|CATTR_LUMA5);
   revers(1);
-  gotoxy(0,21);
-  cprintf("UP/DN PAGE      I INFO_ TITLES      T TOPICS");
-  gotoxy(0,22);
-  cbm_k_bsout(0x5F); // this is silly.
+  gotoxy(0,24);
+  cprintf("CRSR PAGE  I INFO  ESC TITLES   T TOPICS");
   revers(0);
 }
 
@@ -49,7 +47,8 @@ State article(void)
 
   // Set up screen
   clrscr();
-  // VIC.bg_border_color = 250; 
+  bgcolor(BCOLOR_CYAN|CATTR_LUMA1);
+  bordercolor(BCOLOR_CYAN|CATTR_LUMA5);
   article_footer();
 
   // Set up URL
@@ -70,9 +69,9 @@ State article(void)
   /* // Display page */
   gotoxy(0,0);
   revers(1);
-  textcolor(COLOR_RED);
-  cprintf("%22s",p);
-  textcolor(COLOR_BLACK);
+  textcolor(BCOLOR_CYAN|CATTR_LUMA5);
+  cprintf("%40s",p);
+  textcolor(COLOR_CYAN|CATTR_LUMA7);
   strcpy(tmp,p); // store for max page calc below
   revers(0);
   
@@ -94,7 +93,7 @@ State article(void)
     {
       switch(cgetc())
 	{
-	case CH_LEFT:
+	case CH_ESC:
 	  state=TITLES;
 	  return TITLES;
 	case CH_UP:

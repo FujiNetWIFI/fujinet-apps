@@ -25,6 +25,7 @@ static int title_page_num;
 
 char selected_article;
 unsigned long selected_article_id;
+char tmp[128];
 
 const char delim[2] = {0x7C,0x00};
 
@@ -45,25 +46,25 @@ const char *topic_ids[TOPICS_MAX] =
   {
     long int id;
     char date[20];
-    char title[66];
-  } a[4];
+    char title[120];
+  } a[5];
 
 State titles(void)
 {
   char *p;
   char i;
   char pg[8];
-  char tmp[20];
 
   if (!title_page_num)
     title_page_num=1;
   
-  // VIC.bg_border_color=190;
-  textcolor(COLOR_BLUE);
+  bgcolor(BCOLOR_BLUE|CATTR_LUMA1);
+  bordercolor(BCOLOR_BLUE|CATTR_LUMA5);
+  textcolor(BCOLOR_BLUE|CATTR_LUMA7);
 
   clrscr();
   gotoxy(0,11);
-  cprintf("  FETCHING  ARTICLES  ");
+  cprintf("      FETCHING  ARTICLES     ");
 
   // Set up URL.
   sprintf(tmp,"&p=%u&c=%s",title_page_num,topic_ids[selected_topic]);
@@ -82,7 +83,7 @@ State titles(void)
   while (p)
     {
       memset(a[i].date,0,20);
-      memset(a[i].title,0,66);
+      memset(a[i].title,0,120);
       
       a[i].id = atol(p);
 
@@ -90,20 +91,19 @@ State titles(void)
       strncpy(a[i].date,p,20);
 
       p = strtok(NULL,nl_delim);
-      strncpy(a[i++].title,p,65);
+      strncpy(a[i++].title,p,119);
 
       p = strtok(NULL,delim);
     }
 
   clrscr();
 
-  textcolor(COLOR_BLUE);
   revers(1);
+  textcolor(BCOLOR_BLUE|CATTR_LUMA5);
   cputs(TITLES_TOP);
-  gotoxy(4,1);
-  cbm_k_bsout(0x5F); // because conio _HELPS_ grrrr.
-  gotoxy(0,21);
+  gotoxy(0,24);
   cputs(TITLES_BOT);
+  
   revers(0);
 
   while(true)
@@ -114,16 +114,16 @@ State titles(void)
       if (!title_page_num)
 	title_page_num=1;
 
-      textcolor(COLOR_RED);  
-      cprintf("%22s",pg);
+      textcolor(BCOLOR_GREEN|CATTR_LUMA4);  
+      cprintf("\n%40s\n",pg);
 
       for (i=0;i<TITLES_MAX;i++)
 	{
 	  revers(selected_article==i);
-	  textcolor(COLOR_BLUE);
-	  cprintf("%22s",a[i].date);
-	  textcolor(COLOR_BLACK);
-	  cprintf("%-66s",a[i].title);
+	  textcolor(selected_article==i ? BCOLOR_BLUE|CATTR_LUMA6 : BCOLOR_BLUE|CATTR_LUMA3);
+	  cprintf("%40s",a[i].date);
+	  textcolor(BCOLOR_WHITE|CATTR_LUMA6);
+	  cprintf("%-120s",a[i].title);
 	}
       
       switch(cgetc())
@@ -146,7 +146,7 @@ State titles(void)
 	  article_page=1;
 	  state=ARTICLE;
 	  return ARTICLE;
-	case CH_LEFT:
+	case CH_ESC:
 	  state=TOPICS;
 	  return TOPICS;
 	}

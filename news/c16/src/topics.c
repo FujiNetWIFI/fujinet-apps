@@ -32,13 +32,17 @@ unsigned char selected_topic;
 void topics_header(void)
 {
   gotoxy(0,0);
-  cprintf(TOPICS_TOP);  
+  textcolor(BCOLOR_GREEN|CATTR_LUMA3);
+  cprintf(TOPICS_TOP);
+  textcolor(BCOLOR_WHITE|CATTR_LUMA7);
 }
 
 void topics_footer(void)
 {
-  gotoxy(0,21);
+  gotoxy(0,24);
+  textcolor(BCOLOR_GREEN|CATTR_LUMA3);
   cprintf(TOPICS_BOT);
+  textcolor(BCOLOR_BLUE|CATTR_LUMA7);
 }
 
 void topics_menu(void)
@@ -50,7 +54,7 @@ void topics_menu(void)
   for (i=0;i<9;i++)
     {
       revers(i==selected_topic ? 1 : 0);
-      cprintf("%-22s\r\n",topic_names[i]);
+      cprintf("%-40s\r\n",topic_names[i]);
     }
   
   revers(0);
@@ -61,10 +65,9 @@ State topics(void)
   clrscr();
   cbm_k_bsout(0x0E); // Go upper/lower charset
 
-  // VIC.bg_border_color=254;
-
-  textcolor(COLOR_BLUE);
-  
+  bordercolor(BCOLOR_GREEN|CATTR_LUMA3);
+  textcolor(BCOLOR_WHITE|CATTR_LUMA7);
+  bgcolor(BCOLOR_GREEN|CATTR_LUMA1);
   revers(1);
 
   topics_header();
