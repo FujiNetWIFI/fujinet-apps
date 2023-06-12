@@ -146,9 +146,11 @@ void weather_deg(char *s)
 
 void weather_tod(char *val)
 {
-  int hr;
+  int hr=0;
   char tmp[4];
 
+  memset(tmp,0,sizeof(tmp));
+  
   dt(tmp,"%H",val);
   hr = atoi(tmp);
   
