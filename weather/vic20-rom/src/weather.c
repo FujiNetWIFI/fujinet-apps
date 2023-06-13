@@ -310,19 +310,19 @@ void weather(void)
   x=17;
 
   // Date/time
-  gotoxy(0,1);
+  gotoxy(1,0);
   print(wd.date_txt);
   print("     ");
   print(wd.time_txt);
 
   // city
-  gotoxy(1,y-1);
+  gotoxy(1,y-2);
   print(l.city);
   print("\n ");
   print(l.region_code);
   print(" ");
   print(l.country_code);
-  print("\n ");
+  print("\n\n ");
   print(wd.description);
   gotoxy(0,y+4);
 
@@ -331,6 +331,7 @@ void weather(void)
   gotoxy(x-7,y);
   print(wd.feels_like);
 
+  print("\n\n\n\n");
   print(" PRESSURE: ");
   print(wd.pressure);
   print("\n\n");
