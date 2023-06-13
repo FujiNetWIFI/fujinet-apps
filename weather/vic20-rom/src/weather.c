@@ -305,22 +305,18 @@ void weather(void)
   clrscr();
   cbm_k_bsout('\x92');
   weather_get();
-  
-  // Date/time
-  gotoxy(1,1);
-  print(wd.date_txt);
-  print("  ");
-  print(wd.time_txt);
 
-  // Icon
   y=3;
   x=17;
-  weather_icon(wd.icon);
-  gotoxy(x-7,y);
-  print(wd.feels_like);
+
+  // Date/time
+  gotoxy(0,1);
+  print(wd.date_txt);
+  print("     ");
+  print(wd.time_txt);
 
   // city
-  gotoxy(1,y);
+  gotoxy(1,y-1);
   print(l.city);
   print("\n ");
   print(l.region_code);
@@ -329,6 +325,11 @@ void weather(void)
   print("\n ");
   print(wd.description);
   gotoxy(0,y+4);
+
+  // Icon
+  weather_icon(wd.icon);
+  gotoxy(x-7,y);
+  print(wd.feels_like);
 
   print(" PRESSURE: ");
   print(wd.pressure);
