@@ -57,7 +57,7 @@ the screen editor (E:) device output to also go to #FujiNet's built-in
 S.A.M. speech synthesizer, essentially giving you a screen reader
 
 #### `Lobby`
-The FujiNet Game Lobby Client displays a real time list of online game servers. Choose a server and the Lobby will download and mount the correct client and reboot, so you can play! The goal is to expand this to all platforms.
+The goal of the Lobby is to make it easy to find and play online games that span multiple platforms. The FujiNet Game Lobby Client displays a real time list of online game servers. Choose a server and the Lobby will download and mount and boot the correct client, after storing the server details in an **AppKey**. The client will read the **AppKey**, connect to the server, and start the game.
 ![Lobby Screenshot](images/atari/lobby.png)
 
 #### `RA8`, `RA8KEY`, `RA8-win` (Work in progress)
@@ -70,6 +70,11 @@ RA8-win- Windows user interface
 ![Remote Atari](images/atari/RA8.png)
 
 ### Atari 8-bit Games
+
+#### `5cardstud` [(Work in Progress)](5cardstud/atari)
+This is an implimentation of a client for "5 Card Stud", written in FastBasic. It demonstrates using FujiNet to read/write **AppKeys** and parse **JSON** to communicate with the 5 Card Server. Code to the server can be browsed at [here](https://github.com/FujiNetWIFI/servers/tree/main/5cardstud/server/mock-server).
+![5 Card Stud](images/atari/5card.png)
+
 
 #### `Capture_the_Flag` (Work in Progress)
 This is a version of Sirius Software's "Capture the Flag" that is being
