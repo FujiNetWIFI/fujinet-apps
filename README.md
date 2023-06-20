@@ -56,6 +56,10 @@ A handler that can be loaded at boot in any Atari DOS, to redirect
 the screen editor (E:) device output to also go to #FujiNet's built-in
 S.A.M. speech synthesizer, essentially giving you a screen reader
 
+#### `Lobby`
+The FujiNet Game Lobby Client displays a real time list of online game servers. Choose a server and the Lobby will download and mount the correct client and reboot, so you can play! The goal is to expand this to all platforms.
+![Lobby Screenshot](images/atari/lobby.png)
+
 #### `RA8`, `RA8KEY`, `RA8-win` (Work in progress)
 Remote Atari 8-bit 
 A poor man equivalent of remote desktop on windows, but for the Atari 8-bit system.
