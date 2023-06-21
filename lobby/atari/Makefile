@@ -27,16 +27,18 @@ CONFIG  :=
  
 # Additional C compiler flags and options.
 # Default: none
-CFLAGS  =
+#CFLAGS = --debug-info
+CFLAGS =
  
 # Additional assembler flags and options.
 # Default: none
-ASFLAGS =
+ASFLAGS = 
  
 # Additional linker flags and options.
 # Default: none
+# LDFLAGS = --debug-info -Wl --dbgfile,lobby.dbg
 LDFLAGS =
- 
+
 # Path to the directory containing C and ASM sources.
 # Default: src
 SRCDIR :=

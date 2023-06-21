@@ -1,7 +1,8 @@
+
 /**
  * @brief   Lobby program for #FujiNet
- * @author  Thomas Cherryhomes
- * @email   thom dot cherryhomes at gmail dot com
+ * @author  Thomas Cherryhomes, Eric Carr
+ * @email   thom dot cherryhomes at gmail dot com,  eric dot carr at gmail dot com
  * @license gpl v. 3
  */
 
@@ -19,11 +20,10 @@
 #define APP_ID     0x01   /* LOBBY    */
 #define KEY_ID     0x00   /* USERNAME */
 #define SERVER     "N:TCP://IRATA.ONLINE:1512/"
-#define LOBBY_ENDPOINT "N:HTTP://192.168.2.41:8080/view?platform=atari"
-#define PAGE_SIZE  10   /* # of results to show per page of servers */
+#define LOBBY_ENDPOINT "N:http://lobby.rogersm.net:8080/view?platform=atari"
+#define PAGE_SIZE  6   /* # of results to show per page of servers */
 #define SCREEN_WIDTH 40
-
-
+  
 unsigned char username[64];
 void* old_vprced;               // old PROCEED vector, restored on exit.
 bool old_enabled=false;         // were interrupts enabled for old vector
@@ -32,37 +32,35 @@ unsigned short bw=0;            // # of bytes waiting.
 unsigned char rx_buf[4096];     // RX buffer.
 unsigned char tx_buf[128];      // TX buffer.
 unsigned char txbuflen;         // TX buffer length
-unsigned char i;
 unsigned char trip=0;           // if trip=1, fujinet is asking us for attention.
-bool echo = true;
 unsigned char buf[128];         // Temporary buffer use
 extern void ih();               // defined in intr.s
-bool skip_offline_check = false;
-bool skip_server_instructions = false;
 
-unsigned char key;
-unsigned char selected_server = 0;
-unsigned char server_count = 0;
+bool skip_offline_check = false;        // Do not check if server is offline before mounting the client
+bool skip_server_instructions = false;  // Do not show mount instructions
+
+unsigned char server_count = 0;       // Number of servers available
+unsigned char selected_server = 0;    // Currently selected server
+
 
 const char error_138[]="FUJINET NOT RESPONDING\x9B";
 const char error_139[]="FUJINET NAK\x9b";
 const char error[]="SIO ERROR\x9b"; 
-
+ 
 char host_slots[FUJI_HOST_SLOT_COUNT][FUJI_HOST_SLOT_NAME_LENGTH];
 char instance_endpoint[64];
 
 typedef struct {
-  unsigned char id;
-  unsigned char game_type;
-  char * game;
-  char * server;
-  char * url;
-  char * client_url;
-  char * region;
-  unsigned char online;
-  unsigned char players;
-  unsigned char max_players;
-  unsigned short ping_age;
+  unsigned char game_type;    // 3 json chars max
+  char * game;                // 12 
+  char * server;              // 32 
+  char * url;                 // 64 
+  char * client_url;          // 64 
+  char * region;              // 2 
+  unsigned char online;       // 1
+  unsigned char players;      // 3
+  unsigned char max_players;  // 3
+  unsigned short ping_age;    // 5
 } ServerDetails;
 
 ServerDetails serverList[PAGE_SIZE];
@@ -75,7 +73,7 @@ void pause(void)
   revers(0);
   cputs(" to continue.");
   cgetc();
-}
+} 
 
 /**
  * @brief The initial banner 
@@ -89,7 +87,7 @@ void banner(void)
 void term(void)
 {
   unsigned char err;
-
+  unsigned char i;
   running = true;
   
   //printf("\n** Hold OPTION to mount ** \n\n\");
@@ -106,8 +104,8 @@ void term(void)
 	  {
 	    nwrite(SERVER,tx_buf,strlen((char *)tx_buf));
 	    nwrite(SERVER,"\x9b",1);
-	  }
-      }
+	  } 
+    } 
     
     if (trip==0) // is nothing waiting for us?
       continue;
@@ -229,10 +227,13 @@ void display_servers(int old_server)
   printf("________________________________________");
   gotoxy(0,21);
   if (server_count>0) {
-    revers(1); cputs("SELECT"); revers(0);
-    printf(" a server, ");
+    //printf("Select a server, ");
+    //revers(1); cputs("OPTION"); revers(0);
+    //printf(" to boot client\n\n");
+
+    printf("Pick a server, hold ");
     revers(1); cputs("OPTION"); revers(0);
-    printf(" to boot client\n\n");
+    printf(" to boot game\n\n");
   }
   revers(1); cputs("R"); revers(0);
   printf("efresh list - ");
@@ -246,56 +247,66 @@ void refresh_servers()
 { 
   int data_len;
   char *key, *value;
-  unsigned char i;
+  signed char i;
+  bool lobby_error = false;
 
   skip_server_instructions = false;
-  
-  cursor(0);
+  server_count = 0;  
 
+  cursor(0);
+  
   if (
     (njsonparse(LOBBY_ENDPOINT, 2)) != SUCCESS ||
     (njsonquery(LOBBY_ENDPOINT, "N:\x9b")) != SUCCESS ||
     nstatus(LOBBY_ENDPOINT) > 128 ||
     (data_len = (OS.dvstat[1] << 8) + OS.dvstat[0]) == 0
-  )
-  {
-      nstatus(LOBBY_ENDPOINT);
-      printf("Could not query Lobby.\nError: %u\n",OS.dvstat[3]);
-      pause();
-      exit(1);
-  }
-  
-  if (data_len>sizeof(rx_buf))
-      data_len=sizeof(rx_buf);
+  ) {
+    lobby_error = true;
+  } else {
+    if (data_len>sizeof(rx_buf))
+        data_len=sizeof(rx_buf);
 
-  i = nread(LOBBY_ENDPOINT, rx_buf, data_len);
-  i=-1;
+    if (nread(LOBBY_ENDPOINT, rx_buf, data_len) != 1) {
+      lobby_error = true;
+    } else {
+      
+      key = strtok(rx_buf, "\n");
+      i=-1;
+      while( key != NULL) {
+          value = strtok(NULL, "\n");
 
-  key = strtok(rx_buf, "\n");
-  
-  while( key != NULL ) {
-      value = strtok(NULL, "\n");
+          switch (key[0]) {
+            
+            case 'g': 
+              // Assume "g" is the first property of a new server  
+              // Only read up to the page size to avoid buffer overrun
 
-      switch (key[0]) {
-        case 'i': i++; break;
-        case 'g': serverList[i].game = strupper(value); break;
-        case 't': serverList[i].game_type = atoi(value); break;
-        case 's': serverList[i].server = value; break;
-        case 'u': serverList[i].url = value; break;
-        case 'c': serverList[i].client_url = value; break;
-        case 'r': serverList[i].region = value; break;
-        case 'o': serverList[i].online = atoi(value); break;
-        case 'p': serverList[i].players = atoi(value); break;
-        case 'm': serverList[i].max_players = atoi(value); break;
-        case 'a': serverList[i].ping_age = value; break;
+              if (i+1 >= PAGE_SIZE)
+                break;
+
+              i++;
+              
+              serverList[i].game = strupper(value); break;
+              
+            case 't': serverList[i].game_type = atoi(value); break;
+            case 's': serverList[i].server = value; break;
+            case 'u': serverList[i].url = value; break;
+            case 'c': serverList[i].client_url = value; break;
+            case 'r': serverList[i].region = value; break;
+            case 'o': serverList[i].online = atoi(value); break;
+            case 'p': serverList[i].players = atoi(value); break;
+            case 'm': serverList[i].max_players = atoi(value); break;
+            case 'a': serverList[i].ping_age = value; 
+              
+              break;
+          }
+
+          key = strtok(NULL, "\n");
       }
-
-      key = strtok(NULL, "\n");
+      server_count = i+1;
+      nclose(LOBBY_ENDPOINT);
+    }
   }
-
-  nclose(LOBBY_ENDPOINT);
-  
-  server_count = i+1;
   
   banner();
   cputsxy(40-strlen(username),0, username);
@@ -305,7 +316,12 @@ void refresh_servers()
       selected_server = server_count-1;
     }
   } else {
-    printf("\nNo servers are online at the moment.");
+    if (lobby_error) {
+      nstatus(LOBBY_ENDPOINT);
+      printf("\nCould not query Lobby!\nError: %u\n",OS.dvstat[3]);
+    } else {
+      printf("\nNo servers are online at the moment.");
+    }
   }
 
   display_servers(-1);
@@ -373,23 +389,25 @@ void mount()
     return;
   } 
 
+  // Sanity check 2 - the game type is greater than 0
+  if (serverList[selected_server].game_type == 0) {
+    printf("ERROR: Invalid client game type. Inform the owner of the server.");
+    skip_server_instructions = false;
+    return;
+  } 
+
   // Offline warning
-  if (!skip_offline_check && serverList[selected_server].online != 1) {
+  /* Removing warning for now
+    if (!skip_offline_check && serverList[selected_server].online != 1) {
     printf("\nThis server is reportedly offline!\n\nPress ");
     revers(1);cputs("OPTION");revers(0);
     cputs(" again to try anyway.");
     skip_offline_check = true;
     skip_server_instructions = false;
     return;
-  }
+  }*/
 
-  // Sanitu check 2 - the game type is greater than 0
-  if (serverList[selected_server].game_type == 0) {
-    printf("ERROR: Invalid client game type. Inform the owner of the server.");
-    skip_server_instructions = false;
-    return;
-  }
-    
+
   // Remove the protocol for now, assume TNFS://
   if (client_path = strstr(serverList[selected_server].client_url, "://"))
     client_path+=3;
@@ -467,14 +485,14 @@ void mount()
 
 }
 
-void change_selection(char delta) 
+void change_selection(signed char delta) 
 {
     int old_server = selected_server;
 
-    if (delta<0 && selected_server == 0)
+    if (delta < 0 && selected_server == 0)
       selected_server = server_count - 1;
     else
-      selected_server = (selected_server + delta ) % server_count;
+      selected_server = (selected_server + delta) % server_count;
 
     display_servers(old_server);
 
@@ -483,21 +501,10 @@ void change_selection(char delta)
 
 void event_loop()
 {
+  signed char selection_change;
   while (true) 
-  {
-    // TODO: Use arrow keys and joystick to change selection
-    if (CONSOL_SELECT(GTIA_READ.consol)) {
-      change_selection(1);
-
-      // Wait until SELECT is released
-      while (CONSOL_SELECT(GTIA_READ.consol));
-    } 
-
-    if (CONSOL_OPTION(GTIA_READ.consol)) {
-      mount(); 
-       // Wait until OPTION is released
-      while (CONSOL_OPTION(GTIA_READ.consol));
-    }
+  { 
+    selection_change = CONSOL_SELECT(GTIA_READ.consol) ? 1 : 0;
 
     if (kbhit()) {
       switch (cgetc()) {
@@ -510,9 +517,29 @@ void event_loop()
         case 'r':
         case 'R':
           refresh_servers();
+          break;
+        case 0x1C:
+        case '-':
+          selection_change = -1;
+          break;
+        case 0x1D:
+        case '=':
+          selection_change = 1;
+          break;
       }
     }
 
+    // Arrow keys select the server
+    if ( selection_change != 0 ) {
+      change_selection(selection_change);
+    } 
+
+    // Pressing Option mounts the client for the server
+    if (CONSOL_OPTION(GTIA_READ.consol)) {
+      mount(); 
+       // Wait until OPTION is released
+      while (CONSOL_OPTION(GTIA_READ.consol));
+    }
     
   }
 }
