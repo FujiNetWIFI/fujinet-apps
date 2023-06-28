@@ -63,6 +63,9 @@ void main(void)
 {
   clrscr();
 
+  cbm_open(15,12,15,"settrans,2,4");
+  cbm_close(15);
+  
   // Open connections to cmd and endpoint
   cbm_open(LFN,DEV,SAN,"BOOTCPM");
 
