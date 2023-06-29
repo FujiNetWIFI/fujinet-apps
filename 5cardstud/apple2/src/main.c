@@ -1,13 +1,11 @@
 #include <apple2.h>
-#include <tgi.h>
 #include <conio.h>
+#include "hires.h"
 
 void main(void)
 {
-  tgi_install(tgi_static_stddrv);
-  tgi_init();
-  tgi_clear();
-  tgi_setpixel(100,100);
+  hires_Init();
+  hires_Mask(0,0,559,191,ROP_CONST(0x2A));
   cgetc();
-  tgi_done();
+  hires_Done();
 }
