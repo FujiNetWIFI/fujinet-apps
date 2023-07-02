@@ -745,7 +745,7 @@ PROC ViewHowToPlay
   @DrawBuffer
   @PrintAt 7,25, &"PRESS ANY KEY TO CONTINUE"
 
-  @DrawBuffer
+  @DrawBufferEnd
   get k
   @ResetScreen
   
