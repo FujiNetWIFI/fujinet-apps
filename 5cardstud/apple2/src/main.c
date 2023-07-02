@@ -2,10 +2,19 @@
 #include <conio.h>
 #include "hires.h"
 
+unsigned i;
+
 void main(void)
 {
+
   hires_Init();
-  hires_Mask(0,0,559,191,ROP_CONST(0x2A));
+   
+   for (i=0;i<39;++i) {
+    hires_Mask(i,0,1,192,0xa92A);
+    hires_Mask(++i,0,1,192,0xa955);
+  }
+
   cgetc();
   hires_Done();
 }
+
