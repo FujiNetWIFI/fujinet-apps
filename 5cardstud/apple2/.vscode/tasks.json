@@ -1,0 +1,9 @@
+   {
+      "label": "Build",
+      "type": "shell",
+      "command": "./build ${file}",
+      "group": {
+         "kind": "build",
+         "isDefault": true
+      }
+    } 
