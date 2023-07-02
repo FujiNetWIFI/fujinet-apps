@@ -19,7 +19,7 @@ endif
 AK_CREATOR_ID = 1     ' FUJINET
 AK_APP_ID  = 1        ' Lobby Enabled Game
 AK_KEY_USERNAME = 0   ' Lobby owned Username
-AK_KEY_SERVER = 1     ' 5 Card Stud registered as game type 1
+AK_KEY_SERVER = 1     ' 5 Card Stud Client registered as game type 1
 
 DATA NAppKeyBlock()=0,0,0
 
@@ -100,7 +100,6 @@ dim charBuffer(1023) BYTE
 
 ' State related variables
 dim validMoveCount, playerCount, currentCard, xOffset, requestedMove$, previousPot, playerJustMoved, prevPlayerCount
-wasViewing = -1
 
 ' Other varibles
 DIM Screen,__print_inverse, move_color, __print_reverse, noAnim, cursorY, cursorX, errorCount
@@ -129,8 +128,6 @@ DATA playerCountIndex() = 0,4,0,0,0,0,0,0, 0,2,6,0,0,0,0,0, 0,2,4,6,0,0,0,0,
 '       5                6                 7                8
 DATA  = 0,2,3,5,6,0,0,0, 0,2,3,4,5,6,0,0,  0,2,3,4,5,6,7,0, 0,1,2,3,4,5,6,7
 
-' Set this to a high number to 
-waitCount=-1
 
 ' ============================================================================
 ' (Utility Functions) Convert string to upper case, replace character in string
@@ -311,7 +308,7 @@ PROC SetError text
   ' Expect occasional failure. Retry silently the first time
   if errorCount=1 then exit
 
-  if errorCount<5
+  if errorCount<7
     @PrintAt 0,25, &"CONNECTING TO SERVER z"
     @PrintSpaceRest
     exit
@@ -708,8 +705,11 @@ ENDPROC
 
 PROC SelectTable
 
-  prevRound=99
-  prevPlayerCount=0
+  ' Reset some variables
+  prevRound = 99
+  prevPlayerCount = 0
+  wasViewing = -1
+  waitCount=-1
 
   if query$=""
     
@@ -834,7 +834,7 @@ ENDPROC
 PROC CheckIfSpectatorStatusChanged
   if viewing = wasViewing then exit
   wasViewing = viewing
-
+   
   if viewing
     @PrintAt 0,25, &"TABLE FULL: WATCHING AS A SPECTATOR"
     @PrintSpaceRest
@@ -1269,8 +1269,10 @@ PROC WaitOnPlayerMove
   text_color(2) = $0
 
   ' Draw the moves and store the locations and player bits
+  
   @POS 1,25
   x=0
+
   for i=0 to validMoveCount-1
     move_loc(i) = x
     @Print &validMove$(i)
@@ -1286,9 +1288,9 @@ PROC WaitOnPlayerMove
   next 
 
   ' Setup move player line indicator
-  move = validMoveCount>0
+  move = validMoveCount>1
   x = 52+4*move_loc(move)
-  @MoveHighlightToLocation x, 235, len(validMove$(1))
+  @MoveHighlightToLocation x, 235, len(validMove$(move))
   x=cursorX
 
  ' Fade in moves and play ding-ding sound
