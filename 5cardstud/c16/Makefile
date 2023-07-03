@@ -47,7 +47,7 @@ OBJDIR :=
 
 # Command used to run the emulator.
 # Default: depending on target platform. For default (c16) target: x64 -kernal kernal -VICIIdsize -autoload
-EMUCMD := x64sc -model c16ntsc -autostart 
+EMUCMD := xplus4 -model c16ntsc -autostart 
 
 # Optional commands used before starting the emulation process, and after finishing it.
 # Default: none
