@@ -4,30 +4,32 @@
 '' @email   eric dot carr at gmail dot com
 '' @license gpl v. 3
 
+' FujiNet AppKey settings. These should not be changed
+AK_LOBBY_CREATOR_ID = 1     ' FUJINET Lobby
+AK_LOBBY_APP_ID  = 1        ' Lobby Enabled Game
+AK_LOBBY_KEY_USERNAME = 0   ' Lobby Username key
+AK_LOBBY_KEY_SERVER = 1     ' 5 Card Stud Client registered as Lobby appkey 1
+
+' 5 Card Stud client
+AK_CREATOR_ID = $E41C       ' Eric Carr's creator id
+AK_APP_ID = 1               ' 5 Card/Poker App ID
+AK_KEY_SHOWHELP = 0         ' Shown help
+
+DATA NAppKeyBlock()=0,0,0
 
 ' Disable BASIC on XL/XE to make more memory available.
 if dpeek(741)-$BC00<0
   ' Disable BASIC
-  poke $D301, peek($D301) ! 2
-  poke $3F8, 1
+  pause: poke $D301, peek($D301) ! 2: poke $3F8, 1
   ' Set memtop to 48K
   dpoke 741, $BC00
 endif
-
-
-' FujiNet AppKey settings. These should not be changed
-AK_CREATOR_ID = 1     ' FUJINET
-AK_APP_ID  = 1        ' Lobby Enabled Game
-AK_KEY_USERNAME = 0   ' Lobby owned Username
-AK_KEY_SERVER = 1     ' 5 Card Stud registered as game type 1
-
-DATA NAppKeyBlock()=0,0,0
 
 ' Read server endpoint stored from Lobby
 serverEndpoint$=""
 query$=""
 
-@NReadAppKey AK_CREATOR_ID, AK_APP_ID, AK_KEY_SERVER, &serverEndpoint$
+@NReadAppKey AK_LOBBY_CREATOR_ID, AK_LOBBY_APP_ID, AK_LOBBY_KEY_SERVER, &serverEndpoint$
 
 ' Parse endpoint url into server and query
 if serverEndpoint$<>""
@@ -100,7 +102,6 @@ dim charBuffer(1023) BYTE
 
 ' State related variables
 dim validMoveCount, playerCount, currentCard, xOffset, requestedMove$, previousPot, playerJustMoved, prevPlayerCount
-wasViewing = -1
 
 ' Other varibles
 DIM Screen,__print_inverse, move_color, __print_reverse, noAnim, cursorY, cursorX, errorCount
@@ -129,8 +130,6 @@ DATA playerCountIndex() = 0,4,0,0,0,0,0,0, 0,2,6,0,0,0,0,0, 0,2,4,6,0,0,0,0,
 '       5                6                 7                8
 DATA  = 0,2,3,5,6,0,0,0, 0,2,3,4,5,6,0,0,  0,2,3,4,5,6,7,0, 0,1,2,3,4,5,6,7
 
-' Set this to a high number to 
-waitCount=-1
 
 ' ============================================================================
 ' (Utility Functions) Convert string to upper case, replace character in string
@@ -204,7 +203,7 @@ PROC PrintSpace text __len
 ENDPROC
 
 ' ============================================================================
-' Core Printing routine. Converts frmo ATASCII to INTERNAL, handling inverted, alphanumeric and a few other supported characters
+' Core Printing routine. Converts from ATASCII to INTERNAL, handling inverted, alphanumeric and a few other supported characters
 PROC Print text
   if __print_reverse then __loc = __loc - peek(text)+1
   ' Go through each character and convert from ATASCII to INTERNAL, then poke to memory to draw it
@@ -217,6 +216,7 @@ PROC Print text
       _code= _code - 32
       if _code = 12 : _code=116 ' Handle comma
       elif _code = 13 : _code=125  ' Handle hyphen
+      elif _code = 14 : _code=115  ' Handle period
       elif _code = 15 : _code=124  ' Handle /
       endif
     elif _code<128
@@ -311,7 +311,7 @@ PROC SetError text
   ' Expect occasional failure. Retry silently the first time
   if errorCount=1 then exit
 
-  if errorCount<5
+  if errorCount<7
     @PrintAt 0,25, &"CONNECTING TO SERVER z"
     @PrintSpaceRest
     exit
@@ -643,7 +643,7 @@ PROC WelcomeScreen
   pause 1
 
   ' Read player's name from app key
-  @NReadAppKey AK_CREATOR_ID, AK_APP_ID, AK_KEY_USERNAME, &myName$
+  @NReadAppKey AK_LOBBY_CREATOR_ID, AK_LOBBY_APP_ID, AK_LOBBY_KEY_USERNAME, &myName$
   @ToUpper(&myName$)
  
   ' Ask player for name if it is not yet populated
@@ -688,7 +688,8 @@ PROC WelcomeScreen
 
 
     ' Name has been captured. Save to app key and show welcome text
-    @NWriteAppKey AK_CREATOR_ID, AK_APP_ID, AK_KEY_USERNAME, &myName$
+    @NWriteAppKey AK_LOBBY_CREATOR_ID, AK_LOBBY_APP_ID, AK_LOBBY_KEY_USERNAME, &myName$
+
   endif
 
   for n=15 to 19
@@ -696,6 +697,17 @@ PROC WelcomeScreen
   next
   @POS 16-len(myname$)/2,15:@Print &"WELCOME ":@Print &myname$
   @ShowScreen
+
+  ' If the very first run, show the help screen
+  temp$=""
+  @NReadAppKey AK_CREATOR_ID, AK_APP_ID, AK_KEY_SHOWHELP, &temp$
+  if len(temp$)=0
+    temp$="1"
+    @NWriteAppKey AK_CREATOR_ID, AK_APP_ID, AK_KEY_SHOWHELP, &temp$
+    pause 60
+    @ViewHowToPlay
+  endif
+
 ENDPROC
 
 PROC QuitGame
@@ -706,10 +718,47 @@ PROC QuitGame
   i=usr(&""$4C$77$E4+1)
 ENDPROC
 
+PROC ViewHowToPlay
+  ' This COULD retrieve from the server. Hard coded for now.
+  @EnableDoubleBuffer
+  @ClearStatusBar:@HidePlayerSecretCardMask':@EnableDoubleBuffer
+  @ResetScreen:@DrawBorder
+  @DrawBuffer
+  y=4
+  @PrintAt 8,3, &"HOW TO PLAY 5 CARD STUD"
+  @DrawBuffer
+                      ' __________________________________
+  inc y:@PrintAt 3,y, &"PLAYERS ARE DEALT 5 CARDS OVER THE"
+  inc y:@PrintAt 3,y, &"COURSE OF 4 ROUNDS. ON EACH ROUND"
+  inc y:@PrintAt 3,y, &"PLAYERS BET, CALL, AND RE-RAISE."
+  @DrawBuffer
+  INC Y
+  inc y:@PrintAt 18,y, &"MOVES"
+  INC Y
+  inc y:@PrintAt 3,y, &"FOLD   x QUIT THE HAND":inc y
+  inc y:@PrintAt 3,y, &"CHECK  x FREE PASS":inc y
+  inc y:@PrintAt 3,y, &"BET OR x INCREASE BET. OTHERS MUST"
+  inc y:@PrintAt 3,y, &"RAISE    CALL TO STAY IN THE HAND":inc y
+  inc y:@PrintAt 3,y, &"CALL   x MATCH THE CURRENT BET AND"
+  inc y:@PrintAt 3,y, &"         STAY IN THE HAND" 
+  
+  @DrawBuffer
+  @PrintAt 7,25, &"PRESS ANY KEY TO CONTINUE"
+
+  @DrawBufferEnd
+  get k
+  @ResetScreen
+  
+ENDPROC
+
+
 PROC SelectTable
 
-  prevRound=99
-  prevPlayerCount=0
+  ' Reset some variables
+  prevRound = 99
+  prevPlayerCount = 0
+  wasViewing = -1
+  waitCount=-1
 
   if query$=""
     
@@ -752,10 +801,10 @@ PROC SelectTable
         @PrintAt 5,12, &"SORRY, NO TABLES ARE AVAILABLE"
       endif
       @PrintAt 0,25, &"":@PrintSpaceRest
-      @PrintAt 9,25, &"Rx REFRESH     Qx QUIT"
+      @PrintAt 0,25, &"Rx REFRESH     Hx HOW TO PLAY    Qx QUIT"
       
       ' Clear out any queued key presses
-      while key() : get k:wend
+      @ClearKeyQueue
       prevInputDir=0:inputDir=0:inputTrigger=0:j=20:chipColor=0
 
       if playerCount > 0 then @PrintAt 3, 9+index*2, &"o"
@@ -788,6 +837,9 @@ PROC SelectTable
         elif k=82 
           ' R - refresh list
           exit
+        elif k=72 ' H - how to play
+          @ViewHowToPlay
+          exit
         endif
 
       until inputTrigger and playerCount > 0
@@ -802,7 +854,7 @@ PROC SelectTable
         temp$ =+ query$
 
         ' Update server app key in case of reboot 
-        @NWriteAppKey AK_CREATOR_ID, AK_APP_ID, AK_KEY_SERVER, &temp$
+        @NWriteAppKey AK_LOBBY_CREATOR_ID, AK_LOBBY_APP_ID, AK_LOBBY_KEY_SERVER, &temp$
 
         @ResetScreen
         @DrawBorder
@@ -834,7 +886,7 @@ ENDPROC
 PROC CheckIfSpectatorStatusChanged
   if viewing = wasViewing then exit
   wasViewing = viewing
-
+   
   if viewing
     @PrintAt 0,25, &"TABLE FULL: WATCHING AS A SPECTATOR"
     @PrintSpaceRest
@@ -854,15 +906,15 @@ PROC CheckIfSpectatorStatusChanged
     for vol=8 to 0 step -1: sound 0,65,10,vol:pause 1:next
     sound
     pause 50  
+   
   endif
   
 ENDPROC
 
 PROC CheckIfPlayerCountChanged
 
-
   if playerCount <> prevPlayerCount
-
+    
     ' Handle if player joins mid game
     if playerCount>1 and prevPlayerCount > 0 
       @ClearStatusBar
@@ -897,6 +949,10 @@ PROC CheckIfPlayerCountChanged
 
     prevPlayerCount = playerCount
     
+    ' Don't shuffle player locations until
+    ' multple players exist
+    if playerCount<2 then exit
+
     i=0
     for j=(playerCount-2)*8 to (playerCount-2)*8+7
       n=playerCountIndex(j)
@@ -1102,9 +1158,11 @@ PROC UpdateScreen
   @ResetStateIfNewGame
 
   @RenderPot
-  @RenderNamePurse
-  @RenderBets  
-  @RenderCards
+  if playerCount>1
+    @RenderNamePurse
+    @RenderBets  
+    @RenderCards
+  endif
   @RenderGameStatus
   
   @DrawBufferEnd
@@ -1269,8 +1327,10 @@ PROC WaitOnPlayerMove
   text_color(2) = $0
 
   ' Draw the moves and store the locations and player bits
+  
   @POS 1,25
   x=0
+
   for i=0 to validMoveCount-1
     move_loc(i) = x
     @Print &validMove$(i)
@@ -1286,9 +1346,9 @@ PROC WaitOnPlayerMove
   next 
 
   ' Setup move player line indicator
-  move = validMoveCount>0
+  move = validMoveCount>1
   x = 52+4*move_loc(move)
-  @MoveHighlightToLocation x, 235, len(validMove$(1))
+  @MoveHighlightToLocation x, 235, len(validMove$(move))
   x=cursorX
 
  ' Fade in moves and play ding-ding sound
@@ -1310,7 +1370,7 @@ PROC WaitOnPlayerMove
   POKE 731,255
 
   ' Clear out any queued key presses
-  while key() : get k:wend
+  @ClearKeyQueue
 
   ' Determine jiffies per second (60 NTSC, 50 for PAL)
   jifsPerSec = 60-(PEEK(53268)=1)*10
@@ -1453,12 +1513,14 @@ proc AskToLeave
   
   @EnableDoubleBuffer
   
-  x=8:Y=7
+  x=8:Y=5
 
   INC Y:@PrintAt x,y, &";@@@@@@@@@@@@@@@@@@@@@<"
   INC Y:@PrintAt x,y, &"?"$19:@PrintAt x+22,y, &"?"
   INC Y:@PrintAt x,y, &"?":@PrintAt x+22,y, &"?"
   INC Y:@PrintAt x,y, &"?    Q: QUIT TABLE    ?"
+  INC Y:@PrintAt x,y, &"?":@PrintAt x+22,y, &"?"
+  INC Y:@PrintAt x,y, &"?    H: HOW TO PLAY   ?"
   INC Y:@PrintAt x,y, &"?":@PrintAt x+22,y, &"?"
   INC Y:@PrintAt x,y, &"?  ESC: KEEP PLAYING  ?"
   INC Y:@PrintAt x,y, &"?":@PrintAt x+22,y, &"?"
@@ -1468,21 +1530,22 @@ proc AskToLeave
   @DrawBorder
   @DrawBufferEnd
 
-  ' Clear out any queued key presses
-  while key() : get k:wend
-  
+  @ClearKeyQueue
+
   do
-    get k
+    @GetKeyPress
     
-    
-    if k=76 or k=81   ' L - leave table
+    if k=72 ' H - how to play
+      @ViewHowToPlay
+      exit
+    elif k=76 or k=81   ' Q/L - leave table
       @EnableDoubleBuffer
       @ResetScreen
       @DrawBorder
       @DrawBufferEnd
 
       ' Clear server app key in case of reboot 
-      @NWriteAppKey AK_CREATOR_ID, AK_APP_ID, AK_KEY_SERVER, &""
+      @NWriteAppKey AK_LOBBY_CREATOR_ID, AK_LOBBY_APP_ID, AK_LOBBY_KEY_SERVER, &""
 
       ' Inform server player is leaving
       @PrintAt 15,11, &"PLEASE WAIT"
@@ -1625,14 +1688,14 @@ data byte = 0,48,116,220,220,220,116,48,
 data byte = 0,48,184,236,236,236,184,48,
 data byte = 0,40,170,170,174,174,40,0,
 data byte = 0,40,170,170,186,186,40,0,
-data byte = 0,32,236,184,184,184,236,32,
+data byte = 0,0,0,0,0,32,32,0,
 data byte = 0,0,0,0,0,32,32,128,
 data byte = 170,170,85,0,0,0,164,169,
 data byte = 0,148,164,164,164,164,164,148,
 data byte = 0,124,92,92,92,92,92,124,
 data byte = 0,0,0,32,24,20,28,48,
 data byte = 0,0,0,32,144,80,208,48,
-data byte = 0,40,138,138,129,170,170,40,
+data byte = 0,40,138,138,130,170,170,40,
 data byte = 255,215,215,215,255,0,102,153,
 data byte = 0,8,8,32,32,32,128,128,
 data byte = 0,0,0,0,168,0,0,0,
@@ -1643,7 +1706,7 @@ data byte = 0,0,0,0,0,0,0,0
 ' ============================================================================
 ' Call to show the screen, or occasionally to stop Atari attract/screensaver color mode from occuring
 PROC ShowScreen
-  poke 77,0:poke 559,46+16
+  poke 77,0:pause:poke 559,46+16
 ENDPROC
 
 
@@ -1688,6 +1751,24 @@ PROC ClearStatusBar
   mset &screenBuffer+40*25, 40,0
 ENDPROC
 
+PROC ClearKeyQueue
+  ' Clear out any queued key presses
+  while key() : get k:wend
+ENDPROC
+
+' Fills K value in with keypress
+' Sets K to "H" if "HELP" consol key pressed
+PROC GetKeyPress
+  if peek(732)=17 or key() 
+    if peek(732)=17
+      k = 72: poke 732,0
+    else
+      get K 
+    endif
+  else
+    K = 0
+  endif
+ENDPROC
 
 ' ============================================================================
 ' Init screen/graphics - leaves screen blank. ShowScreen must be called afer
@@ -1752,7 +1833,6 @@ PROC InitScreen
   ' Copy the display list from the string to memory.
   displayList = &DL$+1
   dpoke displayList+len(DL$)-2,displayList
-  dpoke 560, displayList
 
   ' Tell the display list the new location of the screen buffer
   dpoke displayList+3,&screenBuffer
@@ -1760,6 +1840,9 @@ PROC InitScreen
   ' Use DLI to change the text/background colors of the bottom status rows
   DLISET dli_colors = background_color INTO $D01A, text_color INTO $D017
   DLI dli_colors
+
+  ' Enable the new Display list
+  dpoke 560, displayList
 
   ' Reset the screen
   @ResetScreen
@@ -1786,6 +1869,7 @@ PROC SetStatusBarHeight __height
   
 ENDPROC
 
+
 @InitScreen
 @WelcomeScreen
 @SelectTable
@@ -1804,9 +1888,8 @@ do
 
   if len(requestedMove$)=0 then pause 20
 
-  if key() 
-    get K 
-
+  @GetKeyPress
+  if k
     if k=27 
       @ResetScreenBuffered
       @AskToLeave
@@ -1815,6 +1898,8 @@ do
       else
         @UpdateScreen
       endif
+    elif k=72 ' H
+      @ViewHowToPlay
     endif
   endif
 
