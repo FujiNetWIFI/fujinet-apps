@@ -5,7 +5,7 @@
 void main(void)
 {
   hires_Init();
-  hires_Mask(0,0,559,191,ROP_CONST(0x2A));
+  hires_Fill();
   cgetc();
   hires_Done();
 }
