@@ -4,13 +4,19 @@
 #include "background.h"
 #include "charset.h"
 
-unsigned i;
+int i;
 
 void main(void)
 {
   hires_Init();
   background();
-  hires_Draw(0,0,1,8,ROP_OR(0x2A),&charset[0x208]);
+
+  for (i='A';i<'I';i++)
+    {
+      int o = i << 3;
+      hires_Draw(i-'A',0,1,8,ROP_OR(0x2A),&charset[o]);
+    }
+  
   cgetc();
   hires_Done();
 }
