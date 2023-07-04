@@ -11,9 +11,7 @@ void main(void)
 {
   hires_Init();
   background();
-
-  hires_puts(0,0,ROP_INV,"HELLO WORLD");
-  
+  status("HI ERIC IT WORKS YEAH\nSECOND LINE");
   cgetc();
   hires_Done();
 }
