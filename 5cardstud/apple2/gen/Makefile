@@ -1,5 +1,7 @@
-.phony: all
+.phony: all clean
 
 all: 
-	gcc -ogencards gencards.c
-
+	gcc -ogencharset gencharset.c
+	rm -rf charset
+	./gencharset
+	xxd -i charset >../src/charset.h
