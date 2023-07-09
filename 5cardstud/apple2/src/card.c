@@ -15,11 +15,11 @@
  */
 void card(unsigned char x, unsigned char y, Card c, Suit s)
 {
-
-  /* hires_putc(x,y,ROP_XOR(0),0x05); */
-
+  hires_putc(x,y,ROP_XOR(0),0x09);
+  hires_putc(x+1,y,ROP_XOR(0),0x0A);
+  
   // Card body
-  hires_Mask(x,y,2,24,ROP_WHITE);
+  /* hires_Mask(x,y,2,24,ROP_WHITE); */
 
   
   
