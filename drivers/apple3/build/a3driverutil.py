@@ -391,7 +391,7 @@ elif args.command == 'add':
     if i == -1:
         #not found, lets add
         trimmed_sosdriver = sosdriverfile[0:driver_end]  #trim of the 0xFFFF end marker
-        newsosdriverfile = trimmed_sosdriver + driver + chr(0xFF) + chr(0xFF)
+        newsosdriverfile = trimmed_sosdriver + driver + b'\xFF' + b'\xFF'
         
         sosdriver = open(sos_file,'wb')      #write it back out, overwriting the old one
         sosdriver.write(newsosdriverfile)      
