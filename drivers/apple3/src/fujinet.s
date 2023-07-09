@@ -17,6 +17,11 @@
 ;         currently the mappingis hard coded
 ;       - optimise the buffer usage (stop the double buffering to speed it up)
 ;
+; Add option to assemble just the character devices. This will work with either my
+; soshdboot disk images, or would also work with stock standard SOS1.3
+; - define symbol 'charonly' to remove the block devices
+;   Note: char unit numbers stay the same, ie from 4 onwards.
+;
 ;
 ; SmartPort driver for prodos compatible SmartPort cards
 ; This is based on the problock3 driver with some learnings aquired along the journey of
@@ -43,7 +48,7 @@
             .setcpu "6502"
             .reloc
 
-DriverVersion    = $001B      ; Version number
+DriverVersion    = $002B      ; Version number
 DriverMfgr       = $524A      ; Driver Manufacturer - RJ
 DriverType       = $E1        ; No formatter present for the time being
 DriverSubtype    = $02        ;
@@ -177,6 +182,7 @@ COMMENT_END:
 
             .SEGMENT    "DATA"
 
+.ifndef charonly
 ;------------------------------------
 ;
 ; Device identification Block (DIB) - #0
@@ -252,6 +258,8 @@ DIB3_Blks:  .word    $0000            ; # Blocks in device
             .word    DriverMfgr       ; Driver manufacturer
             .word    DriverVersion    ; Driver version
             .word    $0000            ; DCB length followed by DCB
+.endif
+
 ;
 ; Device identification Block (DIB) - #4
 ;
@@ -356,11 +364,12 @@ SIR_Tbl:    .res    $05, $00
 SIR_Len     =        *-SIR_Tbl
 MaxUnits:   .byte    $09                    ; The maximum number of units
 
+.ifndef charonly
 DCB_Idx:    .byte    $00                    ; DCB 0's blocks
             .byte    DIB1_Blks-DIB0_Blks    ; DCB 1's blocks
             .byte    DIB2_Blks-DIB0_Blks    ; DCB 2's blocks
             .byte    DIB3_Blks-DIB0_Blks    ; DCB 3's blocks
-
+.endif
 
 CardIsOK:   .byte   $00                 ; Have we found an intelligent disk controller yet?
 
@@ -523,7 +532,7 @@ DInit:      lda     CardIsOK            ; Check if we have checked for a card al
             jmp     FoundCard           ; Yes, skip signature check
 
 CheckSig:   jsr     GoSlow              ; set 1MHz, Grappler plus does not like 2M
-            lda     DIB0_Slot           ; Check configured slot for autoscan
+            lda     DIB4_Slot           ; Check configured slot for autoscan
             bpl     FixedSlot           ; No, use configured DIB1 slot
             lda     #ScanStart          ; else load starting scan slot
 FixedSlot:  ora     #$C0                ; Form a $Cs00 address, where s = slot #
@@ -553,10 +562,12 @@ CheckNext:  ldy     #$05                ; <-- hack, just check the 3 sig bytes, 
             sta     PDEntry+2           ; Set card prodos driver entry high byte
             sta     SPEntry+2           ; Set card smartport driver entry high byte
             and     #$07
+.ifndef charonly
             sta     DIB0_Slot           ; Set found slot for all DIBs
             sta     DIB1_Slot
             sta     DIB2_Slot
             sta     DIB3_Slot
+.endif
             sta     DIB4_Slot
             sta     DIB5_Slot
             sta     DIB6_Slot
@@ -568,9 +579,12 @@ CheckNext:  ldy     #$05                ; <-- hack, just check the 3 sig bytes, 
             lda     #SIR_Len
             ldx     SIR_Addr
             ldy     SIR_Addr+1
+
+.ifndef charonly    ; don't claim the SIR for charonly so we don't double up with the soshdboot driver
             jsr     AllocSIR            ; Claim SIR
             bcc     @ok2
             jmp     NoDevice
+.endif
                                         ; Lets check number of devices connected
                                         ; From P8 1.7 source:
                                         ;    the Smartportinterface does not set up
@@ -578,7 +592,7 @@ CheckNext:  ldy     #$05                ; <-- hack, just check the 3 sig bytes, 
                                         ;    Prodos Status call ; therefore, we have
                                         ;    made two calls : first a prodos status call
                                         ;    then a smartport status call
-@ok2:       lda     DIB0_Slot           ; From Prodos style drive/slot
+@ok2:       lda     DIB4_Slot           ; From Prodos style drive/slot
             asl                         ; 7 6 5 4 3 2 1 0
             asl                         ; D S S S 0 0 0 0
             asl
@@ -664,7 +678,11 @@ NoMatch:    dec     Pointer+1           ; Try next slot
 FoundCard:  jsr     CkUnit              ; Checks for unit below unit max
             jsr     CkCharDev           ; Check dev type
             bcs     notblkdev
+
+.ifndef charonly
             jsr     UpdVolSize          ; Its ok, lets Get volume size and update DIB
+.endif
+
 notblkdev:  lda     SOS_Unit
             cmp     #8                  ; if its init for clock, trigger update time
 			beq     SetupEvent
@@ -759,6 +777,7 @@ DReadGo:
             jsr     CkCharDev           ; is it a char dev?
             bcs     CharRead            ; yes, do char write
 
+.ifndef charonly
             jsr     CkCnt               ; Checks for validity, aborts if not
             lda     Num_Blks            ; Check for block count greater than zero
             beq     ReadExit
@@ -813,6 +832,7 @@ SkipReadMSBIncrement:
             sta     (QtyRead),Y
             clc
 ReadExit:   rts                         ; Exit read routines
+.endif
 
 IO_Error:   lda     #XIOERROR           ; I/O error
             jsr     SysErr              ; Return to SOS with error in A
@@ -875,6 +895,7 @@ DWriteGo:
             jsr     CkCharDev           ; is it a char dev?
             bcs     CharWrite           ; yes, do char write
 
+.ifndef charonly
             jsr     CkCnt               ; Checks for validity, aborts if not
             lda     Num_Blks            ; Check for block count greater than zero
             beq     WriteExit
@@ -925,6 +946,8 @@ SkipWriteMSBIncrement:
 
 WriteExit:  clc
             rts
+.endif
+
 
 ; character device writes
 CharWrite:  lda     #SP_Write           ; Setup SP command code
@@ -1105,13 +1128,17 @@ RSStat03:   lda     #SP_Status          ; Setup SP command code
 
 @ok2:       ldy     #0
             lda     #$FF                ; Output buffer size
-            JSR     CntOut
+            jsr     CntOut
             lda     #0                  ; Number of chars in output buffer
-            JSR     CntOut
+            jsr     CntOut
             lda     #$FF                ; Input buffer size
-            JSR     CntOut
-            lda     Buffer              ; Number of chars in input buffer (assume<256)
-            JSR     CntOut
+            jsr     CntOut
+            lda     Buffer+1            ; >256 chars waiting?
+            beq     @less256            ; no, report what we have
+            lda     #$ff                ; else, send max bytes waiting
+            bne     @grtt256            ; bra always
+@less256:   lda     Buffer              ; Number of chars in input buffer
+@grtt256:   jsr     CntOut
             rts
 
 CntOut:     sta     (CSList),Y
@@ -1397,7 +1424,7 @@ r101:       lda     Buffer,Y
 
 copied:     rts
 
-
+.ifndef charonly
 ;
 ; Check ReqCnt for block devices to ensure it is a multiple of 512.
 ;
@@ -1407,6 +1434,8 @@ CkCnt:      lda     ReqCnt              ; Look at the lsb of bytes requested
             lsr     A                   ; Put bottom bit into carry, 0 into top
             sta     Num_Blks            ; Convert bytes to number of blks to xfer
             bcc     CvtBlk              ; Carry is set from LSR to mark error.
+.endif
+
 BadCnt:     lda     #XBYTECNT
             jsr     SysErr              ; Return to SOS with error in A
 
@@ -1418,6 +1447,7 @@ CkChrCnt:   lda     ReqCnt+1            ; check msb for <3
             bcs     BadCnt              ; no good, error
             rts                         ; else, all good
 
+.ifndef charonly
 ;
 ; Test for valid block number; abort on error
 ;
@@ -1470,6 +1500,7 @@ FixUp:      lda     SosBuf+1            ; Look at msb
             sta     SosBuf+1            ; FDxx ->7Dxx
             inc     SosBuf+ExtPG        ; Bank N -> bank N+1
 @3:         rts                         ; Return carry set
+.endif
 
 CkUnit:     lda     SOS_Unit            ; Checks for unit below unit max
             cmp     MaxUnits
@@ -1512,6 +1543,7 @@ GoFast:     pha
             pla
             rts
 
+.ifndef charonly
 ;
 ; Get Volume size for Unit and update DIB
 ;
@@ -1543,6 +1575,8 @@ UpdVolSize: lda     #SP_Status          ; set command for SP call
             rts
 
 @error:     jmp     NoDevice
+
+.endif
 
 ;
 ; jsr to card prodos driver
@@ -1640,7 +1674,7 @@ SwapScrH:
             txa                         ; TXA/LSR tests whether array index is odd or even
             lsr                         ; and sets carry accordingly (1 = odd).
             tya                         ; Bring screen index into A for manipulation
-            eor     DIB0_Slot           ; Cycle page index between $x8 and $x8+n as long as N in 1..7
+            eor     DIB4_Slot           ; Cycle page index between $x8 and $x8+n as long as N in 1..7
             bcc     @loop               ; Take branch every other loop, using array index odd/even
                                         ;  (carry still valid from TXA/LSR)
             eor     #$80                ; Cycle page index between $F8 and $78
