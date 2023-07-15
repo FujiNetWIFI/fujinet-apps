@@ -317,78 +317,6 @@ void board_color(void)
 }
 
 /**
- * @brief color changing code
- */
-void colorama(void)
-{
-  unsigned char i;
-  
-  while(1)
-    {
-      switch(cgetc())
-	{
-	case 'q':
-	  board_color();
-	  break;
-	case 'a':
-	  OS.pcolr0+=2;
-	  OS.pcolr1+=2;
-	  OS.pcolr2+=2;
-	  OS.pcolr3+=2;
-	  break;
-	case 'z':
-	  OS.pcolr0-=2;
-	  OS.pcolr1-=2;
-	  OS.pcolr2-=2;
-	  OS.pcolr3-=2;
-	  break;
-	case 's':
-	  OS.color0+=2;
-	  break;
-	case 'x':
-	  OS.color0-=2;
-	  break;
-	case 'd':
-	  OS.color1+=2;
-	  break;
-	case 'c':
-	  OS.color1-=2;
-	  break;
-	case 'f':
-	  OS.color2+=2;
-	  break;
-	case 'v':
-	  OS.color2-=2;
-	  break;
-	case 'g':
-	  OS.color3+=2;
-	  break;
-	case 'b':
-	  OS.color3-=2;
-	  break;
-	case 'h':
-	  OS.color4+=2;
-	  break;
-	case 'n':
-	  OS.color4-=2;
-	  break;
-
-	case 'w':
-	  sprintf((char *)0x81E0,"%02x%02x%02x%02x%02x%02x",OS.pcolr0, OS.color0, OS.color1, OS.color2, OS.color3, OS.color4);
-	  for (i=0;i<32;i++)
-	    {
-	      if (MSG[i] < 32)
-		MSG[i] += 64;
-	      else if (MSG[i] < 96)
-		MSG[i] -= 32;
-	    }
-	  break;
-	}
-    }
-    
-}
-
-/**
  * @brief draw board
  */
 void board(void)
@@ -397,7 +325,6 @@ void board(void)
   board_color();
   board_pmg();
   board_pf();
-  colorama();
 }
 
 /**
