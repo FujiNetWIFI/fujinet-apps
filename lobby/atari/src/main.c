@@ -15,17 +15,15 @@
 #include "appkey.h"
 #include "nio.h"
 #include "fuji.h"
-#include "bar.h"
 
 #define CREATOR_ID 0x0001 /* FUJINET  */
 #define APP_ID     0x01   /* LOBBY    */
 #define KEY_ID     0x00   /* USERNAME */
-#define SERVER     "N2:TCP://fujinet.online:2323/"
-#define LOBBY_ENDPOINT "N:http://fujinet.online:8080/view?platform=atari"
-#define PAGE_SIZE  5   /* # of results to show per page of servers */
+#define SERVER     "N:TCP://IRATA.ONLINE:1512/"
+#define LOBBY_ENDPOINT "N:http://lobby.rogersm.net:8080/view?platform=atari"
+#define PAGE_SIZE  6   /* # of results to show per page of servers */
 #define SCREEN_WIDTH 40
-#define CHAT_Y 17
-
+  
 unsigned char username[64];
 void* old_vprced;               // old PROCEED vector, restored on exit.
 bool old_enabled=false;         // were interrupts enabled for old vector
@@ -37,7 +35,6 @@ unsigned char txbuflen;         // TX buffer length
 unsigned char trip=0;           // if trip=1, fujinet is asking us for attention.
 unsigned char buf[128];         // Temporary buffer use
 extern void ih();               // defined in intr.s
-extern void bar_setup_regs();   // defined in bar-setup-regs.s
 
 bool skip_offline_check = false;        // Do not check if server is offline before mounting the client
 bool skip_server_instructions = false;  // Do not show mount instructions
@@ -85,6 +82,75 @@ void banner(void)
 {
   clrscr();
   printf("#FUJINET GAME LOBBY \n\n");
+}
+
+void term(void)
+{
+  unsigned char err;
+  unsigned char i;
+  running = true;
+  
+  //printf("\n** Hold OPTION to mount ** \n\n\");
+
+  while (running==true)
+  {
+    if (kbhit())
+      {
+	memset(tx_buf,0,sizeof(tx_buf));
+	printf(">> ");
+	cursor(1);
+	gets((char *)tx_buf);
+	if (strlen((char *)tx_buf))
+	  {
+	    nwrite(SERVER,tx_buf,strlen((char *)tx_buf));
+	    nwrite(SERVER,"\x9b",1);
+	  } 
+    } 
+    
+    if (trip==0) // is nothing waiting for us?
+      continue;
+
+    // Something waiting for us, get status and bytes waiting.
+    err=nstatus(SERVER);
+
+    if (err==136)
+    {
+      printf("DISCONNECTED.\x9b");
+      running=false;
+      continue;
+    }
+    else if (err!=1)
+    {
+      printf("STATUS ERROR: %u\n",err);
+      running=false;
+      continue;
+    }
+
+    // Get # of bytes waiting, no more than size of rx_buf
+    bw=OS.dvstat[1]*256+OS.dvstat[0];
+
+    if (bw>sizeof(rx_buf))
+      bw=sizeof(rx_buf);
+    
+    if (bw>0)
+    {
+      err=nread(SERVER,rx_buf,bw);
+
+      if (err!=1)
+        {
+          printf("READ ERROR: %u\n",err);
+          running=false;
+          continue;
+        }
+
+      // Print the buffer to screen.
+      for (i=0;i<bw;i++)
+	      putchar(rx_buf[i]);
+      
+      trip=0;
+      PIA.pactl |= 1; // Flag interrupt as serviced, ready for next one.
+    } // if bw > 0
+  } // while running
 }
 
 void connectChat(void)
@@ -167,14 +233,13 @@ void display_servers(int old_server)
 
     printf("Pick a server, hold ");
     revers(1); cputs("OPTION"); revers(0);
-    printf(" to boot game\n");
+    printf(" to boot game\n\n");
   }
   revers(1); cputs("R"); revers(0);
   printf("efresh list - ");
   revers(1); cputs("C"); revers(0);
-  printf("hange your name\n");
-  revers(1); cputs("SPACE BAR"); revers(0);
-  printf(" to talk");
+  printf("hange your name");
+  
   skip_server_instructions = true;
 }
 
@@ -434,82 +499,6 @@ void change_selection(signed char delta)
     skip_offline_check = false;
 }
 
-void chat_clear()
-{
-  unsigned char y,x=0;
-
-  bzero(&OS.savmsc[40*CHAT_Y],128);
-}
-
-void chat_send()
-{
-  memset(tx_buf,0,sizeof(tx_buf));
-  
-  chat_clear();
-  gotoxy(0,CHAT_Y);
-
-  cursor(1);
-
-  gets(tx_buf);
-
-  strcat(tx_buf,"\n");
-
-  nwrite(SERVER,tx_buf,strlen(tx_buf));
-  
-  cursor(0);
-}
-
-void chat()
-{
-  unsigned char err;
-  
-  if (!trip)
-    return;
-
-  err = nstatus(SERVER);
-
-  if (err==136)
-    {
-      chat_clear();
-      gotoxy(0,CHAT_Y);
-      cputs("Chat server disconnected.");
-      return; // FIXME: handle better.
-    }
-  else if (err>1)
-    {
-      chat_clear();
-      gotoxy(0,CHAT_Y);
-      printf("Status error: %u",err);
-      return; // FIXME: handle better.
-    }
-  else
-    bw = OS.dvstat[1]*256+OS.dvstat[0];
-
-  if (bw>sizeof(rx_buf))
-    bw=sizeof(rx_buf);
-
-  if (bw>0)
-    {
-      memset(rx_buf,0,sizeof(rx_buf));
-      err = nread(SERVER,rx_buf,bw);
-
-      if (err!=1)
-	{
-	  chat_clear();
-	  gotoxy(0,CHAT_Y);
-	  printf("READ ERROR: %u",err);
-	  return; // FIXME, handle better.
-	}
-    }
-
-  chat_clear();
-  gotoxy(0,CHAT_Y);
-  cputs(rx_buf);
-
-  trip=0;
-  PIA.pactl |= 1; // Interrupt serviced, ready again.  
-}
-
 void event_loop()
 {
   signed char selection_change;
@@ -517,8 +506,6 @@ void event_loop()
   { 
     selection_change = CONSOL_SELECT(GTIA_READ.consol) ? 1 : 0;
 
-    chat();
-    
     if (kbhit()) {
       switch (cgetc()) {
         case 'c':
@@ -539,9 +526,6 @@ void event_loop()
         case '=':
           selection_change = 1;
           break;
-      case 0x20:
-	chat_send();
-	break;
       }
     }
 
@@ -574,17 +558,7 @@ void main(void)
   register_user();
   printf("\nConnecting..\n");
 
-  connectChat();
-  
   refresh_servers();
-
-  bar_setup_regs();
-  bar_clear();
-  
-  bar_set_color(0x64);
-
-  bar_show(CHAT_Y);
-  
   event_loop();
 
   // term(); TODO: Integrate chatting into lobby
