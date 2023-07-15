@@ -20,7 +20,7 @@
 #define APP_ID     0x01   /* LOBBY    */
 #define KEY_ID     0x00   /* USERNAME */
 #define SERVER     "N:TCP://IRATA.ONLINE:1512/"
-#define LOBBY_ENDPOINT "N:http://lobby.rogersm.net:8080/view?platform=atari"
+#define LOBBY_ENDPOINT "N:http://fujinet.online:8080/view?platform=atari"
 #define PAGE_SIZE  6   /* # of results to show per page of servers */
 #define SCREEN_WIDTH 40
   
