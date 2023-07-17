@@ -358,6 +358,10 @@ DIB8_Slot:  .byte    AutoScan         ; Slot number
 Buffer:     .res    768                 ; buffer for smartport interface in this bank
                                         ; max size for Char SP read/write command
 
+PrtBuf:     .res    256                 ; printer output buffer
+PrtPtr:     .byte   0                   ; printer buffer pointer
+tempy:      .byte   0                   ; temp Y storage
+
 LastOP:     .res    $09, $FF            ; Last operation for D_REPEAT calls
 SIR_Addr:   .word    SIR_Tbl
 SIR_Tbl:    .res    $05, $00
@@ -380,7 +384,7 @@ SPUnitMap:  .byte   $01                 ; block dev0 (mapping not used, assume t
             .byte   $03                 ; block dev2 (mapping not used, assume they are always the first 4)
             .byte   $04                 ; block dev3 (mapping not used, assume they are always the first 4)
             .byte   $07                 ; Network device unit#
-            .byte   $08                 ; Printer device unit#
+PrtUnit:    .byte   $08                 ; Printer device unit#
             .byte   $05                 ; CPM device unit#
             .byte   $09                 ; Modem device unit#
             .byte   $06                 ; FN_Clock device unit#
@@ -426,12 +430,22 @@ SPReqCnt:   .word   $0000             ; Request count
 
 StatLen:    .byte   0                 ; Length for status call data
 
+; Smartport Printer buffer Write Call Parameter List
+PWParam:    .byte   $04               ; #params
+            .byte   $00               ; Unit
+            .word   PrtBuf            ; Printer buffer pointer
+PSPReqCnt:  .word   $0000             ; Request count
+            .byte   $00,$00,$00       ; Address pointer (low byte,mid byte,high byte)
+
+
+
 ; Hack for relocatable code supporting only 16bit values
-StatParAdr: .word StatParam
-CtrlParAdr: .word CtrlParam
-RWParamAdr: .word RWParam
-OpClParAdr: .word OpClParam
+StatParAdr:  .word StatParam
+CtrlParAdr:  .word CtrlParam
+RWParamAdr:  .word RWParam
+OpClParAdr:  .word OpClParam
 CRWParamAdr: .word CRWParam
+PWParamAdr:  .word PWParam
 
 ;
 ; .RS232 Device control parameters
@@ -615,7 +629,7 @@ CheckNext:  ldy     #$05                ; <-- hack, just check the 3 sig bytes, 
             lda     Buffer              ; First byte returned is the num devices
             beq     NoDevice            ; if zero, no devices attached
             sta     NumSPDevs
-			jmp     FoundCard
+            jmp     FoundCard
 
 ; Todo, just hard mapped for now
 ;;; scan for the char dev names and map them to the SOS unit numbers
@@ -950,7 +964,34 @@ WriteExit:  clc
 
 
 ; character device writes
-CharWrite:  lda     #SP_Write           ; Setup SP command code
+CharWrite:  ldx     SOS_Unit            ; Get SP unit
+            lda     SPUnitMap,x
+            cmp     PrtUnit             ; check if we are writing to the printer
+            bne     DW1                 ; no, continue
+
+            ldy     #0                  ; yes, buffer it
+NxtChar:    ldx     PrtPtr              ; current print buffer pointer
+            lda     (SosBuf),Y          ; copy char to print buffer
+            sta     PrtBuf,X
+
+            cpx     #$fe                ; is print buffer full?
+            bne     NotFull
+
+            sty     tempy               ; yes, save y, then output the contents of the buffer
+            inx
+            jsr     PrtBufW             ; write the buffer to SP
+            inc     PrtPtr              ; reset the buffer pointer (inc to $ff, next inc below incs to 0)
+            ldy     tempy               ; restore y
+
+NotFull:    inc     PrtPtr
+            iny
+            cpy     ReqCnt              ; TODO: currently assumes print request <256
+            bne     NxtChar
+
+            clc
+            rts
+
+DW1:        lda     #SP_Write           ; Setup SP command code
             sta     CmdNum
             lda     CRWParamAdr         ; Set Char Read/Write parameter list pointer
             sta     CmdList
@@ -1325,7 +1366,12 @@ DOCont:     lda     #SP_Open            ; Setup SP command code
             lda     SPUnitMap,x
             sta     OpClParam+1
 
-            jsr     SmartPort
+            cmp     PrtUnit             ; check if we are opening the printer
+            bne     DO1
+            lda     #0                  ; yes, reset printer buffer pointer
+            sta     PrtPtr
+
+DO1:        jsr     SmartPort
             bcs     Open_Err
             rts
 
@@ -1343,7 +1389,16 @@ DCloseGo:   jsr     CkCharDev           ; Close only for char dev
             bcs     DCCont
             jmp     BadOp
 
-DCCont:     lda     #SP_Close           ; Setup SP command code
+DCCont:     ldx     SOS_Unit            ; Get SP unit
+            lda     SPUnitMap,x
+            cmp     PrtUnit             ; check if we are closing the printer
+            bne     DC1
+
+            ldx     PrtPtr              ; yes, check printer output buffer
+            beq     DC1                 ; nothing in the output buffer, cont
+            jsr     PrtBufW             ; else output the contents of the buffer
+
+DC1:        lda     #SP_Close           ; Setup SP command code
             sta     CmdNum
             lda     OpClParAdr          ; Set parameter list pointer
             sta     CmdList
@@ -1353,11 +1408,11 @@ DCCont:     lda     #SP_Close           ; Setup SP command code
             ldx     SOS_Unit            ; Set unit in Param list
             lda     SPUnitMap,x
             sta     OpClParam+1
-            sta     OpClParam+2  ;;;debug come out later
 
-            lda     EReg         ;;;debug come out later
-            sta     OpClParam+3  ;;;debug come out later
+;            sta     OpClParam+2  ;;;debug come out later
 
+;            lda     EReg         ;;;debug come out later
+;            sta     OpClParam+3  ;;;debug come out later
 
             jsr     SmartPort
             bcs     Close_Err
@@ -1372,6 +1427,30 @@ Close_Err:  jsr     SysErr              ; we'll just run with the returned SP er
 ; Utility routines
 ;
 ;------------------------------------
+
+;
+; Write the printer buffer to FujiNet
+;  input x = chars to print
+;
+PrtBufW:    stx     PSPReqCnt
+            lda     #0
+            sta     PSPReqCnt+1
+
+            lda     #SP_Write           ; Setup SP command code
+            sta     CmdNum
+            lda     PWParamAdr          ; Set printer Write parameter list pointer
+            sta     CmdList
+            lda     PWParamAdr+1
+            sta     CmdList+1
+            ldx     SOS_Unit            ; Set unit in Param list
+            lda     SPUnitMap,x
+            sta     PWParam+1
+
+            jsr     SmartPort           ; go do the SP write
+            bcc     ExitPB
+            jmp     IO_Error
+
+ExitPB:     rts                         ; Exit print buffer write
 
 ;
 ; copy the Buffer data to the SOS buffer
