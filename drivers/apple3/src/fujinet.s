@@ -361,6 +361,7 @@ Buffer:     .res    768                 ; buffer for smartport interface in this
 PrtBuf:     .res    256                 ; printer output buffer
 PrtPtr:     .byte   0                   ; printer buffer pointer
 tempy:      .byte   0                   ; temp Y storage
+temprq:     .byte   0                   ; temp ReqCnt MSB storage
 
 LastOP:     .res    $09, $FF            ; Last operation for D_REPEAT calls
 SIR_Addr:   .word    SIR_Tbl
@@ -968,6 +969,10 @@ CharWrite:  ldx     SOS_Unit            ; Get SP unit
             lda     SPUnitMap,x
             cmp     PrtUnit             ; check if we are writing to the printer
             bne     DW1                 ; no, continue
+;            beq     DW1             ;uncomment this to disable the printer buffering
+
+            ldy     ReqCnt+1
+            sty     temprq
 
             ldy     #0                  ; yes, buffer it
 NxtChar:    ldx     PrtPtr              ; current print buffer pointer
@@ -985,11 +990,19 @@ NxtChar:    ldx     PrtPtr              ; current print buffer pointer
 
 NotFull:    inc     PrtPtr
             iny
-            cpy     ReqCnt              ; TODO: currently assumes print request <256
+            lda     temprq
+            bne     Prtgt256            ; > 256 bytes
+            cpy     ReqCnt              ; print request < 256 bytes
             bne     NxtChar
-
             clc
             rts
+
+Prtgt256:   cpy     #0                  ; check for more than 256 chars processed
+            bne     NxtChar
+            dec     temprq              ; yes, dec msb, and inc sosbuf msb
+            inc     SosBuf+1
+            jmp     NxtChar
+
 
 DW1:        lda     #SP_Write           ; Setup SP command code
             sta     CmdNum
