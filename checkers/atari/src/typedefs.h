@@ -10,6 +10,19 @@
 #define TYPEDEFS_H
 
 /**
+ * @brief Game state
+ */
+typedef enum _state
+  {
+    BOARD,
+    SOURCE,
+    DESTINATION,
+    CHECK,
+    MOVE,
+  }
+  State;
+
+/**
  * @brief a piece on the board
  */
 typedef enum _piece

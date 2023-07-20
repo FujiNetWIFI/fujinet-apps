@@ -10,8 +10,13 @@
 #include <string.h>
 #include "constants.h"
 
+const char *msg_source_move="SELECT MOVE FROM";
+const char *msg_cant_do_that="CAN'T DO THAT!";
+
 /**
  * @brief convert ASCII to charset code
+ * @param c Character to translate to charset code
+ * @return internal code for character.
  */
 static char msg_char(char c)
 {
@@ -30,8 +35,9 @@ static char msg_char(char c)
 
 /**
  * @brief place s onto message bar
+ * @param s String to display in message bar (0-20 chars)
  */
-void msg(char *s)
+void msg(const char *s)
 {
   unsigned char i;
   

@@ -18,6 +18,11 @@
 #include "typedefs.h"
 
 /**
+ * @brief main program state
+ */
+extern State state;
+
+/**
  * @brief return color at board position
  * @brief x horizontal position (0-3)
  * @brief y vertical position (0-7)
@@ -128,4 +133,5 @@ void board(void)
   board_pmg();
   board_charset();
   board_reset();
+  state++;
 }

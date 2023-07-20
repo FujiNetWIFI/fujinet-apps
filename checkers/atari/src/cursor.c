@@ -10,7 +10,7 @@
 #include <atari.h>
 #include "typedefs.h"
 #include "board.h"
-#include "msg.h"
+#include "delay.h"
 
 #define UP    14
 #define DOWN  13
@@ -25,26 +25,23 @@
 /**
  * @brief initial cursor position
  */
-unsigned char _y = 7;
-unsigned char _x = 3;
+unsigned char cursor_y = 7;
+unsigned char cursor_x = 3;
 
 /**
  * @brief cursor delay
  */
 static void cursor_delay(void)
 {
-  unsigned char i;
-  Piece p = board_get(_x,_y);
+  Piece p = board_get(cursor_x,cursor_y);
 
-  board_set(_x,_y,CURSOR);
+  board_set(cursor_x,cursor_y,CURSOR);
   
-  for (i=0;i<CURSOR_DELAY;i++)
-    waitvsync();
+  delay(CURSOR_DELAY);
+  
+  board_set(cursor_x,cursor_y,p);
 
-  board_set(_x,_y,p);
-
-  for (i=0;i<(CURSOR_DELAY<<1);i++)
-    waitvsync();
+  delay(CURSOR_DELAY);
 }
 
 /**
@@ -52,8 +49,8 @@ static void cursor_delay(void)
  */
 void cursor_pos(char dx, char dy)
 {
-  signed char nx = (signed char)_x+dx;
-  signed char ny = (signed char)_y+dy;
+  signed char nx = (signed char)cursor_x+dx;
+  signed char ny = (signed char)cursor_y+dy;
   
   if (nx<0)
     nx=0;
@@ -65,8 +62,17 @@ void cursor_pos(char dx, char dy)
   else if (ny>7)
     ny=7;
   
-  _x = nx;
-  _y = ny;
+  cursor_x = nx;
+  cursor_y = ny;
+}
+
+/**
+ * @brief get piece at cursor
+ * @return piece at cursor (see typedefs.h)
+ */
+Piece cursor_get(void)
+{
+  return board_get(cursor_x,cursor_y);
 }
 
 /**
@@ -74,24 +80,21 @@ void cursor_pos(char dx, char dy)
  */
 void cursor(void)
 {
-  while (OS.strig0)
+  switch(OS.stick0)
     {
-      switch(OS.stick0)
-	{
-	case UP:
-	  cursor_pos(0,-1);
-	  break;
-	case DOWN:
-	  cursor_pos(0,1);
-	  break;
-	case LEFT:
-	  cursor_pos(-1,0);
-	  break;
-	case RIGHT:
-	  cursor_pos(1,0);
-	  break;
-	}
-      
-      cursor_delay();
+    case UP:
+      cursor_pos(0,-1);
+      break;
+    case DOWN:
+      cursor_pos(0,1);
+      break;
+    case LEFT:
+      cursor_pos(-1,0);
+      break;
+    case RIGHT:
+      cursor_pos(1,0);
+      break;
     }
+  
+  cursor_delay();
 }

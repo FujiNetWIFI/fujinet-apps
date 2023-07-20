@@ -6,7 +6,11 @@
  * @verbose Message line routines
  */
 
+extern const char *msg_source_move;
+extern const char *msg_cant_do_that;
+
 /**
  * @brief place s onto message bar
+ * @param s String to display in message bar (0-20 chars)
  */
-void msg(char *s);
+void msg(const char *s);
