@@ -340,7 +340,7 @@ love:
 	@echo "Not war, eh?"
 
 dist: $(PROGRAM)
-	cp checkers.xex ~/Workspace/tnfs
+	cp checkers.xex ~/Workspace/tnfs/checkers.com
 
 
 
