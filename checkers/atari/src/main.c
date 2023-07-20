@@ -6,6 +6,8 @@
  * @verbose Main program
  */
 
+#include <stdlib.h>
+#include <atari.h>
 #include <stdbool.h>
 #include "board.h"
 #include "cursor.h"
@@ -14,13 +16,31 @@
 #include "destination.h"
 #include "check.h"
 #include "move.h"
+#include "msg.h"
 
 State state=BOARD;
+
+unsigned char frame_counter;
+
+/**
+ * @brief Show current frame # in msg display
+ */
+void frame_debug(void)
+{
+  char tmp[4];
+
+  itoa(frame_counter,tmp,10);
+  
+  msg(tmp);
+}
 
 void main(void)
 {
   while(true)
     {
+
+      frame_debug();
+
       switch(state)
 	{
 	case BOARD:
@@ -39,5 +59,8 @@ void main(void)
 	  move();
 	  break;
 	}
+
+      waitvsync();
+      frame_counter++;
     }
 }

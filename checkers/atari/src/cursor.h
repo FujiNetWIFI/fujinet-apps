@@ -22,6 +22,11 @@ extern unsigned char cursor_x;
 extern unsigned char cursor_y;
 
 /**
+ * @brief set cursor position
+ */
+void cursor_pos(char dx, char dy);
+
+/**
  * @brief Move and position cursor, exit on trigger
  */
 void cursor(void);

@@ -19,11 +19,11 @@
  */
 void destination(void)
 {
-  msg(msg_destination_move);
+  /* msg(msg_destination_move); */
 
-  while (OS.strig0)
-    {
-      source_blink();
-      cursor();
-    }
+  /* while (OS.strig0) */
+  /*   { */
+  /*     source_blink(); */
+  /*     cursor(); */
+  /*   } */
 }

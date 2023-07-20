@@ -8,14 +8,13 @@
 
 #include <atari.h>
 #include <string.h>
-#include <conio.h>
-#include <stdio.h>
 #include "constants.h"
 #include "board_pmg.h"
 #include "charset.h"
 #include "dlist.h"
 #include "pfdata.h"
 #include "typedefs.h"
+#include "cursor.h"
 
 /**
  * @brief main program state
@@ -51,6 +50,7 @@ void board_reset(void)
 {
   memset((void *)BOARDPF_ADDR, 0x00, sizeof(_board_pfdata));
   memcpy((void *)BOARDPF_ADDR, &_board_pfdata, sizeof(_board_pfdata));
+  cursor_pos(3,7);
 }
 
 /**

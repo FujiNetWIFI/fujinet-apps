@@ -14,12 +14,9 @@
 #include "source.h"
 #include "msg.h"
 #include "player.h"
-#include "delay.h"
-
-#define SOURCE_MSG_DELAY 30 /* roughly half a second. */
-#define SOURCE_BLINK_DELAY 3
 
 extern State state;
+extern unsigned char frame_counter;
 
 /**
  * @brief selected source horizontal (0-3)
@@ -55,15 +52,15 @@ bool source_valid(void)
  */
 void source_blink(void)
 {
-  Piece p = board_get(source_x, source_y);
+  /* Piece p = board_get(source_x, source_y); */
 
-  board_set(source_x,source_y,NONE);
+  /* board_set(source_x,source_y,NONE); */
 
-  delay(SOURCE_BLINK_DELAY);
+  /* delay(SOURCE_BLINK_DELAY); */
 
-  board_set(source_x,source_y,p);
+  /* board_set(source_x,source_y,p); */
 
-  delay(SOURCE_BLINK_DELAY);
+  /* delay(SOURCE_BLINK_DELAY); */
 }
 
 /**
@@ -71,22 +68,22 @@ void source_blink(void)
  */
 void source(void)
 {
-  msg(msg_source_move);
+  cursor();
+  
+  /* while (OS.strig0) */
+  /*   { */
+  /*     cursor(); */
+  /*   } */
 
-  while (OS.strig0)
-    {
-      cursor();
-    }
-
-  if (!source_valid())
-    {
-      msg(msg_cant_do_that);
-      delay(SOURCE_MSG_DELAY);
-    }
-  else
-    {
-      source_x = cursor_x;
-      source_y = cursor_y;
-      state=DESTINATION;
-    }
+  /* if (!source_valid()) */
+  /*   { */
+  /*     msg(msg_cant_do_that); */
+  /*     delay(SOURCE_MSG_DELAY); */
+  /*   } */
+  /* else */
+  /*   { */
+  /*     source_x = cursor_x; */
+  /*     source_y = cursor_y; */
+  /*     state=DESTINATION; */
+  /*   } */
 }

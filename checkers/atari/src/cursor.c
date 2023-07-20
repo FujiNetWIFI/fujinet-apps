@@ -6,43 +6,33 @@
  * @verbose Cursor routines
  */
 
-#include <stdlib.h>
 #include <atari.h>
+#include <stdbool.h>
 #include "typedefs.h"
 #include "board.h"
-#include "delay.h"
 
 #define UP    14
 #define DOWN  13
 #define LEFT  11
 #define RIGHT 7
 
-/**
- * @brief delay value in VBLANKs
- */
-#define CURSOR_DELAY 6
+extern unsigned char frame_counter;
 
 /**
  * @brief initial cursor position
  */
-unsigned char cursor_y = 7;
-unsigned char cursor_x = 3;
+unsigned char cursor_y;
+unsigned char cursor_x;
 
 /**
- * @brief cursor delay
+ * @brief piece under cursor
  */
-static void cursor_delay(void)
-{
-  Piece p = board_get(cursor_x,cursor_y);
+Piece cursor_piece;
 
-  board_set(cursor_x,cursor_y,CURSOR);
-  
-  delay(CURSOR_DELAY);
-  
-  board_set(cursor_x,cursor_y,p);
-
-  delay(CURSOR_DELAY);
-}
+/**
+ * @brief display cursor this frame
+ */
+bool cursor_visible=false;
 
 /**
  * @brief set cursor position
@@ -51,6 +41,8 @@ void cursor_pos(char dx, char dy)
 {
   signed char nx = (signed char)cursor_x+dx;
   signed char ny = (signed char)cursor_y+dy;
+
+  // Keep within the board bounds
   
   if (nx<0)
     nx=0;
@@ -61,9 +53,16 @@ void cursor_pos(char dx, char dy)
     ny=0;
   else if (ny>7)
     ny=7;
+
+  // We're within the board bounds, first ensure we've painted the piece under cursor
+
+  board_set(cursor_x,cursor_y,cursor_piece);
+
+  // Then update to new cursor position
   
   cursor_x = nx;
   cursor_y = ny;
+  cursor_piece = board_get(cursor_x,cursor_y);
 }
 
 /**
@@ -76,25 +75,42 @@ Piece cursor_get(void)
 }
 
 /**
+ * @brief update cursor graphic
+ */
+void cursor_update(void)
+{
+  if (!(frame_counter & 7)) // Every 8 frames
+    cursor_visible = !cursor_visible; // flip whether we are displaying cursor or piece
+
+  if (cursor_visible)
+    board_set(cursor_x,cursor_y,CURSOR);
+  else
+    board_set(cursor_x,cursor_y,cursor_piece);
+}
+
+/**
  * @brief Move and position cursor, exit on trigger
  */
 void cursor(void)
 {
-  switch(OS.stick0)
+  cursor_update();
+
+  if (!(frame_counter & 15)) // run every 16 frames.
     {
-    case UP:
-      cursor_pos(0,-1);
-      break;
-    case DOWN:
-      cursor_pos(0,1);
-      break;
-    case LEFT:
-      cursor_pos(-1,0);
-      break;
-    case RIGHT:
-      cursor_pos(1,0);
-      break;
+      switch(OS.stick0)
+	{
+	case UP:
+	  cursor_pos(0,-1);
+	  break;
+	case DOWN:
+	  cursor_pos(0,1);
+	  break;
+	case LEFT:
+	  cursor_pos(-1,0);
+	  break;
+	case RIGHT:
+	  cursor_pos(1,0);
+	  break;
+	}
     }
-  
-  cursor_delay();
 }
