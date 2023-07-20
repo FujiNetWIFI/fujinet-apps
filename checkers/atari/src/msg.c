@@ -10,8 +10,8 @@
 #include <string.h>
 #include "constants.h"
 
-const char *msg_source_move="SELECT MOVE FROM";
-const char *msg_cant_do_that="CAN'T DO THAT!";
+const char *msg_source_move=" SELECT MOVE FROM:";
+const char *msg_cant_do_that=" CAN'T DO THAT.";
 
 /**
  * @brief convert ASCII to charset code

@@ -56,6 +56,6 @@ void source(void)
       msg(msg_cant_do_that);
       delay(SOURCE_MSG_DELAY);
     }
-  
-    
+  else
+    state=DESTINATION;
 }
