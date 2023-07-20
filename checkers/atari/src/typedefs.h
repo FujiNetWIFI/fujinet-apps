@@ -37,6 +37,16 @@ typedef enum _piece
   Piece;
 
 /**
+ * @brief player
+ */
+typedef enum _player
+  {
+    PLAYER_1,
+    PLAYER_2,
+  }
+  Player;
+
+/**
  * @brief Board Position
  */
 typedef signed char Position;
