@@ -10,7 +10,6 @@
 #include <string.h>
 #include <conio.h>
 #include <stdio.h>
-
 #include "constants.h"
 #include "board_pmg.h"
 #include "charset.h"
@@ -20,22 +19,24 @@
 
 /**
  * @brief return color at board position
- * @param pos Board position (0-31)
+ * @brief x horizontal position (0-3)
+ * @brief y vertical position (0-7)
  * @return Piece (see typedef.h)
  */
-Piece board_get(Position pos)
+Piece board_get(unsigned char x, unsigned char y)
 {
-  return (Piece)BOARDPF[_board_pos[pos]];
+  return (Piece)BOARDPF[_board_pos[y][x]];
 }
 
 /**
  * @brief set piece on board
- * @param pos board position (0-31)
+ * @param x horizontal position (0-3)
+ * @parma y vertical position (0-7)
  * @param Piece (see typedef.h)
  */
-void board_set(Position pos, Piece piece)
+void board_set(unsigned char x, unsigned char y, Piece piece)
 {
-  BOARDPF[_board_pos[pos]] = piece;
+  BOARDPF[_board_pos[y][x]] = piece;
 }
 
 /**

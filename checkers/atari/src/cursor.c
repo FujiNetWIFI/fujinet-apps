@@ -12,20 +12,21 @@
 #include "board.h"
 #include "msg.h"
 
-#define UP_LEFT    10
-#define DOWN_LEFT  9
-#define UP_RIGHT   6
-#define DOWN_RIGHT 5
+#define UP    14
+#define DOWN  13
+#define LEFT  11
+#define RIGHT 7
 
 /**
  * @brief delay value in VBLANKs
  */
-#define CURSOR_DELAY 8
+#define CURSOR_DELAY 6
 
 /**
  * @brief initial cursor position
  */
-Position _pos = 31;
+unsigned char _y = 7;
+unsigned char _x = 3;
 
 /**
  * @brief cursor delay
@@ -33,40 +34,39 @@ Position _pos = 31;
 static void cursor_delay(void)
 {
   unsigned char i;
-  Piece p = board_get(_pos);
+  Piece p = board_get(_x,_y);
 
-  board_set(_pos,CURSOR);
+  board_set(_x,_y,CURSOR);
   
   for (i=0;i<CURSOR_DELAY;i++)
     waitvsync();
 
-  board_set(_pos,p);
+  board_set(_x,_y,p);
 
-  for (i=0;i<CURSOR_DELAY;i++)
+  for (i=0;i<(CURSOR_DELAY<<1);i++)
     waitvsync();
 }
 
 /**
  * @brief set cursor position
  */
-void cursor_pos(Position o)
+void cursor_pos(char dx, char dy)
 {
-  Position p;
-  char tmp[4];
-
-  p = _pos + o;
+  signed char nx = (signed char)_x+dx;
+  signed char ny = (signed char)_y+dy;
   
-  if (p<0)
-    return;
-  else if (p>31)
-    return;
+  if (nx<0)
+    nx=0;
+  else if (nx>3)
+    nx=3;
 
-  if ((p >> 2) % 1)
-    p++;
-  _pos = p;
-
-  itoa(p,tmp,10);
-  msg(tmp);
+  if (ny<0)
+    ny=0;
+  else if (ny>7)
+    ny=7;
+  
+  _x = nx;
+  _y = ny;
 }
 
 /**
@@ -78,17 +78,17 @@ void cursor(void)
     {
       switch(OS.stick0)
 	{
-	case UP_LEFT:
-	  cursor_pos(-5);
+	case UP:
+	  cursor_pos(0,-1);
 	  break;
-	case UP_RIGHT:
-	  cursor_pos(-4);
+	case DOWN:
+	  cursor_pos(0,1);
 	  break;
-	case DOWN_LEFT:
-	  cursor_pos(5);
+	case LEFT:
+	  cursor_pos(-1,0);
 	  break;
-	case DOWN_RIGHT:
-	  cursor_pos(4);
+	case RIGHT:
+	  cursor_pos(1,0);
 	  break;
 	}
       
