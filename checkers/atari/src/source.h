@@ -10,8 +10,23 @@
 #define SOURCE_H
 
 /**
+ * @brief selected source horizontal (0-3)
+ */
+extern unsigned char source_x;
+
+/**
+ * @brief selected source vertical (0-7)
+ */
+extern unsigned char source_y;
+
+/**
  * @brief select source square
  */
 void source(void);
+
+/**
+ * @brief blink selected source square
+ */
+void source_blink(void);
 
 #endif /* SOURCE_H */

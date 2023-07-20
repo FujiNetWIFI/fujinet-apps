@@ -17,8 +17,19 @@
 #include "delay.h"
 
 #define SOURCE_MSG_DELAY 30 /* roughly half a second. */
+#define SOURCE_BLINK_DELAY 3
 
 extern State state;
+
+/**
+ * @brief selected source horizontal (0-3)
+ */
+unsigned char source_x;
+
+/**
+ * @brief selected source vertical (0-7)
+ */
+unsigned char source_y;
 
 /**
  * @brief is source valid?
@@ -40,6 +51,22 @@ bool source_valid(void)
 }
 
 /**
+ * @brief blink selected source square
+ */
+void source_blink(void)
+{
+  Piece p = board_get(source_x, source_y);
+
+  board_set(source_x,source_y,NONE);
+
+  delay(SOURCE_BLINK_DELAY);
+
+  board_set(source_x,source_y,p);
+
+  delay(SOURCE_BLINK_DELAY);
+}
+
+/**
  * @brief select source square
  */
 void source(void)
@@ -57,5 +84,9 @@ void source(void)
       delay(SOURCE_MSG_DELAY);
     }
   else
-    state=DESTINATION;
+    {
+      source_x = cursor_x;
+      source_y = cursor_y;
+      state=DESTINATION;
+    }
 }

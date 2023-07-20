@@ -8,6 +8,7 @@
 
 extern const char *msg_source_move;
 extern const char *msg_cant_do_that;
+extern const char *msg_destination_move;
 
 /**
  * @brief place s onto message bar

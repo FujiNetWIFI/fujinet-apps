@@ -12,6 +12,7 @@
 
 const char *msg_source_move=" SELECT MOVE FROM:";
 const char *msg_cant_do_that=" CAN'T DO THAT.";
+const char *msg_destination_move = " SELECT MOVE   TO:";
 
 /**
  * @brief convert ASCII to charset code
