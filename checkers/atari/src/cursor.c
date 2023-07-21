@@ -6,10 +6,10 @@
  * @verbose Cursor routines
  */
 
-#include <atari.h>
 #include <stdbool.h>
 #include "typedefs.h"
 #include "board.h"
+#include "stick.h"
 
 #define UP    14
 #define DOWN  13
@@ -93,11 +93,12 @@ void cursor_update(void)
  */
 void cursor(void)
 {
+  stick();
   cursor_update();
 
   if (!(frame_counter & 15)) // run every 16 frames.
     {
-      switch(OS.stick0)
+      switch(stick_direction)
 	{
 	case UP:
 	  cursor_pos(0,-1);

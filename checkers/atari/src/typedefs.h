@@ -9,6 +9,8 @@
 #ifndef TYPEDEFS_H
 #define TYPEDEFS_H
 
+#include <stdbool.h>
+
 /**
  * @brief Game state
  */
@@ -19,6 +21,7 @@ typedef enum _state
     DESTINATION,
     CHECK,
     MOVE,
+    INVALID_MOVE,
   }
   State;
 
@@ -50,5 +53,21 @@ typedef enum _player
  * @brief Board Position
  */
 typedef signed char Position;
+
+/**
+ * @brief stick directions
+ */
+typedef enum _direction
+  {
+    RIGHT = 7,
+    LEFT  = 11,
+    DOWN  = 13,
+    UP    = 14
+  } Direction;
+
+/**
+ * @brief stick trigger state 0=pushed
+ */
+typedef bool Trigger;
 
 #endif /* TYPEDEFS_H */

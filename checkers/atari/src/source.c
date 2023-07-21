@@ -14,8 +14,9 @@
 #include "source.h"
 #include "msg.h"
 #include "player.h"
+#include "stick.h"
 
-extern State state;
+extern State state, previous_state, return_state;
 extern unsigned char frame_counter;
 
 /**
@@ -68,7 +69,19 @@ void source_blink(void)
  */
 void source(void)
 {
+  if (state != previous_state)
+    msg(msg_source_move);
+  
   cursor();
+
+  if (stick_trigger)
+    {
+      if (!source_valid())
+	{
+	  return_state=SOURCE;
+	  state=INVALID_MOVE;
+	}
+    }
   
   /* while (OS.strig0) */
   /*   { */
