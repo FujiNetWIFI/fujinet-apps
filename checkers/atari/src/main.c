@@ -16,12 +16,11 @@
 #include "check.h"
 #include "move.h"
 #include "msg.h"
-#include "invalid_move.h"
 
 /**
  * @brief state machine variables
  */
-State state=BOARD, previous_state, return_state;
+State state=BOARD;
 
 /**
  * @brief global frame variables
@@ -48,9 +47,6 @@ void main(void)
 	  break;
 	case MOVE:
 	  move();
-	  break;
-	case INVALID_MOVE:
-	  invalid_move();
 	  break;
 	}
 

@@ -16,8 +16,12 @@
 #include "player.h"
 #include "stick.h"
 
-extern State state, previous_state, return_state;
-extern unsigned char frame_counter;
+#include <stdio.h>
+
+extern State state;
+extern unsigned char frame_counter, frame_delay;
+
+SourceState source_state;
 
 /**
  * @brief selected source horizontal (0-3)
@@ -49,19 +53,52 @@ bool source_valid(void)
 }
 
 /**
- * @brief blink selected source square
+ * @brief show source message
  */
-void source_blink(void)
+void source_show_msg(void)
 {
-  /* Piece p = board_get(source_x, source_y); */
+  msg(msg_source_move);
+  source_state=SOURCE_CURSOR;
+}
 
-  /* board_set(source_x,source_y,NONE); */
+/**
+ * @brief get source piece via cursor
+ */
+void source_cursor(void)
+{
+  cursor();
 
-  /* delay(SOURCE_BLINK_DELAY); */
+  if (stick_trigger)
+    if (!source_valid())
+      source_state=SOURCE_INVALID_MOVE;
+    else
+      source_state=SOURCE_DONE;
+}
 
-  /* board_set(source_x,source_y,p); */
+/**
+ * @brief invalid move made
+ */
+void source_invalid_move(void)
+{
+  if (!frame_delay)
+    msg(msg_cant_do_that);
 
-  /* delay(SOURCE_BLINK_DELAY); */
+  frame_delay--;
+  frame_delay&=0x3f; // 64 frames
+
+  if (!frame_delay)
+    source_state=SOURCE_SHOW_MSG;
+}
+
+/**
+ * @brief Done with source, move state to destination
+ */
+void source_done(void)
+{
+  source_x = cursor_x;
+  source_y = cursor_y;
+  state=DESTINATION;
+  source_state=SOURCE_SHOW_MSG;
 }
 
 /**
@@ -69,34 +106,19 @@ void source_blink(void)
  */
 void source(void)
 {
-  if (state != previous_state)
-    msg(msg_source_move);
-  
-  cursor();
-
-  if (stick_trigger)
+  switch(source_state)
     {
-      if (!source_valid())
-	{
-	  return_state=SOURCE;
-	  state=INVALID_MOVE;
-	}
+    case SOURCE_SHOW_MSG:
+      source_show_msg();
+      break;
+    case SOURCE_CURSOR:
+      source_cursor();
+      break;
+    case SOURCE_INVALID_MOVE:
+      source_invalid_move();
+      break;
+    case SOURCE_DONE:
+      source_done();
+      break;
     }
-  
-  /* while (OS.strig0) */
-  /*   { */
-  /*     cursor(); */
-  /*   } */
-
-  /* if (!source_valid()) */
-  /*   { */
-  /*     msg(msg_cant_do_that); */
-  /*     delay(SOURCE_MSG_DELAY); */
-  /*   } */
-  /* else */
-  /*   { */
-  /*     source_x = cursor_x; */
-  /*     source_y = cursor_y; */
-  /*     state=DESTINATION; */
-  /*   } */
 }

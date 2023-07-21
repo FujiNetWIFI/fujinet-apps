@@ -21,9 +21,20 @@ typedef enum _state
     DESTINATION,
     CHECK,
     MOVE,
-    INVALID_MOVE,
   }
   State;
+
+/**
+ * @brief Source state
+ */
+typedef enum _sourceState
+  {
+    SOURCE_SHOW_MSG,
+    SOURCE_CURSOR,
+    SOURCE_INVALID_MOVE,
+    SOURCE_DONE,
+  }
+  SourceState;
 
 /**
  * @brief a piece on the board
