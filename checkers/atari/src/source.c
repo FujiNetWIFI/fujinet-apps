@@ -22,6 +22,7 @@ extern State state;
 extern unsigned char frame_counter, frame_delay;
 
 SourceState source_state;
+Piece source_piece;
 
 /**
  * @brief selected source horizontal (0-3)
@@ -50,6 +51,21 @@ bool source_valid(void)
     case PLAYER_2:
       return p == WHITE;
     }
+}
+
+/**
+ * @brief blink source piece
+ */
+void source_blink(void)
+{
+  if (!frame_delay)
+    board_set(source_x,source_y,NONE);
+
+  frame_delay--;
+  frame_delay&=3; // 8 frames
+
+  if (!frame_delay)
+    board_set(source_x,source_y,source_piece);
 }
 
 /**
@@ -97,6 +113,7 @@ void source_done(void)
 {
   source_x = cursor_x;
   source_y = cursor_y;
+  source_piece = board_get(cursor_x,cursor_y);
   state=DESTINATION;
   source_state=SOURCE_SHOW_MSG;
 }

@@ -37,6 +37,18 @@ typedef enum _sourceState
   SourceState;
 
 /**
+ * @brief Destination state
+ */
+typedef enum _destinationState
+  {
+    DESTINATION_SHOW_MSG,
+    DESTINATION_CURSOR,
+    DESTINATION_INVALID_MOVE,
+    DESTINATION_DONE,
+  }
+  DestinationState;
+
+/**
  * @brief a piece on the board
  */
 typedef enum _piece
