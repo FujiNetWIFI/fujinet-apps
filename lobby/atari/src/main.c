@@ -136,6 +136,7 @@ void connectChat(void)
   // Send login
   sprintf(login,"/login @%s\n\n",username);
   nwrite(SERVER,(unsigned char *)login,strlen(login));
+  nwrite(SERVER,(unsigned char *)"/join #Lobby\n",13);
 }
 
 void chat_clear()
@@ -157,6 +158,8 @@ void chat_send()
 
   strcat((char *)tx_buf,"\n");
 
+  // Temporary
+  nwrite(SERVER,(unsigned char *)"#Lobby ",7);
   nwrite(SERVER,tx_buf,strlen((char *)tx_buf));
   
   cursor(0);
@@ -187,7 +190,7 @@ void chatZoomed(void)
 	  gets((char *)tx_buf);
 	  
 	  strcat((char *)tx_buf,"\n");
-	  
+	  nwrite(SERVER,(unsigned char *)"#Lobby ",7);
 	  nwrite(SERVER,tx_buf,strlen((char *)tx_buf));	  
 	}
 
