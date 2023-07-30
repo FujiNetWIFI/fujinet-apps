@@ -162,6 +162,87 @@ void chat_send()
   cursor(0);
 }
 
+void chatZoomed(void)
+{
+  unsigned char err;
+  char *p;
+
+  cursor(1);
+  clrscr();
+  cputs("You are now zoomed into chat.\r\nPress any key to send.\r\n");
+  revers(1);
+  cputs(" SELECT ");
+  revers(0);
+  cputs(" to return to game list.\r\n\r\n");
+  
+  while (!CONSOL_SELECT(GTIA_READ.consol))
+    {
+      // Keyboard pressed, send something.
+      if (kbhit())
+	{
+	  cursor(1);
+	  
+	  cputs(">> ");
+
+	  gets((char *)tx_buf);
+	  
+	  strcat((char *)tx_buf,"\n");
+	  
+	  nwrite(SERVER,tx_buf,strlen((char *)tx_buf));	  
+	}
+
+      // We received something, display it.
+      if (trip)
+	{
+	  err = nstatus(SERVER);
+	  
+	  if (err==136)
+	    {
+	      puts("Chat server disconnected.");
+	      return; // FIXME: handle better.
+	    }
+	  else if (err>1)
+	    {
+	      printf("Status error: %u",err);
+	      return; // FIXME: handle better.
+	    }
+	  else
+	    bw = OS.dvstat[1]*256+OS.dvstat[0];
+	  
+	  if (bw>sizeof(chat_rx_buf))
+	    bw=sizeof(chat_rx_buf);
+	  
+	  if (bw>0)
+	    {
+	      memset(chat_rx_buf,0,sizeof(chat_rx_buf));
+	      err = nread(SERVER,chat_rx_buf,bw);
+	      
+	      if (err!=1)
+		{
+		  printf("READ ERROR: %u",err);
+		  return; // FIXME, handle better.
+		}
+	    }
+	  
+	  p = strtok((char *)chat_rx_buf,"\n");
+	  
+	  while (p)
+	    {
+	      if (strstr(p,(char *)username) != NULL)
+		chatBlip();
+	      
+	      puts((const char *)p);
+	      p = strtok(NULL,"\n");
+	      if (p)
+		wait(1);
+	    }
+	  
+	  trip=0;
+	  PIA.pactl |= 1; // Interrupt serviced, ready again.  
+	}
+    }
+}
+
 void chat()
 {
   unsigned char err;
@@ -287,6 +368,9 @@ void display_servers(int old_server)
   printf("hange your name\n");
   revers(1); cputs("S"); revers(0);
   printf("hout ");
+  revers(1); cputs("Z"); revers(0);
+  printf("oom into chat");
+  
   
   skip_server_instructions = true;
 }
@@ -548,7 +632,7 @@ void event_loop()
 {
   signed char selection_change;
   while (true) 
-  { 
+  {
     selection_change = CONSOL_SELECT(GTIA_READ.consol) ? 1 : 0;
 
     chat();
@@ -577,6 +661,13 @@ void event_loop()
       case 's':
 	cursor(1);
 	chat_send();
+	break;
+      case 'Z':
+      case 'z':
+	bar_clear();
+	chatZoomed();
+	bar_show(CHAT_Y);
+	refresh_servers();	
 	break;
       }
     }
@@ -614,9 +705,7 @@ void main(void)
 
   bar_setup_regs();
   bar_clear();
-  bar_set_color(0x64);
   bar_show(CHAT_Y);
-
   chat_clear();
   
   event_loop();
