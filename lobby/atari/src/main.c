@@ -134,7 +134,7 @@ void connectChat(void)
   PIA.pactl  |= 1;             // Indicate to PIA we are ready for PROCEED interrupt.
 
   // Send login
-  sprintf(login,"/login %s\n\n",username);
+  sprintf(login,"/login @%s\n\n",username);
   nwrite(SERVER,(unsigned char *)login,strlen(login));
 }
 
