@@ -140,8 +140,6 @@ void connectChat(void)
 
 void chat_clear()
 {
-  unsigned char y,x=0;
-
   bzero(&OS.savmsc[40*CHAT_Y],128);
 }
 
@@ -155,11 +153,11 @@ void chat_send()
 
   cursor(1);
 
-  gets(tx_buf);
+  gets((char *)tx_buf);
 
-  strcat(tx_buf,"\n");
+  strcat((char *)tx_buf,"\n");
 
-  nwrite(SERVER,tx_buf,strlen(tx_buf));
+  nwrite(SERVER,tx_buf,strlen((char *)tx_buf));
   
   cursor(0);
 }
@@ -208,11 +206,11 @@ void chat()
 	}
     }
 
-  p = strtok(chat_rx_buf,"\n");
+  p = strtok((char *)chat_rx_buf,"\n");
 
   while (p)
     {
-      if (strstr(p,username) != NULL)
+      if (strstr(p,(char *)username) != NULL)
 	chatBlip();
       
       chat_clear();
@@ -255,9 +253,9 @@ void display_servers(int old_server)
     cputs(server->server);
 
     if (server->online == 1) {
-      sprintf(buf, "%i/%i ", server->players, server->max_players);
-      cclear(39-strlen(server->server)-strlen(buf));
-      cputs(buf);
+      sprintf((char *)buf, "%i/%i ", server->players, server->max_players);
+      cclear(39-strlen(server->server)-strlen((char *)buf));
+      cputs((char *)buf);
     } else {
       cclear(39-strlen(server->server));
     }
@@ -320,37 +318,35 @@ void refresh_servers()
       lobby_error = true;
     } else {
       
-      key = strtok(rx_buf, "\n");
+      key = strtok((char *)rx_buf, "\n");
       i=-1;
       while( key != NULL) {
-          value = strtok(NULL, "\n");
-
+	value = strtok(NULL, "\n");
+	  
           switch (key[0]) {
             
-            case 'g': 
+	  case 'g': 
               // Assume "g" is the first property of a new server  
               // Only read up to the page size to avoid buffer overrun
 
               if (i+1 >= PAGE_SIZE)
                 break;
-
+	      
               i++;
               
               serverList[i].game = strupper(value); break;
-              
-            case 't': serverList[i].game_type = atoi(value); break;
-            case 's': serverList[i].server = value; break;
-            case 'u': serverList[i].url = value; break;
-            case 'c': serverList[i].client_url = value; break;
-            case 'r': serverList[i].region = value; break;
-            case 'o': serverList[i].online = atoi(value); break;
-            case 'p': serverList[i].players = atoi(value); break;
-            case 'm': serverList[i].max_players = atoi(value); break;
-            case 'a': serverList[i].ping_age = value; 
-              
-              break;
+	      
+	  case 't': serverList[i].game_type = atoi(value); break;
+	  case 's': serverList[i].server = value; break;
+	  case 'u': serverList[i].url = value; break;
+	  case 'c': serverList[i].client_url = value; break;
+	  case 'r': serverList[i].region = value; break;
+	  case 'o': serverList[i].online = atoi(value); break;
+	  case 'p': serverList[i].players = atoi(value); break;
+	  case 'm': serverList[i].max_players = atoi(value); break;
+	  case 'a': serverList[i].ping_age = atoi(value); break;     
           }
-
+	  
           key = strtok(NULL, "\n");
       }
       server_count = i+1;
@@ -359,7 +355,7 @@ void refresh_servers()
   }
   
   banner();
-  cputsxy(40-strlen(username),0, username);
+  cputsxy(40-strlen((char *)username),0, (char *)username);
 
   if (server_count>0) {
     if (selected_server >= server_count) {
@@ -388,7 +384,7 @@ void get_username(bool clearUsername)
   if (clearUsername)
     memset(username,0,sizeof(username));
   
-  while (strlen(username)<1 || strlen(username)>10)
+  while (strlen((char *)username)<1 || strlen((char *)username)>10)
     {
       printf("\nEnter a user name and press RETURN\n");
 
@@ -396,7 +392,7 @@ void get_username(bool clearUsername)
       // support rendering a minimum # of characters, since character sets are limited.
       // printf("Letters and numbers are acceptable.\n");     
 
-      if (strlen(username)>10)
+      if (strlen((char *)username)>10)
         printf("It must be 10 characters or less.\n");
 
       // TODO - Restrict input to AlphaNumeric only
@@ -483,7 +479,7 @@ void mount()
   }
 
   // Read current list of hosts from FujiNet
-  host_read(host_slots);
+  host_read((char *)host_slots);
 
   // Pick the host slot to use. Default to the last, but choose an existing slot
   // if it already has the same host
@@ -498,7 +494,7 @@ void mount()
   // Update the host slot 7 if needed
   if (host_slot==7) {
     strcpy(host_slots[7], host);
-    host_write(host_slots);
+    host_write((char *)host_slots);
   }
 
   // Mount host slot (test connectivity)
@@ -526,7 +522,7 @@ void mount()
   disk_mount(0, FUJI_DEVICE_MODE_READ);
 
   // Set the server url in this game type's app key:
-  sio_writekey(CREATOR_ID,APP_ID,serverList[selected_server].game_type, serverList[selected_server].url);  
+  sio_writekey(CREATOR_ID,APP_ID,serverList[selected_server].game_type, (unsigned char *)serverList[selected_server].url);  
 
   // Cold boot the computer after a second
   wait(1);
@@ -605,7 +601,6 @@ void main(void)
   OS.soundr=0; // Silent noisy SIO
   cursor(1);
   bordercolor(0x90);
-  textcolor(0xff);
   bgcolor(0x90);
   
   banner();

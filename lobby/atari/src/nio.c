@@ -56,7 +56,7 @@ unsigned char nheader(char* devicespec, char* header, unsigned short len)
     }
   }
 
-  return nwrite(devicespec, header, len );
+  return nwrite((char *)devicespec, (unsigned char *)header, len );
   return OS.dcb.dstats; // Return SIO error or success
 }
 
