@@ -50,11 +50,6 @@ The driver automatically updates the SOS time from Fujinet when the device recei
 ## .NETWORK device
 Available as a normal character device. Its really only been tested from Business Basic so far.
 
-Have a look at the following programs for examples of the code needed to access it. This is using the supplied invokable module "REQUEST.INV" that came with Business Basic to interface with SOS.
+Have a look in the examples directory for some sample programs to use the Network device. These are using the supplied invokable module "REQUEST.INV" that came with Business Basic to interface with SOS.
 
-These are under .PROFILE/LANGUAGES/BASIC
-IPV4TEST - print your external IP
-READWEB - read some web content
-ECHOSERVER - listen on TCP port for connections and echo data back
-ISSV3 - ISS tracker (note there are a couple of older version that will show some others ways of doing the same thing. The latest feels like the simplest way.
-
+They are included on the disk images under .PROFILE/LANGUAGES/BASIC
