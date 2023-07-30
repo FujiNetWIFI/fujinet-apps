@@ -69,6 +69,9 @@ typedef struct {
 
 ServerDetails serverList[PAGE_SIZE];
 
+/* Blip sound frequencies */
+unsigned char blipFreq[4] = { 255, 128, 64, 32 };
+
 void wait(unsigned char s)
 {
   OS.rtclok[2]=0;
@@ -92,6 +95,22 @@ void banner(void)
 {
   clrscr();
   printf("#FUJINET GAME LOBBY \n\n");
+}
+
+void chatBlip(void)
+{
+  unsigned char i=0;
+  
+  POKEY_WRITE.audc1=0xA8; // Square at volume 8
+  
+  for (i=0;i<sizeof(blipFreq);i++)
+    {
+      POKEY_WRITE.audf1 = blipFreq[i];
+      waitvsync();
+    }
+
+  POKEY_WRITE.audf1 = 0;
+  POKEY_WRITE.audc1 = 0;
 }
 
 void connectChat(void)
@@ -132,9 +151,6 @@ void chat_send()
   
   chat_clear();
   gotoxy(0,CHAT_Y);
-  revers(1);
-  cputs(" TYPE MESSAGE AND PRESS RETURN \r\n");
-  revers(0);
   cputs(">> ");
 
   cursor(1);
@@ -196,6 +212,9 @@ void chat()
 
   while (p)
     {
+      if (strstr(p,username) != NULL)
+	chatBlip();
+      
       chat_clear();
       gotoxy(0,CHAT_Y);
       cputs((const char *)p);
