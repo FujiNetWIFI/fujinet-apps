@@ -50,6 +50,16 @@ void print_status(void)
   print("\x9b\x9b");
 }
 
+void print_len(unsigned short len)
+{
+  char lens[8];
+  
+  itoa(len,lens,10);
+  print("recv len: ");
+  print(lens);
+  print("\x9b");
+}
+
 void main(void)
 {
   print("CHUNKED TRANSFER TEST\x9b\x9b");
@@ -98,6 +108,7 @@ void main(void)
 
       if (bw>0)
 	{
+	  bzero(buf,sizeof(buf));
 	  err = nread(url,buf,bw);
 
 	  if (err != SUCCESS)
@@ -111,7 +122,8 @@ void main(void)
 	  else
 	    {
 	      // Print to screen
-	      printl((const char *)buf,bw);
+	      print_status();
+	      print_len(strlen((const char *)buf));
 	    }
 	  
 	}
