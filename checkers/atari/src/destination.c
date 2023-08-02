@@ -16,7 +16,9 @@
 #include "stick.h"
 
 extern State state;
+extern SourceState source_state;
 extern unsigned char frame_counter, frame_delay;
+extern unsigned char source_x, source_y;
 
 /**
  * @brief the current destination state
@@ -57,6 +59,16 @@ bool destination_valid(void)
 }
 
 /**
+ * @brief are we selecting the same destination as source?
+ * @return true if we are, false if we are not.
+ */
+bool destination_same(void)
+{
+  return ((cursor_x == source_x) &&
+	  (cursor_y == source_y));
+}
+
+/**
  * @brief get destination piece via cursor
  */
 void destination_cursor(void)
@@ -65,6 +77,8 @@ void destination_cursor(void)
   source_blink();
 
   if (stick_trigger)
+    if (destination_same())
+      destination_state=DESTINATION_BACK_OUT;
     if (!destination_valid())
       destination_state=DESTINATION_INVALID_MOVE;
     else
@@ -84,6 +98,15 @@ void destination_invalid_move(void)
 
   if (!frame_delay)
     destination_state=DESTINATION_SHOW_MSG;
+}
+
+/**
+ * @brief same piece as source selected, back out.
+ */
+void destination_back_out(void)
+{
+  state=SOURCE;
+  source_state=SOURCE_SHOW_MSG;
 }
 
 /**
@@ -114,6 +137,9 @@ void destination(void)
       break;
     case DESTINATION_INVALID_MOVE:
       destination_invalid_move();
+      break;
+    case DESTINATION_BACK_OUT:
+      destination_back_out();
       break;
     case DESTINATION_DONE:
       destination_done();

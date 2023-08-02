@@ -7,9 +7,12 @@
  */
 
 #include <stdbool.h>
+#include <string.h>
+#include <stdio.h>
 #include "typedefs.h"
 #include "board.h"
 #include "stick.h"
+#include "msg.h"
 
 #define UP    14
 #define DOWN  13
@@ -33,6 +36,18 @@ Piece cursor_piece;
  * @brief display cursor this frame
  */
 bool cursor_visible=false;
+
+/**
+ * @brief debug show cursor position
+ */
+void cursor_debug(void)
+{
+  char tmp[8];
+
+  bzero(tmp,sizeof(tmp));
+  sprintf(tmp,"%02u %02u",cursor_x,cursor_y);
+  msg(tmp);
+}
 
 /**
  * @brief set cursor position
@@ -63,6 +78,8 @@ void cursor_pos(char dx, char dy)
   cursor_x = nx;
   cursor_y = ny;
   cursor_piece = board_get(cursor_x,cursor_y);
+
+  cursor_debug();
 }
 
 /**
@@ -95,7 +112,7 @@ void cursor(void)
 {
   stick();
   cursor_update();
-
+  
   if (!(frame_counter & 15)) // run every 16 frames.
     {
       switch(stick_direction)
