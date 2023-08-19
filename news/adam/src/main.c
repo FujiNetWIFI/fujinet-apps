@@ -66,14 +66,14 @@ const char delim[2] = "|";
 
 struct _article_list
 {
-  long int id;
+  unsigned long id;
   char date[20];
   char title[128];
 } articleList[8];
 
 unsigned char old_i;
 
-long int articleId;
+unsigned long articleId;
 int pageNum, catPageNum;
 
 bool connected(void)
@@ -361,7 +361,7 @@ void article(void)
   memset(response,0,sizeof(response));
   
   // Set up URL
-  sprintf(OC.url,"%s?t=lf&ps=31x18&p=%u&a=%ld",urlBase,pageNum,articleId);
+  sprintf(OC.url,"%s?t=lf&ps=31x18&p=%u&a=%lu",urlBase,pageNum,articleId);
 
   // Send to FujiNet
   r = eos_write_character_device(NET,(unsigned char *)OC,sizeof(OC));
