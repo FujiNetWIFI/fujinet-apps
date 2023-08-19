@@ -45,7 +45,7 @@ unsigned char base64_encode_length(unsigned long *len)
   OS.dcb.ddevic   = BASE64_DEVICE;
   OS.dcb.dunit    = 1;
   OS.dcb.dcomnd   = 0xCE;
-  OS.dcb.dstats   = 0x00;
+  OS.dcb.dstats   = 0x40;
   OS.dcb.dbuf     = len;
   OS.dcb.dtimlo   = BASE64_TIMEOUT;
   OS.dcb.dbyt     = sizeof(unsigned long);
@@ -107,7 +107,7 @@ unsigned char base64_decode_length(unsigned long *len)
   OS.dcb.ddevic   = BASE64_DEVICE;
   OS.dcb.dunit    = 1;
   OS.dcb.dcomnd   = 0xCE;
-  OS.dcb.dstats   = 0x00;
+  OS.dcb.dstats   = 0x40;
   OS.dcb.dbuf     = len;
   OS.dcb.dtimlo   = BASE64_TIMEOUT;
   OS.dcb.dbyt     = sizeof(unsigned long);
