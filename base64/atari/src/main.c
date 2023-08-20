@@ -54,7 +54,7 @@ void main(void)
   else
     printf("ENCODED LENGTH: %lu\n",encoded_len);
 
-  printf("ENCODE OUTPUT");
+  printf("ENCODE OUTPUT\n");
   
   if (base64_encode_output(encoded_text,encoded_len) > 128)
     {
@@ -66,7 +66,7 @@ void main(void)
 
   // ------------------------------------------------
   
-  printf("PERFORMING DECODE TESTS\n\n");
+  printf("\n\nPERFORMING DECODE TESTS\n\n");
 
   printf("DECODE INPUT\n");
   
@@ -94,7 +94,7 @@ void main(void)
   else
     printf("DECODED LENGTH: %lu\n",decoded_len);
 
-  printf("DECODE OUTPUT");
+  printf("DECODE OUTPUT\n");
   
   if (base64_decode_output(decoded_text,decoded_len) > 128)
     {
