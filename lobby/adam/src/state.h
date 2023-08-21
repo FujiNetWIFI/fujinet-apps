@@ -16,7 +16,8 @@ typedef enum _state
     DISPLAY,
     SELECT,
     SHOUT,
-    CHAT
+    CHAT,
+    HALT
   } State;
 
 #endif /* STATE_H */
