@@ -25,5 +25,5 @@ void init(void)
   smartkeys_sound_play(SOUND_POSITIVE_CHIME);
   sleep(1);
 
-  state=FETCH;
+  state=USERNAME;
 }

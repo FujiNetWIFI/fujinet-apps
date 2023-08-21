@@ -6,8 +6,9 @@
  */
 
 #include <stdbool.h>
-#include "init.h"
 #include "state.h"
+#include "init.h"
+#include "username.h"
 #include "fetch.h"
 #include "display.h"
 #include "select.h"
@@ -15,6 +16,7 @@
 #include "chat.h"
 
 State state = INIT;
+unsigned char response[1024];
 
 void main(void)
 {
@@ -24,6 +26,9 @@ void main(void)
 	{
 	case INIT:
 	  init();
+	  break;
+	case USERNAME:
+	  username();
 	  break;
 	case FETCH:
 	  fetch();

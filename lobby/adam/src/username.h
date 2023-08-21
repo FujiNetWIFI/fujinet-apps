@@ -5,18 +5,9 @@
  * @license gpl v. 3, see LICENSE for details.
  */
 
-#ifndef STATE_H
-#define STATE_H
+#ifndef USERNAME_H
+#define USERNAME_H
 
-typedef enum _state
-  {
-    INIT,
-    USERNAME,
-    FETCH,
-    DISPLAY,
-    SELECT,
-    SHOUT,
-    CHAT
-  } State;
+void username(void);
 
-#endif /* STATE_H */
+#endif /* USERNAME_H */
