@@ -18,3 +18,6 @@ unsigned char network_close(void);
 unsigned char network_status(NetStatus *ns);
 unsigned short network_read(char *buf, unsigned short len);
 unsigned char network_write(unsigned char *buf, unsigned short len);
+unsigned char network_set_channel_mode(unsigned char mode);
+unsigned char network_json_parse(void);
+unsigned char network_json_query(const char *query, char *buf, unsigned short len);
