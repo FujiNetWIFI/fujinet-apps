@@ -16,7 +16,6 @@
 #include "chat.h"
 
 State state = INIT;
-unsigned char response[1024];
 
 void main(void)
 {
