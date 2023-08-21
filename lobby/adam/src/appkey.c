@@ -9,8 +9,6 @@
 #include <string.h>
 #include "appkey.h"
 
-extern unsigned char response[1024];
-
 unsigned char appkey_read(unsigned int creator, unsigned char app, unsigned char key, char *buf)
 {
   unsigned char r=0;
@@ -33,7 +31,7 @@ unsigned char appkey_read(unsigned int creator, unsigned char app, unsigned char
   if (r > 0x80)
     return r;
   else
-    return eos_read_character_device(ADAMNET_FUJI_DEVICE_ID,response,sizeof(response));
+    return eos_read_character_device(ADAMNET_FUJI_DEVICE_ID,buf,MAX_APPKEY_LEN);
 }
 
 unsigned char appkey_write(unsigned int creator, unsigned char app, unsigned char key, char *buf)
