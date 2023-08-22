@@ -19,6 +19,7 @@
 
 extern int page;
 extern State state;
+extern unsigned char response[1024];
 
 unsigned char buf[1024];
 FetchPage fetchPage[FETCH_NUM_PER_PAGE];
@@ -70,6 +71,7 @@ bool fetch_process(void)
   
   for (int i=0;i<FETCH_NUM_PER_PAGE;i++)
     {
+      memset(response,0,sizeof(response));
       sprintf(q,"Q/%u/g",i);
       eos_write_character_device(NET_DEV,q,strlen(q));
       if (eos_read_character_device(NET_DEV,response,1024) != ACK)
@@ -77,46 +79,55 @@ bool fetch_process(void)
       else
 	strcpy(fetchPage[i].g,response);
 
+      memset(response,0,sizeof(response));
       sprintf(q,"Q/%u/t",i);
       eos_write_character_device(NET_DEV,q,strlen(q));
       eos_read_character_device(NET_DEV,response,1024);
       fetchPage[i].t = atoi(response);
 
+      memset(response,0,sizeof(response));
       sprintf(q,"Q/%u/u",i);
       eos_write_character_device(NET_DEV,q,strlen(q));
       eos_read_character_device(NET_DEV,response,1024);
       strcpy(fetchPage[i].u,response);
 
+      memset(response,0,sizeof(response));
       sprintf(q,"Q/%u/c",i);
       eos_write_character_device(NET_DEV,q,strlen(q));
       eos_read_character_device(NET_DEV,response,1024);
       strcpy(fetchPage[i].c,response);
 
+      memset(response,0,sizeof(response));
       sprintf(q,"Q/%u/s",i);
       eos_write_character_device(NET_DEV,q,strlen(q));
       eos_read_character_device(NET_DEV,response,1024);
       strcpy(fetchPage[i].s,response);
 
+      memset(response,0,sizeof(response));
       sprintf(q,"Q/%u/r",i);
       eos_write_character_device(NET_DEV,q,strlen(q));
       eos_read_character_device(NET_DEV,response,1024);
       strcpy(fetchPage[i].r,response);
 
+      memset(response,0,sizeof(response));
       sprintf(q,"Q/%u/o",i);
       eos_write_character_device(NET_DEV,q,strlen(q));
       eos_read_character_device(NET_DEV,response,1024);
       fetchPage[i].o = atoi(response);
 
+      memset(response,0,sizeof(response));
       sprintf(q,"Q/%u/m",i);
       eos_write_character_device(NET_DEV,q,strlen(q));
       eos_read_character_device(NET_DEV,response,1024);
       fetchPage[i].m = atoi(response);
 
+      memset(response,0,sizeof(response)); 
       sprintf(q,"Q/%u/p",i);
       eos_write_character_device(NET_DEV,q,strlen(q));
       eos_read_character_device(NET_DEV,response,1024);
       fetchPage[i].p = atoi(response);
 
+      memset(response,0,sizeof(response));
       sprintf(q,"Q/%u/a",i);
       eos_write_character_device(NET_DEV,q,strlen(q));
       eos_read_character_device(NET_DEV,response,1024);
