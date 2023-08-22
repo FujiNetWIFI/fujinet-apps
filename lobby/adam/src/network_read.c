@@ -15,8 +15,8 @@ extern unsigned char response[1024];
 
 unsigned short network_read(char *buf, unsigned short len)
 {
-  DCB *dcb = eos_find_dcb(0x09); // Replace with net device
-  unsigned char r=eos_read_character_device(0x09,response,sizeof(response));
+  DCB *dcb = eos_find_dcb(NET_DEV); // Replace with net device
+  unsigned char r=eos_read_character_device(NET_DEV,response,1024);
   
   if (r == 0x80)
     {

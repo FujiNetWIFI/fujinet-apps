@@ -7,7 +7,7 @@
 #include <eos.h>
 #include "network.h"
 
-void network_parse_json(void)
+unsigned char network_parse_json(void)
 {
   return eos_write_character_device(NET_DEV,"P",1);
 }
