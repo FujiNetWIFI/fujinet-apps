@@ -15,9 +15,9 @@
 #define ADDR_FILE_TYPE ADDR_FILE_LIST
 #define ATTR_FILE_TYPE 0xF5
 #define ATTR_BAR 0x13
+#define BAR_SIZE 0x300
 
-#define ROW(x) (x<<8)
-#define COL(x) (x<<3)
+#define ROW(x) (x*0x300)
 
 /**
  * static local variables for bar y, max, and index.
@@ -26,11 +26,11 @@ static unsigned char bar_y=3, bar_c=1, bar_m=1, bar_i=0, bar_oldi=0, bar_co=0x13
 
 void bar_clear(bool oldRow)
 {
-  // Fill column color in old row
-  msx_vfill(ADDR_FILE_LIST + ROW(bar_y+(oldRow==true ? bar_oldi : bar_i)), ATTR_PATH_LINE, COL(bar_c));
+  /* // Fill column color in old row */
+  /* msx_vfill(ADDR_FILE_LIST + ROW(bar_y+(oldRow==true ? bar_oldi : bar_i)), ATTR_PATH_LINE, COL(bar_c)); */
 
   // Fill background color in old row
-  msx_vfill(ADDR_FILE_LIST + ROW(bar_y+(oldRow==true ? bar_oldi : bar_i))+COL(bar_c),ATTR_FILE_LIST,256-COL(bar_c));  
+  msx_vfill(ADDR_FILE_LIST + ROW(bar_y+(oldRow==true ? bar_oldi : bar_i)),ATTR_FILE_LIST,BAR_SIZE);  
 }
 
 /**
@@ -41,7 +41,7 @@ void bar_update(void)
   bar_clear(true);
   
   // Fill bar color in new row
-  msx_vfill(ADDR_FILE_LIST + ROW(bar_y+bar_i),bar_co,256);
+  msx_vfill(ADDR_FILE_LIST + ROW(bar_y+bar_i),bar_co,BAR_SIZE);
 }
 
 /**
