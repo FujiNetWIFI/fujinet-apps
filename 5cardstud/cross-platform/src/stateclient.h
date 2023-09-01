@@ -1,10 +1,12 @@
 #include <string.h>
 #include <peekpoke.h>
 
+char rx_buf[1024];     // buffer for json payload
+
 void updateState() {
-  static unsigned char *line, *nextLine, *end, *key, *value, *parent;
+  static char *line, *nextLine, *end, *key, *value, *parent;
   static bool isKey, inArray;
-  static unsigned char c;
+  static char c;
 
   // Reset state and vars
   isKey=true; inArray=false;
@@ -94,7 +96,7 @@ void updateState() {
           state.validMoves[validMoveCount].name = value;
           validMoveCount++;
         } else {
-          parent=="";
+          parent="";
         }
       } else if (strcmp(parent,"players")==0) {
         if (strcmp(key,"name")==0) {

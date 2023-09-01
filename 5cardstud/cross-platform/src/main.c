@@ -61,8 +61,7 @@ typedef struct {
 
 GameState state;
 
-char rx_buf[1024];     // RX buffer.
-char tx_buf[128];      // TX buffer.
+
 
 // State helper vars
 unsigned char playerCount, prevPlayerCount, validMoveCount, prevRound, tableCount, currentCard, cardIndex, xOffset, fullFirst, cursorX, cursorY, waitCount, inputKey, wasViewing;

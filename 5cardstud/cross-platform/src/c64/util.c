@@ -14,8 +14,7 @@ int getTime() {
   return (PEEK(161)*256)+PEEK(162);
 }
 
-void quit() {
-  // Possible to revert screen to boot normals
+void quit() { 
   resetGraphics();
   exit(0);
 }

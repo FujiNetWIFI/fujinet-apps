@@ -24,18 +24,15 @@ unsigned char open_appkey(unsigned char open_mode, unsigned int creator_id, unsi
 
 
 
-unsigned char read_appkey(unsigned int creator_id, unsigned char app_id, unsigned char key_id, unsigned char* data)
+unsigned char read_appkey(unsigned int creator_id, unsigned char app_id, unsigned char key_id, char* data)
 {
   static unsigned char appkey_error;
-  
   return appkey_error;
 }
 
-unsigned char write_appkey(unsigned int creator_id, unsigned char app_id, unsigned char key_id, const unsigned char *data)
+unsigned char write_appkey(unsigned int creator_id, unsigned char app_id, unsigned char key_id, const char *data)
 {
   static unsigned char appkey_error;
-  
-
   return appkey_error;
 }
 

@@ -22,11 +22,12 @@ const char json_query[] = "jq,2,";
 /// @brief Retrieve a json parsed url response
 /// @param url 
 /// @return response length
-int getJsonResponse(char *url, unsigned char *buffer, int max_len) {
-  static int i, len;
+int getJsonResponse(char *url, char *buffer, int max_len) {
+  static int len;
   
   #ifdef USE_VICE_EMULATOR
-
+  static int i;
+  
   // Write command file (currently just the url )
   cbm_open(LFN,11,1,"vice-out");
   cbm_write(LFN, url, strlen(url));

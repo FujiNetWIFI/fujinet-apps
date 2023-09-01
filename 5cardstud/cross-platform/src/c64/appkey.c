@@ -44,7 +44,7 @@ appkeyC64 appkey;
  * @param key_id The Key ID ($00-$FF)
  * @return error code
  */
-unsigned char open_appkey(unsigned char open_mode, unsigned int creator_id, unsigned char app_id, unsigned char key_id)
+unsigned char open_appkey(unsigned char open_mode, unsigned int creator_id, unsigned char app_id, char key_id)
 { 
   static unsigned char appkey_error;
 
@@ -87,7 +87,7 @@ unsigned char open_appkey(unsigned char open_mode, unsigned int creator_id, unsi
 
 
 
-unsigned char read_appkey(unsigned int creator_id, unsigned char app_id, unsigned char key_id, unsigned char* data)
+unsigned char read_appkey(unsigned int creator_id, unsigned char app_id, unsigned char key_id, char* data)
 {
   static unsigned char appkey_error;
   static int read;
@@ -101,7 +101,7 @@ unsigned char read_appkey(unsigned int creator_id, unsigned char app_id, unsigne
   
   #ifndef USE_VICE_EMULATOR
     cbm_close(LFN);
-    appkey_error = cbm_open(LFN,DEV,SEC_NUM,&command);
+    appkey_error = cbm_open(LFN,DEV,SEC_NUM,(const char *)&command);
   #endif
 
   if (!appkey_error) {
@@ -121,7 +121,7 @@ unsigned char read_appkey(unsigned int creator_id, unsigned char app_id, unsigne
   return appkey_error;
 }
 
-unsigned char write_appkey(unsigned int creator_id, unsigned char app_id, unsigned char key_id, const unsigned char *data)
+unsigned char write_appkey(unsigned int creator_id, unsigned char app_id, unsigned char key_id, const char *data)
 {
   static unsigned char appkey_error;
   static unsigned char len;

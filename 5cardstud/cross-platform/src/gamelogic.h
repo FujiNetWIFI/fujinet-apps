@@ -27,7 +27,6 @@ void resetStateIfNewGame() {
     return;
 
   // Reset status bar and vars for a new game
-
   if (prevRound != 99) {
    // @SetStatusBarHeight 1  
    clearStatusBar(); 
@@ -35,7 +34,7 @@ void resetStateIfNewGame() {
 
     // Force empty screen if coming from another screen.
     // This is mainly to avoid color glitches on c64
-    // when setting the color memory (which is not double buffered)
+    // when setting the color memory - which is not (YET?) double buffered -
     // before the screen is drawn. There may be a better solution.
     drawBuffer();
   }

@@ -19,12 +19,17 @@ TARGETS := c64 apple2
 # Default: name of the current dir with target name appended
 PROGRAM := fcs
 
+# Target extensions
+ext_c64 := prg
+ext_atari := xex
+ext_apple2 := apl
+
 # Running make with multiple targets causes it to run "make target" for each.
 # Here, we check for that use case (targets is a single word), and append the platform
 # name to the output program 
 ifeq ($(words $(TARGETS)),1)
  PROGRAM_STUB := $(PROGRAM)
- override PROGRAM := $(PROGRAM)_$(TARGETS)
+ override PROGRAM := $(PROGRAM).$(ext_$(TARGETS))
 endif
 
 # Path(s) to additional libraries required for linking the program
@@ -70,8 +75,8 @@ EMUCMD :=
 # quick iteration. More emulation handling for Apple is found further below.
 ifeq ($(OS),Windows_NT) 
   atari_EMUCMD := cmd /c start C:\atari\Altirra\Altirra64.exe /singleinstance /run
-  apple2_EMUCMD := taskkill /im applewin.exe & cmd /c start C:\Projects\AppleWin\Debug\applewin.exe -d1 "support/apple2/dist/$(PROGRAM_STUB).po" & REM
-  c64_EMUCMD := taskkill /im x64sc.exe & cmd /c start x64sc -model c64ntsc -autostart 
+  apple2_EMUCMD := taskkill /im applewin.exe >nul 2>nul & cmd /c start C:\Projects\AppleWin\Debug\applewin.exe -d1 "support/apple2/dist/$(PROGRAM_STUB).po" & REM
+  c64_EMUCMD := taskkill /im x64sc.exe >nul 2>nul & cmd /c start x64sc -model c64ntsc -autostart
 else
   #atari_EMUCMD := osascript -e 'quit app "Atari800MacX"';open -n -a Atari800macx --args $(CURDIR)/$(PROGRAM);echo
   atari_EMUCMD := wine64 /Users/eric/Documents/Altirra/Altirra64.exe /singleinstance /run
