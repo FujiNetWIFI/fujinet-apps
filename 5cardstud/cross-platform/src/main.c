@@ -83,13 +83,16 @@ char *hand, *requestedMove;
 #include "misc.h"
 #include "platform-specific/network.h"
 #include "platform-specific/appkey.h"
+#include "platform-specific/sound.h"
 
 #include "stateclient.h"
 #include "gamelogic.h"
 #include "screens.h"
 
 void main(void) {
+
   initGraphics();
+  initSound();
   
   showWelcomScreen();  
   showTableSelectionScreen();

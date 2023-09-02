@@ -148,8 +148,7 @@ void drawCards() {
       i = h % playerCount;
       if (strlen(state.players[i].hand)>j) {
         fullFirst = i==0 && (!state.viewing || finalFlip);
-        //if (doAnim)
-          //sound 1,0,0,1
+     
         hand = state.players[i].hand+j-1;
         if (finalFlip && j==1 && i>0)
           hand="??";
@@ -162,14 +161,12 @@ void drawCards() {
         
         if (doAnim) {
           drawBuffer();
+          soundDealCard();
           // for vol=2 to 0 step -1
           //   pause :sound 1,0,0,vol
           // next
           // sound
         }
-    
-        if (doAnim)
-          pause(5);
       }
     }
     xOffset++;
@@ -181,6 +178,31 @@ void drawCards() {
   noAnim=false;
 }
 
+void checkIfSpectatorStatusChanged() {
+  if (state.viewing == wasViewing)
+    return;
+  wasViewing = state.viewing;
+
+  if (state.viewing) {
+    drawStatusText("TABLE FULL: WATCHING AS A SPECTATOR");
+    drawBuffer();
+    pause(80);
+  } else if (
+    state.players[0].status == 0 || 
+    (state.round == 1 && state.players[0].status == 1 && state.activePlayer != 0 )
+    ) {
+    /* Display intro text if player is joining the table on 
+     * the opening round or sitting down to wait for the next round.
+     * Otherwise, they are re-joining due to connection error, so we do not delay
+     */
+
+    drawStatusText("YOU SIT DOWN AT THE TABLE");
+    drawBuffer();
+    soundJoinGame();
+    pause(50);
+  }
+}
+
 void checkIfPlayerCountChanged() {
   if (playerCount == prevPlayerCount)
     return;
@@ -190,12 +212,17 @@ void checkIfPlayerCountChanged() {
     if (playerCount < prevPlayerCount) {
       
       drawStatusText("A PLAYER LEFT THE TABLE");    
+      drawBuffer();
+      soundPlayerJoin();
+
       // for j=8 to 2 step -2
       //   sound 1,255-j*j,10,j:pause 2:sound:pause 8
       // next
     } else {
       state.lastResult = "A NEW PLAYER JOINS THE TABLE";
       drawStatusText(state.lastResult);
+      drawBuffer();
+      soundPlayerLeft();
     }
   
     if (playerCount > prevPlayerCount) {
@@ -253,6 +280,7 @@ void drawGameStatus() {
     //@HidePlayerSecretCardMask
     // End of (or in between) games
     if (state.round==5 && prevRound != state.round) { 
+      //layMy
       // sound 1,200,10,8:pause 2
       // sound 1,170,10,8:pause 2
     }
@@ -283,6 +311,8 @@ void drawGameStatus() {
       // sound 1,135,10,8:pause 2
       // sound 1,132,10,8:pause 2
       // sound
+      drawBuffer();
+      soundGameDone();
     }
   }
 
@@ -325,6 +355,10 @@ void requestPlayerMove() {
 
   // Prepare the countdown timer
   drawStatusTimeLeft();
+
+  drawBuffer();
+  soundMyTurn();
+
   resetTimer();
   maxJifs = 60*state.moveTime;
   waitCount=0;
@@ -335,12 +369,13 @@ void requestPlayerMove() {
     waitvsync();
     
     // Tick counter once per second   
-    if (++waitCount>10) {
+    if (++waitCount>2) {
       waitCount=0;
       i = (maxJifs-getTime())/60;
       if (i!= state.moveTime) {
         state.moveTime =i;
         drawStatusTimeLeft();
+        soundTick();
       }
     } 
 
@@ -353,8 +388,10 @@ void requestPlayerMove() {
         drawStatusTextAt(moveLoc[cursorX-inputDirX]-1, " ");
         drawStatusTextAt(moveLoc[cursorX]-1, ">");
         drawBuffer();
+        soundCursor();
       } else {
         cursorX-=inputDirX;
+        soundCursorInvalid();
       }
 
     }
@@ -374,6 +411,7 @@ void requestPlayerMove() {
     clearStatusBar();
     drawStatusTextAt(moveLoc[cursorX], state.validMoves[cursorX].name);
     drawBuffer();
+    soundSelectMove();
   }
 
 }

@@ -1,8 +1,5 @@
 /*
-  This is a temporary placeholder for platform specific code until a 
-  cross platform solution is created.
-
-  That will be done once the basic skeleton of the game is ported over from FB.
+ Platform specific graphics commands
 */
 
 #define PARTIAL_LEFT 1
