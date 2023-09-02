@@ -4,4 +4,4 @@
 
 
 
-int getJsonResponse(char *url, unsigned char *buffer, int max_length);
+int getJsonResponse(char *url, char *buffer, int max_length);

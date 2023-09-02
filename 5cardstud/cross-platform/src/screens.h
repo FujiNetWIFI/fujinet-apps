@@ -213,7 +213,7 @@ void showTableSelectionScreen() {
 
 /// @brief Shows main game play screen (table and cards)
 void showGameScreen() {
-  // TODO checkIfSpectatorStatusChanged();
+  checkIfSpectatorStatusChanged();
   checkIfPlayerCountChanged();
   // TODO animateChipsToPotOnRoundEnd();
   

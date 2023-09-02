@@ -13,8 +13,7 @@
 #define APPKEY_WRITE 1
 
 // Uncomment this line to simulate read/writing app keys in VICE emulator on drive 11 (Must configure as EIC Host File System)
-#define USE_VICE_EMULATOR
-
+// #define USE_VICE_EMULATOR
 
 /**
  * @brief Convenience type for handling an appkey
@@ -48,7 +47,7 @@ typedef union {
  * @param key_id The Key ID ($00-$FF)
  * @brief string output (64 chars max)
  */
-unsigned char read_appkey(unsigned int creator_id, unsigned char app_id, unsigned char key_id, unsigned char *data);
+unsigned char read_appkey(unsigned int creator_id, unsigned char app_id, unsigned char key_id, char *data);
 
 /**
  * @brief write a key from appkey var appkey
@@ -57,6 +56,6 @@ unsigned char read_appkey(unsigned int creator_id, unsigned char app_id, unsigne
  * @param key_id The Key ID ($00-$FF)
  * @param Data string to write (64 chars max)
  */
-unsigned char write_appkey(unsigned int creator_id, unsigned char app_id, unsigned char key_id, unsigned char *data);
+unsigned char write_appkey(unsigned int creator_id, unsigned char app_id, unsigned char key_id, char *data);
 
 #endif /* APPKEY_H */

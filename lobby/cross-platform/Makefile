@@ -69,9 +69,9 @@ EMUCMD :=
 # the standard cc65 makefile. The intent is to kill/restart any running emulator where needed for 
 # quick iteration. More emulation handling for Apple is found further below.
 ifeq ($(OS),Windows_NT) 
-  atari_EMUCMD := start C:\atari\Altirra\Altirra64.exe /singleinstance /run "$(CURDIR)/$(PROGRAM)" & REM
-  apple2_EMUCMD := start C:\Projects\AppleWin\Debug\applewin.exe -d1 "dist.apple2\$(PROGRAM_STUB).po" & REM
-  c64_EMUCMD := start x64sc.exe -model c64ntsc +confirmonexit -autostart "$(CURDIR)/$(PROGRAM)" & REM
+  atari_EMUCMD := cmd /c start C:\atari\Altirra\Altirra64.exe /singleinstance /run
+  apple2_EMUCMD := taskkill /im applewin.exe & cmd /c start C:\Projects\AppleWin\Debug\applewin.exe -d1 "dist.apple2\$(PROGRAM_STUB).po" & REM
+  c64_EMUCMD := taskkill /im x64sc.exe & cmd /c start x64sc -model c64ntsc -autostart 
 else
   #atari_EMUCMD := osascript -e 'quit app "Atari800MacX"';open -n -a Atari800macx --args $(CURDIR)/$(PROGRAM);echo
   atari_EMUCMD := wine64 /Users/eric/Documents/Altirra/Altirra64.exe /singleinstance /run
@@ -338,7 +338,7 @@ $(PROGRAM): $(CONFIG) $(OBJECTS) $(LIBS)
 ifeq ($(CC65TARGET),apple2) 
 ifeq ($(OS),Windows_NT) 
   # Kill any Apple emulator that may have a lock on the .po file
-	@taskkill /im applewin.exe&
+	@taskkill /im applewin.exe
 	copy dist.apple2\bootable.po dist.apple2\$(PROGRAM_STUB).po
 else
 	cp dist.apple2/bootable.po dist.apple2/$(PROGRAM_STUB).po

@@ -282,7 +282,6 @@ void resetGraphics() {
   VIC.bgcolor1=0xf1;
   VIC.bgcolor2=0xf2;
 
-  
   POKE(0x291,0); //re-enable SHIFT-Commodore changing of char sets
 }
 
@@ -293,7 +292,7 @@ void initGraphics() {
   VIC.ctrl2 = 0xD8;  
 
   // Clear screen memory
-  memset(SCREEN_LOC,0,1000);
+  memset((void*)SCREEN_LOC,0,1000);
 
   // Load custom charset (and reset the screen) at the 4th bank (0xC000)
   memcpy((void*)CHARSET_LOC,&charset,2048);
