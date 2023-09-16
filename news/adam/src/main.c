@@ -236,7 +236,7 @@ void article_list(void)
   smartkeys_status("  GETTING ARTICLES, PLEASE WAIT...");
 
   // Set up URL
-  sprintf(OC.url,"%s?t=lf&ps=32x21&l=4&p=%u&c=%s",urlBase,pageNum,categoryNameToNum[selected_category]);
+  sprintf(OC.url,"%s?t=lf&ps=32x21&l=7&p=%u&c=%s",urlBase,pageNum,categoryNameToNum[selected_category]);
 
   // Send to FujiNet
   r = eos_write_character_device(NET,(unsigned char *)OC,sizeof(OC));
