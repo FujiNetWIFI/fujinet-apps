@@ -1,4 +1,4 @@
-TARGET_EXEC ?= fujilink.ddp
+TARGET_EXEC ?= netcat-40.ddp
 
 BUILD_DIR ?= ./build
 SRC_DIRS ?= ./src
@@ -10,8 +10,8 @@ SRCS := $(shell find $(SRC_DIRS) -name *.cpp -or -name *.c -or -name *.asm)
 OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
 DEPS := $(OBJS:.o=.d)
 
-CFLAGS=+coleco -subtype=adam
-LDFLAGS=+coleco -subtype=adam -o$(TARGET_EXEC) -create-app -leos -lsmartkeys 
+CFLAGS=+coleco -subtype=adam -DBUILD_ADAM 
+LDFLAGS=+coleco -subtype=adam -pragma-redirect:CRT_FONT=_font_8x8_coleco_adam_system -o$(TARGET_EXEC) -create-app -leos -lsmartkeys 
 ASFLAGS=+coleco -subtype=adam
 
 INC_DIRS := $(shell find $(SRC_DIRS) -type d)
@@ -33,7 +33,7 @@ $(BUILD_DIR)/%.asm.o: %.asm
 .PHONY: clean
 
 clean:
-	$(RM) -r fujilink* $(BUILD_DIR)
+	$(RM) -r iss* $(BUILD_DIR)
 
 -include $(DEPS)
 
