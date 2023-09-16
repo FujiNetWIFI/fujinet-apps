@@ -1,4 +1,4 @@
-TARGET_EXEC ?= nc
+TARGET_EXEC ?= netcat.ddp
 
 BUILD_DIR ?= ./build
 SRC_DIRS ?= ./src
@@ -10,9 +10,9 @@ SRCS := $(shell find $(SRC_DIRS) -name *.cpp -or -name *.c -or -name *.asm)
 OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
 DEPS := $(OBJS:.o=.d)
 
-CFLAGS=+cpm -subtype=adam -O3
-LDFLAGS=+cpm -subtype=adam -m -s
-ASFLAGS=+cpm -subtype=adam
+CFLAGS=+coleco -subtype=adam
+LDFLAGS=+coleco -subtype=adam -pragma-redirect:CRT_FONT=_font_8x8_coleco_adam_system -o$(TARGET_EXEC) -create-app -leos -lsmartkeys 
+ASFLAGS=+coleco -subtype=adam
 
 INC_DIRS := $(shell find $(SRC_DIRS) -type d)
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
@@ -33,7 +33,7 @@ $(BUILD_DIR)/%.asm.o: %.asm
 .PHONY: clean
 
 clean:
-	$(RM) -r $(TARGET_EXEC)* $(BUILD_DIR)
+	$(RM) -r lobby* $(BUILD_DIR)
 
 -include $(DEPS)
 
