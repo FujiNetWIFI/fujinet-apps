@@ -11,6 +11,7 @@
 #include "appkey.h"
 #include "nio.h"
 #include "fuji.h"
+#include "fn_io.h"
 
 union
 {
@@ -29,16 +30,7 @@ union
  */
 void host_read(char* host_slots)
 {
-  // Query for host slots
-  OS.dcb.ddevic=0x70;
-  OS.dcb.dunit=1;
-  OS.dcb.dcomnd=0xF4; // Get host slots
-  OS.dcb.dstats=0x40;
-  OS.dcb.dbuf=host_slots;
-  OS.dcb.dtimlo=0x0f;
-  OS.dcb.dbyt=256;
-  OS.dcb.daux=0;
-  siov();
+  fn_io_get_host_slots((HostSlot *) host_slots);
 }
 
 /**
@@ -46,16 +38,7 @@ void host_read(char* host_slots)
  */
 void host_write(char* host_slots)
 {
-  // Query for host slots
-  OS.dcb.ddevic=0x70;
-  OS.dcb.dunit=1;
-  OS.dcb.dcomnd=0xF3; // Write host slots
-  OS.dcb.dstats=0x80;
-  OS.dcb.dbuf=host_slots;
-  OS.dcb.dtimlo=0x0f;
-  OS.dcb.dbyt=256;
-  OS.dcb.daux=0;
-  siov();
+  fn_io_put_host_slots((HostSlot *) host_slots);
 }
 
 /**
@@ -63,16 +46,7 @@ void host_write(char* host_slots)
  */
 void disk_read(void)
 {
-  // Read Drive Tables
-  OS.dcb.ddevic=0x70;
-  OS.dcb.dunit=1;
-  OS.dcb.dcomnd=0xF2;
-  OS.dcb.dstats=0x40;
-  OS.dcb.dbuf=&device_slots.rawData;
-  OS.dcb.dtimlo=0x0f;
-  OS.dcb.dbyt=sizeof(device_slots.rawData);
-  OS.dcb.daux=0;
-  siov();
+  fn_io_get_device_slots((DeviceSlot *) &device_slots.rawData);
 }
 
 /**
@@ -80,15 +54,7 @@ void disk_read(void)
  */
 void disk_write(void)
 {
-  OS.dcb.ddevic=0x70;
-  OS.dcb.dunit=1;
-  OS.dcb.dcomnd=0xF1;
-  OS.dcb.dstats=0x80;
-  OS.dcb.dbuf=&device_slots.rawData;
-  OS.dcb.dtimlo=0x0f;
-  OS.dcb.dbyt=sizeof(device_slots.rawData);
-  OS.dcb.daux=0;
-  siov();
+  fn_io_put_device_slots((DeviceSlot *) &device_slots.rawData);
 }
 
 /// @brief Set the host slot and read/write mode for the given device slot
@@ -107,18 +73,9 @@ void disk_set_host_slot(unsigned char device_slot, unsigned char host_slot, unsi
 /**
  * Set filename for device slot
  */
-void set_filename(char* filename, unsigned char slot)
+void set_filename(unsigned char mode, unsigned char host_slot, unsigned char device_slot, char* filename)
 {
-  OS.dcb.ddevic=0x70;
-  OS.dcb.dunit=1;
-  OS.dcb.dcomnd=0xE2;
-  OS.dcb.dstats=0x80;
-  OS.dcb.dbuf=filename;
-  OS.dcb.dtimlo=0x0F;
-  OS.dcb.dbyt=256;
-  OS.dcb.daux1=slot;
-  OS.dcb.daux2=0;
-  siov();
+  fn_io_set_device_filename(mode, host_slot, device_slot, filename);
 }
 
 /**
@@ -126,15 +83,7 @@ void set_filename(char* filename, unsigned char slot)
  */
 void host_mount(unsigned char c)
 {
-  OS.dcb.ddevic=0x70;
-  OS.dcb.dunit=1;
-  OS.dcb.dcomnd=0xF9;
-  OS.dcb.dstats=0x00;
-  OS.dcb.dbuf=0;
-  OS.dcb.dtimlo=0x01;
-  OS.dcb.dbyt=0;
-  OS.dcb.daux=c;
-  siov();
+  fn_io_mount_host_slot(c);
 }
 
 /**
@@ -142,15 +91,7 @@ void host_mount(unsigned char c)
  */
 void host_unmount(unsigned char c)
 {
-  OS.dcb.ddevic=0x70;
-  OS.dcb.dunit=1;
-  OS.dcb.dcomnd=0xE6;
-  OS.dcb.dstats=0x00;
-  OS.dcb.dbuf=0;
-  OS.dcb.dtimlo=0x01;
-  OS.dcb.dbyt=0;
-  OS.dcb.daux=c;
-  siov();
+  fn_io_unmount_host_slot(c);
 }
 
 /**
@@ -158,16 +99,7 @@ void host_unmount(unsigned char c)
  */
 void disk_mount(unsigned char c, unsigned char o)
 {
-  OS.dcb.ddevic=0x70;
-  OS.dcb.dunit=1;
-  OS.dcb.dcomnd=0xF8;
-  OS.dcb.dstats=0x00;
-  OS.dcb.dbuf=0;
-  OS.dcb.dtimlo=0x01;
-  OS.dcb.dbyt=0;
-  OS.dcb.daux1=c;
-  OS.dcb.daux2=o;
-  siov();
+  fn_io_mount_disk_image(c, o);
 }
 
 /**
@@ -175,15 +107,7 @@ void disk_mount(unsigned char c, unsigned char o)
  */
 void fujinet_reset()
 {
-  OS.dcb.ddevic=0x70;
-  OS.dcb.dunit=1;
-  OS.dcb.dcomnd=0xFF;
-  OS.dcb.dstats=0x00;
-  OS.dcb.dbuf=0;
-  OS.dcb.dtimlo=0x01;
-  OS.dcb.dbyt=0;
-  OS.dcb.daux=0;
-  siov();
+  fn_io_reset();
 }
 
 

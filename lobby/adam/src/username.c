@@ -35,7 +35,7 @@ void username_set(void)
 void username_get(void)
 {
   strcpy(username,response);
-  state=FETCH;
+  state=CONNECT;
 }
 
 void username(void)

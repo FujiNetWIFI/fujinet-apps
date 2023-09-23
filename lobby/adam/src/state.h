@@ -12,6 +12,7 @@ typedef enum _state
   {
     INIT,
     USERNAME,
+    CONNECT,
     FETCH,
     DISPLAY,
     SELECT,

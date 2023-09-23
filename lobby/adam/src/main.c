@@ -9,6 +9,7 @@
 #include "state.h"
 #include "init.h"
 #include "username.h"
+#include "connect.h"
 #include "fetch.h"
 #include "display.h"
 #include "select.h"
@@ -28,6 +29,9 @@ void main(void)
 	  break;
 	case USERNAME:
 	  username();
+	  break;
+	case CONNECT:
+	  connect();
 	  break;
 	case FETCH:
 	  fetch();
