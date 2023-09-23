@@ -235,7 +235,8 @@ DEPENDS := $(OBJECTS:.o=.d)
 # Add to LIBS something like 'src/foo.lib src/c64/bar.lib'.
 LIBS += $(wildcard $(SRCDIR)/*.lib)
 LIBS += $(wildcard $(SRCDIR)/$(TARGETLIST)/*.lib)
- 
+LIBS += $(wildcard ../../fn_io/*.lib)
+
 # Add to CONFIG something like 'src/c64/bar.cfg src/foo.cfg'.
 CONFIG += $(wildcard $(SRCDIR)/$(TARGETLIST)/*.cfg)
 CONFIG += $(wildcard $(SRCDIR)/*.cfg)
