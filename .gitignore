@@ -22,6 +22,9 @@
 *.la
 *.lo
 
+# lib exceptions
+!fn_io_*.lib
+
 # Shared objects (inc. Windows DLLs)
 *.dll
 *.so
