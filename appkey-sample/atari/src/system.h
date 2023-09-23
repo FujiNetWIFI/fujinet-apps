@@ -1,7 +1,6 @@
 /**
- * Function to call sio
+ * Assembly stuff
  */
 
-void siov();
 void rtclr();
 void cold_start();
