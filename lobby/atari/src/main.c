@@ -630,7 +630,7 @@ void mount()
   disk_set_host_slot(0, host_slot, FUJI_DEVICE_MODE_READ);
 
   // Set and mount the filename in device slot 0
-  set_filename(filename, 0);
+  set_filename(0, host_slot, 0, filename);
   disk_mount(0, FUJI_DEVICE_MODE_READ);
 
   // Set the server url in this game type's app key:
