@@ -145,7 +145,7 @@ void help(void)
 void categories(void)
 {
   smartkeys_set_mode();
-  smartkeys_display(NULL,NULL,NULL,NULL,NULL,"  HELP");
+  smartkeys_display(NULL,NULL,NULL,NULL,NULL,NULL);
   smartkeys_status("  WELCOME TO FUJINEWS.");
 
   pageNum=1;
@@ -195,9 +195,6 @@ void categories(void)
 	case KEY_DOWN_ARROW:
 	  bar_down();
 	  break;
-	case KEY_SMART_VI:
-	  help();
-	  return;
 	case KEY_RETURN:
 	  selected_category=bar_get();
 	  state=ARTICLE_LIST;
