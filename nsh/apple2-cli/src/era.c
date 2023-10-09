@@ -38,6 +38,6 @@ void era(char *s)
   if (s!=NULL)
     strncpy((char *)&sp_payload[2],s,256);
 
-  if (sp_control(net,'!') == SP_ERR_NOERROR)
+  if (sp_control(net,'!') == SP_ERR_OK)
     printf("ERROR\n\n");
 }

@@ -24,71 +24,70 @@ void dir(char *s)
 {
   char default_path[3] = "N:";
   unsigned char err;
-  unsigned char nerr=1;
+  unsigned char nerr = 1;
   unsigned short bw;
   unsigned char *p;
 
   if (!s)
-    s=&default_path[0];
+    s = &default_path[0];
 
-  if ((err = network_open(s,DIRECTORY,LONG_DIRECTORY)) != SP_ERR_NOERROR)
-    {
-      printf("OPEN ERROR: %u\n\n",err);
-      network_close();
-      return;
-    }
+  if ((err = network_open(s, DIRECTORY, LONG_DIRECTORY)) != SP_ERR_OK)
+  {
+    printf("OPEN ERROR: %u\n\n", err);
+    network_close();
+    return;
+  }
 
   do
+  {
+    memset(buf, 0, sizeof(buf));
+
+    if (err = network_status(&bw, NULL, &nerr))
     {
-      memset(buf,0,sizeof(buf));
-  
-      if (err = network_status(&bw,NULL,&nerr))
-	{
-	  printf("STATUS ERROR: %u\n\n",nerr);
-	  network_close();
-	  return;
-	}
-      
-      if ((err = network_read(buf,bw)) != SP_ERR_NOERROR)
-	{
-	  printf("READ ERROR: %u\n\n",err);
-	  network_close();
-	  return;
-	}
-
-      p = &buf[0];
-
-      while (bw--)
-	{
-	  if (*p==0x9B) // convert EOL to Line feed for putchar.
-	    *p=0x0A;
-
-	  putchar(*p++);
-	}
-    } while (nerr != 136);
-
-  if (err = network_status(&bw,NULL,&nerr))
-    {
-      printf("STATUS ERROR: %u\n\n",nerr);
+      printf("STATUS ERROR: %u\n\n", nerr);
       network_close();
       return;
     }
 
-  if ((err = network_read(buf,bw)) != SP_ERR_NOERROR)
+    if ((err = network_read(buf, bw)) != SP_ERR_OK)
     {
-      printf("READ ERROR: %u\n\n",err);
+      printf("READ ERROR: %u\n\n", err);
       network_close();
       return;
     }
-  
-  p = &buf[0];
-  
-  while (bw--)
+
+    p = &buf[0];
+
+    while (bw--)
     {
-      if (*p==0x9B) // convert EOL to Line feed for putchar.
-	*p=0x0A;
-      
+      if (*p == 0x9B) // convert EOL to Line feed for putchar.
+        *p = 0x0A;
+
       putchar(*p++);
     }
-  
+  } while (nerr != 136);
+
+  if (err = network_status(&bw, NULL, &nerr))
+  {
+    printf("STATUS ERROR: %u\n\n", nerr);
+    network_close();
+    return;
+  }
+
+  if ((err = network_read(buf, bw)) != SP_ERR_OK)
+  {
+    printf("READ ERROR: %u\n\n", err);
+    network_close();
+    return;
+  }
+
+  p = &buf[0];
+
+  while (bw--)
+  {
+    if (*p == 0x9B) // convert EOL to Line feed for putchar.
+      *p = 0x0A;
+
+    putchar(*p++);
+  }
 }
