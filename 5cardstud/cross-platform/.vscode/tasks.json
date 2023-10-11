@@ -2,7 +2,8 @@
 	"label": "Build",
 	"type": "shell",
 	//"command": "make test size",
-	"command": "make clean test size",
+	"command": "make -f Makefile.adam",
+	//"command": "make clean test size",
 	"group": {
 		 "kind": "build",
 		 "isDefault": true
