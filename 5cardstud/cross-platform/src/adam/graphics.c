@@ -31,7 +31,7 @@ void drawStatusTextAt(unsigned char x, char* s)
 {
 }
 
-void drawStatusText(char* s);
+void drawStatusText(char* s)
 {
 }
 
