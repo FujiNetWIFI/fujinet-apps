@@ -1,4 +1,12 @@
+/* 
+ * Include CC65 style Joystick defines for Adam - There is a probably a better way to do this.
+ */
+#ifdef __ADAM__
+#include "adam/joystick.h"
+#else
 #include <joystick.h>
+#endif
+
 #include <conio.h>
 #include "platform-specific/graphics.h"
 
