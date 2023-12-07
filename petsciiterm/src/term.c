@@ -89,13 +89,19 @@ void out (void)
     unsigned char i = 0;
 
     while (kbhit())
-        buf[i++] = cgetc();
+    {
+        unsigned char c = cgetc();
+        //cputc(c);
 
-    // if ( buf[i] == 85 ) // F1
-    // {
-    //     disconnect();
-    //     return;
-    // }
+        if ( c == 0x85 ) // F1
+        {
+            disconnect();
+            return;
+        }
+
+        buf[i++] = c;
+    }
+
 
     if (!i)
         return;
