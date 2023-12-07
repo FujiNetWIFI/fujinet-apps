@@ -91,11 +91,11 @@ void out (void)
     while (kbhit())
         buf[i++] = cgetc();
 
-    if ( buf[i] == 85 ) // F1
-    {
-        disconnect();
-        return;
-    }
+    // if ( buf[i] == 85 ) // F1
+    // {
+    //     disconnect();
+    //     return;
+    // }
 
     if (!i)
         return;
