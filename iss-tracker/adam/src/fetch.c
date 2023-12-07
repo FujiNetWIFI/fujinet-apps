@@ -14,7 +14,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <conio.h>
-#include <msx.h>
+#include <video/tms99x8.h>
 #include <graphics.h>
 #include "fetch.h"
 #include "input.h"
@@ -23,6 +23,7 @@
 #define TRACKING_URL "N:HTTP://api.wheretheiss.at/v1/satellites/25544/positions?timestamps=%ld,%ld"
 #define WHO_URL "N:HTTP://api.open-notify.org/astros.json"
 #define ACK 0x80
+#define NACK 0x8C
 #define JSON 1
 #define NET 0x09
 #define Y_CENTER 80
@@ -70,6 +71,7 @@ const unsigned char ypos[360] =
 
 State fetch(void)
 {
+  DCB *dcb;
   smartkeys_display(NULL,NULL,NULL,NULL,NULL,NULL);
   smartkeys_status("   FETCHING DATA.");
   
@@ -108,17 +110,18 @@ State fetch(void)
       exit(1);
     }
 
-  // Query for all the information
-
+  // Wait for device to parse, then Query for all the information
+  while (eos_request_device_status(NET,dcb) != ACK);
+  
   eos_write_character_device(NET,timestamp_query,sizeof(timestamp_query));
-  eos_read_character_device(NET,timestamp_str,1024);
+  while (eos_read_character_device(NET,timestamp_str,1024) == NACK);
   timestamp=atol(timestamp_str);
   
   eos_write_character_device(NET,longitude_query,sizeof(longitude_query));
-  eos_read_character_device(NET,longitude,1024);
+  while (eos_read_character_device(NET,longitude,1024) == NACK);
 
   eos_write_character_device(NET,latitude_query,sizeof(latitude_query));
-  eos_read_character_device(NET,latitude,1024);
+  while (eos_read_character_device(NET,latitude,1024) == NACK);
 
   // Close the connection
 
@@ -143,10 +146,12 @@ unsigned char fetch_longitude_to_x(void)
 
 void fetch_track()
 {
+  DCB *dcb;
+  
   smartkeys_display(NULL,NULL,NULL,NULL,NULL,NULL);
   smartkeys_status("   FETCHING UPCOMING ISS POSITIONS...");
 
-  msx_color(1,1,4); // using color clash in our favor!
+  vdp_color(1,1,4); // using color clash in our favor!
   
   for (int i=0;i<10;i++)
     {
@@ -163,25 +168,28 @@ void fetch_track()
       eos_write_character_device(NET,(unsigned char *)SCM,sizeof(SCM));
       eos_write_character_device(NET,"P",1);
 
+      // wait for parse to complete
+      while(eos_request_device_status(NET,dcb) != 0x80);
+      
       eos_write_character_device(NET,latitude0_tracking_query,sizeof(latitude0_tracking_query));
-      eos_read_character_device(NET,tmp,1024);
+      while (eos_read_character_device(NET,tmp,1024) != 0x80);
       lat = atoi(tmp)+180;
       ty = ypos[lat];
 
       eos_write_character_device(NET,longitude0_tracking_query,sizeof(longitude0_tracking_query));
-      eos_read_character_device(NET,tmp,1024);
+      while (eos_read_character_device(NET,tmp,1024) != 0x80);
       lon = atoi(tmp)+180;
       tx = xpos[lon]-24;
 
       plot(tx,ty);
 
       eos_write_character_device(NET,latitude1_tracking_query,sizeof(latitude1_tracking_query));
-      eos_read_character_device(NET,tmp,1024);
+      while (eos_read_character_device(NET,tmp,1024) != 0x80);
       lat = atoi(tmp)+180;
       ty = ypos[lat];
 
       eos_write_character_device(NET,longitude1_tracking_query,sizeof(longitude1_tracking_query));
-      eos_read_character_device(NET,tmp,1024);
+      while (eos_read_character_device(NET,tmp,1024) != 0x80);
       lon = atoi(tmp)+180;
       tx = xpos[lon]-24;
 
@@ -201,11 +209,15 @@ void fetch_who()
   int i=0;
   char statusmsg[128];
   char k=0;
+  DCB *dcb;
   
   strcpy(OC.url,WHO_URL);
   eos_write_character_device(NET,(unsigned char *)OC,sizeof(OC));
   eos_write_character_device(NET,(unsigned char *)SCM,sizeof(SCM));
   eos_write_character_device(NET,"P",1);
+
+  // wait for parse to complete
+  while(eos_request_device_status(NET,dcb) != 0x80);
 
   memset(name,0,64);
   
@@ -216,7 +228,7 @@ void fetch_who()
       
       sprintf(q,qf,i++);
       eos_write_character_device(NET,q,sizeof(q));
-      eos_read_character_device(NET,name,1024);
+      while (eos_read_character_device(NET,name,1024) == NACK);
 
       if (name[0]==0x00)
 	goto who_exit;

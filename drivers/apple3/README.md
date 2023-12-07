@@ -13,10 +13,24 @@ Unit  Name       Type
 7     .RS232     Char -> mapped to Fujinet MODEM device
 8     .FN_CLOCK  Char
 
-These are all using Smartport and requires an updated version of the Soshdboot version of SOS to run.(so that the 4 SP HD devices are available)
+Update:
+Included an option to build just the character devices into the driver. The driver can then be used with the standard soshdboot sos.
+
+The following prebuilt disk images are available now:
+
+1. sos_selector_hd.po
+The FujiNet driver for this image the includes the character devices only and gives you two block devices using the internal soshdboot driver. This boots into Selector/// and includes most A3 software. This is based on the Apple3rtr image plus quite a few additions.
+
+2. businessbasic_hd.po
+The FujiNet driver for this image the includes the character devices only and boots straight into Business Basic so you can write your .network programs quickly from there.
+
+3. sos15_selector_hd.po
+The FujiNet driver includes all of the devices, block and character. This requires an updated version of the Soshdboot version of SOS to run.(so that the four Smartport HD devices are available)
 This special version is limited at the moment to only using the Selector /// program selector on boot up. You can easily add more applications to this. Its very much an early version, so beware.
 
-The included disk image includes this and the driver all ready to go. You will need either a soshdboot rom installed, or, use the special boot floppy available on the soshdboot site. For more details, refer to the Fujinet Wiki.
+You will need either a soshdboot rom installed, or, use the special boot floppy available on the soshdboot site to boot these images. For more details, refer to the Fujinet Wiki.
+
+# Driver overview
 
 ## 4 x SP Block devices
 mount them via Fujinet CONFIG, or via the web interface
@@ -36,10 +50,6 @@ The driver automatically updates the SOS time from Fujinet when the device recei
 ## .NETWORK device
 Available as a normal character device. Its really only been tested from Business Basic so far.
 
-Have a look at the following programs for examples of the code needed to access it. This is using the supplied invokable module "REQUEST.INV" that came with Business Basic to interface with SOS.
+Have a look in the examples directory for some sample programs to use the Network device. These are using the supplied invokable module "REQUEST.INV" that came with Business Basic to interface with SOS.
 
-These are under .PROFILE/LANGUAGES/BASIC
-IPV4TEST - print your external IP
-READWEB - read some web content
-ISSV3 - ISS tracker (note there are a couple of older version that will show some others ways of doing the same thing. The latest feels like the simplest way.
-
+They are included on the disk images under .PROFILE/LANGUAGES/BASIC

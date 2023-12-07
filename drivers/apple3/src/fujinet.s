@@ -17,6 +17,11 @@
 ;         currently the mappingis hard coded
 ;       - optimise the buffer usage (stop the double buffering to speed it up)
 ;
+; Add option to assemble just the character devices. This will work with either my
+; soshdboot disk images, or would also work with stock standard SOS1.3
+; - define symbol 'charonly' to remove the block devices
+;   Note: char unit numbers stay the same, ie from 4 onwards.
+;
 ;
 ; SmartPort driver for prodos compatible SmartPort cards
 ; This is based on the problock3 driver with some learnings aquired along the journey of
@@ -43,7 +48,7 @@
             .setcpu "6502"
             .reloc
 
-DriverVersion    = $001B      ; Version number
+DriverVersion    = $002B      ; Version number
 DriverMfgr       = $524A      ; Driver Manufacturer - RJ
 DriverType       = $E1        ; No formatter present for the time being
 DriverSubtype    = $02        ;
@@ -177,6 +182,7 @@ COMMENT_END:
 
             .SEGMENT    "DATA"
 
+.ifndef charonly
 ;------------------------------------
 ;
 ; Device identification Block (DIB) - #0
@@ -252,6 +258,8 @@ DIB3_Blks:  .word    $0000            ; # Blocks in device
             .word    DriverMfgr       ; Driver manufacturer
             .word    DriverVersion    ; Driver version
             .word    $0000            ; DCB length followed by DCB
+.endif
+
 ;
 ; Device identification Block (DIB) - #4
 ;
@@ -350,17 +358,23 @@ DIB8_Slot:  .byte    AutoScan         ; Slot number
 Buffer:     .res    768                 ; buffer for smartport interface in this bank
                                         ; max size for Char SP read/write command
 
+PrtBuf:     .res    256                 ; printer output buffer
+PrtPtr:     .byte   0                   ; printer buffer pointer
+tempy:      .byte   0                   ; temp Y storage
+temprq:     .byte   0                   ; temp ReqCnt MSB storage
+
 LastOP:     .res    $09, $FF            ; Last operation for D_REPEAT calls
 SIR_Addr:   .word    SIR_Tbl
 SIR_Tbl:    .res    $05, $00
 SIR_Len     =        *-SIR_Tbl
 MaxUnits:   .byte    $09                    ; The maximum number of units
 
+.ifndef charonly
 DCB_Idx:    .byte    $00                    ; DCB 0's blocks
             .byte    DIB1_Blks-DIB0_Blks    ; DCB 1's blocks
             .byte    DIB2_Blks-DIB0_Blks    ; DCB 2's blocks
             .byte    DIB3_Blks-DIB0_Blks    ; DCB 3's blocks
-
+.endif
 
 CardIsOK:   .byte   $00                 ; Have we found an intelligent disk controller yet?
 
@@ -371,7 +385,7 @@ SPUnitMap:  .byte   $01                 ; block dev0 (mapping not used, assume t
             .byte   $03                 ; block dev2 (mapping not used, assume they are always the first 4)
             .byte   $04                 ; block dev3 (mapping not used, assume they are always the first 4)
             .byte   $07                 ; Network device unit#
-            .byte   $08                 ; Printer device unit#
+PrtUnit:    .byte   $08                 ; Printer device unit#
             .byte   $05                 ; CPM device unit#
             .byte   $09                 ; Modem device unit#
             .byte   $06                 ; FN_Clock device unit#
@@ -417,12 +431,22 @@ SPReqCnt:   .word   $0000             ; Request count
 
 StatLen:    .byte   0                 ; Length for status call data
 
+; Smartport Printer buffer Write Call Parameter List
+PWParam:    .byte   $04               ; #params
+            .byte   $00               ; Unit
+            .word   PrtBuf            ; Printer buffer pointer
+PSPReqCnt:  .word   $0000             ; Request count
+            .byte   $00,$00,$00       ; Address pointer (low byte,mid byte,high byte)
+
+
+
 ; Hack for relocatable code supporting only 16bit values
-StatParAdr: .word StatParam
-CtrlParAdr: .word CtrlParam
-RWParamAdr: .word RWParam
-OpClParAdr: .word OpClParam
+StatParAdr:  .word StatParam
+CtrlParAdr:  .word CtrlParam
+RWParamAdr:  .word RWParam
+OpClParAdr:  .word OpClParam
 CRWParamAdr: .word CRWParam
+PWParamAdr:  .word PWParam
 
 ;
 ; .RS232 Device control parameters
@@ -523,7 +547,7 @@ DInit:      lda     CardIsOK            ; Check if we have checked for a card al
             jmp     FoundCard           ; Yes, skip signature check
 
 CheckSig:   jsr     GoSlow              ; set 1MHz, Grappler plus does not like 2M
-            lda     DIB0_Slot           ; Check configured slot for autoscan
+            lda     DIB4_Slot           ; Check configured slot for autoscan
             bpl     FixedSlot           ; No, use configured DIB1 slot
             lda     #ScanStart          ; else load starting scan slot
 FixedSlot:  ora     #$C0                ; Form a $Cs00 address, where s = slot #
@@ -553,10 +577,12 @@ CheckNext:  ldy     #$05                ; <-- hack, just check the 3 sig bytes, 
             sta     PDEntry+2           ; Set card prodos driver entry high byte
             sta     SPEntry+2           ; Set card smartport driver entry high byte
             and     #$07
+.ifndef charonly
             sta     DIB0_Slot           ; Set found slot for all DIBs
             sta     DIB1_Slot
             sta     DIB2_Slot
             sta     DIB3_Slot
+.endif
             sta     DIB4_Slot
             sta     DIB5_Slot
             sta     DIB6_Slot
@@ -568,9 +594,12 @@ CheckNext:  ldy     #$05                ; <-- hack, just check the 3 sig bytes, 
             lda     #SIR_Len
             ldx     SIR_Addr
             ldy     SIR_Addr+1
+
+.ifndef charonly    ; don't claim the SIR for charonly so we don't double up with the soshdboot driver
             jsr     AllocSIR            ; Claim SIR
             bcc     @ok2
             jmp     NoDevice
+.endif
                                         ; Lets check number of devices connected
                                         ; From P8 1.7 source:
                                         ;    the Smartportinterface does not set up
@@ -578,7 +607,7 @@ CheckNext:  ldy     #$05                ; <-- hack, just check the 3 sig bytes, 
                                         ;    Prodos Status call ; therefore, we have
                                         ;    made two calls : first a prodos status call
                                         ;    then a smartport status call
-@ok2:       lda     DIB0_Slot           ; From Prodos style drive/slot
+@ok2:       lda     DIB4_Slot           ; From Prodos style drive/slot
             asl                         ; 7 6 5 4 3 2 1 0
             asl                         ; D S S S 0 0 0 0
             asl
@@ -601,7 +630,7 @@ CheckNext:  ldy     #$05                ; <-- hack, just check the 3 sig bytes, 
             lda     Buffer              ; First byte returned is the num devices
             beq     NoDevice            ; if zero, no devices attached
             sta     NumSPDevs
-			jmp     FoundCard
+            jmp     FoundCard
 
 ; Todo, just hard mapped for now
 ;;; scan for the char dev names and map them to the SOS unit numbers
@@ -664,7 +693,11 @@ NoMatch:    dec     Pointer+1           ; Try next slot
 FoundCard:  jsr     CkUnit              ; Checks for unit below unit max
             jsr     CkCharDev           ; Check dev type
             bcs     notblkdev
+
+.ifndef charonly
             jsr     UpdVolSize          ; Its ok, lets Get volume size and update DIB
+.endif
+
 notblkdev:  lda     SOS_Unit
             cmp     #8                  ; if its init for clock, trigger update time
 			beq     SetupEvent
@@ -759,6 +792,7 @@ DReadGo:
             jsr     CkCharDev           ; is it a char dev?
             bcs     CharRead            ; yes, do char write
 
+.ifndef charonly
             jsr     CkCnt               ; Checks for validity, aborts if not
             lda     Num_Blks            ; Check for block count greater than zero
             beq     ReadExit
@@ -813,6 +847,7 @@ SkipReadMSBIncrement:
             sta     (QtyRead),Y
             clc
 ReadExit:   rts                         ; Exit read routines
+.endif
 
 IO_Error:   lda     #XIOERROR           ; I/O error
             jsr     SysErr              ; Return to SOS with error in A
@@ -875,6 +910,7 @@ DWriteGo:
             jsr     CkCharDev           ; is it a char dev?
             bcs     CharWrite           ; yes, do char write
 
+.ifndef charonly
             jsr     CkCnt               ; Checks for validity, aborts if not
             lda     Num_Blks            ; Check for block count greater than zero
             beq     WriteExit
@@ -925,9 +961,50 @@ SkipWriteMSBIncrement:
 
 WriteExit:  clc
             rts
+.endif
+
 
 ; character device writes
-CharWrite:  lda     #SP_Write           ; Setup SP command code
+CharWrite:  ldx     SOS_Unit            ; Get SP unit
+            lda     SPUnitMap,x
+            cmp     PrtUnit             ; check if we are writing to the printer
+            bne     DW1                 ; no, continue
+;            beq     DW1             ;uncomment this to disable the printer buffering
+
+            ldy     ReqCnt+1
+            sty     temprq
+
+            ldy     #0                  ; yes, buffer it
+NxtChar:    ldx     PrtPtr              ; current print buffer pointer
+            lda     (SosBuf),Y          ; copy char to print buffer
+            sta     PrtBuf,X
+
+            cpx     #$fe                ; is print buffer full?
+            bne     NotFull
+
+            sty     tempy               ; yes, save y, then output the contents of the buffer
+            inx
+            jsr     PrtBufW             ; write the buffer to SP
+            inc     PrtPtr              ; reset the buffer pointer (inc to $ff, next inc below incs to 0)
+            ldy     tempy               ; restore y
+
+NotFull:    inc     PrtPtr
+            iny
+            lda     temprq
+            bne     Prtgt256            ; > 256 bytes
+            cpy     ReqCnt              ; print request < 256 bytes
+            bne     NxtChar
+            clc
+            rts
+
+Prtgt256:   cpy     #0                  ; check for more than 256 chars processed
+            bne     NxtChar
+            dec     temprq              ; yes, dec msb, and inc sosbuf msb
+            inc     SosBuf+1
+            jmp     NxtChar
+
+
+DW1:        lda     #SP_Write           ; Setup SP command code
             sta     CmdNum
             lda     CRWParamAdr         ; Set Char Read/Write parameter list pointer
             sta     CmdList
@@ -1105,13 +1182,17 @@ RSStat03:   lda     #SP_Status          ; Setup SP command code
 
 @ok2:       ldy     #0
             lda     #$FF                ; Output buffer size
-            JSR     CntOut
+            jsr     CntOut
             lda     #0                  ; Number of chars in output buffer
-            JSR     CntOut
+            jsr     CntOut
             lda     #$FF                ; Input buffer size
-            JSR     CntOut
-            lda     Buffer              ; Number of chars in input buffer (assume<256)
-            JSR     CntOut
+            jsr     CntOut
+            lda     Buffer+1            ; >256 chars waiting?
+            beq     @less256            ; no, report what we have
+            lda     #$ff                ; else, send max bytes waiting
+            bne     @grtt256            ; bra always
+@less256:   lda     Buffer              ; Number of chars in input buffer
+@grtt256:   jsr     CntOut
             rts
 
 CntOut:     sta     (CSList),Y
@@ -1298,7 +1379,12 @@ DOCont:     lda     #SP_Open            ; Setup SP command code
             lda     SPUnitMap,x
             sta     OpClParam+1
 
-            jsr     SmartPort
+            cmp     PrtUnit             ; check if we are opening the printer
+            bne     DO1
+            lda     #0                  ; yes, reset printer buffer pointer
+            sta     PrtPtr
+
+DO1:        jsr     SmartPort
             bcs     Open_Err
             rts
 
@@ -1316,7 +1402,16 @@ DCloseGo:   jsr     CkCharDev           ; Close only for char dev
             bcs     DCCont
             jmp     BadOp
 
-DCCont:     lda     #SP_Close           ; Setup SP command code
+DCCont:     ldx     SOS_Unit            ; Get SP unit
+            lda     SPUnitMap,x
+            cmp     PrtUnit             ; check if we are closing the printer
+            bne     DC1
+
+            ldx     PrtPtr              ; yes, check printer output buffer
+            beq     DC1                 ; nothing in the output buffer, cont
+            jsr     PrtBufW             ; else output the contents of the buffer
+
+DC1:        lda     #SP_Close           ; Setup SP command code
             sta     CmdNum
             lda     OpClParAdr          ; Set parameter list pointer
             sta     CmdList
@@ -1326,11 +1421,11 @@ DCCont:     lda     #SP_Close           ; Setup SP command code
             ldx     SOS_Unit            ; Set unit in Param list
             lda     SPUnitMap,x
             sta     OpClParam+1
-            sta     OpClParam+2  ;;;debug come out later
 
-            lda     EReg         ;;;debug come out later
-            sta     OpClParam+3  ;;;debug come out later
+;            sta     OpClParam+2  ;;;debug come out later
 
+;            lda     EReg         ;;;debug come out later
+;            sta     OpClParam+3  ;;;debug come out later
 
             jsr     SmartPort
             bcs     Close_Err
@@ -1345,6 +1440,30 @@ Close_Err:  jsr     SysErr              ; we'll just run with the returned SP er
 ; Utility routines
 ;
 ;------------------------------------
+
+;
+; Write the printer buffer to FujiNet
+;  input x = chars to print
+;
+PrtBufW:    stx     PSPReqCnt
+            lda     #0
+            sta     PSPReqCnt+1
+
+            lda     #SP_Write           ; Setup SP command code
+            sta     CmdNum
+            lda     PWParamAdr          ; Set printer Write parameter list pointer
+            sta     CmdList
+            lda     PWParamAdr+1
+            sta     CmdList+1
+            ldx     SOS_Unit            ; Set unit in Param list
+            lda     SPUnitMap,x
+            sta     PWParam+1
+
+            jsr     SmartPort           ; go do the SP write
+            bcc     ExitPB
+            jmp     IO_Error
+
+ExitPB:     rts                         ; Exit print buffer write
 
 ;
 ; copy the Buffer data to the SOS buffer
@@ -1397,7 +1516,7 @@ r101:       lda     Buffer,Y
 
 copied:     rts
 
-
+.ifndef charonly
 ;
 ; Check ReqCnt for block devices to ensure it is a multiple of 512.
 ;
@@ -1407,6 +1526,8 @@ CkCnt:      lda     ReqCnt              ; Look at the lsb of bytes requested
             lsr     A                   ; Put bottom bit into carry, 0 into top
             sta     Num_Blks            ; Convert bytes to number of blks to xfer
             bcc     CvtBlk              ; Carry is set from LSR to mark error.
+.endif
+
 BadCnt:     lda     #XBYTECNT
             jsr     SysErr              ; Return to SOS with error in A
 
@@ -1418,6 +1539,7 @@ CkChrCnt:   lda     ReqCnt+1            ; check msb for <3
             bcs     BadCnt              ; no good, error
             rts                         ; else, all good
 
+.ifndef charonly
 ;
 ; Test for valid block number; abort on error
 ;
@@ -1470,6 +1592,7 @@ FixUp:      lda     SosBuf+1            ; Look at msb
             sta     SosBuf+1            ; FDxx ->7Dxx
             inc     SosBuf+ExtPG        ; Bank N -> bank N+1
 @3:         rts                         ; Return carry set
+.endif
 
 CkUnit:     lda     SOS_Unit            ; Checks for unit below unit max
             cmp     MaxUnits
@@ -1512,6 +1635,7 @@ GoFast:     pha
             pla
             rts
 
+.ifndef charonly
 ;
 ; Get Volume size for Unit and update DIB
 ;
@@ -1543,6 +1667,8 @@ UpdVolSize: lda     #SP_Status          ; set command for SP call
             rts
 
 @error:     jmp     NoDevice
+
+.endif
 
 ;
 ; jsr to card prodos driver
@@ -1640,7 +1766,7 @@ SwapScrH:
             txa                         ; TXA/LSR tests whether array index is odd or even
             lsr                         ; and sets carry accordingly (1 = odd).
             tya                         ; Bring screen index into A for manipulation
-            eor     DIB0_Slot           ; Cycle page index between $x8 and $x8+n as long as N in 1..7
+            eor     DIB4_Slot           ; Cycle page index between $x8 and $x8+n as long as N in 1..7
             bcc     @loop               ; Take branch every other loop, using array index odd/even
                                         ;  (carry still valid from TXA/LSR)
             eor     #$80                ; Cycle page index between $F8 and $78

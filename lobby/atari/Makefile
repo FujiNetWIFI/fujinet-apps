@@ -27,16 +27,18 @@ CONFIG  :=
  
 # Additional C compiler flags and options.
 # Default: none
-CFLAGS  =
+#CFLAGS = --debug-info
+CFLAGS =
  
 # Additional assembler flags and options.
 # Default: none
-ASFLAGS =
+ASFLAGS = 
  
 # Additional linker flags and options.
 # Default: none
+# LDFLAGS = --debug-info -Wl --dbgfile,lobby.dbg
 LDFLAGS =
- 
+
 # Path to the directory containing C and ASM sources.
 # Default: src
 SRCDIR :=
@@ -233,7 +235,8 @@ DEPENDS := $(OBJECTS:.o=.d)
 # Add to LIBS something like 'src/foo.lib src/c64/bar.lib'.
 LIBS += $(wildcard $(SRCDIR)/*.lib)
 LIBS += $(wildcard $(SRCDIR)/$(TARGETLIST)/*.lib)
- 
+LIBS += $(wildcard ../../fn_network/fujinet-network-$(TARGETLIST)_*.lib)
+
 # Add to CONFIG something like 'src/c64/bar.cfg src/foo.cfg'.
 CONFIG += $(wildcard $(SRCDIR)/$(TARGETLIST)/*.cfg)
 CONFIG += $(wildcard $(SRCDIR)/*.cfg)

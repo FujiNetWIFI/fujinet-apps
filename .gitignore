@@ -22,6 +22,9 @@
 *.la
 *.lo
 
+# lib exceptions
+!fujinet-network-*.lib
+
 # Shared objects (inc. Windows DLLs)
 *.dll
 *.so
@@ -50,3 +53,14 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+.vscode/
+
+# apple tools for generating po files etc
+apple-tools/*.jar
+apple-tools/*.dsk
+
+# build artifacts
+build/
+dist/
+obj/

@@ -1,0 +1,5 @@
+CHANGES.txt changelog for `libchessmove`
+
+2023-07-XX
+ * ...
+
