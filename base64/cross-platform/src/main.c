@@ -9,7 +9,6 @@
 
 #include <string.h>
 #include <stdlib.h>
-#include <stdio.h>
 #include <conio.h>
 #include "fujinet-io.h"
 
@@ -24,89 +23,82 @@ const char *test_base64 = "SGVsbG8gV29ybGQ=";
 char decoded_text[40];
 unsigned long decoded_len;
 
-void main(void)
+char *version = "v1.0.1";
+
+int main(void)
 {
-  printf("BASE64 TEST PROGRAM\n\n");
+  char *header = "BASE64 TEST PROGRAM";
+  uint8_t x, y;
+  screensize(&x, &y);
+  clrscr();
+  cputsxy((x - strlen(header))/2, 0, header);
+  cputsxy((x - strlen(version))/2, 1, version);
 
-  printf("PERFORMING ENCODE TESTS\n\n");
+  cputsxy(8, 3, "INP COM LEN OUTPUT");
 
-  printf("ENCODE INPUT\n");
+  cputsxy(1, 5, "ENCODE");
+
+  if (fn_io_base64_encode_input((char *)test_text, strlen(test_text)) != 0) {
+    cputsxy(0, 10, "BASE64 ENCODE INPUT FAILED\n");
+    return 1;
+  }
+  gotox(9);
+  cputc('X');
+
+  if (fn_io_base64_encode_compute() != 0) {
+    cputsxy(0, 10, "BASE64 ENCODE COMPUTE FAILED\n");
+    return 1;
+  }
+  gotox(13);
+  cputc('X');
+
+  if (fn_io_base64_encode_length(&encoded_len) != 0) {
+    cputsxy(0, 10, "BASE64 ENCODE LENGTH FAILED\n");
+    return 1;
+  }
+  gotox(17);
+  cprintf("%ld", encoded_len);
   
-  if (fn_io_base64_encode_input((char *)test_text,strlen(test_text)) > 128)
-    {
-      printf("BASE64 ENCODE INPUT FAILED\n");
-      exit(1);
-    }
+  if (fn_io_base64_encode_output(encoded_text, encoded_len) != 0) {
+    cputsxy(0, 10, "BASE64 ENCODE OUTPUT FAILED\n");
+    return 1;
+  }
+  gotox(20);
+  cputs(encoded_text);
 
-  printf("ENCODE COMPUTE\n");
-  
-  if (fn_io_base64_encode_compute() > 128)
-    {
-      printf("BASE64 ENCODE COMPUTE FAILED\n");
-      exit(1);
-    }
 
-  printf("ENCODE LENGTH\n");
-  
-  if (fn_io_base64_encode_length(&encoded_len) > 128)
-    {
-      printf("BASE64 ENCODE LENGTH FAILED\n");
-      exit(1);
-    }
-  else
-    printf("ENCODED LENGTH: %lu\n",encoded_len);
+  cputsxy(1, 6, "DECODE");
 
-  printf("ENCODE OUTPUT\n");
-  
-  if (fn_io_base64_encode_output(encoded_text,encoded_len) > 128)
-    {
-      printf("BASE64 ENCODE OUTPUT FAILED\n");
-      exit(1);
-    }
-  else
-    printf("ENCODED TEXT IS: %s\n",encoded_text);
+  if (fn_io_base64_decode_input((char *)test_base64,strlen(test_base64)) != 0) {
+    cputsxy(0, 10, "BASE64 DECODE INPUT FAILED\n");
+    return 1;
+  }
+  gotox(9);
+  cputc('X');
 
-  // ------------------------------------------------
-  
-  printf("\n\nPERFORMING DECODE TESTS\n\n");
+  if (fn_io_base64_decode_compute() != 0) {
+    cputsxy(0, 10, "BASE64 DECODE COMPUTE FAILED\n");
+    return 1;
+  }
+  gotox(13);
+  cputc('X');
 
-  printf("DECODE INPUT\n");
-  
-  if (fn_io_base64_decode_input((char *)test_base64,strlen(test_base64)) > 128)
-    {
-      printf("BASE64 DECODE INPUT FAILED\n");
-      exit(1);
-    }
+  if (fn_io_base64_decode_length(&decoded_len) != 0) {
+    cputsxy(0, 10, "BASE64 DECODE LENGTH FAILED\n");
+    return 1;
+  }
+  gotox(17);
+  cprintf("%ld", decoded_len);
 
-  printf("DECODE COMPUTE\n");
-  
-  if (fn_io_base64_decode_compute() > 128)
-    {
-      printf("BASE64 DECODE COMPUTE FAILED\n");
-      exit(1);
-    }
+  if (fn_io_base64_decode_output(decoded_text, decoded_len) != 0) {
+    cputsxy(0, 10, "BASE64 ENCODE OUTPUT FAILED\n");
+    return 1;
+  }
+  gotox(20);
+  cputs(decoded_text);
 
-  printf("DECODE LENGTH\n");
-  
-  if (fn_io_base64_decode_length(&decoded_len) > 128)
-    {
-      printf("BASE64 DECODE LENGTH FAILED\n");
-      exit(1);
-    }
-  else
-    printf("DECODED LENGTH: %lu\n",decoded_len);
-
-  printf("DECODE OUTPUT\n");
-  
-  if (fn_io_base64_decode_output(decoded_text,decoded_len) > 128)
-    {
-      printf("BASE64 ENCODE OUTPUT FAILED\n");
-      exit(1);
-    }
-  else
-    printf("DECODED TEXT IS: %s\n",decoded_text);
-
-  printf("\nDONE.\n");
+  gotoxy(2, 11);
 
   cgetc();
+  return 0;
 }
