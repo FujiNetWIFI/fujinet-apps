@@ -30,7 +30,7 @@ appkeyC64 appkey;
   #define OPEN_APPKEY_PREFIX "appkey-"
   #define OPEN_APPKEY_DELIM "-"
 #else
-  #define DEV 15
+  #define DEV 30  // The FujiNet device #
   #define SEC_NUM 15
   #define OPEN_APPKEY_PREFIX "openappkey:"
   #define OPEN_APPKEY_DELIM ","
