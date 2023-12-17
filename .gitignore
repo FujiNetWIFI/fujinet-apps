@@ -64,3 +64,6 @@ apple-tools/*.dsk
 build/
 dist/
 obj/
+
+# altirra debugging... clue's in the name
+altirra-debug.ini
