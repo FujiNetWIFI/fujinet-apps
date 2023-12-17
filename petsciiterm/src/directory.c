@@ -26,7 +26,7 @@ static bool directory_running;
 
 extern void ihdone();  // srq.s
 
-char dial_url[40] = {};
+char dial_url[40];
 
 /**
  * @brief a Directory entry

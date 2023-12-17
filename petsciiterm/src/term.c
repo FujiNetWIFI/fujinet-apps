@@ -16,7 +16,7 @@
 #define SAN 2     // The secondary address (SA) to use on DEV.
 #define CMD 15    // The secondary address for the Command channel
 
-extern char dial_url[40] = {};
+extern char dial_url[40];
 static bool connected = false;
 static bool echo = false;
 
