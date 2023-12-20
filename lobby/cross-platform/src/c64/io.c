@@ -54,7 +54,7 @@
 #define FUJICMD_STATUS "\x53"
 
 #define LFN 15
-#define DEV 15
+#define DEV 30  // The FujiNet device #
 #define SAN 15
 
 #include <string.h>

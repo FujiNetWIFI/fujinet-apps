@@ -12,12 +12,13 @@
 #include <stdio.h>
 
 #define LFN 2     // The logical file number to use for I/O
-#define DEV 12    // The network device #
+#define DEV 16    // The network device #
 #define SAN 2     // The secondary address (SA) to use on DEV.
 #define CMD 15    // The secondary address for the Command channel
 
 extern char dial_url[40];
-static bool connected;
+static bool connected = false;
+static bool echo = false;
 
 char buf[4096];   // buffer. reused for everything.
 
@@ -91,15 +92,23 @@ void out (void)
     while (kbhit())
     {
         unsigned char c = cgetc();
-        //cputc(c);
 
-        if ( c == 0x85 ) // F1
+        if ( echo )
+            cputc(c);
+
+        switch( c )
         {
+        case 0x85: // F1 - Disconnect
             disconnect();
-            return;
+            break;
+        case 0x86: // F2 - Toggle Echo
+            echo = !echo;
+            cprintf("echo[%d]", echo);
+            break;
+        default:
+            buf[i++] = c;
         }
 
-        buf[i++] = c;
     }
 
 

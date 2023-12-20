@@ -14,7 +14,7 @@
 #include <stdbool.h>
 
 #define LFN 2     // The logical file number to use for I/O
-#define DEV 14    // The network CPM
+#define DEV 20    // The CPM device #
 #define SAN 2     // The secondary address (SA) to use on DEV.
 
 char buf[4096];   // buffer. reused for everything.

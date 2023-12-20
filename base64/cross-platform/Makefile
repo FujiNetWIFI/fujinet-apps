@@ -1,4 +1,4 @@
-# Adapted from the generic cc65 makefile.
+# Adapted from the generic (non-official) cc65 makefile.
 # Notible exceptions:
 # - recursive dirs for src
 # - final files go into build/ directory instead of polluting root folder (e.g. lbl, com file etc)
@@ -8,10 +8,10 @@
 ###############################################################################
 
 # Space or comma separated list of cc65 supported target platforms to build for.
-TARGETS := atari apple2
+TARGETS := apple2 atari
 
-# Name of the final, single-file library.
-PROGRAM := jsontest
+# Name of the final, single-file application.
+PROGRAM := base64
 
 APP_NAME := $(PROGRAM)
 
@@ -252,10 +252,8 @@ OBJECTS := $(OBJECTS:$(SRCDIR)/%=$(OBJDIR)/$(TARGETLIST)/%)
 # Set DEPENDS to something like 'obj/c64/foo.d obj/c64/bar.d'.
 DEPENDS := $(OBJECTS:.o=.d)
 
-# Add to LIBS something like 'src/foo.lib src/c64/bar.lib'.
 LIBS += $(wildcard ../../fn_network/fujinet-network-$(TARGETLIST)_*.lib)
 
-# add common/inc, <target>/src/inc, and the root directory (for fujinet-network.[h|inc])
 ASFLAGS += --asm-include-dir $(SRCDIR)/include --asm-include-dir ../../fn_network
 CFLAGS += --include-dir $(SRCDIR)/include --include-dir ../../fn_network
 
@@ -265,7 +263,7 @@ CFLAGS += -DBUILD_$(UPPER_TARGETLIST)
 ASFLAGS += -DBUILD_$(UPPER_TARGETLIST)
 LDFLAGS += -DBUILD_$(UPPER_TARGETLIST)
 
-ifeq ($(TARGETLIST),atari)
+ifeq ($(TARGETS),atari)
 LDFLAGS += --start-addr 0x3000
 endif
 
@@ -362,6 +360,14 @@ atr: dist
 	cp dist/$(PROGRAM).com dist/atr/$(APP_NAME).com
 	$(call RMFILES,dist/*.atr)
 	dir2atr -S dist/$(APP_NAME).atr dist/atr
+
+gendebug: $(PROGRAM)
+	@echo "Generating debug.scr script for AppleWin"
+	@echo 'echo "Loading symbols"' > build/debug.scr
+	@awk '{printf("sym %s = %s\n", substr($$3, 2), $$2)}' < build/$(PROGRAM).lbl >> build/debug.scr
+	@echo 'bpx _main' >> build/debug.scr
+	@echo 'bpx _debug' >> build/debug.scr
+
 
 po: dist
 	$(call RMFILES,dist/$(APP_NAME)*.po)

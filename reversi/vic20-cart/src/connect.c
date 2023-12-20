@@ -14,7 +14,7 @@
 
 #define LFN 2
 #define CMD 15
-#define DEV 12
+#define DEV 16    // The network device #
 #define SAN 2
 
 #define LISTEN_URL "tcp://:6502/"

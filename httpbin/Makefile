@@ -3,53 +3,16 @@
 # - recursive dirs for src
 # - final files go into build/ directory instead of polluting root folder (e.g. lbl, com file etc)
 
-###############################################################################
-### In order to override defaults - values can be assigned to the variables ###
-###############################################################################
-
 # Space or comma separated list of cc65 supported target platforms to build for.
 TARGETS := atari apple2
 
 # Name of the final, single-file library.
-PROGRAM := jsontest
+PROGRAM := httpbin
 
 APP_NAME := $(PROGRAM)
 
-APPLE_TOOLS_DIR = ../../apple-tools
-
-# Path(s) to additional libraries required for linking the program
-# Use only if you don't want to place copies of the libraries in SRCDIR
-# Default: none
-LIBS    :=
-
-# Custom linker configuration file
-# Use only if you don't want to place it in SRCDIR
-# Default: none
-CONFIG  :=
-
-# Additional C compiler flags and options.
-# Default: none
-CFLAGS  =
-
-# Additional assembler flags and options.
-# Default: none
-ASFLAGS =
-
-# Additional linker flags and options.
-# Default: none
-LDFLAGS =
-
-# Path to the directory containing C and ASM sources.
-# Default: src
-SRCDIR :=
-
-# Path to the directory where object files are to be stored (inside respective target subdirectories).
-# Default: obj
-OBJDIR :=
-
-# Command used to run the emulator.
-# Default: depending on target platform. For default (c64) target: x64 -kernal kernal -VICIIdsize -autoload
-EMUCMD :=
+APPLE_TOOLS_DIR = ../apple-tools
+FUJINET_NETWORK_LIBS = ../fn_network
 
 # Build dir for putting final built program rather than cluttering root
 BUILD_DIR = build
@@ -253,11 +216,11 @@ OBJECTS := $(OBJECTS:$(SRCDIR)/%=$(OBJDIR)/$(TARGETLIST)/%)
 DEPENDS := $(OBJECTS:.o=.d)
 
 # Add to LIBS something like 'src/foo.lib src/c64/bar.lib'.
-LIBS += $(wildcard ../../fn_network/fujinet-network-$(TARGETLIST)_*.lib)
+LIBS += $(wildcard ../fn_network/fujinet-network-$(TARGETLIST)_*.lib)
 
 # add common/inc, <target>/src/inc, and the root directory (for fujinet-network.[h|inc])
-ASFLAGS += --asm-include-dir $(SRCDIR)/include --asm-include-dir ../../fn_network
-CFLAGS += --include-dir $(SRCDIR)/include --include-dir ../../fn_network
+ASFLAGS += --asm-include-dir $(SRCDIR)/include --asm-include-dir $(FUJINET_NETWORK_LIBS)
+CFLAGS += --include-dir $(SRCDIR)/include --include-dir $(FUJINET_NETWORK_LIBS)
 
 # Add -DBUILD_(TARGET) to all args for the current name.
 UPPER_TARGETLIST := $(shell echo $(TARGETLIST) | tr a-z A-Z)
@@ -265,9 +228,7 @@ CFLAGS += -DBUILD_$(UPPER_TARGETLIST)
 ASFLAGS += -DBUILD_$(UPPER_TARGETLIST)
 LDFLAGS += -DBUILD_$(UPPER_TARGETLIST)
 
-ifeq ($(TARGETLIST),atari)
 LDFLAGS += --start-addr 0x3000
-endif
 
 .SUFFIXES:
 .PHONY: all clean dist $(PROGRAM).$(TARGETLIST)
