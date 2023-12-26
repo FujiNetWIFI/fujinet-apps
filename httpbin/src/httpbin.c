@@ -50,6 +50,9 @@ int main(void) {
     test_delete();
     test_simple_get();
 
+    printf("Press a key to exit.");
+    cgetc();
+
     return 0;
 }
 
