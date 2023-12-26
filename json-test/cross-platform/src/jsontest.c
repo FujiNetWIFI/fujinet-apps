@@ -32,7 +32,7 @@ uint16_t conn_bw;
 uint8_t connected;
 uint8_t conn_err;
 
-char *version = "v2.0.1";
+char *version = "v2.0.2";
 
 int main(void) {
     setup();
@@ -46,12 +46,17 @@ int main(void) {
     test_get_query(timestamp_query);
     end_get();                          // finally close resource
 
+    printf("press a key to exit.");
+    cgetc();
+
    return 0;
 }
 
 void handle_err(char *reason) {
     if (err) {
         printf("Error: %d (d: %d) %s\n", err, fn_device_error, reason);
+        printf("press a key to exit.");
+        cgetc();
         exit(1);
     }
 }
