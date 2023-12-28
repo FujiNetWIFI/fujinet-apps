@@ -1,13 +1,13 @@
 TARGETS := atari apple2
-PROGRAM := jsontest
+PROGRAM := httpbin
 
-FUJINET_NETWORK_LIBS = ../../fn_network
-APPLE_TOOLS_DIR = ../../apple-tools
+FUJINET_NETWORK_LIBS = ../fn_network
+APPLE_TOOLS_DIR = ../apple-tools
 
 CC := cl65
 
 # Used as global "include" dir for macros etc.
-COMMON_INC_DIR := ../../COMMON/include
+COMMON_INC_DIR := ../COMMON/include
 
 SRCDIR := src
 BUILD_DIR := build

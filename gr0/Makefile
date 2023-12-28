@@ -1,17 +1,20 @@
-TARGETS := atari apple2
-PROGRAM := jsontest
+TARGETS := atari
+PROGRAM := gr0
 
-FUJINET_NETWORK_LIBS = ../../fn_network
-APPLE_TOOLS_DIR = ../../apple-tools
+# Set if using FujiNet library
+# FUJINET_NETWORK_LIBS = ../fn_network
 
 CC := cl65
 
 # Used as global "include" dir for macros etc.
-COMMON_INC_DIR := ../../COMMON/include
+COMMON_INC_DIR := ../COMMON/include
 
 SRCDIR := src
 BUILD_DIR := build
 OBJDIR := obj
+
+PREEMUCMD :=
+POSTEMUCMD :=
 
 # This allows src to be nested withing sub-directories.
 rwildcard=$(wildcard $(1)$(2))$(foreach d,$(wildcard $1*), $(call rwildcard,$d/,$2))
@@ -63,9 +66,6 @@ ALTIRRA ?= $(ALTIRRA_HOME)/Altirra64.exe \
 
 atari_EMUCMD := $(ALTIRRA)
 
-PREEMUCMD :=
-POSTEMUCMD :=
-
 ifeq ($(EMUCMD),)
   EMUCMD = $($(TARGETLIST)_EMUCMD)
 endif
@@ -87,9 +87,10 @@ OBJECTS := $(OBJECTS:$(SRCDIR)/%=$(OBJDIR)/$(CURRENT_TARGET)/%)
 DEPENDS := $(OBJECTS:.o=.d)
 STATEFILE := Makefile.options
 
-LIBS += $(wildcard $(FUJINET_NETWORK_LIBS)/fujinet-network-$(CURRENT_TARGET)_*.lib)
-ASFLAGS += --asm-include-dir $(FUJINET_NETWORK_LIBS)
-CFLAGS += --include-dir $(FUJINET_NETWORK_LIBS)
+# Uncomment to add FujiNet support
+# LIBS += $(wildcard $(FUJINET_NETWORK_LIBS)/fujinet-network-$(CURRENT_TARGET)_*.lib)
+# ASFLAGS += --asm-include-dir $(FUJINET_NETWORK_LIBS)
+# CFLAGS += --include-dir $(FUJINET_NETWORK_LIBS)
 
 # add common/inc
 ASFLAGS += --asm-include-dir $(COMMON_INC_DIR)
@@ -101,14 +102,12 @@ CFLAGS += --include-dir $(SRCDIR) --include-dir $(SRCDIR)/include
 
 # Add -DBUILD_(TARGET) to all args for the current name.
 UPPER_CURRENT_TARGET := $(shell echo $(CURRENT_TARGET) | tr a-z A-Z)
-CFLAGS += -DBUILD_$(UPPER_CURRENT_TARGET)
-ASFLAGS += -DBUILD_$(UPPER_CURRENT_TARGET)
-LDFLAGS += -DBUILD_$(UPPER_CURRENT_TARGET)
+# CFLAGS += -DBUILD_$(UPPER_CURRENT_TARGET)
+# ASFLAGS += -DBUILD_$(UPPER_CURRENT_TARGET)
+# LDFLAGS += -DBUILD_$(UPPER_CURRENT_TARGET)
 
 # Fix for graphics calls on Atari
-ifeq ($(CURRENT_TARGET),atari)
-# LDFLAGS += -Wl -D__RESERVED_MEMORY__=0x1
-endif
+LDFLAGS += -Wl -D__RESERVED_MEMORY__=0x1
 
 # Fix for loading location for Atari to be above SDX
 ifeq ($(CURRENT_TARGET),atari)
@@ -154,13 +153,13 @@ vpath %.c $(SRC_INC_DIRS)
 
 $(TARGETOBJDIR)/%.o: %.c | $(TARGETOBJDIR)
 	@$(call MKDIR,$(dir $@))
-	$(CC) -t $(CURRENT_TARGET) -c --create-dep $(@:.o=.d) $(CFLAGS) -o $@ $<
+	$(CC) -t $(CURRENT_TARGET) -c $(CFLAGS) -o $@ $<
 
 vpath %.s $(SRC_INC_DIRS)
 
 $(TARGETOBJDIR)/%.o: %.s | $(TARGETOBJDIR)
 	@$(call MKDIR,$(dir $@))
-	$(CC) -t $(CURRENT_TARGET) -c --create-dep $(@:.o=.d) $(ASFLAGS) -o $@ $<
+	$(CC) -t $(CURRENT_TARGET) -c $(ASFLAGS) -o $@ $<
 
 $(BUILD_DIR)/$(PROGRAM_TGT): $(OBJECTS) $(LIBS) | $(BUILD_DIR)
 	$(CC) -t $(CURRENT_TARGET) $(LDFLAGS) -o $@ $(patsubst %.cfg,-C %.cfg,$^)
@@ -187,12 +186,6 @@ atr: dist
 	cp dist/$(PROGRAM_TGT).com dist/atr/$(PROGRAM).com
 	$(call RMFILES,dist/*.atr)
 	dir2atr -S dist/$(PROGRAM).atr dist/atr
-
-po: dist
-	$(call RMFILES,dist/$(APP_NAME)*.po)
-	cp dist/$(PROGRAM_TGT).com dist/$(PROGRAM)
-	$(APPLE_TOOLS_DIR)/mk-bitsy.sh dist/$(PROGRAM).po TEST_$(PROGRAM)
-	$(APPLE_TOOLS_DIR)/add-file.sh dist/$(PROGRAM).po dist/$(PROGRAM) $(PROGRAM)
 
 ############################################################################
 else # $(words $(TARGETLIST)),1
