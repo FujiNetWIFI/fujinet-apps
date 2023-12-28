@@ -18,7 +18,10 @@
 #define SAN 2     // The secondary address (SA) to use on DEV.
 #define CMD 15    // The secondary address for the Command channel
 
-const char url[]="HTTP://api.open-notify.org/iss-now.json";
+// Don't translate underscore to petscii glyph in string literals
+#pragma charmap (0x5F, 0x5F);
+
+const char url[]="http://api.open-notify.org/iss-now.json";
 
 const char cmd_parse[]="jsonparse,2";
 const char lon_query[] = "jq,2,/iss_position/longitude";
