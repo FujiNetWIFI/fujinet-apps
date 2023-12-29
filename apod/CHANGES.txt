@@ -1,6 +1,9 @@
 apod (Astronomy Picture of the Day) Client for #FujiNet
 Change Log
 
+ * 2023-12-29
+   + Talking to my websever over HTTPS now.
+
  * 2021-06-10
    + Split colorbars into a test version of the APOD app,
      so the main app has a little more breathing room.

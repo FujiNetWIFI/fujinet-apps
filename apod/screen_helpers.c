@@ -12,7 +12,7 @@
   memory blocks.
 
   By Bill Kendrick <bill@newbreedsoftware.com>
-  2021-03-27 - 2021-05-04;
+  2021-03-27 - 2023-12-29
 */
 
 #include <string.h> /* for memset() */
@@ -30,7 +30,8 @@ unsigned char * dlist1, * dlist2, * dlist3;
  */
 void screen_off(void) {
   OS.sdmctl = 0;
-  memset(scr_mem, 0, (SCR_BLOCK_SIZE * 3));
+  bzero(scr_mem, (SCR_BLOCK_SIZE * 3));
+//memset(scr_mem, 0, (SCR_BLOCK_SIZE * 3)); /* optimizes into 'bzero', but then we get an error: screen_helpers.s:64: Error: Unresolved external '___bzero' -bjk 2023.12.29 */
 }
 
 /**

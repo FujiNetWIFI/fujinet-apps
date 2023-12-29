@@ -6,10 +6,10 @@
 
   This module fetches an APOD photo (or sample image)
   from the APOD server via the FujiNet "N:" device,
-  using the HTTP transport.
+  using the HTTPS transport.
 
   By Bill Kendrick <bill@newbreedsoftware.com>
-  2021-03-27 - 2021-06-10
+  2021-03-27 - 2023-12-29
 */
 
 #include <stdio.h>
@@ -22,7 +22,7 @@
 
 
 /* The base URL for the web app */
-char * baseurl = "N:HTTP://billsgames.com/fujinet/apod/index.php";
+char * baseurl = "N:HTTPS://billsgames.com/fujinet/apod/index.php";
 
 /* Space to store the composed URL */
 char url[255];
@@ -42,7 +42,7 @@ char url[255];
 void fetch_image(unsigned char choice, char sample, int size, unsigned char pick_yr, unsigned pick_mo, unsigned pick_day) {
   unsigned short data_len, data_read;
   unsigned char retries = 0;
-  char * txt_buf;
+  unsigned char * txt_buf;
 
   txt_buf = (unsigned char *) (txt_mem + 40);
 
@@ -57,7 +57,7 @@ void fetch_image(unsigned char choice, char sample, int size, unsigned char pick
 
   if (size == 7680) {
     /* Single screen image to load */
-    nread(1, scr_mem1, (unsigned short) size);
+    nread(1, (char *) scr_mem1, (unsigned short) size);
   } else if (size == (40 + 4) * 192) {
     /* Single screen with color palette for every scanline */
     retries = 0;
@@ -78,7 +78,7 @@ void fetch_image(unsigned char choice, char sample, int size, unsigned char pick
         if (data_read + data_len > 7680) {
           data_len = 7680 - data_read;
         }
-        nread(1, scr_mem1 + data_read, data_len);
+        nread(1, (char *) (scr_mem1 + data_read), data_len);
       }
     }
 
@@ -101,7 +101,7 @@ void fetch_image(unsigned char choice, char sample, int size, unsigned char pick
           if (data_read + data_len > 768) {
             data_len = 768 - data_read;
           }
-          nread(1, rgb_table + data_read, data_len);
+          nread(1, (char *) (rgb_table + data_read), data_len);
         }
       }
     }
@@ -117,7 +117,7 @@ void fetch_image(unsigned char choice, char sample, int size, unsigned char pick
       data_len=(OS.dvstat[1] << 8) + OS.dvstat[0];
       if (data_len == 0) break;
       if (data_read + data_len > 7680) data_len = 7680 - data_read;
-      nread(1, scr_mem1 + data_read, data_len);
+      nread(1, (char *) (scr_mem1 + data_read), data_len);
     }
 
     OS.sdmctl = 0;
@@ -134,7 +134,7 @@ void fetch_image(unsigned char choice, char sample, int size, unsigned char pick
       data_len=(OS.dvstat[1] << 8) + OS.dvstat[0];
       if (data_len == 0) break;
       if (data_read + data_len > 7680) data_len = 7680 - data_read;
-      nread(1, scr_mem2 + data_read, data_len);
+      nread(1, (char *) (scr_mem2 + data_read), data_len);
     }
 
     OS.sdmctl = 0;
@@ -151,7 +151,7 @@ void fetch_image(unsigned char choice, char sample, int size, unsigned char pick
       data_len=(OS.dvstat[1] << 8) + OS.dvstat[0];
       if (data_len == 0) break;
       if (data_read + data_len > 7680) data_len = 7680 - data_read;
-      nread(1, scr_mem3 + data_read, data_len);
+      nread(1, (char *) (scr_mem3 + data_read), data_len);
     }
 
     OS.sdlst = dlist1;
@@ -165,7 +165,7 @@ void fetch_image(unsigned char choice, char sample, int size, unsigned char pick
     nread(1, (char *) 708, 3);
   }
 
-  nread(1, txt_buf, 40);
+  nread(1, (char *) txt_buf, 40);
 
   txt_buf[39] = 0x9B;
 
