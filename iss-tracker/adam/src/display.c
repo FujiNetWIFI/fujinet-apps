@@ -8,18 +8,12 @@
  * @license gpl v. 3, see LICENSE.md for details
  */
 
-#include <msx.h>
+#include <video/tms99x8.h>
 #include <conio.h>
 #include <smartkeys.h>
 #include <eos.h>
 #include "display.h"
 #include "input.h"
-
-#define SPRITE_COLOR             1
-#define SPRITE_ATTRIBUTE_ADDRESS 0x1b00
-#define SPRITE_PATTERN_ADDRESS   0x3800
-#define X_POS                    SPRITE_ATTRIBUTE_ADDRESS + 1
-#define Y_POS                    SPRITE_ATTRIBUTE_ADDRESS
 
 extern char latitude[16];
 extern char longitude[16];
@@ -1059,28 +1053,12 @@ const unsigned char sprite[8] =
     0x20,0x50,0xA4,0x58,0x1A,0x05,0x0A,0x04
   };
 
-const unsigned char sprite_attributes[4] =
-  {
-    0,0,1,SPRITE_COLOR
-  };
-
-void display_sprite_put(unsigned char x, unsigned char y)
-{
-  msx_vpoke(0x1b01,x);
-  msx_vpoke(0x1b00,y);
-  msx_vpoke(0x1b02,0);
-}
-
 void display_init(void)
-{
-  msx_color(3,4,4);
+{  
   clrscr();
-  msx_vpoke(0x1b02,1);
-  eos_write_vdp_register(1,0xE3);
-  msx_vwrite(sprite,SPRITE_PATTERN_ADDRESS,sizeof(sprite));
-  msx_vwrite(sprite_attributes,SPRITE_ATTRIBUTE_ADDRESS,sizeof(sprite_attributes));
-  msx_vwrite(map_pixels,0,sizeof(map_pixels));
-  msx_vwrite(map_colors,MODE2_ATTR,sizeof(map_colors));
+  vdp_color(3,4,4);
+  vdp_vwrite(map_pixels,0,sizeof(map_pixels));
+  vdp_vwrite(map_colors,MODE2_ATTR,sizeof(map_colors));
 }
 
 State display(void)
@@ -1088,13 +1066,14 @@ State display(void)
   unsigned short timer=0;
   unsigned char color=0;
   char status_msg[128];
+
+  vdp_set_sprite_mode(sprite_scaled);
+  vdp_set_sprite_8(0,sprite);
   
   smartkeys_display(NULL,NULL,NULL,"REFRESH"," TRACK", "WHO'S IN\n SPACE");  
   sprintf(status_msg,"   CURRENT ISS POSITION:\n   LATITUDE: %s\n   LONGITUDE: %s\n",latitude,longitude);
   smartkeys_status(status_msg);
-  
-  display_sprite_put(fetch_longitude_to_x(),fetch_latitude_to_y());
-
+    
   while(1)
     {
       switch(input())
@@ -1108,7 +1087,7 @@ State display(void)
 	  return WHO;
 	default:
 	  csleep(5);
-	  vpoke(0x1B03,color++ & 0x0f);
+	  vdp_put_sprite_8(0,fetch_longitude_to_x(),fetch_latitude_to_y(),0,(color++ & 0x0F));
 	  if (timer > 16384)
 	    {
 	      timer=0;

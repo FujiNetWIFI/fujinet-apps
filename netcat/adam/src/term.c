@@ -73,7 +73,7 @@ void connect(void)
     unsigned char mode;
     unsigned char translation;
     char url[256];
-  } openCmd = {'O',READ_WRITE,NONE,"N:TELNET://BBS.FOZZTEXX.COM/"};
+  } openCmd = {'O',READ_WRITE,NONE,"N:HTTPS://www.gnu.org/licenses/gpl-3.0.txt"};
 
   eos_write_character_device(NET_DEV,openCmd,sizeof(openCmd));
 
@@ -126,7 +126,8 @@ void in(void)
 void term(void)
 {
   vdp_set_mode(0);
-
+  vdp_color(VDP_INK_BLACK,VDP_INK_CYAN,VDP_INK_CYAN);
+  
   if (!connect())
     {
       printf("COULD NOT CONNECT.\nPRESS ANY KEY FOR DIALING DIRECTORY.");

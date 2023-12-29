@@ -14,7 +14,7 @@
 #define FUJICMD_OPEN_APPKEY "\xDC"
 #define FUJICMD_CLOSE_APPKEY "\xDB"
 
-#define DEV 11 
+#define DEV 30  // The FujiNet device #
 
 appkeyblock appkey; // The appkey (see appkey.h)
 unsigned char appkey_error;

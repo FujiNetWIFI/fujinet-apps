@@ -1,0 +1,82 @@
+	;; Boot Z88DK program using EOS Filesystem methods
+	;; Based on the SmartBASIC 1.0 boot block
+	;; originally (c) 1983 COLECO
+
+READ		EQU	01H	; EOS mode for opening file
+
+ONEKB		EQU	0400H	; 1kb of bytes, used for size
+
+DESTADDR	EQU	0D000H	; Destination address pointer
+BLOCKSLEFT	EQU	0D002H	; # of blocks left to read
+FILENUM		EQU	0D004H	; The opened file number
+
+OPENFILE	EQU	0FCC0H	; EOS Open File call
+CLOSEFILE	EQU	0FCC3H	; EOS Close File call
+READFILE	EQU	0FCD2H	; EOS Read File call
+	
+SMARTWRITER	EQU	0FCE7H	; Start SmartWriter
+STACKPTR	EQU	0FE58H	; Stack pointer set to this
+	
+	
+	ORG $C800		; All boot blocks must ORG here
+
+	di			; disable interrupts
+	jr	Continue	; Jump over program name
+
+pname:	defm	"FUJILINK"	; Filename (11 chars max)
+	defb	$02		; File type (Ctrl-B for bootable binary)
+	defb	$03		; Coleco liked using ASCII ETX as an end delimiter.
+
+porg:	defw	$0000		; The target org for the program
+psiz:	defw	$5000		; Program size
+
+	;; Boot code starts execution here
+Continue:	
+	ld	sp,STACKPTR	; Set stack pointer
+	ld	a,b		; B = Current AdamNet device #
+	ld	b,READ		; Set file mode to READ
+	ld	hl,pname	; HL = Program name
+	call	OPENFILE	; Call EOS OPEN FILE
+	jr	z,OpenSuccess	; Yes, we opened okay, continue.
+	jp	SMARTWRITER	; No, we did not, jump to SmartWriter Entry. Bye.
+OpenSuccess:
+	ld	(FILENUM),A	; A = opened file number, store it.
+	call	DoLoad		; Attempt the load
+	cp	0H		; Everything ok?
+	jr	z,DoClose	; Yes, do close
+	jp	SMARTWRITER	; No, jump to SmartWriter, Bye.
+DoClose:
+	ld	a,(FILENUM)	; get file number into A
+	call	CLOSEFILE	; Close the file
+	jr	z,RunProgram	; Run the program
+	jp	SMARTWRITER	; If close failed for some reason, RETURN TO SMARTWRITER. Bye.
+RunProgram:
+	ld	hl,porg		; HL = program org
+	jp	(hl)		; Go run it. Bye.
+
+	;; Subroutine to load program into memory
+DoLoad:	ld	hl,porg		; HL = Program ORG
+	ld	de,DESTADDR	;
+	ld	bc,04H		; 4 bytes
+	ldir			; do copy
+ldloop:	ld	hl,BLOCKSLEFT	; Get blocks left
+	dec	(hl)		; decrement
+	ld	a,(FILENUM)	; Get File #
+	ld	hl,(DESTADDR)	; Where to store
+	ld	bc,ONEKB	; request 1 KB (block) of data
+	call	READFILE	; Read from file
+	jr	nz,LoadErr	; We failed, return with non-zero error
+	ld	bc,ONEKB	; bc = $0400 (1024)
+	add	hl,bc		; Increment DESTADDR by 1KB
+	ld	ix,0D000H	; ix = DESTADDR
+	ld	(ix+0),l	; save HL to DESTADDR using IX
+	ld 	(ix+1),h	; ...
+	ld	a,(0d0002H)	; Any blocks left?
+	cp	0H		; ...
+	jr	nz,ldloop	; Yes, continue loading
+	ret			; Return with no error.
+LoadErr:
+	ld	a,01H		; Non-zero error code
+	ret			; Bye.
+
+	ALIGN	1024,$00	; Must be a block in size.

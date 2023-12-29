@@ -7,6 +7,8 @@
 
 #include "hires.h"
 #include "text.h"
+#include<peekpoke.h>
+#include<string.h>
 #include "../platform-specific/graphics.h"
 
 
@@ -20,9 +22,11 @@ unsigned char cycleNextColor() {
 }
 
 void enableDoubleBuffer() {
+   POKE(0xc055,1);
 }
 
 void disableDoubleBuffer() {
+  POKE(0xc054,1);
 }
 
 void clearStatusBar() {
@@ -35,6 +39,7 @@ void clearStatusBar() {
 }
 
 void drawBuffer() {
+   memcpy((void*)0x4000,(void*)0x2000,0x2000);
 }
 
 void drawStatusTextAt(unsigned char x, char* s) {
@@ -179,6 +184,7 @@ void resetGraphics() {
 
 void initGraphics() {
   hires_Init();
+  enableDoubleBuffer();
 }
 
 void waitvsync() {

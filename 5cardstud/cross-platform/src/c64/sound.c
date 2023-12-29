@@ -30,13 +30,16 @@ void playNoise(unsigned f) {
 }
 
 void initSound() {
-  static unsigned char i=15,j;
+  static unsigned char j,i=15;
   memset(&SID,0,25);
+
+  // Ramp up volume to avoid a harsh pop
   while(--i) {
     SID.amp++;
     j=100;while(--j);
   }
 
+  // Set default values for voices
   SID.v1.ad=0x09;
   SID.v1.sr=0x00;
   SID.v2.sr=0x00;
@@ -51,8 +54,10 @@ void soundJoinGame() {
 }
 
 void soundMyTurn() {
-  for(delay=0;(delay+=10)<21;)
-    playNote(0x191e);
+  delay=10;
+  playNote(0x191e);
+  delay=20;
+  playNote(0x191e);
 }
 
 void soundGameDone() {
@@ -77,19 +82,18 @@ void soundTick() {
 }
 
 void soundPlayerJoin() {
-  unsigned i;
   SID.v2.ad=0x56;
   delay=25;
-  for(i=0x630;i<0x660;i+=0x10)
-    playNoise(i);
+  playNoise(0x630);
+  playNoise(0x640);
+  playNoise(0x650);
 }
 
 void soundPlayerLeft() {
-  unsigned i;
   SID.v2.ad=0x56;
-  delay=25;
-  for(i=0x660;i>=0x630;i-=0x10)
-    playNoise(i);
+  delay=20;
+  playNoise(0x760);
+  playNoise(0x750);
 }
 
 void soundSelectMove() {

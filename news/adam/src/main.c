@@ -6,7 +6,7 @@
  * @license gpl v. 3 
  */
 
-#include <msx.h>
+#include <video/tms99x8.h>
 #include <eos.h>
 #include <smartkeys.h>
 #include <stdio.h>
@@ -131,11 +131,11 @@ void find_fujinet(void)
 
 void help(void)
 {
-  msx_vfill(MODE2_ATTR+0x0500,0xF4,0x0100);
-  msx_vfill(MODE2_ATTR+0x0600,0x1F,0x0A00);
-  msx_vfill(0x0500,0x00,0x0B00);
+  vdp_vfill(MODE2_ATTR+0x0500,0xF4,0x0100);
+  vdp_vfill(MODE2_ATTR+0x0600,0x1F,0x0A00);
+  vdp_vfill(0x0500,0x00,0x0B00);
 
-  msx_color(15,4,7);
+  vdp_color(15,4,7);
 
   gotoxy(0,6); cprintf("%32s","HELP");
 
@@ -145,30 +145,30 @@ void help(void)
 void categories(void)
 {
   smartkeys_set_mode();
-  smartkeys_display(NULL,NULL,NULL,NULL,NULL,"  HELP");
+  smartkeys_display(NULL,NULL,NULL,NULL,NULL,NULL);
   smartkeys_status("  WELCOME TO FUJINEWS.");
 
   pageNum=1;
   
-  msx_vfill(MODE2_ATTR+0x0500,0xF4,0x0100);
-  msx_vfill(MODE2_ATTR+0x0600,0xF5,0x0100);
-  msx_vfill(MODE2_ATTR+0x0700,0x1F,0x0900);
-  msx_vfill(MODE2_ATTR+0x1000,0xF4,0x0100);
+  vdp_vfill(MODE2_ATTR+0x0500,0xF4,0x0100);
+  vdp_vfill(MODE2_ATTR+0x0600,0xF5,0x0100);
+  vdp_vfill(MODE2_ATTR+0x0700,0x1F,0x0900);
+  vdp_vfill(MODE2_ATTR+0x1000,0xF4,0x0100);
   
   cprintf("\x20\x20\x20\x20\x20\x9A\x9B\x9C\x20\x20\x20\x20\x20\n");
   cprintf("\x80\x81\x82\x83\x84\x94\x95\x96\x8A\x8B\x8C\x8D\x8e NEWS READER CLIENT");
   cprintf("\x85\x86\x87\x88\x89\x97\x98\x99\x8F\x90\x91\x92\x93  FOR COLECO  ADAM ");
   cprintf("\x20\x20\x20\x20\x20\x20\x9D\x9E\x9F\x20\x20\x20\x20\n\n");  
 
-  msx_color(15,4,7);
+  vdp_color(15,4,7);
   
   cprintf("%32s","CATEGORIES");
 
-  msx_color(1,5,7);
+  vdp_color(1,5,7);
   
   cprintf("%32s","FUJINET.ONLINE/8bitnews/");
 
-  msx_color(1,15,7);
+  vdp_color(1,15,7);
 
   cprintf("\xa0\xa1" " TOP STORIES\n");
   cprintf("\xa0\xa1" " WORLD NEWS\n");
@@ -180,8 +180,8 @@ void categories(void)
   cprintf("\xa0\xa1" " POLITICS\n");
   cprintf("\xa0\xa1" " SPORTS\n");
 
-  msx_vfill_v(MODE2_ATTR+0x0700,0xF4,72);
-  msx_vfill_v(MODE2_ATTR+0x0700+8,0xF4,72);
+  vdp_vfill_v(MODE2_ATTR+0x0700,0xF4,72);
+  vdp_vfill_v(MODE2_ATTR+0x0700+8,0xF4,72);
 
   bar_set(6,2,9,0);
 
@@ -195,9 +195,6 @@ void categories(void)
 	case KEY_DOWN_ARROW:
 	  bar_down();
 	  break;
-	case KEY_SMART_VI:
-	  help();
-	  return;
 	case KEY_RETURN:
 	  selected_category=bar_get();
 	  state=ARTICLE_LIST;
@@ -212,12 +209,12 @@ void article_list_bar(unsigned char _i)
   unsigned short y1=_i*0x300 + MODE2_ATTR;
 
   // Grey out original entry.
-  msx_vfill(y0,0xF1,0x100);
-  msx_vfill(y0+0x100,0x1E,0x200);
+  vdp_vfill(y0,0xF1,0x100);
+  vdp_vfill(y0+0x100,0x1E,0x200);
 
   // color new entry
-  msx_vfill(y1,0xF4,0x100);
-  msx_vfill(y1+0x100,0x1F,0x200);  
+  vdp_vfill(y1,0xF4,0x100);
+  vdp_vfill(y1+0x100,0x1F,0x200);  
 
   old_i=_i;
 }
@@ -231,7 +228,7 @@ void article_list(void)
   char i;
   
   smartkeys_set_mode();
-  msx_color(1,14,14);
+  vdp_color(1,14,14);
   smartkeys_display(NULL,NULL,NULL,NULL,NULL,NULL);
   smartkeys_status("  GETTING ARTICLES, PLEASE WAIT...");
 
@@ -239,8 +236,8 @@ void article_list(void)
   sprintf(OC.url,"%s?t=lf&ps=32x21&l=7&p=%u&c=%s",urlBase,pageNum,categoryNameToNum[selected_category]);
 
   // Send to FujiNet
-  r = eos_write_character_device(NET,(unsigned char *)OC,sizeof(OC));
-
+  while (eos_write_character_device(NET,(unsigned char *)OC,sizeof(OC)) < 0x80);
+  
   // Wait for data to come in
   while (!connected())
     {
@@ -278,7 +275,7 @@ void article_list(void)
   // Set up the display
   clrscr();
   
-  msx_vfill(MODE2_ATTR,0x1E,6144); // Fill screen grey initially.
+  vdp_vfill(MODE2_ATTR,0x1E,6144); // Fill screen grey initially.
 
   smartkeys_display(NULL,NULL,NULL,"  PREV\n  PAGE","  NEXT\n  PAGE","CATEGORIES");
   sprintf(smartkeys_status_msg,"  %s %s",categoryNameToNum[selected_category],page);
@@ -286,11 +283,11 @@ void article_list(void)
 
   for (i=0;i<n;i++)
     {
-      msx_vfill(MODE2_ATTR * 3, 0xF1, 0x100);
-      msx_vfill(MODE2_ATTR * 3 + 0x100, 0x1E, 0x200);
-      msx_color(14,1,7);
+      vdp_vfill(MODE2_ATTR * 3, 0xF1, 0x100);
+      vdp_vfill(MODE2_ATTR * 3 + 0x100, 0x1E, 0x200);
+      vdp_color(14,1,7);
       gotoxy(0,i*3); cprintf("%32s",articleList[i].date);
-      msx_color(1,14,7);
+      vdp_color(1,14,7);
       smartkeys_puts(0,i*24+8,articleList[i].title);
     }
 
@@ -348,8 +345,8 @@ void article_list(void)
 	}
     }
   
-  msx_vfill(MODE2_ATTR,0xF4,0x100);
-  msx_vfill(MODE2_ATTR+0x100,0x1F,0x200);
+  vdp_vfill(MODE2_ATTR,0xF4,0x100);
+  vdp_vfill(MODE2_ATTR+0x100,0x1F,0x200);
 }
 
 void article(void)
@@ -364,7 +361,7 @@ void article(void)
   sprintf(OC.url,"%s?t=lf&ps=31x18&p=%u&a=%lu",urlBase,pageNum,articleId);
 
   // Send to FujiNet
-  r = eos_write_character_device(NET,(unsigned char *)OC,sizeof(OC));
+  while (eos_write_character_device(NET,(unsigned char *)OC,sizeof(OC)) < 0x80);
 
   // Wait for data to come in
   while (!connected())
@@ -393,22 +390,22 @@ void article(void)
   // Now display the page.
   if (pageNum==1)
     {
-      msx_color(1,14,7);
+      vdp_color(1,14,7);
       clrscr();
-      msx_vfill(MODE2_ATTR,0xF4,0x200);
-      msx_color(15,4,7);
+      vdp_vfill(MODE2_ATTR,0xF4,0x200);
+      vdp_color(15,4,7);
       smartkeys_puts(0,0,title);
     }
   else
     {
-      msx_vfill(0x200,0x00,0x1300);
+      vdp_vfill(0x200,0x00,0x1300);
     }
   
   smartkeys_display(NULL,"  INFO","ARTICLES","  PREV\n  PAGE","  NEXT\n  PAGE","CATEGORIES");
   sprintf(smartkeys_status_msg,"  %s",page);
   smartkeys_status(smartkeys_status_msg);
 
-  msx_color(1,14,7);
+  vdp_color(1,14,7);
   gotoxy(0,2); cprintf("%s",pageData);
 
   while(1)

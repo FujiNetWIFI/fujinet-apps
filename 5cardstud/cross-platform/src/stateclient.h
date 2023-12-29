@@ -1,5 +1,9 @@
 #include <string.h>
-#include <peekpoke.h>
+
+#define POKE(addr,val)     (*(unsigned char*) (addr) = (val))
+#define POKEW(addr,val)    (*(unsigned*) (addr) = (val))
+#define PEEK(addr)         (*(unsigned char*) (addr))
+#define PEEKW(addr)        (*(unsigned*) (addr))
 
 char rx_buf[1024];     // buffer for json payload
 
