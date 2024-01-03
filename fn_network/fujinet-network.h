@@ -22,6 +22,18 @@ extern uint16_t fn_bytes_read;
  */
 extern uint8_t fn_device_error;
 
+uint8_t fn_error(uint8_t code);
+
+/*
+ * Network status values.
+ * bw      : bytes waiting
+ * conn    : Connected status, this is 1 for still reading a particular resource, 0 when the current read has completed.
+ * error   : the error status returned from FN, e.g. 136 for EOF, 1 for normal OK status (don't ask why)
+ */
+extern uint16_t fn_network_bw;
+extern uint8_t fn_network_conn;
+extern uint8_t fn_network_error;
+
 /**
  * @brief  Get Network Device Status byte 
  * @param  devicespec pointer to device specification of form: N:PROTO://[HOSTNAME]:PORT/PATH/.../

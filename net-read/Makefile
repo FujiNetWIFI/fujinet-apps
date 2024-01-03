@@ -145,6 +145,22 @@ all: $(PROGRAM_TGT)
 -include $(DEPENDS)
 -include $(STATEFILE)
 
+define _listing_
+  CFLAGS += --listing $$(@:.o=.lst)
+  ASFLAGS += --listing $$(@:.o=.lst)
+endef
+
+define _mapfile_
+  LDFLAGS += --mapfile $$@.map
+endef
+
+define _labelfile_
+  LDFLAGS += -Ln $$@.lbl
+endef
+
+OPTIONS = $(_OPTIONS_)
+$(eval $(OBJECTS): $(STATEFILE))
+
 # Transform the abstract OPTIONS to the actual cc65 options.
 $(foreach o,$(subst $(COMMA),$(SPACE),$(OPTIONS)),$(eval $(_$o_)))
 
@@ -194,6 +210,9 @@ test: $(PROGRAM_TGT)
 clean:
 	$(call RMFILES,$(OBJECTS))
 	$(call RMFILES,$(DEPENDS))
+	$(call RMFILES,$(TARGETOBJDIR)/*.lst)
+	$(call RMFILES,$(BUILD_DIR)/*.lbl)
+	$(call RMFILES,$(BUILD_DIR)/*.map)
 	$(call RMFILES,$(BUILD_DIR)/$(PROGRAM_TGT))
 
 dist: $(PROGRAM_TGT)

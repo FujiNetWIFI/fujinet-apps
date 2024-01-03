@@ -9,19 +9,33 @@ uint8_t buffer[1024];
 
 uint8_t err = 0;
 
-char *version = "1.1.0";
+char *version = "1.1.6";
 char *url;
 
 uint16_t nw_bw = 0;
 uint8_t nw_conn = 0;
 uint8_t nw_err = 0;
 
-int main(void) {
+uint8_t ask() {
+  char sure = 0;
+  printf("Run this test? ");
+  sure = cgetc();
+  if (sure == 'y' || sure == 'Y') {
+    return 1;
+  } else {
+    return 0;
+  }
+}
 
+int main(void) {
+  uint8_t sure = 0;
   new_screen();
-  printf("google\n");
-  // show all of the page by using 0 as the count
-  do_long("n:https://www.google.com/");
+  printf("read google page\n");
+  sure = ask();
+  if (sure == 1) {
+    // show all of the page by using 0 as the count
+    do_long("n:https://www.google.com/");
+  }
 
   // simple read of 27 bytes
   new_screen();
@@ -64,11 +78,14 @@ int main(void) {
   printf("multi 82/27\n");
   do_multi(82, 27);
 
-  // this takes about 2 minutes to fully display only printing 1st byte of each 1024 block. Takes 20 if you display every byte.
   new_screen();
   printf("read 500K\n");
-  sprintf(abUrl, "n:http://%s:%s/alphabet/500000", REST_SERVER_ADDRESS, REST_SERVER_PORT);
-  do_long_first_only(abUrl);
+  sure = ask();
+  if (sure == 1) {
+    // this takes about 2 minutes to fully display only printing 1st byte of each 1024 block. Takes 20 if you display every byte.
+    sprintf(abUrl, "n:http://%s:%s/alphabet/500000", REST_SERVER_ADDRESS, REST_SERVER_PORT);
+    do_long_first_only(abUrl);
+  }
 
   printf("\n");
   return 0;
@@ -142,16 +159,12 @@ void do_long(char *u) {
 
   url = u;
   do_open();
-  while(1) {
-    network_status(url, &nw_bw, &nw_conn, &nw_err);
-    if (nw_err == 136) break;
-    if (nw_bw == 0) continue;
-
+  do {
     network_read(url, buffer, sizeof(buffer));
     for (i = 0; i < fn_bytes_read; ++i) {
       putchar(buffer[i]);
     }
-  }
+  } while (fn_network_error != 136);
   do_close();
   cgetc();
 }
@@ -161,15 +174,11 @@ void do_long_first_only(char *u) {
 
   url = u;
   do_open();
-  while(1) {
-    network_status(url, &nw_bw, &nw_conn, &nw_err);
-    if (nw_err == 136) break;
-    if (nw_bw == 0) continue;
-
-    // only display first byte of block to save time
+  do {
     network_read(url, buffer, sizeof(buffer));
+    // only display first byte of block to save time
     putchar(buffer[0]);
-  }
+  } while (fn_network_error != 136);
   do_close();
   cgetc();
 }
