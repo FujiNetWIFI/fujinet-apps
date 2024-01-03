@@ -24,9 +24,10 @@ void handle_err(char *reason);
 void clear_buffer();
 void hex_dump(uint8_t* data, int size);
 void new_screen();
-void do_alpha(int num, uint8_t clear_char);
-void do_chunked(int num, uint8_t clear_char);
-void do_multi(int total, int size, uint8_t clear_char);
+void do_alpha(int num);
+void do_chunked(int total, int size);
+void do_multi(int total, int size);
 void do_read(int num);
+void do_google();
 
 #endif

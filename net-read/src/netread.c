@@ -9,7 +9,7 @@ uint8_t buffer[1024];
 
 uint8_t err = 0;
 
-char *version = "1.0.3";
+char *version = "1.1.0";
 char *url;
 
 uint16_t nw_bw = 0;
@@ -17,28 +17,51 @@ uint8_t nw_conn = 0;
 uint8_t nw_err = 0;
 
 int main(void) {
+  // the google fetch
+  new_screen();
+  printf("doing google page\n");
+  do_google();
 
+  // simple read of 27 bytes
   new_screen();
   printf("Normal Read 27 bytes\n");
-  do_alpha(27, 0x01);
+  do_alpha(27);
 
-  // on real FN, this doesn't work as network read isn't looking at bw yet
+  // ask and take exactly 27 (chunks are 10 bytes every 100ms)
   new_screen();
-  printf("Chunked 27 bytes\n"); 
-  do_chunked(27, 0x02);
+  printf("Chunked 27/27 bytes\n"); 
+  do_chunked(27, 27);
 
-  // new_screen();
-  // printf("Normal Read 521 bytes\n");
-  // do_alpha(521, 0x03);
+  // ask for less than available, should be 10 in BW at end
+  new_screen();
+  printf("Chunked 27/17 bytes\n"); 
+  do_chunked(27, 17);
 
-  // new_screen();
-  // printf("Chunked 521 bytes\n");
-  // do_chunked(521, 0x03);
+  // ask for more than available
+  new_screen();
+  printf("Chunked 27/550 bytes\n"); 
+  do_chunked(27, 500);
 
+  // ask for lots, only read a few, BW will be 13 at the end (not sure why it's not 3)
+  new_screen();
+  printf("Chunked 550/27 bytes\n"); 
+  do_chunked(550, 27);
+
+  // over 512
+  new_screen();
+  printf("Normal Read 521 bytes\n");
+  do_alpha(521);
+
+  // over 512 chunked
+  new_screen();
+  printf("Chunked 521/521 bytes\n");
+  do_chunked(521, 521);
+
+  // multiple reads in application
   new_screen();
   // 3 lots of A-A, B-B, C-C, then an extra D at the end.
   printf("multi 82/27\n");
-  do_multi(82, 27, 0x03);
+  do_multi(82, 27);
 
   return 0;
 }
@@ -68,30 +91,30 @@ void do_close() {
 void do_common(int num) {
   do_open();
   do_read(num);
-  cgetc();
 }
 
-void do_alpha(int num, uint8_t clear_char) {
-  clear_buffer(clear_char);
+void do_alpha(int num) {
+  clear_buffer();
   url = createAbUrl(num);
   do_common(num);
   do_close();
+  cgetc();
 }
 
-void do_chunked(int num, uint8_t clear_char) {
-  clear_buffer(clear_char);
-  url = createCabUrl(num);
-  do_common(num);
+void do_chunked(int total, int size) {
+  clear_buffer();
+  url = createCabUrl(total);
+  do_common(size);
   do_close();
+  cgetc();
 }
 
-void do_multi(int total, int size, uint8_t clear_char) {
+void do_multi(int total, int size) {
   int i = 0;
   int num_chunks = total / size;
   int remainder = total - (size * num_chunks);
-  printf("chunks: %d, rem: %d\n", num_chunks, remainder);
 
-  clear_buffer(clear_char);
+  clear_buffer();
   url = createAbUrl(total);
   do_open();
 
@@ -103,10 +126,28 @@ void do_multi(int total, int size, uint8_t clear_char) {
   }
 
   do_close();
+  cgetc();
 }
 
-void clear_buffer(uint8_t v) {
-  memset(buffer, v, 1024);
+void do_google() {
+  int i = 0;
+  sprintf(abUrl, "n:https://www.google.com/");
+  url = abUrl;
+  do_open();
+  network_status(url, &nw_bw, &nw_conn, &nw_err);
+  while(nw_err != 136) {
+    network_read(url, buffer, sizeof(buffer));
+    for (i = 0; i < fn_bytes_read; ++i) {
+      putchar(buffer[i]);
+    }
+    network_status(url, &nw_bw, &nw_conn, &nw_err);
+  }
+  do_close();
+  cgetc();
+}
+
+void clear_buffer() {
+  memset(buffer, 0, 1024);
 }
 
 void new_screen() {
@@ -117,12 +158,12 @@ void new_screen() {
 
 // Create Network URL to REST API we are using to test network library functionality
 char * createAbUrl(int num) {
-  sprintf(abUrl, "N:http://%s:%s/alphabet/%d", REST_SERVER_ADDRESS, REST_SERVER_PORT, num);
+  sprintf(abUrl, "n:http://%s:%s/alphabet/%d", REST_SERVER_ADDRESS, REST_SERVER_PORT, num);
   return (char *)abUrl;
 }
 
 char * createCabUrl(int num) {
-  sprintf(cabUrl, "N:http://%s:%s/cab/%d", REST_SERVER_ADDRESS, REST_SERVER_PORT, num);
+  sprintf(cabUrl, "n:http://%s:%s/cab/%d", REST_SERVER_ADDRESS, REST_SERVER_PORT, num);
   return (char *)cabUrl;
 }
 
