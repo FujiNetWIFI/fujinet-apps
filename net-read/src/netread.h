@@ -28,6 +28,7 @@ void do_alpha(int num);
 void do_chunked(int total, int size);
 void do_multi(int total, int size);
 void do_read(int num);
-void do_google();
+void do_long(char *u);
+void do_long_first_only(char *u);
 
 #endif

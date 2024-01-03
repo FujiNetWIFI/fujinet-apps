@@ -17,10 +17,11 @@ uint8_t nw_conn = 0;
 uint8_t nw_err = 0;
 
 int main(void) {
-  // the google fetch
+
   new_screen();
-  printf("doing google page\n");
-  do_google();
+  printf("google\n");
+  // show all of the page by using 0 as the count
+  do_long("n:https://www.google.com/");
 
   // simple read of 27 bytes
   new_screen();
@@ -63,6 +64,13 @@ int main(void) {
   printf("multi 82/27\n");
   do_multi(82, 27);
 
+  // this takes about 2 minutes to fully display only printing 1st byte of each 1024 block. Takes 20 if you display every byte.
+  new_screen();
+  printf("read 500K\n");
+  sprintf(abUrl, "n:http://%s:%s/alphabet/500000", REST_SERVER_ADDRESS, REST_SERVER_PORT);
+  do_long_first_only(abUrl);
+
+  printf("\n");
   return 0;
 }
 
@@ -129,18 +137,38 @@ void do_multi(int total, int size) {
   cgetc();
 }
 
-void do_google() {
+void do_long(char *u) {
   int i = 0;
-  sprintf(abUrl, "n:https://www.google.com/");
-  url = abUrl;
+
+  url = u;
   do_open();
-  network_status(url, &nw_bw, &nw_conn, &nw_err);
-  while(nw_err != 136) {
+  while(1) {
+    network_status(url, &nw_bw, &nw_conn, &nw_err);
+    if (nw_err == 136) break;
+    if (nw_bw == 0) continue;
+
     network_read(url, buffer, sizeof(buffer));
     for (i = 0; i < fn_bytes_read; ++i) {
       putchar(buffer[i]);
     }
+  }
+  do_close();
+  cgetc();
+}
+
+void do_long_first_only(char *u) {
+  int i = 0;
+
+  url = u;
+  do_open();
+  while(1) {
     network_status(url, &nw_bw, &nw_conn, &nw_err);
+    if (nw_err == 136) break;
+    if (nw_bw == 0) continue;
+
+    // only display first byte of block to save time
+    network_read(url, buffer, sizeof(buffer));
+    putchar(buffer[0]);
   }
   do_close();
   cgetc();
