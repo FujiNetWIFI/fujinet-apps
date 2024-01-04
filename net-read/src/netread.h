@@ -30,5 +30,10 @@ void do_multi(int total, int size);
 void do_read(int num);
 void do_long(char *u);
 void do_long_first_only(char *u);
+void setup();
+
+#ifdef BUILD_APPLE2
+extern uint8_t sp_network;
+#endif
 
 #endif

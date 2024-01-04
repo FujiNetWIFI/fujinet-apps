@@ -25,7 +25,7 @@ extern uint8_t fn_device_error;
 uint8_t fn_error(uint8_t code);
 
 /*
- * Network status values.
+ * Network status values. These are set during network_read. You can capture your own using network_status.
  * bw      : bytes waiting
  * conn    : Connected status, this is 1 for still reading a particular resource, 0 when the current read has completed.
  * error   : the error status returned from FN, e.g. 136 for EOF, 1 for normal OK status (don't ask why)
@@ -35,7 +35,15 @@ extern uint8_t fn_network_conn;
 extern uint8_t fn_network_error;
 
 /**
- * @brief  Get Network Device Status byte 
+ * @brief  Initialise network device
+ * Allows initialisation of network to perform any platform dependent checks, and allow applications to
+ * exit early if there is a network issue.
+ * @return fujinet-network status/error code (See FN_ERR_* values) and set device specific error if there is any
+ */
+uint8_t network_init();
+
+/**
+ * @brief  Get Network Device Status byte
  * @param  devicespec pointer to device specification of form: N:PROTO://[HOSTNAME]:PORT/PATH/.../
  * @param  bw pointer to where to put bytes waiting
  * @param  c pointer to where to put connection status
@@ -184,6 +192,7 @@ uint8_t network_http_delete(char *devicespec, uint8_t trans);
 #define FN_ERR_BAD_CMD          (0x02)      /* Function called with bad arguments */
 #define FN_ERR_OFFLINE          (0x03)      /* The device is offline */
 #define FN_ERR_WARNING          (0x04)      /* Device specific non-fatal warning issued */
+#define FN_ERR_NO_DEVICE        (0x05)      /* There is no network device */
 
 #define FN_ERR_UNKNOWN          (0xff)      /* Device specific error we didn't handle */
 

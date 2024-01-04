@@ -24,4 +24,8 @@ void test_put();
 void test_simple_get();
 void hex_dump(char* data, int size);
 
+#ifdef BUILD_APPLE2
+extern uint8_t sp_network;
+#endif
+
 #endif

@@ -29,6 +29,8 @@ uint8_t ask() {
 
 int main(void) {
   uint8_t sure = 0;
+  setup();
+
   new_screen();
   printf("read google page\n");
   sure = ask();
@@ -89,6 +91,16 @@ int main(void) {
 
   printf("\n");
   return 0;
+}
+
+void setup() {
+  uint8_t init_r = 0;
+  init_r = network_init();
+  printf("init: %d, derr: %d\n", init_r, fn_device_error);
+#ifdef BUILD_APPLE2
+  printf("nw: %d\n", sp_network);
+#endif
+  cgetc();
 }
 
 void do_read(int num) {

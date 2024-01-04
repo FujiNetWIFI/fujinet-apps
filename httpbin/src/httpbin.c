@@ -15,7 +15,7 @@
  * internally parse the results as values to return, rather than the entire body of the response.
 */
 
-char *httpbin = "N:HTTPS://httpbin.org/";
+char *httpbin = "n:https://httpbin.org/";
 char url_buffer[128];
 char result[1024];
 uint8_t err = 0;
@@ -24,22 +24,25 @@ uint16_t conn_bw;
 uint8_t connected;
 uint8_t conn_err;
 
-char *version = "v1.3.4";
+char *version = "v1.3.7";
+
+void debug() {}
 
 int main(void) {
-    setup();
-
     printf("httpbin %s\n", version);
     printf("Base URL: %s\n", httpbin);
 
+    setup();
+
     start_get();                        // save us having to keep closing/reopening.
-    test_get_query("");                 // returns entire json *object* line by line. forces you to know structure if you use this (looking at you lobby)
+    // test_get_query("");                 // returns entire json *object* line by line. forces you to know structure if you use this (looking at you lobby)
 
     // examples that return nothing as the json path doesn't match output
-    test_get_query("/");                // returns nothing, not the entire root.
+    // test_get_query("/");                // returns nothing, not the entire root.
     test_get_query("/foo/bar");         // path doesn't exist, returns nothing
 
     // example that does match
+    debug();
     test_get_query("/headers/host");    // returns value from httpbin.org
 
     end_get();                          // finally close resource
@@ -58,9 +61,15 @@ int main(void) {
 }
 
 void setup() {
+    uint8_t init_r = 0;
     bzero(url_buffer, 128);
     bzero(result, 1024);
     gotox(0);
+    init_r = network_init();
+    printf("init: %d, derr: %d\n", init_r, fn_device_error);
+  #ifdef BUILD_APPLE2
+    printf("nw: %d\n", sp_network);
+  #endif
 }
 
 void start_get() {
@@ -76,7 +85,7 @@ void test_get_query(char *path) {
     err = network_json_query(url, path, result);
     handle_err("query");
 
-    printf("json >%s<, res: >%s<\n", path, result);
+    printf("j: >%s<, r: >%s<\n", path, result);
 }
 
 void end_get() {
@@ -97,7 +106,7 @@ void test_post() {
     handle_err("post:json parse");
     network_json_query(url, "/json/name", result);
     handle_err("post:json query");
-    printf("/post   :  name=%s\n", result);
+    printf("/post   :  name=>%s<\n", result);
     network_close(url);
     handle_err("post:close");
 }
@@ -115,7 +124,7 @@ void test_put() {
     handle_err("put:json parse");
     network_json_query(url, "/json/level", result);
     handle_err("put:json query");
-    printf("/put    : level=%s\n", result);
+    printf("/put    : level=>%s<\n", result);
     network_close(url);
     handle_err("put:close");
 }
@@ -132,7 +141,7 @@ void test_delete() {
     handle_err("del:json parse");
     network_json_query(url, "/headers/host", result);
     handle_err("del:json query");
-    printf("/delete :  host=%s\n", result);
+    printf("/delete :  host=>%s<\n", result);
     network_close(url);
     handle_err("del:close");
 }
