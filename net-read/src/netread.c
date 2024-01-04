@@ -9,7 +9,7 @@ uint8_t buffer[1024];
 
 uint8_t err = 0;
 
-char *version = "1.1.6";
+char *version = "1.1.7";
 char *url;
 
 uint16_t nw_bw = 0;

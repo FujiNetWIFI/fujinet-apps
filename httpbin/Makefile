@@ -126,6 +126,22 @@ all: $(PROGRAM_TGT)
 -include $(DEPENDS)
 -include $(STATEFILE)
 
+define _listing_
+  CFLAGS += --listing $$(@:.o=.lst)
+  ASFLAGS += --listing $$(@:.o=.lst)
+endef
+
+define _mapfile_
+  LDFLAGS += --mapfile $$@.map
+endef
+
+define _labelfile_
+  LDFLAGS += -Ln $$@.lbl
+endef
+
+OPTIONS = $(_OPTIONS_)
+$(eval $(OBJECTS): $(STATEFILE))
+
 # Transform the abstract OPTIONS to the actual cc65 options.
 $(foreach o,$(subst $(COMMA),$(SPACE),$(OPTIONS)),$(eval $(_$o_)))
 
@@ -193,6 +209,15 @@ po: dist
 	cp dist/$(PROGRAM_TGT).com dist/$(PROGRAM)
 	$(APPLE_TOOLS_DIR)/mk-bitsy.sh dist/$(PROGRAM).po TEST_$(PROGRAM)
 	$(APPLE_TOOLS_DIR)/add-file.sh dist/$(PROGRAM).po dist/$(PROGRAM) $(PROGRAM)
+
+gendebug: $(PROGRAM_TGT)
+	@echo "Generating debug.scr script for AppleWin"
+	@echo 'echo "Loading symbols"' > build/debug.scr
+	@awk '{printf("sym %s = %s\n", substr($$3, 2), $$2)}' < build/$(PROGRAM_TGT).lbl >> build/debug.scr
+	@echo 'bpx _main' >> build/debug.scr
+	@echo 'bpx _debug' >> build/debug.scr
+	@echo 'bpx _network_open' >> build/debug.scr
+	@echo 'bpx _sp_init' >> build/debug.scr
 
 ############################################################################
 else # $(words $(TARGETLIST)),1

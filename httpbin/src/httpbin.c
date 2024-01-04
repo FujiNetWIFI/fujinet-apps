@@ -24,7 +24,7 @@ uint16_t conn_bw;
 uint8_t connected;
 uint8_t conn_err;
 
-char *version = "v1.3.3";
+char *version = "v1.3.4";
 
 int main(void) {
     setup();
