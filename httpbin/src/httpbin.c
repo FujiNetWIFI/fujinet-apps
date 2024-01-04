@@ -24,7 +24,7 @@ uint16_t conn_bw;
 uint8_t connected;
 uint8_t conn_err;
 
-char *version = "v1.3.2";
+char *version = "v1.3.3";
 
 int main(void) {
     setup();
@@ -52,6 +52,7 @@ int main(void) {
 
     printf("Press a key to exit.");
     cgetc();
+    printf("\n");
 
     return 0;
 }
