@@ -1,5 +1,5 @@
-TARGETS := atari apple2
-PROGRAM := httpbin
+TARGETS := apple2
+PROGRAM := testsp2
 
 FUJINET_NETWORK_LIBS = ../fn_network
 APPLE_TOOLS_DIR = ../apple-tools
@@ -39,29 +39,6 @@ TARGETLIST := $(subst $(COMMA),$(SPACE),$(TARGETS))
 
 ifeq ($(words $(TARGETLIST)),1)
 CURRENT_TARGET := $(TARGETLIST)
-
-ifeq '$(findstring ;,$(PATH))' ';'
-    detected_OS := Windows
-else
-    detected_OS := $(shell uname 2>/dev/null || echo Unknown)
-    detected_OS := $(patsubst CYGWIN%,Cygwin,$(detected_OS))
-    detected_OS := $(patsubst MSYS%,MSYS,$(detected_OS))
-    detected_OS := $(patsubst MINGW%,MSYS,$(detected_OS))
-endif
-
-# MSYS2 environment hack for extra slash (XS) needed in cmd line args
-XS := ""
-ifeq ($(detected_OS),$(filter $(detected_OS),MSYS MINGW))
-	XS := /
-endif
-
-ALTIRRA ?= $(ALTIRRA_HOME)/Altirra64.exe \
-  $(XS)/portable $(XS)/portablealt:altirra-debug.ini \
-  $(XS)/debug \
-  $(XS)/debugcmd: ".loadsym build\$(PROGRAM).$(CURRENT_TARGET).lbl" \
-  $(XS)/debugcmd: "bp _debug" \
-
-atari_EMUCMD := $(ALTIRRA)
 
 PREEMUCMD :=
 POSTEMUCMD :=
@@ -197,12 +174,6 @@ dist: $(PROGRAM_TGT)
 	$(call MKDIR,dist/)
 	$(call RMFILES,dist/$(PROGRAM_TGT)*)
 	cp build/$(PROGRAM_TGT) dist/$(PROGRAM_TGT).com
-
-atr: dist
-	$(call MKDIR,dist/atr)
-	cp dist/$(PROGRAM_TGT).com dist/atr/$(PROGRAM).com
-	$(call RMFILES,dist/*.atr)
-	dir2atr -S dist/$(PROGRAM).atr dist/atr
 
 po: dist
 	$(call RMFILES,dist/$(APP_NAME)*.po)
