@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <conio.h>
 #include <stdlib.h>
+#include <stdint.h>
+#include <stdbool.h>
 #include <string.h>
 #include <ctype.h>
 #include <inttypes.h>
@@ -30,7 +32,7 @@ void do_multi(int total, int size);
 void do_read(int num);
 void do_long(char *u);
 void do_long_first_only(char *u);
-void setup();
+bool setup();
 
 #ifdef BUILD_APPLE2
 extern uint8_t sp_network;

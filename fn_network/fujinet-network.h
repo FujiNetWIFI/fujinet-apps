@@ -23,7 +23,6 @@ extern uint16_t fn_bytes_read;
 extern uint8_t fn_device_error;
 
 uint8_t fn_error(uint8_t code);
-
 /*
  * Network status values. These are set during network_read. You can capture your own using network_status.
  * bw      : bytes waiting

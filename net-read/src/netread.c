@@ -9,32 +9,34 @@ uint8_t buffer[1024];
 
 uint8_t err = 0;
 
-char *version = "1.1.8";
+char *version = "1.1.9";
 char *url;
 
 uint16_t nw_bw = 0;
 uint8_t nw_conn = 0;
 uint8_t nw_err = 0;
 
-uint8_t ask() {
+bool ask() {
   char sure = 0;
   printf("Run this test? ");
   sure = cgetc();
   if (sure == 'y' || sure == 'Y') {
-    return 1;
+    return true;
   } else {
-    return 0;
+    return false;
   }
 }
 
 int main(void) {
-  uint8_t sure = 0;
+  bool sure = false;
+
+  new_screen();
   setup();
 
   new_screen();
   printf("read google page\n");
   sure = ask();
-  if (sure == 1) {
+  if (sure) {
     // show all of the page by using 0 as the count
     do_long("n:https://www.google.com/");
   }
@@ -83,7 +85,7 @@ int main(void) {
   new_screen();
   printf("read 500K\n");
   sure = ask();
-  if (sure == 1) {
+  if (sure) {
     // this takes about 2 minutes to fully display only printing 1st byte of each 1024 block. Takes 20 if you display every byte.
     sprintf(abUrl, "n:http://%s:%s/alphabet/500000", REST_SERVER_ADDRESS, REST_SERVER_PORT);
     do_long_first_only(abUrl);
@@ -93,14 +95,22 @@ int main(void) {
   return 0;
 }
 
-void setup() {
+bool setup() {
   uint8_t init_r = 0;
+  printf("running network_init\n");
   init_r = network_init();
   printf("init: %d, derr: %d\n", init_r, fn_device_error);
 #ifdef BUILD_APPLE2
   printf("nw: %d\n", sp_network);
 #endif
+
+  if (init_r != 0) {
+    err = init_r;
+    handle_err("network_init failed");
+  }
+  printf("Press a key to continue.");
   cgetc();
+  return true;
 }
 
 void do_read(int num) {

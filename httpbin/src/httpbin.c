@@ -24,7 +24,7 @@ uint16_t conn_bw;
 uint8_t connected;
 uint8_t conn_err;
 
-char *version = "v1.3.9";
+char *version = "v1.3.11";
 
 void debug() {}
 
@@ -35,15 +35,14 @@ int main(void) {
     setup();
 
     start_get();                        // save us having to keep closing/reopening.
-    // test_get_query("");                 // returns entire json *object* line by line. forces you to know structure if you use this (looking at you lobby)
+    test_get_query("");                 // returns entire json *object* line by line. forces you to know structure if you use this (looking at you lobby)
+
+    // example that does match
+    test_get_query("/headers/host");    // returns value from httpbin.org
 
     // examples that return nothing as the json path doesn't match output
     // test_get_query("/");                // returns nothing, not the entire root.
     test_get_query("/foo/bar");         // path doesn't exist, returns nothing
-
-    // example that does match
-    debug();
-    test_get_query("/headers/host");    // returns value from httpbin.org
 
     end_get();                          // finally close resource
 
