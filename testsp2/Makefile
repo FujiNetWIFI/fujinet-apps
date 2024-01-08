@@ -1,5 +1,6 @@
 TARGETS := apple2
 PROGRAM := testsp2
+NOSTART :=
 
 FUJINET_NETWORK_LIBS = ../fn_network
 APPLE_TOOLS_DIR = ../apple-tools
@@ -179,7 +180,7 @@ po: dist
 	$(call RMFILES,dist/$(APP_NAME)*.po)
 	cp dist/$(PROGRAM_TGT).com dist/$(PROGRAM)
 	$(APPLE_TOOLS_DIR)/mk-bitsy.sh dist/$(PROGRAM).po TEST_$(PROGRAM)
-	$(APPLE_TOOLS_DIR)/add-bas.sh dist/$(PROGRAM).po dist/$(PROGRAM) $(PROGRAM)
+	$(APPLE_TOOLS_DIR)/add-file.sh dist/$(PROGRAM).po dist/$(PROGRAM) $(PROGRAM) ${NOSTART}
 
 gendebug: $(PROGRAM_TGT)
 	@echo "Generating debug.scr script for AppleWin"
