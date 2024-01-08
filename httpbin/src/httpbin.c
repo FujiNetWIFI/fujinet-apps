@@ -23,8 +23,9 @@ char *url;
 uint16_t conn_bw;
 uint8_t connected;
 uint8_t conn_err;
+uint8_t trans_type = OPEN_TRANS_CRLF;
 
-char *version = "v1.3.12";
+char *version = "v1.3.14";
 
 void debug() {}
 
@@ -34,22 +35,22 @@ int main(void) {
 
     setup();
 
-    start_get();                        // save us having to keep closing/reopening.
-    test_get_query("");                 // returns entire json *object* line by line. forces you to know structure if you use this (looking at you lobby)
+    // start_get();                        // save us having to keep closing/reopening.
+    // test_get_query("");                 // returns entire json *object* line by line. forces you to know structure if you use this (looking at you lobby)
 
-    // example that does match
-    test_get_query("/headers/host");    // returns value from httpbin.org
+    // // example that does match
+    // test_get_query("/headers/host");    // returns value from httpbin.org
 
-    // examples that return nothing as the json path doesn't match output
-    // test_get_query("/");                // returns nothing, not the entire root.
-    test_get_query("/foo/bar");         // path doesn't exist, returns nothing
+    // // examples that return nothing as the json path doesn't match output
+    // // test_get_query("/");                // returns nothing, not the entire root.
+    // test_get_query("/foo/bar");         // path doesn't exist, returns nothing
 
-    end_get();                          // finally close resource
+    // end_get();                          // finally close resource
 
-    // examples of other protocols
-    test_post();
-    test_put();
-    test_delete();
+    // // examples of other protocols
+    // test_post();
+    // test_put();
+    // test_delete();
     test_simple_get();
 
     printf("Press a key to exit.");
@@ -73,7 +74,7 @@ void setup() {
 
 void start_get() {
     url = create_url("get");
-    err = network_open(url, OPEN_MODE_HTTP_GET, OPEN_TRANS_NONE);
+    err = network_open(url, OPEN_MODE_HTTP_GET, trans_type);
     handle_err("open");
 
     err = network_json_parse(url);
@@ -96,7 +97,7 @@ void end_get() {
 // POST JSON, get result
 void test_post() {
     url = create_url("post");
-    err = network_open(url, OPEN_MODE_HTTP_POST, OPEN_TRANS_NONE);
+    err = network_open(url, OPEN_MODE_HTTP_POST, trans_type);
     handle_err("post:open");
 
     set_json(url);
@@ -114,7 +115,7 @@ void test_post() {
 // PUT JSON, get result. PUT is just a slightly different POST
 void test_put() {
     url = create_url("put");
-    err = network_open(url, OPEN_MODE_HTTP_PUT_H, OPEN_TRANS_NONE);
+    err = network_open(url, OPEN_MODE_HTTP_PUT_H, trans_type);
     handle_err("put:open");
 
     set_json(url);
@@ -132,7 +133,7 @@ void test_put() {
 // DELETE - no data to send, but response will have data in it
 void test_delete() {
     url = create_url("delete");
-    err = network_http_delete(url, OPEN_TRANS_NONE);
+    err = network_http_delete(url, trans_type);
     handle_err("del:open");
 
     set_json(url);
@@ -149,8 +150,8 @@ void test_delete() {
 // GET - no data to send, but response will have data in it
 void test_simple_get() {
     url = create_url("get");
-    // trans mode doesn't appear to be working, always coming back 0x9b
-    err = network_open(url, OPEN_MODE_HTTP_GET, OPEN_TRANS_LF);
+    // trans mode doesn't appear to be working, always coming back 0x9b on atari
+    err = network_open(url, OPEN_MODE_HTTP_GET, trans_type);
     handle_err("open");
 
     // simply read without any fancy modes. FN resets the modes to normal body after closing a connection, so we don't even have to specify the BODY mode.

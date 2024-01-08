@@ -139,8 +139,10 @@ define _labelfile_
   LDFLAGS += -Ln $$@.lbl
 endef
 
+ifeq ($(origin _OPTIONS_),file)
 OPTIONS = $(_OPTIONS_)
 $(eval $(OBJECTS): $(STATEFILE))
+endif
 
 # Transform the abstract OPTIONS to the actual cc65 options.
 $(foreach o,$(subst $(COMMA),$(SPACE),$(OPTIONS)),$(eval $(_$o_)))
