@@ -162,8 +162,31 @@ plus4_EMUCMD := $(VICE_HOME)xplus4 -TEDdsize -autoload
 c16_EMUCMD := $(VICE_HOME)xplus4 -ramsize 16 -TEDdsize -autoload
 cbm510_EMUCMD := $(VICE_HOME)xcbm2 -model 510 -VICIIdsize -autoload
 cbm610_EMUCMD := $(VICE_HOME)xcbm2 -model 610 -Crtcdsize -autoload
-atari_EMUCMD := atari800 -windowed -xl -pal -nopatchall -run
- 
+#atari_EMUCMD := atari800 -windowed -xl -pal -nopatchall -run
+
+ifeq '$(findstring ;,$(PATH))' ';'
+    detected_OS := Windows
+else
+    detected_OS := $(shell uname 2>/dev/null || echo Unknown)
+    detected_OS := $(patsubst CYGWIN%,Cygwin,$(detected_OS))
+    detected_OS := $(patsubst MSYS%,MSYS,$(detected_OS))
+    detected_OS := $(patsubst MINGW%,MSYS,$(detected_OS))
+endif
+
+# MSYS2 environment hack for extra slash (XS) needed in cmd line args
+XS := ""
+ifeq ($(detected_OS),$(filter $(detected_OS),MSYS MINGW))
+	XS := /
+endif
+
+ALTIRRA ?= $(ALTIRRA_HOME)/Altirra64.exe \
+  $(XS)/portable $(XS)/portablealt:altirra-debug.ini \
+  $(XS)/debug \
+  $(XS)/debugcmd: ".loadsym build\$(PROGRAM).$(CC65TARGET).lbl" \
+  $(XS)/debugcmd: "bp _debug" \
+
+atari_EMUCMD := $(ALTIRRA)
+
 ifeq ($(EMUCMD),)
   EMUCMD = $($(CC65TARGET)_EMUCMD)
 endif
@@ -282,7 +305,12 @@ $(foreach o,$(subst $(COMMA),$(SPACE),$(OPTIONS)),$(eval $(_$o_)))
  
 # Strip potential variant suffix from the actual cc65 target.
 CC65TARGET := $(firstword $(subst .,$(SPACE),$(TARGETLIST)))
- 
+
+# Fix for loading location for Atari to be above SDX
+ifeq ($(CC65TARGET),atari)
+LDFLAGS += --start-addr 0x2D00
+endif
+
 # The remaining targets.
 $(TARGETOBJDIR):
 	$(call MKDIR,$@)
@@ -324,6 +352,17 @@ clean:
 	$(call RMFILES,test.map)
 	$(call RMFILES,test.atr)
  
+dist: $(PROGRAM)
+	$(call MKDIR,dist/)
+	$(call RMFILES,dist/$(basename $(PROGRAM))*)
+	cp $(PROGRAM) dist/$(basename $(PROGRAM)).com
+
+atr: dist
+	$(call MKDIR,dist/atr)
+	cp dist/$(basename $(PROGRAM)).com dist/atr/
+	$(call RMFILES,dist/*.atr)
+	dir2atr -S dist/$(basename $(PROGRAM)).atr dist/atr
+
 else # $(words $(TARGETLIST)),1
  
 all test clean:

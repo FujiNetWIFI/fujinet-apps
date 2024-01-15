@@ -68,3 +68,5 @@ obj/
 # altirra/applewin debugging... clue's in the name
 altirra-debug.ini
 AppleWin.log
+
+Makefile.options

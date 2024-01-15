@@ -1,5 +1,10 @@
 TARGETS := atari apple2
-PROGRAM := httpbin
+PROGRAM := netread
+
+
+# See later for setting server IP address
+# REST_SERVER_ADDRESS = \"$(shell hostname)\"
+REST_SERVER_PORT = \"8080\"
 
 FUJINET_NETWORK_LIBS = ../fn_network
 APPLE_TOOLS_DIR = ../apple-tools
@@ -7,7 +12,7 @@ APPLE_TOOLS_DIR = ../apple-tools
 CC := cl65
 
 # Used as global "include" dir for macros etc.
-COMMON_INC_DIR := ../COMMON/include
+COMMON_INC_DIR := ../../COMMON/include
 
 SRCDIR := src
 BUILD_DIR := build
@@ -63,6 +68,16 @@ ALTIRRA ?= $(ALTIRRA_HOME)/Altirra64.exe \
 
 atari_EMUCMD := $(ALTIRRA)
 
+####################################
+# REST_SERVER_ADDRESS
+####################################
+# If REST_SERVER_ADDRESS is already set on command line, these do nothing, otherwise they will work out the local IP address, ignoring 172 range which is WSL on Windows.
+ifeq ($(detected_OS),Linux)
+  REST_SERVER_ADDRESS = \"$(shell ip -4 addr show scope global | grep -oP '(?<=inet\s)\d+(\.\d+){3}')\"
+else ifeq ($(detected_OS),$(filter $(detected_OS),MSYS MINGW Cygwin Windows))
+  REST_SERVER_ADDRESS = \"$(shell ipconfig | grep -oP 'IPv4.*:\s*\K[\d.]+' | grep -v '^172\.')\"
+endif
+
 PREEMUCMD :=
 POSTEMUCMD :=
 
@@ -101,9 +116,13 @@ CFLAGS += --include-dir $(SRCDIR) --include-dir $(SRCDIR)/include
 
 # Add -DBUILD_(TARGET) to all args for the current name.
 UPPER_CURRENT_TARGET := $(shell echo $(CURRENT_TARGET) | tr a-z A-Z)
-CFLAGS += -DBUILD_$(UPPER_CURRENT_TARGET)
-ASFLAGS += -DBUILD_$(UPPER_CURRENT_TARGET)
-LDFLAGS += -DBUILD_$(UPPER_CURRENT_TARGET)
+# CFLAGS += -DBUILD_$(UPPER_CURRENT_TARGET)
+# ASFLAGS += -DBUILD_$(UPPER_CURRENT_TARGET)
+# LDFLAGS += -DBUILD_$(UPPER_CURRENT_TARGET)
+
+CFLAGS += -DREST_SERVER_ADDRESS=$(REST_SERVER_ADDRESS) -DREST_SERVER_PORT=$(REST_SERVER_PORT)
+ASFLAGS += -DREST_SERVER_ADDRESS=$(REST_SERVER_ADDRESS) -DREST_SERVER_PORT=$(REST_SERVER_PORT)
+LDFLAGS += -DREST_SERVER_ADDRESS=$(REST_SERVER_ADDRESS) -DREST_SERVER_PORT=$(REST_SERVER_PORT)
 
 # Fix for graphics calls on Atari
 ifeq ($(CURRENT_TARGET),atari)
@@ -193,6 +212,9 @@ test: $(PROGRAM_TGT)
 clean:
 	$(call RMFILES,$(OBJECTS))
 	$(call RMFILES,$(DEPENDS))
+	$(call RMFILES,$(TARGETOBJDIR)/*.lst)
+	$(call RMFILES,$(BUILD_DIR)/*.lbl)
+	$(call RMFILES,$(BUILD_DIR)/*.map)
 	$(call RMFILES,$(BUILD_DIR)/$(PROGRAM_TGT))
 
 dist: $(PROGRAM_TGT)
@@ -211,15 +233,6 @@ po: dist
 	cp dist/$(PROGRAM_TGT).com dist/$(PROGRAM)
 	$(APPLE_TOOLS_DIR)/mk-bitsy.sh dist/$(PROGRAM).po TEST_$(PROGRAM)
 	$(APPLE_TOOLS_DIR)/add-bas.sh dist/$(PROGRAM).po dist/$(PROGRAM) $(PROGRAM)
-
-gendebug: $(PROGRAM_TGT)
-	@echo "Generating debug.scr script for AppleWin"
-	@echo 'echo "Loading symbols"' > build/debug.scr
-	@awk '{printf("sym %s = %s\n", substr($$3, 2), $$2)}' < build/$(PROGRAM_TGT).lbl >> build/debug.scr
-	@echo 'bpx _main' >> build/debug.scr
-	@echo 'bpx _debug' >> build/debug.scr
-	@echo 'bpx _network_open' >> build/debug.scr
-	@echo 'bpx _sp_init' >> build/debug.scr
 
 ############################################################################
 else # $(words $(TARGETLIST)),1
