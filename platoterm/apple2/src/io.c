@@ -20,8 +20,6 @@
 #include <apple2.h>
 #endif
 
-#define NULL 0
-
 static uint8_t io_res;
 static uint8_t net;
 static char url[]="N:TCP://IRATA.ONLINE:8005/";
