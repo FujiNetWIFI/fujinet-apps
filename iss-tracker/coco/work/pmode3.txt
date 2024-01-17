@@ -1,0 +1,7 @@
+00 = white
+01 = cyan
+10 = purple
+11 = orange
+
+
+

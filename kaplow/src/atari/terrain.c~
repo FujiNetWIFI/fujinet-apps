@@ -1,0 +1,101 @@
+/**
+ * @brief   Kaplowawow! A Pillbox Game for FujiNet
+ * @author  Thomas Cherryhomes
+ * @email   thom dot cherryhomes at gmail dot com
+ * @license gpl v. 3, see LICENSE.md for details.
+ * @verbose Terrain plotting routines
+ */
+
+#include <atari.h>
+#include <tgi.h>
+#include <conio.h>
+#include <stdint.h>
+#include <stdlib.h>
+
+#define SCREEN_X_MAX 320
+#define SCREEN_Y_MAX 191
+#define TERRAIN_X_MAX 256
+#define TERRAIN_X_0 ((SCREEN_X_MAX - TERRAIN_X_MAX) / 2)
+
+/**
+ * @brief the terrain data from server, 256 points
+ */
+uint8_t terrain_data[256];
+
+
+/**
+ * @brief draw terrain
+ */
+void terrain_draw(void)
+{
+  uint16_t i=0;
+  
+  tgi_clear();
+  
+  // Draw frame
+  // top
+  tgi_line(TERRAIN_X_0,
+	   0,
+	   TERRAIN_X_0+TERRAIN_X_MAX,
+	   0);
+
+  // bottom
+  tgi_line(TERRAIN_X_0,
+	   SCREEN_Y_MAX,
+	   TERRAIN_X_0+TERRAIN_X_MAX,
+	   SCREEN_Y_MAX);
+
+  // left
+  tgi_line(TERRAIN_X_0,
+	   0,
+	   TERRAIN_X_0,
+	   SCREEN_Y_MAX);
+
+  // right
+  tgi_line(TERRAIN_X_0+TERRAIN_X_MAX,
+	   0,
+	   TERRAIN_X_0+TERRAIN_X_MAX,
+	   SCREEN_Y_MAX);
+
+  // Plot current terrain
+  for (i=0; i<256; i++)
+    {
+      unsigned char x = terrain_data[i] ^ 0xFF;
+      
+      tgi_line(TERRAIN_X_0+i,
+	       SCREEN_Y_MAX,
+	       TERRAIN_X_0+i,
+	       x);
+    }
+}
+
+/**
+ * @brief testing harness, generate random terrain
+ */
+void main_terrain_generate(void)
+{
+  uint16_t i=0;
+  
+  for (i=0;i<256;i++)
+    {
+      uint8_t x = ((rand() & 0xFF));
+
+      if (x>128)
+	x=128;
+      
+      terrain_data[i]=x;
+    }
+}
+
+/**
+ * @brief testing harness, remove when done
+ */
+void main(void)
+{
+  tgi_install(atr8_tgi);
+  tgi_init();
+  main_terrain_generate();
+  terrain_draw();
+  cgetc();
+  tgi_done();
+}
