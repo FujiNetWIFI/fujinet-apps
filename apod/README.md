@@ -7,7 +7,7 @@ with help from apc & others (see credits, below)
 Released under the GNU General Public License 3 (GPL-3);
 see COPYING
 
-2021-03-27 - 2021-06-10
+2021-03-27 - 2024-01-28
 
 ## Purpose
 Fetch and view [NASA's Astronomy Picture of the Day (APOD)](https://apod.nasa.gov/apod/),
@@ -101,7 +101,7 @@ It is otherwise identical, but only does the test patterns,
 and cannot fetch images over the network (or have the date controls
 described above.)
 
-It not require a #FujiNet device).
+It does not require a #FujiNet device.
 
 - In high resolution mono mode, a set of bars will appear, dithered to simulate shading.
 - In medium resolution four-color mode and low resolution greyscale mode, grey bars will appear.
