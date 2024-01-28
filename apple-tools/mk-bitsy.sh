@@ -6,7 +6,7 @@ if [ $# -ne 2 ] ; then
   exit 1
 fi
 
-if ! which java; then
+if [ -z "$(which java)" ] ; then
   echo "Unable to find java on command line. You must have a working java at least version 11 to use this script."
   exit 1
 fi

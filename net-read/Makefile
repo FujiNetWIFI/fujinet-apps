@@ -1,6 +1,7 @@
 TARGETS := atari apple2
 PROGRAM := netread
-NOSTART :=
+# set to 1 to make application auto start on boot of disk
+AUTOSTART := 1
 
 
 # See later for setting server IP address
@@ -116,7 +117,8 @@ ASFLAGS += --asm-include-dir $(SRCDIR) --asm-include-dir $(SRCDIR)/include
 CFLAGS += --include-dir $(SRCDIR) --include-dir $(SRCDIR)/include
 
 # Add -DBUILD_(TARGET) to all args for the current name.
-UPPER_CURRENT_TARGET := $(shell echo $(CURRENT_TARGET) | tr a-z A-Z)
+# THIS IS JUST A CONVENIENCE FOR APPS TO DETECT THE BUILD TYPE IF REQUIRED
+# UPPER_CURRENT_TARGET := $(shell echo $(CURRENT_TARGET) | tr a-z A-Z)
 # CFLAGS += -DBUILD_$(UPPER_CURRENT_TARGET)
 # ASFLAGS += -DBUILD_$(UPPER_CURRENT_TARGET)
 # LDFLAGS += -DBUILD_$(UPPER_CURRENT_TARGET)
@@ -133,6 +135,13 @@ endif
 # Fix for loading location for Atari to be above SDX
 ifeq ($(CURRENT_TARGET),atari)
 LDFLAGS += --start-addr 0x2D00
+endif
+
+# Autoboot detection
+ifeq ($(AUTOSTART),1)
+AUTOBOOT := -a
+else
+AUTOBOOT :=
 endif
 
 # Split out OBJ files for each target separately.
@@ -233,7 +242,7 @@ po: dist
 	$(call RMFILES,dist/$(APP_NAME)*.po)
 	cp dist/$(PROGRAM_TGT).com dist/$(PROGRAM)
 	$(APPLE_TOOLS_DIR)/mk-bitsy.sh dist/$(PROGRAM).po TEST_$(PROGRAM)
-	$(APPLE_TOOLS_DIR)/add-file.sh dist/$(PROGRAM).po dist/$(PROGRAM) $(PROGRAM) ${NOSTART}
+	$(APPLE_TOOLS_DIR)/add-file.sh ${AUTOBOOT} dist/$(PROGRAM).po dist/$(PROGRAM) $(PROGRAM)
 
 ############################################################################
 else # $(words $(TARGETLIST)),1
