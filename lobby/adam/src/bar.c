@@ -27,10 +27,10 @@ static unsigned char bar_y=3, bar_c=1, bar_m=1, bar_i=0, bar_oldi=0, bar_co=0x13
 void bar_clear(bool oldRow)
 {
   /* // Fill column color in old row */
-  /* msx_vfill(ADDR_FILE_LIST + ROW(bar_y+(oldRow==true ? bar_oldi : bar_i)), ATTR_PATH_LINE, COL(bar_c)); */
+  /* vdp_vfill(ADDR_FILE_LIST + ROW(bar_y+(oldRow==true ? bar_oldi : bar_i)), ATTR_PATH_LINE, COL(bar_c)); */
 
   // Fill background color in old row
-  msx_vfill(ADDR_FILE_LIST + ROW(bar_y+(oldRow==true ? bar_oldi : bar_i)),ATTR_FILE_LIST,BAR_SIZE);  
+  vdp_vfill(ADDR_FILE_LIST + ROW(bar_y+(oldRow==true ? bar_oldi : bar_i)),ATTR_FILE_LIST,BAR_SIZE);  
 }
 
 /**
@@ -41,7 +41,7 @@ void bar_update(void)
   bar_clear(true);
   
   // Fill bar color in new row
-  msx_vfill(ADDR_FILE_LIST + ROW(bar_y+bar_i),bar_co,BAR_SIZE);
+  vdp_vfill(ADDR_FILE_LIST + ROW(bar_y+bar_i),bar_co,BAR_SIZE);
 }
 
 /**

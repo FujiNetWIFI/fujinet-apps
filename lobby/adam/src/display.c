@@ -68,7 +68,7 @@ unsigned char display_offset_y_s(unsigned char i)
 void display_username(void)
 {
   msx_color(15,4,7);
-  msx_vfill(0x00,0x00,0x0100); // Clear first line.
+  vdp_vfill(0x00,0x00,0x0100); // Clear first line.
   gotoxy(0,0);
   cprintf("%32s",_username);
   smartkeys_puts(0,0,"#FUJINET GAME LOBBY");
@@ -85,7 +85,7 @@ void display(void)
   msx_color(1,15,7);
 
   // Pre-fill screen color for # of visible entries
-  msx_vfill(MODE2_ATTR+0x100,0x1F,0x300*numEntries);
+  vdp_vfill(MODE2_ATTR+0x100,0x1F,0x300*numEntries);
   
   for (int i=0;i<numEntries;i++)
     {
