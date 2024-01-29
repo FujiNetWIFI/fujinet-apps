@@ -12,7 +12,7 @@
 #include <stdbool.h>
 
 #define LFN 2     // The logical file number to use for I/O
-#define DEV 11    // The network device #
+#define DEV 16    // The network device #
 #define SAN 2     // The secondary address (SA) to use on DEV.
 #define CMD 15    // The secondary address for the Command channel
 

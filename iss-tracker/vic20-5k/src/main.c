@@ -21,17 +21,20 @@ void main(void)
 {
   int i;
   
+  VIC.bg_border_color = 0x7E;
+  clrscr();
+  print("\x8e"); // font switch to gfx/upper
+  
+  map();
+  
   while(true)
-    {
-      VIC.bg_border_color = 0x7E;
-      clrscr();
-      print("\x8e"); // font switch to gfx/upper
-      map();
-      fetch(&lon,&lat,lon_s,lat_s);
-      osd(lon_s,lat_s);
-      satellite(lon,lat);
+  { 
+    fetch(&lon,&lat,lon_s,lat_s);
+    map();   // Needs to be in loop to erase old position
+    osd(lon_s,lat_s);
+    satellite(lon,lat);
       
-      for (i=0;i<6000;i++)
-	waitvsync();
-    }
+    for (i=0;i<1200;i++)
+	  waitvsync();
+  }
 }

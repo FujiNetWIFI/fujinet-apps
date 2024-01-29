@@ -23,7 +23,7 @@
 *.lo
 
 # lib exceptions
-!fn_io_*.lib
+!fujinet-network-*.lib
 
 # Shared objects (inc. Windows DLLs)
 *.dll
@@ -55,3 +55,18 @@ Mkfile.old
 dkms.conf
 
 .vscode/
+
+# apple tools for generating po files etc
+apple-tools/*.jar
+apple-tools/*.dsk
+
+# build artifacts
+build/
+dist/
+obj/
+
+# altirra/applewin debugging... clue's in the name
+altirra-debug.ini
+AppleWin.log
+
+Makefile.options

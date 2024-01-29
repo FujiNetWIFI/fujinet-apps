@@ -14,9 +14,12 @@
 #include <stdlib.h>
 
 #define LFN 2     // The logical file number to use for I/O
-#define DEV 12    // The network device #
+#define DEV 16    // The network device #
 #define SAN 2     // The secondary address (SA) to use on DEV.
 #define CMD 15    // The secondary address for the Command channel
+
+// Don't translate underscore to petscii glyph in string literals
+#pragma charmap (0x5F, 0x5F);
 
 const char url[]="http://api.open-notify.org/iss-now.json";
 

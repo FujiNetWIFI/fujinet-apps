@@ -1,0 +1,150 @@
+#include <cmoc.h>
+#include <coco.h>
+#include "font.h"
+#include "clear.h"
+#include "few_clouds.h"
+#include "scattered_clouds.h"
+#include "broken_clouds.h"
+#include "shower_rain.h"
+#include "rain.h"
+#include "thunderstorm.h"
+#include "snow.h"
+#include "mist.h"
+
+static byte *screenBuffer;
+
+#define BUFFER_OFFSET(x,y) ((y << 5) + (x >> 2))
+#define PIXEL_OFFSET(x) (x & 0x03)
+
+#define WHITE  0x00
+#define CYAN   0x01
+#define PURPLE 0x02
+#define ORANGE 0x03
+
+byte andTable[4] =
+  {0x3F, 0xCF, 0xF3, 0xFC};
+byte orTable[4][4] =
+  {
+    {0x00,0x00,0x00,0x00},
+    {0x40,0x10,0x04,0x01},
+    {0x80,0x20,0x08,0x02},
+    {0xC0,0x30,0x0C,0x03}
+  };
+
+void pset(int x, int y,unsigned char c)
+{
+  screenBuffer[BUFFER_OFFSET(x,y)] &= andTable[PIXEL_OFFSET(x)];
+  screenBuffer[BUFFER_OFFSET(x,y)] |= orTable[c][PIXEL_OFFSET(x)];
+}
+
+void putc(int x, int y, char ch, char color)
+{
+  for (int i=0;i<8;i++)
+    {
+      char b = font[ch][i];
+      for (int j=0;j<8;j++)
+	{
+	  if (b < 0)
+	    pset(x,y,color);
+
+	  b <<= 1;
+	  
+	  x++;
+	}
+      y++;
+      x -= 8;
+    }
+}
+
+void puts(int x, int y, char color, const char *s)
+{
+  while (*s)
+    {
+      putc(x,y,*s++,color);
+      x += 8;
+
+      if (x > 128)
+	{
+	  x=0;
+	  y += 8;
+	}
+    }
+}
+
+/**
+ * @brief place icon on 8x8 boundary
+ * @param x horizontal position (0-127) // must be divisible by 8
+ * @param y vertical position (0-191)
+ */
+void put_icon(int x, int y, byte *icon)
+{
+  int o = BUFFER_OFFSET(x,y);
+  
+  for (int i=0;i<24;i++)
+    {
+      screenBuffer[o] = *icon++;
+      screenBuffer[o+1] = *icon++;
+      screenBuffer[o+2] = *icon++;
+      screenBuffer[o+3] = *icon++;
+      screenBuffer[o+4] = *icon++;
+      screenBuffer[o+5] = *icon++;
+      o += 32;
+    }
+}
+
+void set_screenbuffer(void)
+{
+  screenBuffer = (byte *) (((word) * (byte *) 0x00BC) << 8);
+}
+
+int main(void)
+{
+  initCoCoSupport();
+  rgb();
+  width(32);
+  set_screenbuffer();
+
+  pmode(1,screenBuffer);
+
+  // cyan
+  memset(screenBuffer,0x55,6144);
+
+  put_icon(0,0,clear);
+  puts(24,8,0,"CLEAR");
+
+  put_icon(64,0,rain);
+  puts(64+24,8,0,"RAIN");
+
+  put_icon(0,24,few_clouds);
+  puts(24,32,0,"FEW");
+  puts(24,40,0,"CLOUDS");
+
+  put_icon(72,24,snow);
+  puts(72+24,32,0,"SNOW");
+
+  put_icon(0,48,scattered_clouds);
+  puts(24,56,0,"SCATTERED");
+  puts(24,64,0,"CLOUDS");
+
+  put_icon(0,72,broken_clouds);
+  puts(24,80,0,"BROKEN");
+  puts(24,88,0,"CLOUDS");
+
+  put_icon(72,72,mist);
+  puts(72+24,80,0,"MIST");
+
+  put_icon(0,96,shower_rain);
+  puts(24,104,0,"SHOWER RAIN");
+
+  put_icon(0,120,thunderstorm);
+  puts(24,128,0,"THUNDERSTORM");
+  
+  puts(0,184,2,"   ICONS TEST   ");
+  // copy in the icon
+  
+  screen(1,1);
+
+  while(1);
+  
+  return 0;
+}

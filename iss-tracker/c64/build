@@ -1,0 +1,4 @@
+#!/bin/bash
+
+make
+exomizer sfx systrim -o iss.c64 iss

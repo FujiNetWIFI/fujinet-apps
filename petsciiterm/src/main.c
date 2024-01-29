@@ -9,12 +9,12 @@ extern void directory(); // directory.c
 extern void term();      // term.c
 extern void ihsetup();   // srq.s
 
-void main(void)
+void main (void)
 {
-  ihsetup();
-  while(1)
+    ihsetup();
+    while (1)
     {
-      directory();
-      term();
+        directory();
+        term();
     }
 }
