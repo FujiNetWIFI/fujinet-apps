@@ -25,7 +25,7 @@ static int entry_timer=0;
 
 static void input_clear_bottom(void)
 {
-  msx_vfill(0x1200,0x00,768);
+  vdp_vfill(0x1200,0x00,768);
 }
 
 /**

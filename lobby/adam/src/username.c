@@ -34,8 +34,8 @@ void username_set(void)
 
 void username_get(void)
 {
-  strcpy(username,response);
-  state=CONNECT;
+//  strcpy(username,response);
+//  state=CONNECT;
 }
 
 void username(void)
@@ -46,5 +46,5 @@ void username(void)
   if (_username[0]==0x00)
     username_set();
   else
-    username_get();
+    state=CONNECT;
 }
