@@ -16,15 +16,16 @@
 extern State state;
 
 const char connect_cmd[] = "O\x0c\x02""N2:TCP://fujinet.online:7373/";
+extern char _username[32];
 
 void connect(void)
 {
   char t[256];
   eos_write_character_device(CHAT_DEV,connect_cmd,strlen(connect_cmd));
-  sprintf(t,"W\x0c\x02/login @%s\n\n",_username);
+  sprintf(t,"W/login @%s\n\n",_username);
   eos_write_character_device(CHAT_DEV,t,strlen(t));
   memset(t,0,sizeof(t));
-  sprintf(t,"W\x0c\x02/join #lobby\n");
+  sprintf(t,"W/join #Lobby\n");
   eos_write_character_device(CHAT_DEV,t,strlen(t));
   state=FETCH;
 }

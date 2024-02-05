@@ -6,7 +6,7 @@
  */
 
 #include <eos.h>
-#include <msx.h>
+#include <video/tms99x8.h>
 #include <smartkeys.h>
 #include "select.h"
 #include "state.h"
@@ -27,19 +27,24 @@ void select(void)
   eos_start_read_keyboard();
   
   while (state==SELECT)
-    {
+  {
       switch(input())
-	{
-	case KEY_UP_ARROW:
-	  bar_up();
-	  break;
-	case KEY_DOWN_ARROW:
-	  bar_down();
-	  break;
-	}
-    }
+      {
+        case KEY_UP_ARROW:
+          bar_up();
+        break;
+        case KEY_DOWN_ARROW:
+          bar_down();
+        break;
+        case KEY_SMART_V:
+          state=CHAT;
+        break;
+        case KEY_SMART_VI:
+          state=FETCH;
+        break;
+      }
+  }
 
   eos_end_read_keyboard();
   
-  state=HALT;
 }

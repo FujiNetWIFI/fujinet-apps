@@ -2,7 +2,7 @@
  * Input routines
  */
 
-#include <msx.h>
+#include <video/tms99x8.h>
 #include <eos.h>
 #include <smartkeys.h>
 #include <conio.h>
@@ -20,7 +20,6 @@ static unsigned char button_copy=0;
 static unsigned char keypad=0;
 static unsigned char keypad_copy=0;
 static unsigned char repeat=0;
-static int entry_timer=0;
 
 
 static void input_clear_bottom(void)
@@ -35,14 +34,12 @@ static void input_clear_bottom(void)
 unsigned char input()
 {
   key = eos_end_read_keyboard();
-  if (entry_timer>0)
-    entry_timer--;
 
   if (key > 1)
     {
       eos_start_read_keyboard();
       if (key != 0x0D && key != 0x1B)
-	smartkeys_sound_play(SOUND_KEY_PRESS);
+        smartkeys_sound_play(SOUND_KEY_PRESS);
       return key;
     }
   else
@@ -53,60 +50,60 @@ unsigned char input()
       keypad = cont.joystick1_keypad;
 
       if ((button > 0) && (button != button_copy))
-	{
-	  key=0x0d; // same as RETURN
-	}
+    {
+      key=0x0d; // same as RETURN
+    }
       else if ((keypad != 0x0F) && (keypad != keypad_copy))
-	{
-	  switch (keypad)
-	    {
-	    case 1: // Slot 1
-	      key=KEY_1;
-	      break;
-	    case 2: // Slot 2
-	      key=KEY_2;
-	      break;
-	    case 3: // Slot 3
-	      key=KEY_3;
-	      break;
-	    case 4: // Slot 4
-	      key=KEY_4;
-	      break;
-	    case 5: // Slot 5
-	      key=KEY_5;
-	      break;
-	    case 6: // Slot 6
-	      key=KEY_6;
-	      break;
-	    case 7: // Slot 7
-	      key=KEY_7;
-	      break;
-	    case 8: // Slot 8
-	      key=KEY_8;
-	      break;
-	    case 0x0a: // *
-	      key=KEY_SMART_VI;
-	      break;
-	    }
-	}
+    {
+      switch (keypad)
+        {
+        case 1: // Slot 1
+          key=KEY_1;
+          break;
+        case 2: // Slot 2
+          key=KEY_2;
+          break;
+        case 3: // Slot 3
+          key=KEY_3;
+          break;
+        case 4: // Slot 4
+          key=KEY_4;
+          break;
+        case 5: // Slot 5
+          key=KEY_5;
+          break;
+        case 6: // Slot 6
+          key=KEY_6;
+          break;
+        case 7: // Slot 7
+          key=KEY_7;
+          break;
+        case 8: // Slot 8
+          key=KEY_8;
+          break;
+        case 0x0a: // *
+          key=KEY_SMART_VI;
+          break;
+        }
+    }
       else if ((joystick > 0) && (joystick == joystick_copy))
-	repeat++;
+    repeat++;
       else
-	repeat=0;
+    repeat=0;
 
       if (repeat > 16)
-	{
-	  repeat=0;
-	  switch(joystick)
-	    {
-	    case 1: // UP
-	      key=KEY_UP_ARROW;
-	      break;
-	    case 4: // DOWN
-	      key=KEY_DOWN_ARROW;
-	      break;
-	    }
-	}
+    {
+      repeat=0;
+      switch(joystick)
+        {
+        case 1: // UP
+          key=KEY_UP_ARROW;
+          break;
+        case 4: // DOWN
+          key=KEY_DOWN_ARROW;
+          break;
+        }
+    }
       
       joystick_copy = joystick;
       button_copy = button;
@@ -115,6 +112,7 @@ unsigned char input()
   
   return key;
 }
+
 
 void input_line(unsigned char x, unsigned char y, unsigned char o, char *c, unsigned char len, bool *keyVI)
 {
@@ -132,46 +130,46 @@ void input_line(unsigned char x, unsigned char y, unsigned char o, char *c, unsi
   gotoxy(x,y);
   cursor_pos(x,y);
 
-  while (key = eos_read_keyboard())
+  while (key = input()/*eos_read_keyboard()*/)
     {
       smartkeys_sound_play(SOUND_KEY_PRESS);
       if (key == KEY_RETURN)
-	{
-	  cursor(false);
-	  break;
-	}
-      else if (key == KEY_BACKSPACE)
-	{
-	  if (pos > 0)
-	    {
-	      pos--;
-	      x--;
-	      c--;
-	      *c=0x00;
-	      putchar(KEY_BACKSPACE);
-	      putchar(KEY_SPACE);
-	      putchar(KEY_BACKSPACE);
-	      cursor_pos(x,y);
-	    }
-	}
-      else if ((keyVI != NULL) && (key == KEY_SMART_VI))
-	{
-	  *keyVI=true;
-	  return;
-	}
-      else if (key > 0x1F && key < 0x7F) // Printable characters 
-	{
-	  if (pos < len)
-	    {
-	      pos++;
-	      x++;
-	      *c=key;
-	      c++;
-	      putchar(key);
-	      cursor_pos(x,y);
-	    }
-	}
+    {
+      cursor(false);
+      break;
     }
-  eos_end_read_keyboard();
-  eos_start_read_keyboard();
+      else if (key == KEY_BACKSPACE)
+    {
+      if (pos > 0)
+        {
+          pos--;
+          x--;
+          c--;
+          *c=0x00;
+          putchar(KEY_BACKSPACE);
+          putchar(KEY_SPACE);
+          putchar(KEY_BACKSPACE);
+          cursor_pos(x,y);
+        }
+    }
+      else if ((keyVI != NULL) && (key == KEY_SMART_VI))
+    {
+      *keyVI=true;
+      return;
+    }
+      else if (key > 0x1F && key < 0x7F) // Printable characters 
+    {
+      if (pos < len)
+        {
+          pos++;
+          x++;
+          *c=key;
+          c++;
+          putchar(key);
+          cursor_pos(x,y);
+        }
+    }
+    }
+//   eos_end_read_keyboard();
+//   eos_start_read_keyboard();
 }
