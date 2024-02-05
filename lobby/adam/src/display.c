@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <smartkeys.h>
 #include <conio.h>
-#include <msx.h>
+#include <video/tms99x8.h>
 #include "display.h"
 #include "state.h"
 #include "fetch.h"
@@ -67,7 +67,7 @@ unsigned char display_offset_y_s(unsigned char i)
 
 void display_username(void)
 {
-  msx_color(15,4,7);
+  vdp_color(15,4,7);
   vdp_vfill(0x00,0x00,0x0100); // Clear first line.
   gotoxy(0,0);
   cprintf("%32s",_username);
@@ -82,7 +82,7 @@ void display(void)
   
   gotoxy(0,1);
 
-  msx_color(1,15,7);
+  vdp_color(1,15,7);
 
   // Pre-fill screen color for # of visible entries
   vdp_vfill(MODE2_ATTR+0x100,0x1F,0x300*numEntries);

@@ -2,7 +2,7 @@
  * Bar routines
  */
 
-#include <msx.h>
+#include <video/tms99x8.h>
 #include <stdbool.h>
 #include "bar.h"
 
