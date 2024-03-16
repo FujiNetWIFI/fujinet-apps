@@ -41,7 +41,7 @@ This attaches the SRQ as an IRQ handler at the KERNAL IRQ vector ($0314).
 Once a network connection is opened, e.g. with any of channels 2-14:
 
 ```
-10 OPEN 2,12,2,"TCP://192.168.1.2:1234/"
+10 OPEN 2,16,2,"TCP://192.168.1.2:1234/"
 ```
 
 Any received traffic will be signaled via wiggling the SRQ line on the IEC port. This causes an IRQ, and the "trip" variable to be set to 16 ($10) (this is the value of the IRQ status register)

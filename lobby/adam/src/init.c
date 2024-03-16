@@ -5,7 +5,7 @@
  * @license gpl v. 3, see LICENSE for details.
  */
 
-#include <msx.h>
+#include <video/tms99x8.h>
 #include <eos.h>
 #include <smartkeys.h>
 #include <conio.h>
