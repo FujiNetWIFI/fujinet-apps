@@ -3,7 +3,10 @@ PROGRAM := httpbin
 # set to 1 to make application auto start on boot of disk
 AUTOSTART := 1
 
-FUJINET_NETWORK_LIBS = ../fn_network
+FUJINET_LIB_VERSION = 3.0.1
+FUJINET_LIB = fujinet-lib
+FUJINET_LIB_VERSION_DIR = $(FUJINET_LIB)/$(FUJINET_LIB_VERSION)-$(CURRENT_TARGET)
+
 APPLE_TOOLS_DIR = ../apple-tools
 
 CC := cl65
@@ -41,6 +44,9 @@ TARGETLIST := $(subst $(COMMA),$(SPACE),$(TARGETS))
 
 ifeq ($(words $(TARGETLIST)),1)
 CURRENT_TARGET := $(TARGETLIST)
+
+FUJINET_LIB_DOWNLOAD_URL = https://github.com/FujiNetWIFI/fujinet-lib/releases/download/v$(FUJINET_LIB_VERSION)/fujinet-lib-$(CURRENT_TARGET)-$(FUJINET_LIB_VERSION).zip
+FUJINET_LIB_DOWNLOAD_FILE = $(FUJINET_LIB)/fujinet-lib-$(CURRENT_TARGET)-$(FUJINET_LIB_VERSION).zip
 
 ifeq '$(findstring ;,$(PATH))' ';'
     detected_OS := Windows
@@ -89,9 +95,9 @@ OBJECTS := $(OBJECTS:$(SRCDIR)/%=$(OBJDIR)/$(CURRENT_TARGET)/%)
 DEPENDS := $(OBJECTS:.o=.d)
 STATEFILE := Makefile.options
 
-LIBS += $(wildcard $(FUJINET_NETWORK_LIBS)/fujinet-network-$(CURRENT_TARGET)_*.lib)
-ASFLAGS += --asm-include-dir $(FUJINET_NETWORK_LIBS)
-CFLAGS += --include-dir $(FUJINET_NETWORK_LIBS)
+LIBS += $(FUJINET_LIB_VERSION_DIR)/fujinet-$(CURRENT_TARGET)-$(FUJINET_LIB_VERSION).lib
+ASFLAGS += --asm-include-dir $(FUJINET_LIB_VERSION_DIR)
+CFLAGS += --include-dir $(FUJINET_LIB_VERSION_DIR)
 
 # add common/inc
 ASFLAGS += --asm-include-dir $(COMMON_INC_DIR)
@@ -129,9 +135,9 @@ endif
 TARGETOBJDIR := $(OBJDIR)/$(CURRENT_TARGET)
 
 .SUFFIXES:
-.PHONY: all clean dist $(PROGRAM).$(CURRENT_TARGET)
+.PHONY: all clean dist get_fujinet_lib $(PROGRAM).$(CURRENT_TARGET)
 
-all: $(PROGRAM_TGT)
+all: get_fujinet_lib $(PROGRAM_TGT)
 
 -include $(DEPENDS)
 -include $(STATEFILE)
@@ -156,6 +162,25 @@ endif
 
 # Transform the abstract OPTIONS to the actual cc65 options.
 $(foreach o,$(subst $(COMMA),$(SPACE),$(OPTIONS)),$(eval $(_$o_)))
+
+get_fujinet_lib:
+	@if [ ! -f "$(FUJINET_LIB_DOWNLOAD_FILE)" ]; then \
+		if [ -d "$(FUJINET_LIB_VERSION_DIR)" ]; then \
+		  echo "A directory already exists with version $(FUJINET_LIB_VERSION) - please remove it first"; \
+			exit 1; \
+		fi; \
+		HTTPSTATUS=$$(curl -Is $(FUJINET_LIB_DOWNLOAD_URL) | head -n 1 | awk '{print $$2}'); \
+		if [ "$${HTTPSTATUS}" == "404" ]; then \
+			echo "ERROR: Unable to find file $(FUJINET_LIB_DOWNLOAD_URL)"; \
+			exit 1; \
+		fi; \
+		echo "Downloading fujinet-lib for $(TARGETLIST) version $(FUJINET_LIB_VERSION) from $(FUJINET_LIB_DOWNLOAD_URL)"; \
+		mkdir -p $(FUJINET_LIB); \
+		curl -L $(FUJINET_LIB_DOWNLOAD_URL) -o $(FUJINET_LIB_DOWNLOAD_FILE); \
+		echo "Unzipping to $(FUJINET_LIB)"; \
+		unzip -o $(FUJINET_LIB_DOWNLOAD_FILE) -d $(FUJINET_LIB_VERSION_DIR); \
+		echo "Unzip complete."; \
+	fi
 
 $(OBJDIR):
 	$(call MKDIR,$@)

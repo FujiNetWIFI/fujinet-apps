@@ -4,7 +4,7 @@
 
 #include "test_fnlib.h"
 
-char *version = "v1.0.3";
+char *version = "v1.0.4";
 
 char *sHostName = "hostname:";
 char *sIP = "ip:";
@@ -25,8 +25,11 @@ int main(void) {
 }
 
 void test_ac(void) {
-    fn_io_get_adapter_config(&ac);
-    fn_io_get_adapter_config_extended(&acx);
+    bool is_success;
+    is_success = fuji_get_adapter_config(&ac);
+    printf("ac result: %s\n", is_success ? "true" : "false");
+    is_success = fuji_get_adapter_config_extended(&acx);
+    printf("acx result: %s\n", is_success ? "true" : "false");
 
     printf("fuji id: %u\n", sp_fuji_id);
 

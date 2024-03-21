@@ -2,7 +2,7 @@
 #define ACX_H
 
 #include <stdint.h>
-#include "fujinet-io.h"
+#include "fujinet-fuji.h"
 
 extern uint8_t sp_payload[];
 extern int8_t sp_fuji_id;

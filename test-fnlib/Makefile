@@ -3,9 +3,9 @@ PROGRAM := testlib
 # set to 1 to make application auto start on boot of disk
 AUTOSTART := 1
 
-FUJINET_LIB_VERSION = 2.2.2
+FUJINET_LIB_VERSION = 3.0.1
 FUJINET_LIB = fujinet-lib
-FUJINET_LIB_VERSION_DIR = $(FUJINET_LIB)/$(FUJINET_LIB_VERSION)
+FUJINET_LIB_VERSION_DIR = $(FUJINET_LIB)/$(FUJINET_LIB_VERSION)-$(CURRENT_TARGET)
 
 APPLE_TOOLS_DIR = ../apple-tools
 
@@ -143,10 +143,15 @@ $(foreach o,$(subst $(COMMA),$(SPACE),$(OPTIONS)),$(eval $(_$o_)))
 get_fujinet_lib:
 	@if [ ! -f "$(FUJINET_LIB_DOWNLOAD_FILE)" ]; then \
 		if [ -d "$(FUJINET_LIB_VERSION_DIR)" ]; then \
-			echo "A directory already exists with version $(FUJINET_LIB_VERSION) - please remove it first"; \
+		  echo "A directory already exists with version $(FUJINET_LIB_VERSION) - please remove it first"; \
 			exit 1; \
 		fi; \
-		echo "Downloading fujinet-lib for $(TARGETLIST) version $(FUJINET_LIB_VERSION)"; \
+		HTTPSTATUS=$$(curl -Is $(FUJINET_LIB_DOWNLOAD_URL) | head -n 1 | awk '{print $$2}'); \
+		if [ "$${HTTPSTATUS}" == "404" ]; then \
+			echo "ERROR: Unable to find file $(FUJINET_LIB_DOWNLOAD_URL)"; \
+			exit 1; \
+		fi; \
+		echo "Downloading fujinet-lib for $(TARGETLIST) version $(FUJINET_LIB_VERSION) from $(FUJINET_LIB_DOWNLOAD_URL)"; \
 		mkdir -p $(FUJINET_LIB); \
 		curl -L $(FUJINET_LIB_DOWNLOAD_URL) -o $(FUJINET_LIB_DOWNLOAD_FILE); \
 		echo "Unzipping to $(FUJINET_LIB)"; \
