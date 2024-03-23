@@ -1,0 +1,8 @@
+altirra-debug.ini
+Makefile.options
+
+build/
+obj/
+dist/
+
+*.jar
