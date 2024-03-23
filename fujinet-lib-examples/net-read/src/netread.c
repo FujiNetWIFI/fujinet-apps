@@ -114,10 +114,14 @@ bool setup() {
 }
 
 void do_read(int num) {
-  err = network_read(url, buffer, num);
-  handle_err("read");
+  int count = 0;
+  count = network_read(url, buffer, num);
+  if (count < 0) {
+    err = -count;
+    handle_err("read");
+  }
 
-  printf("Fetched %" PRIu16 " bytes:\n", fn_bytes_read);
+  printf("Fetched %" PRIu16 " bytes, count: %" PRIu16 "\n", fn_bytes_read, count);
   hex_dump(buffer, fn_bytes_read);
 
   // check network status

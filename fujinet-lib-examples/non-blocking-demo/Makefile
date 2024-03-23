@@ -1,7 +1,11 @@
 TARGETS := atari apple2
-PROGRAM := mastodon
+PROGRAM := nbdemo
 # set to 1 to make application auto start on boot of disk
 AUTOSTART := 1
+
+# See later for setting server IP address
+# REST_SERVER_ADDRESS = \"$(shell hostname)\"
+REST_SERVER_PORT = \"8080\"
 
 FUJINET_LIB_VERSION = 3.0.2
 FUJINET_LIB = ../_libs
@@ -65,12 +69,21 @@ endif
 
 ALTIRRA ?= $(ALTIRRA_HOME)/Altirra64.exe \
   $(XS)/portable $(XS)/portablealt:altirra-debug.ini \
-
-#   $(XS)/debug \
-#   $(XS)/debugcmd: ".loadsym build\$(PROGRAM).$(CURRENT_TARGET).lbl" \
-#   $(XS)/debugcmd: "bp _debug" \
+  $(XS)/debug \
+  $(XS)/debugcmd: ".loadsym build\$(PROGRAM).$(CURRENT_TARGET).lbl" \
+  $(XS)/debugcmd: "bp _debug" \
 
 atari_EMUCMD := $(ALTIRRA)
+
+####################################
+# REST_SERVER_ADDRESS
+####################################
+# If REST_SERVER_ADDRESS is already set on command line, these do nothing, otherwise they will work out the local IP address, ignoring 172 range which is WSL on Windows.
+ifeq ($(detected_OS),Linux)
+  REST_SERVER_ADDRESS = \"$(shell ip -4 addr show scope global | grep -oP '(?<=inet\s)\d+(\.\d+){3}')\"
+else ifeq ($(detected_OS),$(filter $(detected_OS),MSYS MINGW Cygwin Windows))
+  REST_SERVER_ADDRESS = \"$(shell ipconfig | grep -oP 'IPv4.*:\s*\K[\d.]+' | grep -v '^172\.')\"
+endif
 
 PREEMUCMD :=
 POSTEMUCMD :=
@@ -114,6 +127,10 @@ UPPER_CURRENT_TARGET := $(shell echo $(CURRENT_TARGET) | tr a-z A-Z)
 CFLAGS += -DBUILD_$(UPPER_CURRENT_TARGET)
 ASFLAGS += -DBUILD_$(UPPER_CURRENT_TARGET)
 LDFLAGS += -DBUILD_$(UPPER_CURRENT_TARGET)
+
+CFLAGS += -DREST_SERVER_ADDRESS=$(REST_SERVER_ADDRESS) -DREST_SERVER_PORT=$(REST_SERVER_PORT)
+ASFLAGS += -DREST_SERVER_ADDRESS=$(REST_SERVER_ADDRESS) -DREST_SERVER_PORT=$(REST_SERVER_PORT)
+LDFLAGS += -DREST_SERVER_ADDRESS=$(REST_SERVER_ADDRESS) -DREST_SERVER_PORT=$(REST_SERVER_PORT)
 
 # Fix for graphics calls on Atari
 ifeq ($(CURRENT_TARGET),atari)

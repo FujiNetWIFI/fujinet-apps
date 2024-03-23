@@ -81,8 +81,12 @@ void end_get() {
 }
 
 void test_get_query(char *path) {
+    int count = 0;
     err = network_json_query(url, path, result);
-    handle_err("query");
+    if (count < 0) {
+        err = -count;
+        handle_err("query");
+    }
 
     printf("  path: %s\nresult: %s\n\n", path, result);
 }
