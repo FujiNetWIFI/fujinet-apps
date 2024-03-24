@@ -22,7 +22,7 @@ void username_set(void)
   smartkeys_clear();
   smartkeys_display(NULL,NULL,NULL,NULL,NULL,NULL);
   smartkeys_status("\n  PLEASE ENTER A USER NAME.");
-  input_line(0,19,0,_username,128,NULL);
+  input_line(0,19,0,_username,sizeof(_username),NULL);
 
   if (appkey_write(0x0001,0x01,0x00,_username) != 0x80)
     {
@@ -34,7 +34,6 @@ void username_set(void)
 
 void username_get(void)
 {
-  strcpy(username,response);
   state=CONNECT;
 }
 
