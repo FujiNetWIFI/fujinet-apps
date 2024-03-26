@@ -25,7 +25,7 @@ uint8_t connected;
 uint8_t conn_err;
 uint8_t trans_type = OPEN_TRANS_CRLF;
 
-char *version = "v1.3.14";
+char *version = "v1.3.15";
 
 void debug() {}
 
@@ -35,22 +35,22 @@ int main(void) {
 
     setup();
 
-    // start_get();                        // save us having to keep closing/reopening.
-    // test_get_query("");                 // returns entire json *object* line by line. forces you to know structure if you use this (looking at you lobby)
+    start_get();                        // save us having to keep closing/reopening.
+    test_get_query("");                 // returns entire json *object* line by line. forces you to know structure if you use this (looking at you lobby)
 
-    // // example that does match
-    // test_get_query("/headers/host");    // returns value from httpbin.org
+    // example that does match
+    test_get_query("/headers/host");    // returns value from httpbin.org
 
-    // // examples that return nothing as the json path doesn't match output
-    // // test_get_query("/");                // returns nothing, not the entire root.
-    // test_get_query("/foo/bar");         // path doesn't exist, returns nothing
+    // examples that return nothing as the json path doesn't match output
+    test_get_query("/");                // returns nothing, not the entire root.
+    test_get_query("/foo/bar");         // path doesn't exist, returns nothing
 
-    // end_get();                          // finally close resource
+    end_get();                          // finally close resource
 
-    // // examples of other protocols
-    // test_post();
-    // test_put();
-    // test_delete();
+    // examples of other protocols
+    test_post();
+    test_put();
+    test_delete();
     test_simple_get();
 
     printf("Press a key to exit.");
@@ -82,8 +82,12 @@ void start_get() {
 }
 
 void test_get_query(char *path) {
-    err = network_json_query(url, path, result);
-    handle_err("query");
+    int n = 0;
+    n = network_json_query(url, path, result);
+    if (n < 0) {
+        err = -n;
+        handle_err("query");
+    }
 
     printf("j: >%s<, r: >%s<\n", path, result);
 }
@@ -96,24 +100,30 @@ void end_get() {
 // -------------------------------------------------------------------------------
 // POST JSON, get result
 void test_post() {
+    int n = 0;
     url = create_url("post");
     err = network_open(url, OPEN_MODE_HTTP_POST, trans_type);
     handle_err("post:open");
 
     set_json(url);
-    network_http_put(url, "{\"name\":\"fenrock\"}");
+    network_http_post(url, "{\"name\":\"fenrock\"}");
     err = network_json_parse(url);
     handle_err("post:json parse");
-    network_json_query(url, "/json/name", result);
-    handle_err("post:json query");
+    n = network_json_query(url, "/json/name", result);
+    if (n < 0) {
+        err = -n;
+        handle_err("post:json query");
+    }
+
     printf("/post   :  name=>%s<\n", result);
-    network_close(url);
+    err = network_close(url);
     handle_err("post:close");
 }
 
 // -------------------------------------------------------------------------------
 // PUT JSON, get result. PUT is just a slightly different POST
 void test_put() {
+    int n = 0;
     url = create_url("put");
     err = network_open(url, OPEN_MODE_HTTP_PUT_H, trans_type);
     handle_err("put:open");
@@ -122,16 +132,22 @@ void test_put() {
     network_http_put(url, "{\"level\":11}");
     err = network_json_parse(url);
     handle_err("put:json parse");
-    network_json_query(url, "/json/level", result);
-    handle_err("put:json query");
+
+    n = network_json_query(url, "/json/level", result);
+    if (n < 0) {
+        err = -n;
+        handle_err("put:json query");
+    }
+
     printf("/put    : level=>%s<\n", result);
-    network_close(url);
+    err = network_close(url);
     handle_err("put:close");
 }
 
 // -------------------------------------------------------------------------------
 // DELETE - no data to send, but response will have data in it
 void test_delete() {
+    int n = 0;
     url = create_url("delete");
     err = network_http_delete(url, trans_type);
     handle_err("del:open");
@@ -139,16 +155,20 @@ void test_delete() {
     set_json(url);
     err = network_json_parse(url);
     handle_err("del:json parse");
-    network_json_query(url, "/headers/host", result);
-    handle_err("del:json query");
+    n = network_json_query(url, "/headers/host", result);
+    if (n < 0) {
+        err = -n;
+        handle_err("del:json query");
+    }
     printf("/delete :  host=>%s<\n", result);
-    network_close(url);
+    err = network_close(url);
     handle_err("del:close");
 }
 
 // -------------------------------------------------------------------------------
 // GET - no data to send, but response will have data in it
 void test_simple_get() {
+    int n = 0;
     url = create_url("get");
     // trans mode doesn't appear to be working, always coming back 0x9b on atari
     err = network_open(url, OPEN_MODE_HTTP_GET, trans_type);
@@ -157,12 +177,15 @@ void test_simple_get() {
     // simply read without any fancy modes. FN resets the modes to normal body after closing a connection, so we don't even have to specify the BODY mode.
     // We are only going to read first 40 bytes of the results so we can display it easily.
     // TODO: block reading so very large payloads can be read into limited memory are not yet handled, and above 512 may be broken on apple2.
-    err = network_read(url, result, 40);
-    handle_err("simple_get");
+    n = network_read(url, result, 40);
+    if (n < 0) {
+        err = -n;
+        handle_err("simple_get");
+    }
     printf("simple read (same as GET):\n");
     hex_dump(result, 40);
 
-    network_close(url);
+    err = network_close(url);
     handle_err("del:close");
 }
 
@@ -185,11 +208,15 @@ void post(char *devicespec, char *data) {
 }
 
 void body(char *devicespec, char *r, uint16_t len) {
+    int n = 0;
     strcpy(r, "NO DATA");
     err = network_http_set_channel_mode(devicespec, HTTP_CHAN_MODE_BODY);
     handle_err("body chan mode");
-    err = network_read(devicespec, (uint8_t *) r, len);
-    handle_err("body read");
+    n = network_read(devicespec, (uint8_t *) r, len);
+    if (n < 0) {
+        err = -n;
+        handle_err("body read");
+    }
 }
 
 void set_json(char *devicespec) {

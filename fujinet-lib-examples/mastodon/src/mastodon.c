@@ -19,6 +19,7 @@ uint8_t err = 0;
 
 void main(void)
 {
+	int count = 0;
 	setup();
 	new_screen();
 	while (1)
@@ -27,19 +28,28 @@ void main(void)
 		err = network_json_parse(url);
 		handle_err("parse");
 
-		err = network_json_query(url, display_name_query, buffer);
-		handle_err("query");
+		count = network_json_query(url, display_name_query, buffer);
+		if (count < 0) {
+			err = -count;
+			handle_err("query");
+		}
 
 		revers(1);
 		printf("%40s", buffer);
 
-		err = network_json_query(url, created_at_query, buffer);
-		handle_err("query");
+		count = network_json_query(url, created_at_query, buffer);
+		if (count < 0) {
+			err = -count;
+			handle_err("query");
+		}
 		printf("%40s", buffer);
 		revers(0);
 
-		err = network_json_query(url, content_query, buffer);
-		handle_err("query");
+		count = network_json_query(url, content_query, buffer);
+		if (count < 0) {
+			err = -count;
+			handle_err("query");
+		}
 		printf("%s\n---\n", buffer);
 
 		network_close(url);

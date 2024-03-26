@@ -1,10 +1,10 @@
 # building rest api
 
-- Download REST api jar from https://github.com/markjfisher/http-simple/releases/download/v1.0.1/http-simple-1.0.1-all.jar
+- Download REST api jar from https://github.com/markjfisher/http-simple/releases/download/v1.0.2/http-simple-1.0.2-all.jar
 - Run it with:
 
 ```shell
-MICRONAUT_SERVER_HOST=0.0.0.0 MICRONAUT_SERVER_PORT=8080 java -jar /path/to/http-simple-1.0.1-all.jar
+MICRONAUT_SERVER_HOST=0.0.0.0 MICRONAUT_SERVER_PORT=8080 java -jar /path/to/http-simple-1.0.2-all.jar
 ```
 
 This will allow the server to respond to network requests on all bindings.
