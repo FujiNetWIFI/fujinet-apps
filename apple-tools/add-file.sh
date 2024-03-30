@@ -6,25 +6,29 @@ function show_help {
   echo
   echo "  -a : autostart enabled. marks file as STARTUP, booting it directly rather than bitsy bye."
   echo "       For makefile convenience, NAME is allowed if -a specified, but it will be ignored."
+  echo
+  echo "  -l : autostart via LOADER.SYSTEM"
   exit 1
 }
 
 # don't default to autostart, this script's job is normally to add files to a disk. You have to mark it as autostart rather than it always do that.
 AUTOSTART=0
-while getopts "ah" flag
+LOADER=0
+while getopts "alh" flag
 do
   case "$flag" in
     a) AUTOSTART=1 ;;
+    l) LOADER=1 ;;
     h) show_help ;;
     *) show_help ;;
   esac
 done
 shift $((OPTIND - 1))
 
-if [[ ($AUTOSTART -eq 0 && $# -ne 3) || ($AUTOSTART -eq 1 && $# -lt 2) ]]; then
-  echo "ERROR: Bad argument count."
-  show_help
-fi
+#if [[ ($AUTOSTART -eq 0 && $# -ne 3) || ($AUTOSTART -eq 1 && $# -lt 2) ]]; then
+#  echo "ERROR: Bad argument count."
+#  show_help
+#fi
 
 if [ -z "$(which java)" ]; then
   echo "Unable to find java on command line. You must have a working java at least version 11 to use this script."
@@ -51,6 +55,11 @@ NAME="$3"
 if [ $AUTOSTART -eq 1 ]; then 
   ${AC} -d "$DISKFILE" QUIT.SYSTEM
   NAME="startup"
+fi
+
+if [ $LOADER -eq 1 ]; then 
+  ${AC} -d "$DISKFILE" QUIT.SYSTEM
+  ${AC} -p "$DISKFILE" "$NAME".SYSTEM sys < "`cl65 --print-target-path`/apple2/util/loader.system"
 fi
 
 ${AC} -as "$DISKFILE" "$NAME" < "$INFILE"
