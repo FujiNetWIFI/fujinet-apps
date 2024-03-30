@@ -13,9 +13,7 @@ PROCESS(webclient_process, "Web Client");
 
 struct webclient_state {
   uint8_t open;
-  uint16_t bytes_waiting;
   uint8_t connected;
-  uint8_t error;
   char mimetype[32];
   char device[2 + WWW_CONF_MAX_URLLEN + 1];
   char buffer[2048];
@@ -44,6 +42,8 @@ webclient_open(const char *url)
   }
   s.open = 1;
 
+  strcpy(s.mimetype, "html");
+
   webclient_connected();
 
   process_poll(&webclient_process);
@@ -59,6 +59,8 @@ webclient_close(void)
 
   network_close(s.device);
   s.open = 0;
+
+  webclient_closed();
 }
 /*-----------------------------------------------------------------------------------*/
 static void
@@ -84,24 +86,29 @@ webclient_exit(void)
 static void
 webclient_poll(void)
 {
+  uint16_t retval;
+
   if(!s.open) {
     return;
   }
 
-  if(network_status(s.device, &s.bytes_waiting, &s.connected, &s.error) == FN_ERR_OK) {
+  retval = network_read_nb(s.device, s.buffer, sizeof(s.buffer));
 
-    if(s.bytes_waiting) {
-      if(network_read(s.device, s.buffer, sizeof(s.buffer)) == FN_ERR_OK) {
-        webclient_datahandler(s.buffer, fn_bytes_read);
-      }
-    }
-
-    if(s.connected) {
-      process_poll(PROCESS_CURRENT());
-    } else {
-      webclient_closed();
-    }
+  if (retval > 0) {
+    webclient_datahandler(s.buffer, retval);
   }
+
+  /* Check if we hit EOF, i.e. no more data for this URL */
+  if (fn_network_error == 136) {
+    network_close(s.device);
+    s.open = 0;
+
+    webclient_datahandler(NULL, 0);
+    
+    return;
+  }
+
+  process_poll(PROCESS_CURRENT());
 }
 /*-----------------------------------------------------------------------------------*/
 PROCESS_THREAD(webclient_process, ev, data)
