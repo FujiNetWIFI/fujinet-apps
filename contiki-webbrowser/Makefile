@@ -1,185 +1,30 @@
-###############################################################################
-### Generic Makefile for cc65 projects - full version with abstract options ###
-### V1.3.0(w) 2010 - 2013 Oliver Schmidt & Patryk "Silver Dream !" Łogiewa  ###
-###############################################################################
+TARGETS := atari apple2 apple2enh
+PROGRAM := browser
+# set to 1 to make application auto start on boot of disk
+# set to 2 to make application auto start on boot of disk via LOADER.SYSTEM
+AUTOSTART := 2
 
-###############################################################################
-### In order to override defaults - values can be assigned to the variables ###
-###############################################################################
+CFLAGS = -Oris -D AUTOSTART_ENABLE -W -unused-param
+LDFLAGS = -D __HIMEM__=0xBF00
 
-# Space or comma separated list of cc65 supported target platforms to build for.
-# Default: c64 (lowercase!)
-TARGETS := apple2 apple2enh atari
+FUJINET_LIB_VERSION = 3.0.2
+FUJINET_LIB = $(OBJDIR)/_libs
+FUJINET_LIB_VERSION_DIR = $(FUJINET_LIB)/$(FUJINET_LIB_VERSION)-$(FUJINET_LIB_TARGET)
 
-# Name of the final, single-file executable.
-# Default: name of the current dir with target name appended
-PROGRAM :=
+APPLE_TOOLS_DIR = ../apple-tools
 
-# Path(s) to additional libraries required for linking the program
-# Use only if you don't want to place copies of the libraries in SRCDIR
-# Default: none
-LIBS    :=
+CC := cl65
 
-# Custom linker configuration file
-# Use only if you don't want to place it in SRCDIR
-# Default: none
-CONFIG  :=
+# Used as global "include" dir for macros etc.
+COMMON_INC_DIR := ../_include
 
-# Additional C compiler flags and options.
-# Default: none
-CFLAGS  = -I src/$(CC65TARGET) -D AUTOSTART_ENABLE -W -unused-param
+SRCDIR := src
+BUILD_DIR := build
+OBJDIR := obj
 
-# Additional assembler flags and options.
-# Default: none
-ASFLAGS =
+# This allows src to be nested withing sub-directories.
+rwildcard=$(wildcard $(1)$(2))$(foreach d,$(wildcard $1*), $(call rwildcard,$d/,$2))
 
-# Additional linker flags and options.
-# Default: none
-LDFLAGS =
-
-# Path to the directory containing C and ASM sources.
-# Default: src
-SRCDIR :=
-
-# Path to the directory where object files are to be stored (inside respective target subdirectories).
-# Default: obj
-OBJDIR :=
-
-# Command used to run the emulator.
-# Default: depending on target platform. For default (c64) target: x64 -kernal kernal -VICIIdsize -autoload
-EMUCMD :=
-
-# Optional commands used before starting the emulation process, and after finishing it.
-# Default: none
-# Examples
-#PREEMUCMD := osascript -e "tell application \"System Events\" to set isRunning to (name of processes) contains \"X11.bin\"" -e "if isRunning is true then tell application \"X11\" to activate"
-#PREEMUCMD := osascript -e "tell application \"X11\" to activate"
-#POSTEMUCMD := osascript -e "tell application \"System Events\" to tell process \"X11\" to set visible to false"
-#POSTEMUCMD := osascript -e "tell application \"Terminal\" to activate"
-PREEMUCMD :=
-POSTEMUCMD :=
-
-# On Windows machines VICE emulators may not be available in the PATH by default.
-# In such case, please set the variable below to point to directory containing
-# VICE emulators. 
-#VICE_HOME := "C:\Program Files\WinVICE-2.2-x86\"
-VICE_HOME :=
-
-# Options state file name. You should not need to change this, but for those
-# rare cases when you feel you really need to name it differently - here you are
-STATEFILE := Makefile.options
-
-###################################################################################
-####  DO NOT EDIT BELOW THIS LINE, UNLESS YOU REALLY KNOW WHAT YOU ARE DOING!  ####
-###################################################################################
-
-###################################################################################
-### Mapping abstract options to the actual compiler, assembler and linker flags ###
-### Predefined compiler, assembler and linker flags, used with abstract options ###
-### valid for 2.14.x. Consult the documentation of your cc65 version before use ###
-###################################################################################
-
-# Compiler flags used to tell the compiler to optimise for SPEED
-define _optspeed_
-  CFLAGS += -Oris
-endef
-
-# Compiler flags used to tell the compiler to optimise for SIZE
-define _optsize_
-  CFLAGS += -Or
-endef
-
-# Compiler and assembler flags for generating listings
-define _listing_
-  CFLAGS += --listing $$(@:.o=.lst)
-  ASFLAGS += --listing $$(@:.o=.lst)
-  REMOVES += $(addsuffix .lst,$(basename $(OBJECTS)))
-endef
-
-# Linker flags for generating map file
-define _mapfile_
-  LDFLAGS += --mapfile $$@.map
-  REMOVES += $(PROGRAM).map
-endef
-
-# Linker flags for generating VICE label file
-define _labelfile_
-  LDFLAGS += -Ln $$@.lbl
-  REMOVES += $(PROGRAM).lbl
-endef
-
-# Linker flags for generating a debug file
-define _debugfile_
-  LDFLAGS += -Wl --dbgfile,$$@.dbg
-  REMOVES += $(PROGRAM).dbg
-endef
-
-###############################################################################
-###  Defaults to be used if nothing defined in the editable sections above  ###
-###############################################################################
-
-# Presume the C64 target like the cl65 compile & link utility does.
-# Set TARGETS to override.
-ifeq ($(TARGETS),)
-  TARGETS := c64
-endif
-
-# Presume we're in a project directory so name the program like the current
-# directory. Set PROGRAM to override.
-ifeq ($(PROGRAM),)
-  PROGRAM := $(notdir $(CURDIR))
-endif
-
-# Presume the C and asm source files to be located in the subdirectory 'src'.
-# Set SRCDIR to override.
-ifeq ($(SRCDIR),)
-  SRCDIR := src
-endif
-
-# Presume the object and dependency files to be located in the subdirectory
-# 'obj' (which will be created). Set OBJDIR to override.
-ifeq ($(OBJDIR),)
-  OBJDIR := obj
-endif
-TARGETOBJDIR := $(OBJDIR)/$(TARGETS)
-
-# Default emulator commands and options for particular targets.
-# Set EMUCMD to override.
-c64_EMUCMD := $(VICE_HOME)x64 -kernal kernal -VICIIdsize -autoload
-c128_EMUCMD := $(VICE_HOME)x128 -kernal kernal -VICIIdsize -autoload
-vic20_EMUCMD := $(VICE_HOME)xvic -kernal kernal -VICdsize -autoload
-pet_EMUCMD := $(VICE_HOME)xpet -Crtcdsize -autoload
-plus4_EMUCMD := $(VICE_HOME)xplus4 -TEDdsize -autoload
-# So far there is no x16 emulator in VICE (why??) so we have to use xplus4 with -memsize option
-c16_EMUCMD := $(VICE_HOME)xplus4 -ramsize 16 -TEDdsize -autoload
-cbm510_EMUCMD := $(VICE_HOME)xcbm2 -model 510 -VICIIdsize -autoload
-cbm610_EMUCMD := $(VICE_HOME)xcbm2 -model 610 -Crtcdsize -autoload
-atari_EMUCMD := atari800 -windowed -xl -pal -nopatchall -run
-cx16_EMUCMD := x16emu -run -prg
-
-ifeq ($(EMUCMD),)
-  EMUCMD = $($(CC65TARGET)_EMUCMD)
-endif
-
-###############################################################################
-### The magic begins                                                        ###
-###############################################################################
-
-# The "Native Win32" GNU Make contains quite some workarounds to get along with
-# cmd.exe as shell. However it does not provide means to determine that it does
-# actually activate those workarounds. Especially $(SHELL) does NOT contain the
-# value 'cmd.exe'. So the usual way to determine if cmd.exe is being used is to
-# execute the command 'echo' without any parameters. Only cmd.exe will return a
-# non-empty string - saying 'ECHO is on/off'.
-#
-# Many "Native Win32" programs accept '/' as directory delimiter just fine. How-
-# ever the internal commands of cmd.exe generally require '\' to be used.
-#
-# cmd.exe has an internal command 'mkdir' that doesn't understand nor require a
-# '-p' to create parent directories as needed.
-#
-# cmd.exe has an internal command 'del' that reports a syntax error if executed
-# without any file so make sure to call it only if there's an actual argument.
 ifeq ($(shell echo),)
   MKDIR = mkdir -p $1
   RMDIR = rmdir $1
@@ -197,143 +42,238 @@ define NEWLINE
 endef
 # Note: Do not remove any of the two empty lines above !
 
+############################################################################
+# START OF MAIN LOOP IF THERE ARE MULTIPLE TARGETS
 TARGETLIST := $(subst $(COMMA),$(SPACE),$(TARGETS))
 
 ifeq ($(words $(TARGETLIST)),1)
+CURRENT_TARGET := $(TARGETLIST)
 
-# Set PROGRAM to something like 'myprog.c64'.
-override PROGRAM := $(PROGRAM).$(TARGETLIST)
+ifeq ($(CURRENT_TARGET),apple2enh)
+    FUJINET_LIB_TARGET = apple2
+else
+    FUJINET_LIB_TARGET = $(CURRENT_TARGET)
+endif
+FUJINET_LIB_DOWNLOAD_URL = https://github.com/FujiNetWIFI/fujinet-lib/releases/download/v$(FUJINET_LIB_VERSION)/fujinet-lib-$(FUJINET_LIB_TARGET)-$(FUJINET_LIB_VERSION).zip
+FUJINET_LIB_DOWNLOAD_FILE = $(FUJINET_LIB)/fujinet-lib-$(FUJINET_LIB_TARGET)-$(FUJINET_LIB_VERSION).zip
 
-# Set SOURCES to something like 'src/foo.c src/bar.s'.
-# Use of assembler files with names ending differently than .s is deprecated!
-SOURCES := $(wildcard $(SRCDIR)/*.c)
-SOURCES += $(wildcard $(SRCDIR)/*.s)
-SOURCES += $(wildcard $(SRCDIR)/*.asm)
-SOURCES += $(wildcard $(SRCDIR)/*.a65)
-
-# Add to SOURCES something like 'src/c64/me.c src/c64/too.s'.
-# Use of assembler files with names ending differently than .s is deprecated!
-SOURCES += $(wildcard $(SRCDIR)/$(TARGETLIST)/*.c)
-SOURCES += $(wildcard $(SRCDIR)/$(TARGETLIST)/*.s)
-SOURCES += $(wildcard $(SRCDIR)/$(TARGETLIST)/*.asm)
-SOURCES += $(wildcard $(SRCDIR)/$(TARGETLIST)/*.a65)
-
-# Set OBJECTS to something like 'obj/c64/foo.o obj/c64/bar.o'.
-OBJECTS := $(addsuffix .o,$(basename $(addprefix $(TARGETOBJDIR)/,$(notdir $(SOURCES)))))
-
-# Set DEPENDS to something like 'obj/c64/foo.d obj/c64/bar.d'.
-DEPENDS := $(OBJECTS:.o=.d)
-
-# Add to LIBS something like 'src/foo.lib src/c64/bar.lib'.
-LIBS += $(wildcard $(SRCDIR)/*.lib)
-LIBS += $(wildcard $(SRCDIR)/$(TARGETLIST)/*.lib)
-
-# Add to CONFIG something like 'src/c64/bar.cfg src/foo.cfg'.
-CONFIG += $(wildcard $(SRCDIR)/$(TARGETLIST)/*.cfg)
-CONFIG += $(wildcard $(SRCDIR)/*.cfg)
-
-# Select CONFIG file to use. Target specific configs have higher priority.
-ifneq ($(word 2,$(CONFIG)),)
-  CONFIG := $(firstword $(CONFIG))
-  $(info Using config file $(CONFIG) for linking)
+ifeq '$(findstring ;,$(PATH))' ';'
+    detected_OS := Windows
+else
+    detected_OS := $(shell uname 2>/dev/null || echo Unknown)
+    detected_OS := $(patsubst CYGWIN%,Cygwin,$(detected_OS))
+    detected_OS := $(patsubst MSYS%,MSYS,$(detected_OS))
+    detected_OS := $(patsubst MINGW%,MSYS,$(detected_OS))
 endif
 
-.SUFFIXES:
-.PHONY: all test clean zap love
+# MSYS2 environment hack for extra slash (XS) needed in cmd line args
+XS := ""
+ifeq ($(detected_OS),$(filter $(detected_OS),MSYS MINGW))
+	XS := /
+endif
 
-all: $(PROGRAM)
+ALTIRRA ?= $(ALTIRRA_HOME)/Altirra64.exe \
+  $(XS)/portable $(XS)/portablealt:altirra-debug.ini \
+
+#   $(XS)/debug \
+#   $(XS)/debugcmd: ".loadsym build\$(PROGRAM).$(CURRENT_TARGET).lbl" \
+#   $(XS)/debugcmd: "bp _debug" \
+
+atari_EMUCMD := $(ALTIRRA)
+
+PREEMUCMD :=
+POSTEMUCMD :=
+
+ifeq ($(EMUCMD),)
+  EMUCMD = $($(TARGETLIST)_EMUCMD)
+endif
+
+PROGRAM_TGT := $(PROGRAM).$(CURRENT_TARGET)
+
+# Add all root level src dirs
+SOURCES := $(wildcard $(SRCDIR)/*.s)
+SOURCES += $(wildcard $(SRCDIR)/*.c)
+SOURCES += $(wildcard $(SRCDIR)/$(CURRENT_TARGET)/*.c)
+SOURCES += $(wildcard $(SRCDIR)/$(CURRENT_TARGET)/*.s)
+
+# remove trailing and leading spaces.
+SOURCES := $(strip $(SOURCES))
+
+OBJ1 := $(SOURCES:.c=.o)
+OBJECTS := $(OBJ1:.s=.o)
+# change from src/ -> obj/<target>/ for generating compiled files into obj dir
+OBJECTS := $(OBJECTS:$(SRCDIR)/%=$(OBJDIR)/$(CURRENT_TARGET)/%)
+
+DEPENDS := $(OBJECTS:.o=.d)
+STATEFILE := Makefile.options
+
+LIBS += $(FUJINET_LIB_VERSION_DIR)/fujinet-$(FUJINET_LIB_TARGET)-$(FUJINET_LIB_VERSION).lib
+ASFLAGS += --asm-include-dir $(FUJINET_LIB_VERSION_DIR)
+CFLAGS += --include-dir $(FUJINET_LIB_VERSION_DIR)
+
+# add common/inc
+ASFLAGS += --asm-include-dir $(COMMON_INC_DIR)
+CFLAGS += --include-dir $(COMMON_INC_DIR)
+
+# Add src as include locations
+ASFLAGS += --asm-include-dir $(SRCDIR) --asm-include-dir $(SRCDIR)/$(CURRENT_TARGET)
+CFLAGS += --include-dir $(SRCDIR) --include-dir $(SRCDIR)/$(CURRENT_TARGET)
+
+# Add -DBUILD_(TARGET) to all args for the current name.
+# THIS IS JUST A CONVENIENCE FOR APPS TO DETECT THE BUILD TYPE IF REQUIRED
+UPPER_CURRENT_TARGET := $(shell echo $(CURRENT_TARGET) | tr a-z A-Z)
+CFLAGS += -DBUILD_$(UPPER_CURRENT_TARGET)
+ASFLAGS += -DBUILD_$(UPPER_CURRENT_TARGET)
+LDFLAGS += -DBUILD_$(UPPER_CURRENT_TARGET)
+
+# Fix for graphics calls on Atari
+ifeq ($(CURRENT_TARGET),atari)
+# LDFLAGS += -Wl -D__RESERVED_MEMORY__=0x1
+endif
+
+# Fix for loading location for Atari to be above SDX
+ifeq ($(CURRENT_TARGET),atari)
+LDFLAGS += --start-addr 0x2D00
+endif
+
+# Autoboot detection
+ifeq ($(AUTOSTART),1)
+AUTOBOOT := -a
+else ifeq ($(AUTOSTART),2)
+AUTOBOOT := -l
+else
+AUTOBOOT :=
+endif
+
+# Split out OBJ files for each target separately.
+TARGETOBJDIR := $(OBJDIR)/$(CURRENT_TARGET)
+
+.SUFFIXES:
+.PHONY: all clean dist get_fujinet_lib $(PROGRAM).$(CURRENT_TARGET)
+
+all: get_fujinet_lib $(PROGRAM_TGT)
 
 -include $(DEPENDS)
 -include $(STATEFILE)
 
-# If OPTIONS are given on the command line then save them to STATEFILE
-# if (and only if) they have actually changed. But if OPTIONS are not
-# given on the command line then load them from STATEFILE. Have object
-# files depend on STATEFILE only if it actually exists.
-ifeq ($(origin OPTIONS),command line)
-  ifneq ($(OPTIONS),$(_OPTIONS_))
-    ifeq ($(OPTIONS),)
-      $(info Removing OPTIONS)
-      $(shell $(RM) $(STATEFILE))
-      $(eval $(STATEFILE):)
-    else
-      $(info Saving OPTIONS=$(OPTIONS))
-      $(shell echo _OPTIONS_=$(OPTIONS) > $(STATEFILE))
-    endif
-    $(eval $(OBJECTS): $(STATEFILE))
-  endif
-else
-  ifeq ($(origin _OPTIONS_),file)
-    $(info Using saved OPTIONS=$(_OPTIONS_))
-    OPTIONS = $(_OPTIONS_)
-    $(eval $(OBJECTS): $(STATEFILE))
-  endif
+define _listing_
+  CFLAGS += --listing $$(@:.o=.lst)
+  ASFLAGS += --listing $$(@:.o=.lst)
+endef
+
+define _mapfile_
+  LDFLAGS += --mapfile $$@.map
+endef
+
+define _labelfile_
+  LDFLAGS += -Ln $$@.lbl
+endef
+
+ifeq ($(origin _OPTIONS_),file)
+OPTIONS = $(_OPTIONS_)
+$(eval $(OBJECTS): $(STATEFILE))
 endif
 
 # Transform the abstract OPTIONS to the actual cc65 options.
 $(foreach o,$(subst $(COMMA),$(SPACE),$(OPTIONS)),$(eval $(_$o_)))
 
-# Strip potential variant suffix from the actual cc65 target.
-CC65TARGET := $(firstword $(subst .,$(SPACE),$(TARGETLIST)))
+get_fujinet_lib:
+	@if [ ! -f "$(FUJINET_LIB_DOWNLOAD_FILE)" ]; then \
+		if [ -d "$(FUJINET_LIB_VERSION_DIR)" ]; then \
+		  echo "A directory already exists with version $(FUJINET_LIB_VERSION) - please remove it first"; \
+			exit 1; \
+		fi; \
+		HTTPSTATUS=$$(curl -Is $(FUJINET_LIB_DOWNLOAD_URL) | head -n 1 | awk '{print $$2}'); \
+		if [ "$${HTTPSTATUS}" == "404" ]; then \
+			echo "ERROR: Unable to find file $(FUJINET_LIB_DOWNLOAD_URL)"; \
+			exit 1; \
+		fi; \
+		echo "Downloading fujinet-lib for $(TARGETLIST) version $(FUJINET_LIB_VERSION) from $(FUJINET_LIB_DOWNLOAD_URL)"; \
+		mkdir -p $(FUJINET_LIB); \
+		curl -L $(FUJINET_LIB_DOWNLOAD_URL) -o $(FUJINET_LIB_DOWNLOAD_FILE); \
+		echo "Unzipping to $(FUJINET_LIB)"; \
+		unzip -o $(FUJINET_LIB_DOWNLOAD_FILE) -d $(FUJINET_LIB_VERSION_DIR); \
+		echo "Unzip complete."; \
+	fi
 
-# The remaining targets.
+$(OBJDIR):
+	$(call MKDIR,$@)
+
 $(TARGETOBJDIR):
 	$(call MKDIR,$@)
 
-vpath %.c $(SRCDIR)/$(TARGETLIST) $(SRCDIR)
+$(BUILD_DIR):
+	$(call MKDIR,$@)
+
+SRC_INC_DIRS := $(SRCDIR)/$(CURRENT_TARGET) $(SRCDIR)
+
+# $(info $$SOURCES = $(SOURCES))
+# $(info $$OBJECTS = $(OBJECTS))
+# $(info $$SRC_INC_DIRS = $(SRC_INC_DIRS))
+# $(info $$ASFLAGS = $(ASFLAGS))
+# $(info $$TARGETOBJDIR = $(TARGETOBJDIR))
+# $(info $$CURRENT_TARGET = $(CURRENT_TARGET))
+# $(info $$PROGRAM = $(PROGRAM))
+# $(info $$PROGRAM_TGT = $(PROGRAM_TGT))
+
+vpath %.c $(SRC_INC_DIRS)
 
 $(TARGETOBJDIR)/%.o: %.c | $(TARGETOBJDIR)
-	cl65 -t $(CC65TARGET) -c --create-dep $(@:.o=.d) $(CFLAGS) -o $@ $<
+	@$(call MKDIR,$(dir $@))
+	$(CC) -t $(CURRENT_TARGET) -c --create-dep $(@:.o=.d) $(CFLAGS) -o $@ $<
 
-vpath %.s $(SRCDIR)/$(TARGETLIST) $(SRCDIR)
+vpath %.s $(SRC_INC_DIRS)
 
 $(TARGETOBJDIR)/%.o: %.s | $(TARGETOBJDIR)
-	cl65 -t $(CC65TARGET) -c --create-dep $(@:.o=.d) $(ASFLAGS) -o $@ $<
+	@$(call MKDIR,$(dir $@))
+	$(CC) -t $(CURRENT_TARGET) -c --create-dep $(@:.o=.d) $(ASFLAGS) -o $@ $<
 
-vpath %.asm $(SRCDIR)/$(TARGETLIST) $(SRCDIR)
+$(BUILD_DIR)/$(PROGRAM_TGT): $(OBJECTS) $(LIBS) | $(BUILD_DIR)
+	$(CC) -t $(CURRENT_TARGET) $(LDFLAGS) -o $@ $(patsubst %.cfg,-C %.cfg,$^)
 
-$(TARGETOBJDIR)/%.o: %.asm | $(TARGETOBJDIR)
-	cl65 -t $(CC65TARGET) -c --create-dep $(@:.o=.d) $(ASFLAGS) -o $@ $<
+$(PROGRAM_TGT): $(BUILD_DIR)/$(PROGRAM_TGT) | $(BUILD_DIR)
 
-vpath %.a65 $(SRCDIR)/$(TARGETLIST) $(SRCDIR)
-
-$(TARGETOBJDIR)/%.o: %.a65 | $(TARGETOBJDIR)
-	cl65 -t $(CC65TARGET) -c --create-dep $(@:.o=.d) $(ASFLAGS) -o $@ $<
-
-$(PROGRAM): $(CONFIG) $(OBJECTS) $(LIBS)
-	cl65 -t $(CC65TARGET) $(LDFLAGS) -o $@ $(patsubst %.cfg,-C %.cfg,$^)
-
-test: $(PROGRAM)
+test: $(PROGRAM_TGT)
 	$(PREEMUCMD)
-	$(EMUCMD) $<
+	$(EMUCMD) $(BUILD_DIR)\\$<
 	$(POSTEMUCMD)
 
 clean:
 	$(call RMFILES,$(OBJECTS))
 	$(call RMFILES,$(DEPENDS))
-	$(call RMFILES,$(REMOVES))
-	$(call RMFILES,$(PROGRAM))
+	$(call RMFILES,$(BUILD_DIR)/$(PROGRAM_TGT))
 
+dist: $(PROGRAM_TGT)
+	$(call MKDIR,dist/)
+	$(call RMFILES,dist/$(PROGRAM_TGT)*)
+	cp build/$(PROGRAM_TGT) dist/$(PROGRAM_TGT).com
+
+atr: dist
+	$(call MKDIR,dist/atr)
+	cp dist/$(PROGRAM_TGT).com dist/atr/$(PROGRAM).com
+	$(call RMFILES,dist/*.atr)
+	dir2atr -S dist/$(PROGRAM).atr dist/atr
+
+po: dist
+	$(call RMFILES,dist/$(APP_NAME)*.po)
+	cp dist/$(PROGRAM_TGT).com dist/$(PROGRAM)
+	$(APPLE_TOOLS_DIR)/mk-bitsy.sh dist/$(PROGRAM).po $(PROGRAM)
+	$(APPLE_TOOLS_DIR)/add-file.sh $(AUTOBOOT) dist/$(PROGRAM).po dist/$(PROGRAM) $(PROGRAM)
+
+gendebug: $(PROGRAM_TGT)
+	@echo "Generating debug.scr script for AppleWin"
+	@echo 'echo "Loading symbols"' > build/debug.scr
+	@awk '{printf("sym %s = %s\n", substr($$3, 2), $$2)}' < build/$(PROGRAM_TGT).lbl >> build/debug.scr
+	@echo 'bpx _main' >> build/debug.scr
+	@echo 'bpx _debug' >> build/debug.scr
+	@echo 'bpx _network_open' >> build/debug.scr
+	@echo 'bpx _sp_init' >> build/debug.scr
+
+############################################################################
 else # $(words $(TARGETLIST)),1
 
 all test clean:
-	$(foreach t,$(TARGETLIST),$(MAKE) TARGETS=$t $@$(NEWLINE))
+	$(foreach t,$(TARGETLIST),$(MAKE) TARGETS=$t --no-print-directory clean all dist$(NEWLINE))
 
+############################################################################
 endif # $(words $(TARGETLIST)),1
-
-OBJDIRLIST := $(wildcard $(OBJDIR)/*)
-
-zap:
-	$(foreach o,$(OBJDIRLIST),-$(call RMFILES,$o/*.o $o/*.d $o/*.lst)$(NEWLINE))
-	$(foreach o,$(OBJDIRLIST),-$(call RMDIR,$o)$(NEWLINE))
-	-$(call RMDIR,$(OBJDIR))
-	-$(call RMFILES,$(basename $(PROGRAM)).* $(STATEFILE))
-
-love:
-	@echo "Not war, eh?"
-
-###################################################################
-###  Place your additional targets in the additional Makefiles  ###
-### in the same directory - their names have to end with ".mk"! ###
-###################################################################
--include *.mk
