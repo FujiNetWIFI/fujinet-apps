@@ -14,15 +14,19 @@ void start_get();
 void end_get();
 
 void body(char *devicespec, char *r, uint16_t len);
-void del(char *devicespec);
-void post(char *devicespec, char *data);
 
 void test_get_query(char *path);
 void test_delete();
 void test_post();
 void test_put();
 void test_simple_get();
+void test_redir_headers();
 void hex_dump(char* data, int size);
+
+void begin_collect_headers(char *devicespec);
+void end_collect_headers(char *devicespec);
+void add_header_to_collect(char *devicespec, char *header);
+uint16_t get_header_length(char *devicespec);
 
 #ifdef BUILD_APPLE2
 extern uint8_t sp_network;
