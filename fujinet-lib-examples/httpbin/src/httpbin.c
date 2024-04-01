@@ -229,12 +229,12 @@ void test_redir_headers() {
         if (header_length > 0) {
             printf("fetching header, size: %d\n", header_length);
             n = network_read(url, result, header_length);
-            // last char is 0x9b, convert to nul char for simple string
-            result[n - 1] = '\0';
             if (n < 0) {
                 err = (-n) && 0xFF;
                 handle_err("reading header");
             }
+            // last char is 0x9b, convert to nul char for simple string
+            result[n - 1] = '\0';
             printf("H: >%s<\n", result);
         }
     } while (header_length > 0);
