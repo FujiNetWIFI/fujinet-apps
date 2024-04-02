@@ -7,11 +7,14 @@ AUTOSTART := 2
 CFLAGS = -Oris -D AUTOSTART_ENABLE -W -unused-param
 LDFLAGS = -D __HIMEM__=0xBF00
 
-FUJINET_LIB_VERSION = 3.0.2
-FUJINET_LIB = $(OBJDIR)/_libs
-FUJINET_LIB_VERSION_DIR = $(FUJINET_LIB)/$(FUJINET_LIB_VERSION)-$(FUJINET_LIB_TARGET)
+include fnlib_platforms.mk
 
-APPLE_TOOLS_DIR = ../apple-tools
+FUJINET_LIB_VERSION := 3.0.3
+FUJINET_LIB = $(OBJDIR)/_libs
+FUJINET_LIB_VERSION_DIR = $(FUJINET_LIB)/$(FUJINET_LIB_VERSION)-$(CURRENT_PLATFORM)
+FUJINET_LIB_PATH = $(FUJINET_LIB_VERSION_DIR)/fujinet-$(CURRENT_PLATFORM)-$(FUJINET_LIB_VERSION).lib
+
+APPLE_TOOLS_DIR := ../apple-tools
 
 CC := cl65
 
@@ -49,13 +52,8 @@ TARGETLIST := $(subst $(COMMA),$(SPACE),$(TARGETS))
 ifeq ($(words $(TARGETLIST)),1)
 CURRENT_TARGET := $(TARGETLIST)
 
-ifeq ($(CURRENT_TARGET),apple2enh)
-    FUJINET_LIB_TARGET = apple2
-else
-    FUJINET_LIB_TARGET = $(CURRENT_TARGET)
-endif
-FUJINET_LIB_DOWNLOAD_URL = https://github.com/FujiNetWIFI/fujinet-lib/releases/download/v$(FUJINET_LIB_VERSION)/fujinet-lib-$(FUJINET_LIB_TARGET)-$(FUJINET_LIB_VERSION).zip
-FUJINET_LIB_DOWNLOAD_FILE = $(FUJINET_LIB)/fujinet-lib-$(FUJINET_LIB_TARGET)-$(FUJINET_LIB_VERSION).zip
+FUJINET_LIB_DOWNLOAD_URL = https://github.com/FujiNetWIFI/fujinet-lib/releases/download/v$(FUJINET_LIB_VERSION)/fujinet-lib-$(CURRENT_PLATFORM)-$(FUJINET_LIB_VERSION).zip
+FUJINET_LIB_DOWNLOAD_FILE = $(FUJINET_LIB)/fujinet-lib-$(CURRENT_PLATFORM)-$(FUJINET_LIB_VERSION).zip
 
 ifeq '$(findstring ;,$(PATH))' ';'
     detected_OS := Windows
@@ -107,7 +105,7 @@ OBJECTS := $(OBJECTS:$(SRCDIR)/%=$(OBJDIR)/$(CURRENT_TARGET)/%)
 DEPENDS := $(OBJECTS:.o=.d)
 STATEFILE := Makefile.options
 
-LIBS += $(FUJINET_LIB_VERSION_DIR)/fujinet-$(FUJINET_LIB_TARGET)-$(FUJINET_LIB_VERSION).lib
+LIBS += $(FUJINET_LIB_PATH)
 ASFLAGS += --asm-include-dir $(FUJINET_LIB_VERSION_DIR)
 CFLAGS += --include-dir $(FUJINET_LIB_VERSION_DIR)
 
@@ -127,22 +125,24 @@ ASFLAGS += -DBUILD_$(UPPER_CURRENT_TARGET)
 LDFLAGS += -DBUILD_$(UPPER_CURRENT_TARGET)
 
 # Fix for graphics calls on Atari
-ifeq ($(CURRENT_TARGET),atari)
+ifeq ($(CURRENT_PLATFORM),atari)
 # LDFLAGS += -Wl -D__RESERVED_MEMORY__=0x1
 endif
 
 # Fix for loading location for Atari to be above SDX
-ifeq ($(CURRENT_TARGET),atari)
+ifeq ($(CURRENT_PLATFORM),atari)
 LDFLAGS += --start-addr 0x2D00
 endif
 
 # Autoboot detection
+ifeq ($(CURRENT_PLATFORM),apple2)
 ifeq ($(AUTOSTART),1)
 AUTOBOOT := -a
 else ifeq ($(AUTOSTART),2)
 AUTOBOOT := -l
 else
 AUTOBOOT :=
+endif
 endif
 
 # Split out OBJ files for each target separately.
