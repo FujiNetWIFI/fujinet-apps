@@ -70,7 +70,7 @@ void setup() {
     gotox(0);
     init_r = network_init();
     printf("init: %d, derr: %d\n", init_r, fn_device_error);
-  #ifdef BUILD_APPLE2
+  #ifdef __APPLE2__
     printf("nw: %d\n", sp_network);
   #endif
 }
@@ -216,6 +216,7 @@ void test_redir_headers() {
 
     // now perform the request, just get the header 4 bytes, should be hex 0x89, 0x50, 0x4E, 0x47, which is 0x89 followed by "PNG"
     printf("\nFile first 4 bytes:\n");
+    debug();
     n = network_read(url, result, 4);
     hex_dump(result, 4);
 

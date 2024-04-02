@@ -34,7 +34,7 @@ void do_long(char *u);
 void do_long_first_only(char *u);
 bool setup();
 
-#ifdef BUILD_APPLE2
+#ifdef __APPLE2__
 extern uint8_t sp_network;
 #endif
 

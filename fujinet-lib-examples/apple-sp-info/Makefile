@@ -1,13 +1,17 @@
 TARGETS := apple2
 PROGRAM := spinfo
+
 # set to 1 to make application auto start on boot of disk
-AUTOSTART := 1
+AUTOSTART = 1
 
-FUJINET_LIB_VERSION = 3.0.2
-FUJINET_LIB = ../_libs
-FUJINET_LIB_VERSION_DIR = $(FUJINET_LIB)/$(FUJINET_LIB_VERSION)-$(CURRENT_TARGET)
+include ../fnlib_platforms.mk
 
-APPLE_TOOLS_DIR = ../../apple-tools
+FUJINET_LIB_VERSION := 3.0.3
+FUJINET_LIB := ../_libs
+FUJINET_LIB_VERSION_DIR = $(FUJINET_LIB)/$(FUJINET_LIB_VERSION)-$(CURRENT_PLATFORM)
+FUJINET_LIB_PATH = $(FUJINET_LIB_VERSION_DIR)/fujinet-$(CURRENT_PLATFORM)-$(FUJINET_LIB_VERSION).lib
+
+APPLE_TOOLS_DIR := ../../apple-tools
 
 CC := cl65
 
@@ -45,8 +49,8 @@ TARGETLIST := $(subst $(COMMA),$(SPACE),$(TARGETS))
 ifeq ($(words $(TARGETLIST)),1)
 CURRENT_TARGET := $(TARGETLIST)
 
-FUJINET_LIB_DOWNLOAD_URL = https://github.com/FujiNetWIFI/fujinet-lib/releases/download/v$(FUJINET_LIB_VERSION)/fujinet-lib-$(CURRENT_TARGET)-$(FUJINET_LIB_VERSION).zip
-FUJINET_LIB_DOWNLOAD_FILE = $(FUJINET_LIB)/fujinet-lib-$(CURRENT_TARGET)-$(FUJINET_LIB_VERSION).zip
+FUJINET_LIB_DOWNLOAD_URL = https://github.com/FujiNetWIFI/fujinet-lib/releases/download/v$(FUJINET_LIB_VERSION)/fujinet-lib-$(CURRENT_PLATFORM)-$(FUJINET_LIB_VERSION).zip
+FUJINET_LIB_DOWNLOAD_FILE = $(FUJINET_LIB)/fujinet-lib-$(CURRENT_PLATFORM)-$(FUJINET_LIB_VERSION).zip
 
 PREEMUCMD :=
 POSTEMUCMD :=
@@ -72,7 +76,7 @@ OBJECTS := $(OBJECTS:$(SRCDIR)/%=$(OBJDIR)/$(CURRENT_TARGET)/%)
 DEPENDS := $(OBJECTS:.o=.d)
 STATEFILE := Makefile.options
 
-LIBS += $(FUJINET_LIB_VERSION_DIR)/fujinet-$(CURRENT_TARGET)-$(FUJINET_LIB_VERSION).lib
+LIBS += $(FUJINET_LIB_PATH)
 ASFLAGS += --asm-include-dir $(FUJINET_LIB_VERSION_DIR)
 CFLAGS += --include-dir $(FUJINET_LIB_VERSION_DIR)
 
@@ -84,28 +88,23 @@ CFLAGS += --include-dir $(COMMON_INC_DIR)
 ASFLAGS += --asm-include-dir $(SRCDIR) --asm-include-dir $(SRCDIR)/include
 CFLAGS += --include-dir $(SRCDIR) --include-dir $(SRCDIR)/include
 
-# Add -DBUILD_(TARGET) to all args for the current name.
-# THIS IS JUST A CONVENIENCE FOR APPS TO DETECT THE BUILD TYPE IF REQUIRED
-UPPER_CURRENT_TARGET := $(shell echo $(CURRENT_TARGET) | tr a-z A-Z)
-CFLAGS += -DBUILD_$(UPPER_CURRENT_TARGET)
-ASFLAGS += -DBUILD_$(UPPER_CURRENT_TARGET)
-LDFLAGS += -DBUILD_$(UPPER_CURRENT_TARGET)
-
 # Fix for graphics calls on Atari
-ifeq ($(CURRENT_TARGET),atari)
+ifeq ($(CURRENT_PLATFORM),atari)
 # LDFLAGS += -Wl -D__RESERVED_MEMORY__=0x1
 endif
 
 # Fix for loading location for Atari to be above SDX
-ifeq ($(CURRENT_TARGET),atari)
+ifeq ($(CURRENT_PLATFORM),atari)
 LDFLAGS += --start-addr 0x2D00
 endif
 
 # Autoboot detection
+ifeq ($(CURRENT_PLATFORM),apple2)
 ifeq ($(AUTOSTART),1)
 AUTOBOOT := -a
 else
 AUTOBOOT :=
+endif
 endif
 
 # Split out OBJ files for each target separately.

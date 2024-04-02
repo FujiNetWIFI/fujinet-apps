@@ -28,7 +28,7 @@ void end_collect_headers(char *devicespec);
 void add_header_to_collect(char *devicespec, char *header);
 uint16_t get_header_length(char *devicespec);
 
-#ifdef BUILD_APPLE2
+#ifdef __APPLE2__
 extern uint8_t sp_network;
 #endif
 

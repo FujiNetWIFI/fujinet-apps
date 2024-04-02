@@ -100,7 +100,7 @@ bool setup() {
   printf("running network_init\n");
   init_r = network_init();
   printf("init: %d, derr: %d\n", init_r, fn_device_error);
-#ifdef BUILD_APPLE2
+#ifdef __APPLE2__
   printf("nw: %d\n", sp_network);
 #endif
 
