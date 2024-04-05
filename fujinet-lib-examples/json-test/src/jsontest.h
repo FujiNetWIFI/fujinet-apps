@@ -7,13 +7,17 @@
 void handle_err(char *reason);
 void setup();
 
-void start_get();
-void end_get();
+void open_and_parse_json(char *u);
+void open();
+void close();
 
-void test_get_query(char *path);
+void json_query(char *path);
+void get();
 void test_iss_json();
 void test_5cs_json();
 void test_httpbin_json();
+void test_fuji_http();
+void test_fuji_https();
 bool ask();
 
 #endif

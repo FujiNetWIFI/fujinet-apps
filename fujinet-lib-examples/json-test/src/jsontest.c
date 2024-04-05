@@ -32,6 +32,10 @@ char pot_query[] = "/pot";
 char httpbin_url[] = "n:https://httpbin.org/get";
 char host_query[] = "/headers/host";
 
+// These are not JSON tests, but html pages that were failing to parse in fujinet-pc client due to missing content-length / or some weird chunk processing by mongoose after redirect
+char fuji_online_http[] = "n:http://fujinet.online/fujifind/index.php?q=fujinet";
+char fuji_online_https[] = "n:https://fujinet.online/fujifind/index.php?q=fujinet";
+
 char result[1024];
 uint8_t err = 0;
 char *url;
@@ -41,7 +45,7 @@ uint8_t conn_err;
 
 bool sure = false;
 
-char *version = "v2.1.0";
+char *version = "v2.2.0";
 
 int main(void) {
     setup();
@@ -51,6 +55,8 @@ int main(void) {
     test_iss_json();
     test_httpbin_json();
     test_5cs_json();
+    test_fuji_http();
+    test_fuji_https();
 
     printf("press a key to exit.");
     cgetc();
@@ -72,37 +78,59 @@ bool ask() {
 void test_iss_json() {
     printf("ISS JSON Test\n");
     sure = ask();
-    if (!sure) return;
     printf("\n");
+    if (!sure) return;
 
-    start_get(iss_now);
-    test_get_query(longitude_query);
-    test_get_query(latitude_query);
-    test_get_query(timestamp_query);
-    end_get();
+    open_and_parse_json(iss_now);
+    json_query(longitude_query);
+    json_query(latitude_query);
+    json_query(timestamp_query);
+    close();
 }
 
 void test_httpbin_json() {
     printf("Httpbin Test\n");
     sure = ask();
-    if (!sure) return;
     printf("\n");
+    if (!sure) return;
 
-    start_get(httpbin_url);
-    test_get_query(host_query);
-    end_get();
+    open_and_parse_json(httpbin_url);
+    json_query(host_query);
+    close();
 }
 
 void test_5cs_json() {
     printf("5 Card Stud Test\n");
     sure = ask();
-    if (!sure) return;
     printf("\n");
+    if (!sure) return;
 
-    start_get(five_card_stud_url);
-    test_get_query(round_query);
-    test_get_query(pot_query);
-    end_get();
+    open_and_parse_json(five_card_stud_url);
+    json_query(round_query);
+    json_query(pot_query);
+    close();
+}
+
+void test_fuji_http() {
+    printf("Fujinet Online HTTP\n");
+    sure = ask();
+    printf("\n");
+    if (!sure) return;
+
+    open(fuji_online_http);
+    get();
+    close();
+}
+
+void test_fuji_https() {
+    printf("Fujinet Online HTTPS\n");
+    sure = ask();
+    printf("\n");
+    if (!sure) return;
+
+    open(fuji_online_https);
+    get();
+    close();
 }
 
 void handle_err(char *reason) {
@@ -119,7 +147,7 @@ void setup() {
     gotox(0);
 }
 
-void start_get(char *u) {
+void open_and_parse_json(char *u) {
     url = u;
     err = network_open(url, OPEN_MODE_HTTP_GET, OPEN_TRANS_NONE);
     handle_err("open");
@@ -128,18 +156,35 @@ void start_get(char *u) {
     handle_err("parse");
 }
 
-void end_get() {
+void open(char *u) {
+    url = u;
+    err = network_open(url, OPEN_MODE_HTTP_GET, OPEN_TRANS_NONE);
+    handle_err("open");
+}
+
+void close() {
     err = network_close(url);
     handle_err("close");
 }
 
-void test_get_query(char *path) {
+void json_query(char *path) {
     int count = 0;
-    err = network_json_query(url, path, result);
+    count = network_json_query(url, path, result);
     if (count < 0) {
         err = -count;
         handle_err("query");
     }
 
     printf("  path: %s\nresult: %s\n\n", path, result);
+}
+
+void get() {
+    int count = 0;
+    count = network_read(url, result, 120);
+    if (count < 0) {
+        err = -count;
+        handle_err("query");
+    }
+
+    printf("  result: %s\n\n", result);
 }
