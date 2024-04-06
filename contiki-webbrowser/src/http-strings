@@ -1,0 +1,3 @@
+http_http "http://"
+http_https "https://"
+http_html ".html"

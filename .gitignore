@@ -24,6 +24,8 @@
 
 # lib exceptions
 !fujinet-network-*.lib
+!fujinet-*.lib
+fujinet-lib/
 
 # Shared objects (inc. Windows DLLs)
 *.dll
