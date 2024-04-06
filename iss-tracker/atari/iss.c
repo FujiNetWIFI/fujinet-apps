@@ -3,11 +3,12 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "nsio.h"
+
 #include "colors.h"
+#include "fujinet-network.h"
 
 /* FIXME: Get "VERSION" from Makefile */
-#define VERSION "2021-05-29 \"ARGONAUTS\"" /* get it? "JSON and the..."? */
+#define VERSION "2024-04-05 \"GOLD RUSH\"" /* get it? "JSON and the..."? */
 
 /* How long to wait before auto-refresh */
 #define RTCLOK1_WAIT ((3 /* minutes */ * 60 /* seconds per minute */ * 60 /* 'jiffies' per second */) / 256 /* RTCLOK2 cycles per RTCLOK1 increment */)
@@ -241,19 +242,18 @@ unsigned char flash_colors[16] = {
 };
 
 
-unsigned char open_json(unsigned char * url) {
-  unsigned char err;
+uint8_t open_json(unsigned char * url) {
+  uint8_t err;
 
-  err = nopen(1, url, 12);
-  if (err != 1)
+  err = network_open(url, OPEN_MODE_HTTP_GET, OPEN_TRANS_NONE);
+
+  if ( err ) 
     return err;
+  
+  err = network_json_parse(url);
 
-  err = nchanmode(1, 12, CHANNELMODE_JSON);
-  if (err != 1)
+  if ( err ) 
     return err;
-
-  err = njsonparse(1, 12);
-  return err;
 }
 
 
@@ -262,32 +262,40 @@ unsigned char query[256];
 unsigned char tmp[256];
 
 void parse_json(unsigned char * element) {
-  unsigned char err;
-  int data_len;
+  uint8_t err;
 
   json_part[0] = '\0';
 
   sprintf(query, "N1:%s%c", element, CH_EOL);
-  err = njsonquery(1, 12, (char *) query);
+  err = network_json_query(url, query, json_part);
+
+  //err = njsonquery(1, 12, (char *) query);
   /* FIXME: Detect error */
 
-  err = nstatus(1);
+  //err = nstatus(1);
   /* FIXME: Detect error */
 
-  data_len = (OS.dvstat[1] << 8) + OS.dvstat[0];
-  if (data_len == 0) {
-    return; /* FIXME: Error! */
+//  data_len = (OS.dvstat[1] << 8) + OS.dvstat[0];
+
+  if ( strlen (json_part) == 0 ) {
+    return;
   }
 
-  err = nread(1, json_part, data_len);
-  json_part[data_len - 1 /* eat final char because of "ending in an ATASCII EOL" */] = '\0';
+//  if (data_len == 0) {
+//    return; 
+//  }
+
+//  err = nread(1, json_part, data_len);
+
+  //json_part[data_len - 1 /* eat final char because of "ending in an ATASCII EOL" */] = '\0';
   /* FIXME: Detect error */
 }
 
 
 void main(void) {
   int i, j, lat, lon, last_space;
-  unsigned char n, x, y, key, done, err;
+  unsigned char n, x, y, key, done;
+  uint8_t err;
   long timestamp;
   char * ptr;
 
@@ -356,7 +364,7 @@ void main(void) {
 
     clear_message();
 
-    if (err != 1) {
+    if (err) {
       /* ERROR */
       message(MSG_CENTER, 0, "Cannot read from open-notify!");
       message(MSG_CENTER, 1, "Press a key to retry...");
@@ -394,8 +402,9 @@ void main(void) {
       message(12, 3, json_part);
       */
 
-      nchanmode(1, 12, CHANNELMODE_PROTOCOL);
-      nclose(1);
+      // nchanmode(1, 12, CHANNELMODE_PROTOCOL);
+      //nclose(1);
+      err = network_close(url);
 
       /* Draw the ISS in its position over the map */
 
@@ -473,7 +482,7 @@ void main(void) {
 
         clear_message();
 
-        if (err != 1) {
+        if (err != 0) {
           /* ERROR */
           message(MSG_CENTER, 0, "Cannot read from open-notify!");
           message(MSG_CENTER, 1, "Press a key to continue...");
@@ -583,8 +592,8 @@ void main(void) {
             }
           }
 
-          nchanmode(1, 12, CHANNELMODE_PROTOCOL);
-          nclose(1);
+          //nchanmode(1, 12, CHANNELMODE_PROTOCOL);
+          //nclose(1);
 
           /* Clear map: */
           memcpy((unsigned char *) scr_mem, (unsigned char *) map_data, 3200);
@@ -657,8 +666,8 @@ void main(void) {
             scr_mem[y * 40 + (x >> 2)] = 0x00;
           }
 
-          nchanmode(1, 12, CHANNELMODE_PROTOCOL);
-          nclose(1);
+          //nchanmode(1, 12, CHANNELMODE_PROTOCOL);
+          //nclose(1);
 
           /* Pause 1 second (API rate-limit requirement!) */
           OS.rtclok[2] = 0;
