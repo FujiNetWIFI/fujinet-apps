@@ -3,5 +3,14 @@
 10 = purple
 11 = orange
 
+converting png to 2bpp:
+convert input.png -depth 2 gray:output.raw
 
+
+Mapping greyscale to colors:
+
+color 0 = 0-64
+color 1 = 64-127
+color 2 = 127-191
+color 3 = 192-255
 
