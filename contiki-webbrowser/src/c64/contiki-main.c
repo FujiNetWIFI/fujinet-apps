@@ -32,6 +32,8 @@
  *
  */
 
+#include <stdlib.h>
+
 #include "../contiki-net.h"
 #include "../ctk.h"
 #include "../log.h"
@@ -44,9 +46,10 @@ PROCINIT(&etimer_process,
 void
 main(void)
 {
-  clrscr();
-  bordercolor(BORDERCOLOR);
-  bgcolor(SCREENCOLOR);
+
+#if WITH_80COL
+  _heapadd((void *)0x0400, 0x0400);
+#endif /* WITH_80COL */
 
   process_init();
   procinit_init();
