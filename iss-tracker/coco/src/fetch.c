@@ -46,6 +46,27 @@ void fetch_json(const char *qs, char *s, int *i)
 }
 
 /**
+ * @brief fetch individual json element and populate vars.
+ */
+void fetch_json_timestamp(const char *qs, unsigned long *l)
+{
+    NetworkStatus ns;
+    char tsi[16];
+    
+    // Set query
+    net_set_json_query(0,qs);
+
+    // Get # of bytes waiting
+    net_status(0,&ns);
+
+    // read into buffer
+    net_read(0,(unsigned char *)tsi,ns.bytesWaiting);
+
+    // Convert string to integer
+    *l=atol(tsi);
+}
+
+/**
  * @brief Fetch JSON data from web endpoint, and populate vars
  */
 void fetch(void)
@@ -73,7 +94,7 @@ void fetch(void)
 
     fetch_json(QUERY_LONGITUDE,&lon_s,&lon_i);
     fetch_json(QUERY_LATITUDE,&lat_s,&lat_i);
-    // fetch_json(QUERY_TIMESTAMP,&tsi,&ts);
+    fetch_json_timestamp(QUERY_TIMESTAMP,&ts);
     
     net_close(0);
     

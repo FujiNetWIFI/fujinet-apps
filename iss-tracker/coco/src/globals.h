@@ -22,18 +22,8 @@ extern char lon_s[16];
 extern int lon_i;
 
 /**
- * @brief input Timestamp string 
- */
-extern char tsi[16];
-
-/**
  * @brief timestamp as integer
  */
-extern long long ts;
-
-/**
- * @brief output Timestamp string 
- */
-extern char tso[16];
+extern unsigned long ts;
 
 #endif /* GLOBALS_H */

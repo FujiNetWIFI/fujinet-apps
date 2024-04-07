@@ -21,7 +21,7 @@ int main(void)
         fetch();
         satellite();
         osd();
-        sleep(30);
+        sleep(120);
     }
     
     return 0;

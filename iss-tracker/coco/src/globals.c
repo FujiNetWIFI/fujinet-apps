@@ -19,16 +19,6 @@ char lon_s[16];
 int lon_i;
 
 /**
- * @brief input Timestamp string 
- */
-char tsi[16];
-
-/**
  * @brief timestamp as integer
  */
-long long ts;
-
-/**
- * @brief output Timestamp string 
- */
-char tso[16];
+unsigned long ts;
