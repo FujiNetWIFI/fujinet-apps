@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006, Swedish Institute of Computer Science.
+ * Copyright (c) 2007, Swedish Institute of Computer Science.
  * All rights reserved. 
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -32,33 +32,42 @@
  *
  */
 
-#include "../contiki-net.h"
-#include "../ctk.h"
-#include "../log.h"
+#ifndef CONTIKI_CONF_H_
+#define CONTIKI_CONF_H_
 
-PROCINIT(&etimer_process,
-         &ctk_process,
-         &webclient_process);
+#include "6502def.h"
 
-/*-----------------------------------------------------------------------------------*/
-void
-main(void)
-{
-  clrscr();
-  bordercolor(BORDERCOLOR);
-  bgcolor(SCREENCOLOR);
+/* !!! HACK !!! */
+#define network_init() FN_ERR_OK
 
-  process_init();
-  procinit_init();
-  autostart_start(autostart_processes);
+#define CTK_CONF_MENU_KEY         CH_F1
+#define CTK_CONF_WINDOWSWITCH_KEY CH_F3
+#define CTK_CONF_WIDGETUP_KEY     CH_F5
+#define CTK_CONF_WIDGETDOWN_KEY   CH_F7
 
-  log_message("Contiki up and running ...", "");
+#if WITH_80COL
+#define MOUSE_CONF_XTOC(x) ((x) / 4)
+#else
+#define MOUSE_CONF_XTOC(x) ((x) / 8)
+#endif
+#define MOUSE_CONF_YTOC(y) ((y) / 8)
 
-  while(1) {
+#define BORDERCOLOR       COLOR_BLACK
+#define SCREENCOLOR       COLOR_BLACK
+#define WINDOWCOLOR       COLOR_GRAY3
+#define WINDOWCOLOR_FOCUS COLOR_GRAY3
+#define WIDGETCOLOR       COLOR_GRAY3
+#define WIDGETCOLOR_FOCUS COLOR_YELLOW
+#define WIDGETCOLOR_FWIN  COLOR_GRAY3
+#define WIDGETCOLOR_HLINK COLOR_CYAN
 
-    process_run();
+#if WITH_80COL
+#define WWW_CONF_WEBPAGE_WIDTH  80
+#else
+#define WWW_CONF_WEBPAGE_WIDTH  40
+#endif
+#define WWW_CONF_WEBPAGE_HEIGHT 20
+#define WWW_CONF_HISTORY_SIZE    4
+#define WWW_CONF_WGET_EXEC(url) exec("wget", url)
 
-    etimer_request_poll();
-  }
-}
-/*-----------------------------------------------------------------------------------*/
+#endif /* CONTIKI_CONF_H_ */

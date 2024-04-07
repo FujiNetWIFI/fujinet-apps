@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006, Swedish Institute of Computer Science.
+ * Copyright (c) 2007, Swedish Institute of Computer Science.
  * All rights reserved. 
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -32,33 +32,27 @@
  *
  */
 
-#include "../contiki-net.h"
-#include "../ctk.h"
-#include "../log.h"
+#include <time.h>
 
-PROCINIT(&etimer_process,
-         &ctk_process,
-         &webclient_process);
+#include "../contiki.h"
 
-/*-----------------------------------------------------------------------------------*/
-void
-main(void)
+/*---------------------------------------------------------------------------*/
+clock_time_t
+clock_time(void)
 {
-  clrscr();
-  bordercolor(BORDERCOLOR);
-  bgcolor(SCREENCOLOR);
-
-  process_init();
-  procinit_init();
-  autostart_start(autostart_processes);
-
-  log_message("Contiki up and running ...", "");
-
-  while(1) {
-
-    process_run();
-
-    etimer_request_poll();
-  }
+  /* Contiki contains quite some calculations based on clock_time_t so we want
+   * to avoid defining clock_time_t to be 32 bit because that would mean a lot
+   * of overhead for cc65 targets.
+   * On the other hand we want to avoid wrapping around frequently so the idea
+   * is to reduce the clock resolution to the bare minimum. This is defined by
+   * the DNS resolver using a 1/4 second timer. So CLOCK_CONF_SECOND needs to
+   * be defined at least as 4. */
+  return clock() / (CLK_TCK / CLOCK_CONF_SECOND);
 }
-/*-----------------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
+unsigned long
+clock_seconds(void)
+{
+  return clock() / CLK_TCK;
+}
+/*---------------------------------------------------------------------------*/

@@ -1,4 +1,6 @@
 TARGETS := atari apple2 apple2enh
+#TARGETS := atari apple2 apple2enh c64 c128
+
 PROGRAM := browser
 # set to 1 to make application auto start on boot of disk
 # set to 2 to make application auto start on boot of disk via LOADER.SYSTEM
@@ -6,6 +8,10 @@ AUTOSTART := 2
 
 CFLAGS = -Oris -D AUTOSTART_ENABLE -W -unused-param
 LDFLAGS = -Wl -D,__HIMEM__=0xBF00
+
+# For C64 Soft80 only
+#CFLAGS += -D WITH_80COL
+#LDFLAGS += c64-soft80.o
 
 include fnlib_platforms.mk
 

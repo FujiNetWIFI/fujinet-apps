@@ -44,9 +44,7 @@ PROCINIT(&etimer_process,
 void
 main(void)
 {
-  clrscr();
-  bordercolor(BORDERCOLOR);
-  bgcolor(SCREENCOLOR);
+  videomode(VIDEOMODE_80COL);
 
   process_init();
   procinit_init();
