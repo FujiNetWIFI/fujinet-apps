@@ -8,7 +8,7 @@
 #include "fujinet-network.h"
 
 /* FIXME: Get "VERSION" from Makefile */
-#define VERSION "2024-04-05 \"GOLD RUSH\"" /* get it? "JSON and the..."? */
+#define VERSION "2024-04-07 \"GOLD RUSH\"" /* commemorating a Calif. visit */
 
 /* How long to wait before auto-refresh */
 #define RTCLOK1_WAIT ((3 /* minutes */ * 60 /* seconds per minute */ * 60 /* 'jiffies' per second */) / 256 /* RTCLOK2 cycles per RTCLOK1 increment */)
@@ -247,12 +247,12 @@ uint8_t open_json(unsigned char * url) {
 
   err = network_open(url, OPEN_MODE_HTTP_GET, OPEN_TRANS_NONE);
 
-  if ( err ) 
+  if ( err )
     return err;
-  
+
   err = network_json_parse(url);
 
-  if ( err ) 
+  if ( err )
     return err;
 }
 
@@ -282,7 +282,7 @@ void parse_json(unsigned char * element) {
   }
 
 //  if (data_len == 0) {
-//    return; 
+//    return;
 //  }
 
 //  err = nread(1, json_part, data_len);

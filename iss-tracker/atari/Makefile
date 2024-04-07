@@ -7,7 +7,8 @@
 # some of NASA's awesome data)
 #
 # Bill Kendrick <bill@newbreedsoftware.com>
-# 2021-05-17 - 2022-05-29
+#
+# 2021-05-17 - 2024-04-07
 
 CURRENT_PLATFORM = atari
 FUJINET_LIB_VERSION := 3.0.3
@@ -32,7 +33,7 @@ CC65 = cc65
 CA65 = ca65
 LD65 = cl65
 # FIXME: Use this in "iss.c" as well
-VERSION=2024-04-05
+VERSION=2024-04-07
 
 all:	get_fujinet_lib iss.xex
 
@@ -54,6 +55,15 @@ clean:
 	-rm app_key.s
 	-rm colors.o
 	-rm colors.s
+	# Fujinet-lib things we downloaded
+	-rm Changelog.md
+	-rm fujinet-atari-?.?.?.lib
+	-rm fujinet-fuji.h
+	-rm fujinet-fuji.inc
+	-rm fujinet-lib-atari-?.?.?.zip
+	-rm fujinet-network.h
+	-rm fujinet-network.inc
+
 
 release:	clean releaseclean
 	mkdir release
