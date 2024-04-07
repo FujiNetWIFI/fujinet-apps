@@ -1,3 +1,11 @@
+2024-04-05 "GOLD RUSH"
+ * Build & implementation changes:
+   * Now fetches and uses the fujinet network library.
+     https://github.com/FujiNetWIFI/fujinet-lib
+     (h/t Frank Rachel)
+ * Other improvements:
+   * Slightly faster text blitting
+
 2022-05-29 "ARGONAUTS"
  * Implementation changes:
    * Now uses #FujiNet firmware's built-in JSON fetching & parsing

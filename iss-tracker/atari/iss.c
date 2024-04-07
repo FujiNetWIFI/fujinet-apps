@@ -3,11 +3,12 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "nsio.h"
+
 #include "colors.h"
+#include "fujinet-network.h"
 
 /* FIXME: Get "VERSION" from Makefile */
-#define VERSION "2021-05-29 \"ARGONAUTS\"" /* get it? "JSON and the..."? */
+#define VERSION "2024-04-07 \"GOLD RUSH\"" /* commemorating a Calif. visit */
 
 /* How long to wait before auto-refresh */
 #define RTCLOK1_WAIT ((3 /* minutes */ * 60 /* seconds per minute */ * 60 /* 'jiffies' per second */) / 256 /* RTCLOK2 cycles per RTCLOK1 increment */)
@@ -167,6 +168,7 @@ unsigned char sprite[SPRITE_HEIGHT] = {
 #define CHARSET 0xE000
 
 unsigned char pxcolor[2] = { 2, 0 };
+unsigned int yoff[8] = { 0, 40, 80, 120, 160, 200, 240, 280 };
 
 void blit_text(unsigned char x, unsigned char y, char * txt) {
   int i;
@@ -196,7 +198,7 @@ void blit_text(unsigned char x, unsigned char y, char * txt) {
       px7 = pxcolor[((pixels & 0x02) >> 1)];
       px8 = pxcolor[(pixels & 0x01)];
 
-      dest = ybase + (yy * 40) + ((x + i) << 1);
+      dest = ybase + yoff[yy] + ((x + i) << 1);
       POKE(dest, (px1 << 6) | (px2 << 4) | (px3 << 2) | px4);
       POKE(dest + 1, (px5 << 6) | (px6 << 4) | (px7 << 2) | px8);
     }
@@ -241,19 +243,21 @@ unsigned char flash_colors[16] = {
 };
 
 
-unsigned char open_json(unsigned char * url) {
-  unsigned char err;
+/* Open and parse JSON from an URL
+ * @param url
+ * @return 0 on success, else fujinet-network error code (See FN_ERR_* values)
+ */
+uint8_t open_json(unsigned char * url) {
+  uint8_t err;
 
-  err = nopen(1, url, 12);
-  if (err != 1)
-    return err;
+  err = network_open((char *) url, OPEN_MODE_HTTP_GET, OPEN_TRANS_NONE);
 
-  err = nchanmode(1, 12, CHANNELMODE_JSON);
-  if (err != 1)
-    return err;
+  if (err)
+    return err; // ERROR! Return it & bail
 
-  err = njsonparse(1, 12);
-  return err;
+  err = network_json_parse((char *) url);
+
+  return err; // SUCCESS or ERROR
 }
 
 
@@ -261,33 +265,33 @@ unsigned char json_part[256];
 unsigned char query[256];
 unsigned char tmp[256];
 
-void parse_json(unsigned char * element) {
-  unsigned char err;
-  int data_len;
+/* Parse an element of json
+ * @param element
+ * @return 0 on success, or negative value (see FN_ERR_*) on error
+ */
+int8_t parse_json(unsigned char * element) {
+  int16_t stat;
 
   json_part[0] = '\0';
 
   sprintf(query, "N1:%s%c", element, CH_EOL);
-  err = njsonquery(1, 12, (char *) query);
-  /* FIXME: Detect error */
+  stat = network_json_query(url, query, json_part);
 
-  err = nstatus(1);
-  /* FIXME: Detect error */
+  if (stat < 0)
+    return stat; // ERROR, return it!
 
-  data_len = (OS.dvstat[1] << 8) + OS.dvstat[0];
-  if (data_len == 0) {
-    return; /* FIXME: Error! */
+  if (strlen(json_part) == 0) {
+    return 0; // FIXME: An error value, instead?
   }
 
-  err = nread(1, json_part, data_len);
-  json_part[data_len - 1 /* eat final char because of "ending in an ATASCII EOL" */] = '\0';
-  /* FIXME: Detect error */
+  return 0; // SUCCESS, apparently!
 }
 
 
 void main(void) {
   int i, j, lat, lon, last_space;
-  unsigned char n, x, y, key, done, err;
+  unsigned char n, x, y, key, done;
+  uint8_t err;
   long timestamp;
   char * ptr;
 
@@ -319,7 +323,7 @@ void main(void) {
   blit_text(0, 1, "Station Tracker for");
   blit_text(6, 2, "#FujiNet");
 
-  blit_text(1, 3, "Bill Kendrick, 2021");
+  blit_text(1, 3, "Bill Kendrick, 2024");
 
   blit_text(2, 5, "Using data from");
   blit_text(2, 6, "Nathan Bergey's");
@@ -331,6 +335,7 @@ void main(void) {
   message(x, 1, "Version ");
   message(x + 8, 1, VERSION);
 
+  message(MSG_CENTER, 0, "With help from Frank Rachel");
   message(MSG_CENTER, 3, "Press any key to continue...");
 
   OS.ch = KEY_NONE;
@@ -356,7 +361,7 @@ void main(void) {
 
     clear_message();
 
-    if (err != 1) {
+    if (err) {
       /* ERROR */
       message(MSG_CENTER, 0, "Cannot read from open-notify!");
       message(MSG_CENTER, 1, "Press a key to retry...");
@@ -370,7 +375,7 @@ void main(void) {
       /* SUCCESS */
 
       /* Parse and display position */
-      parse_json("/iss_position/latitude");
+      parse_json("/iss_position/latitude"); // FIXME: Detect and deal with errors
       lat = atoi(json_part);
 
       message(0, 0, "Latitude: ");
@@ -378,7 +383,7 @@ void main(void) {
       message(10, 0, json_part);
       message(10 + strlen(json_part), 0, "N");
 
-      parse_json("/iss_position/longitude");
+      parse_json("/iss_position/longitude"); // FIXME: Detect and deal with errors
       lon = atoi(json_part);
 
       message(20, 0, "Longitude: ");
@@ -386,7 +391,7 @@ void main(void) {
       message(31, 0, json_part);
       message(31 + strlen(json_part), 0, "E");
 
-      parse_json("/timestamp");
+      parse_json("/timestamp"); // FIXME: Detect and deal with errors
       timestamp = atol(json_part);
 
       /*
@@ -394,8 +399,8 @@ void main(void) {
       message(12, 3, json_part);
       */
 
-      nchanmode(1, 12, CHANNELMODE_PROTOCOL);
-      nclose(1);
+      err = network_close(url); // FIXME: Detect and deal with errors (moot?)
+
 
       /* Draw the ISS in its position over the map */
 
@@ -473,7 +478,7 @@ void main(void) {
 
         clear_message();
 
-        if (err != 1) {
+        if (err != 0) {
           /* ERROR */
           message(MSG_CENTER, 0, "Cannot read from open-notify!");
           message(MSG_CENTER, 1, "Press a key to continue...");
@@ -490,7 +495,7 @@ void main(void) {
           GTIA_WRITE.hposp2 = 0;
           GTIA_WRITE.hposp3 = 0;
 
-          parse_json("/number");
+          parse_json("/number"); // FIXME: Detect and deal with errors
 
           blit_text(0, 0, "There are    people");
           blit_text(10, 0, json_part);
@@ -501,7 +506,7 @@ void main(void) {
           key = KEY_NONE;
           for (i = 0; i < n && key != KEY_ESC; i++) {
             sprintf(tmp, "/people/%d/name", i);
-            parse_json(tmp);
+            parse_json(tmp); // FIXME: Detect and deal with errors
 
             y = 6 - (strlen(json_part) / 40);
             ptr = json_part;
@@ -532,7 +537,7 @@ void main(void) {
             snprintf(txt, 80, "%s is on ", json_part);
 
             sprintf(tmp, "/people/%d/craft", i);
-            parse_json(tmp);
+            parse_json(tmp); // FIXME: Detect and deal with errors
             strcat(txt, json_part);
 
             strcpy(json_part, txt);
@@ -583,8 +588,8 @@ void main(void) {
             }
           }
 
-          nchanmode(1, 12, CHANNELMODE_PROTOCOL);
-          nclose(1);
+          //nchanmode(1, 12, CHANNELMODE_PROTOCOL);
+          //nclose(1);
 
           /* Clear map: */
           memcpy((unsigned char *) scr_mem, (unsigned char *) map_data, 3200);
@@ -633,37 +638,53 @@ void main(void) {
             }
           }
 
-          open_json(url);
+          err = open_json(url);
 
-          for (i = 0; i < 10 && OS.ch != KEY_ESC; i++) {
-            sprintf(txt, "%d..", i + 1);
-            message(i * 4, 2, txt);
+          if (err != 0) {
+            /* ERROR */
+            clear_message();
 
-            sprintf(tmp, "/%d/latitude", i);
-            parse_json(tmp);
-            lat = atoi(json_part);
+            message(MSG_CENTER, 0, "Cannot read from where-the-iss-at!");
+            message(MSG_CENTER, 1, "Press a key to continue...");
 
-            sprintf(tmp, "/%d/longitude", i);
-            parse_json(tmp);
-            lon = atoi(json_part);
+            OS.ch = KEY_NONE;
+            do {
+            } while (OS.ch == KEY_NONE);
+            OS.ch = KEY_NONE;
 
-            /* Map longitude (-180 -> 180 degrees east) to screen X position (0 left -> 159 right) */
-            x = X_CENTER + (unsigned char) ((lon << 2) / 9);
+            j = 2; /* bail */
+          } else {
+            /* SUCCESS */
+            for (i = 0; i < 10 && OS.ch != KEY_ESC; i++) {
+              sprintf(txt, "%d..", i + 1);
+              message(i * 4, 2, txt);
 
-            /* Map latitude (-90 -> 90 degrees north) to screen Y position (0 top -> 79 bottom) */
-            y = Y_CENTER - (unsigned char) ((lat << 2) / 9);
+              sprintf(tmp, "/%d/latitude", i);
+              parse_json(tmp); // FIXME: Detect and deal with errors
+              lat = atoi(json_part);
 
-            /* FIXME: A better plot routine would be good here! */
-            scr_mem[y * 40 + (x >> 2)] = 0x00;
+              sprintf(tmp, "/%d/longitude", i);
+              parse_json(tmp); // FIXME: Detect and deal with errors
+              lon = atoi(json_part);
+
+              /* Map longitude (-180 -> 180 degrees east) to screen X position (0 left -> 159 right) */
+              x = X_CENTER + (unsigned char) ((lon << 2) / 9);
+
+              /* Map latitude (-90 -> 90 degrees north) to screen Y position (0 top -> 79 bottom) */
+              y = Y_CENTER - (unsigned char) ((lat << 2) / 9);
+
+              /* FIXME: A better plot routine would be good here! */
+              scr_mem[y * 40 + (x >> 2)] = 0x00;
+            }
+
+            // FIXME: Do we need to close?
+
+
+            /* Pause 1 second (API rate-limit requirement!) */
+            OS.rtclok[2] = 0;
+            do {
+            } while (OS.rtclok[2] < 60 && OS.ch != KEY_ESC);
           }
-
-          nchanmode(1, 12, CHANNELMODE_PROTOCOL);
-          nclose(1);
-
-          /* Pause 1 second (API rate-limit requirement!) */
-          OS.rtclok[2] = 0;
-          do {
-          } while (OS.rtclok[2] < 60 && OS.ch != KEY_ESC);
         }
         if (OS.ch == KEY_ESC) {
           bell(BELL_ABORT);

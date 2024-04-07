@@ -1,12 +1,12 @@
 International Space Station (ISS) Tracker for #FujiNet
 ======================================================
 
-Bill Kendrick bill@newbreedsoftware.com
+Bill Kendrick <bill@newbreedsoftware.com>
 
 Released under the GNU General Public License 3 (GPL-3);
 see COPYING
 
-2021-05-17 - 2022-05-29
+2021-05-17 - 2024-04-07
 
 ## Purpose
 View the current position of the International Space Station
@@ -62,14 +62,23 @@ Programming and ISS sprite by Bill Kendrick.
 Data sources provided by Nathan Bergey (Open-Notify)
 and Bill Shupp (Where The ISS At?).
 
+Updates to fetch and use the FujiNet Network Lib library
+by Frank Rachel <https://github.com/frachel>
+
 ## Requirements
 This requires a #FujiNet with firmware capable of parsing and
 allowing querying of JSON.
-(As of this commit to `fujinet-platformio`:
-https://github.com/FujiNetWIFI/fujinet-platformio/commit/5785d76860245863254f91736d42f6c0f61182c6)
 
-For #FujiNet devices still using an older firmware, download
-ISS Tracker version `2021-05-21`.
+### Compilation Requirements
+
+ * cc65 tools to compile, assemble, and link
+   <https://cc65.github.io/>
+
+ * Internet access is required, to fetch a release ZIP file
+   of Fujinet Network Lib <https://github.com/FujiNetWIFI/fujinet-lib>
+   + curl <https://curl.se/>
+   + `bash`, `awk`, `head`
+   + unzip (e.g. Info-ZIP <https://infozip.sourceforge.net/>)
 
 ## Links
 - Homepage: http://www.newbreedsoftware.com/fujinet-iss-tracker/

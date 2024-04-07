@@ -1,4 +1,8 @@
 TODO for ISS Tracker for #FujiNet
+2024-04-06
+ * Switch to fujinet-lib needed some Makefile changes that were pulled from other projects, but they can probably be cleaned up a lot
+
+
 2022-05-29
 
  * Better error handling! (See FIXMEs)
