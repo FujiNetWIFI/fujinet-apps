@@ -69,8 +69,16 @@ by Frank Rachel <https://github.com/frachel>
 This requires a #FujiNet with firmware capable of parsing and
 allowing querying of JSON.
 
-To compile, Internet access is required, to fetch a release ZIP file
-of Fujinet Network Lib <https://github.com/FujiNetWIFI/fujinet-lib>
+### Compilation Requirements
+
+ * cc65 tools to compile, assemble, and link
+   <https://cc65.github.io/>
+
+ * Internet access is required, to fetch a release ZIP file
+   of Fujinet Network Lib <https://github.com/FujiNetWIFI/fujinet-lib>
+   + curl <https://curl.se/>
+   + `bash`, `awk`, `head`
+   + unzip (e.g. Info-ZIP <https://infozip.sourceforge.net/>)
 
 ## Links
 - Homepage: http://www.newbreedsoftware.com/fujinet-iss-tracker/
