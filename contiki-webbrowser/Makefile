@@ -5,7 +5,7 @@ PROGRAM := browser
 AUTOSTART := 2
 
 CFLAGS = -Oris -D AUTOSTART_ENABLE -W -unused-param
-LDFLAGS = -D __HIMEM__=0xBF00
+LDFLAGS = -Wl -D,__HIMEM__=0xBF00
 
 include fnlib_platforms.mk
 
