@@ -62,6 +62,9 @@
 #define WWW_CONF_MAX_INPUTVALUELEN 100
 #endif
 
+char *www_geturl(void);
+void www_seturl(void);
+
 PROCESS_NAME(www_process);
 
 #endif /* WWW_H_ */

@@ -265,8 +265,7 @@ static void
 show_url(void)
 {
   memcpy(editurl, url, WWW_CONF_MAX_URLLEN);
-  strncpy(editurl, "http://", 7);
-  petsciiconv_topetscii(editurl + 7, WWW_CONF_MAX_URLLEN - 7);
+  petsciiconv_topetscii(editurl, WWW_CONF_MAX_URLLEN);
   CTK_WIDGET_REDRAW(&urlentry);
 }
 /*-----------------------------------------------------------------------------------*/
@@ -324,8 +323,8 @@ open_url(void)
     return;
   }
 
-  /* See if the URL starts with http://, otherwise prepend it. */
-  if(strncmp(url, http_http, 7) != 0) {
+  /* See if the URL starts with http(s)://, otherwise prepend it. */
+  if(strncasecmp(url, http_https, 8) != 0 && strncasecmp(url, http_http, 7) != 0) {
     while(urlptr >= url) {
       *(urlptr + 7) = *urlptr;
       --urlptr;
@@ -350,24 +349,25 @@ static void
 set_link(char *link)
 {
   register char *urlptr;
+  uint8_t s = strncmp(link, http_https, 8) == 0;
 
-  if(strncmp(link, http_http, 7) == 0) {
-    /* The link starts with http://. We just copy the contents of the
+  if(s || strncmp(link, http_http, 7) == 0) {
+    /* The link starts with http(s)://. We just copy the contents of the
        link into the url string and jump away. */
     strncpy(url, link, WWW_CONF_MAX_URLLEN);
   } else if(*link == ISO_slash &&
 	    *(link + 1) == ISO_slash) {
     /* The link starts with //, so we'll copy it into the url
-       variable, starting after the http (which already is present in
+       variable, starting after the http(s) (which already is present in
        the url variable since we were able to open the web page on
        which this link was found in the first place). */
-    strncpy(&url[5], link, WWW_CONF_MAX_URLLEN);
+    strncpy(&url[5 + s], link, WWW_CONF_MAX_URLLEN);
   } else if(*link == ISO_slash) {
     /* The link starts with a slash, so it is a non-relative link
        within the same web site. We find the start of the filename of
        the current URL and paste the contents of this link there, and
        head off to the new URL. */
-    for(urlptr = &url[7];
+    for(urlptr = &url[7 + s];
         *urlptr != 0 && *urlptr != ISO_slash;
         ++urlptr);
     strncpy(urlptr, link, WWW_CONF_MAX_URLLEN - (urlptr - url));
@@ -548,29 +548,24 @@ PROCESS_THREAD(www_process, ev, data)
   PROCESS_END();
 }
 /*-----------------------------------------------------------------------------------*/
-/* set_url():
+/* www_geturl():
  *
- * Constructs an URL from the arguments and puts it into the global
- * "url" variable and the visible "editurl" (which is shown in the URL
- * text entry widget in the browser window).
+ * Get the global "url" variable.
  */
-static void
-set_url(char *host, uint16_t port, char *file)
+char *
+www_geturl(void)
 {
-  char *urlptr;
-
-  memset(url, 0, WWW_CONF_MAX_URLLEN);
-  
-  if(strncmp(file, http_http, 7) == 0) {
-    strncpy(url, file, sizeof(url));
-  } else {
-    strncpy(url, http_http, 7);
-    urlptr = url + 7;
-    strcpy(urlptr, host);
-    urlptr += strlen(host);
-    strcpy(urlptr, file);
-  }
-
+  return url;
+}
+/*-----------------------------------------------------------------------------------*/
+/* www_seturl():
+ *
+ * Update the visible "editurl"
+ * (which is shown in the URL text entry widget in the browser window).
+ */
+void
+www_seturl(void)
+{
   show_url();
 }
 /*-----------------------------------------------------------------------------------*/
@@ -608,7 +603,6 @@ webclient_connected(void)
   start_loading();
 
   show_statustext("Request sent...");
-//  set_url(webclient_hostname(), webclient_port(), webclient_filename());
 
   htmlparser_init();
 }
@@ -832,8 +826,8 @@ htmlparser_word(char *word, unsigned char wordlen)
 void
 htmlparser_link(char *text, unsigned char textlen, char *url)
 {
-  /* No link for https or fragment-only as we would't be able to handle it anyway. */
-  if(url[0] == ISO_hash || strncmp(url, http_https, sizeof(http_https) - 1) == 0) {
+  /* No link for fragment-only as we would't be able to handle it anyway. */
+  if(url[0] == ISO_hash) {
     htmlparser_word(text, textlen);
   } else {
     add_pagewidget(text, textlen, url, CTK_WIDGET_HYPERLINK, 0);
