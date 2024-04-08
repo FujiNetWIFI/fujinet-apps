@@ -27,7 +27,7 @@ FUJINET_LIB_DOWNLOAD_FILE = $(FUJINET_LIB)/fujinet-lib-$(CURRENT_PLATFORM)-$(FUJ
 #CC65_ASMINC=${CC65_HOME}/asminc/
 #CC65_LIB=${CC65_HOME}/lib/
 #CC65_CFG=${CC65_HOME}/cfg/
-#CC65_FLAGS=-Osir --add-source
+CC65_FLAGS=-Osir --add-source
 
 CC65 = cc65
 CA65 = ca65

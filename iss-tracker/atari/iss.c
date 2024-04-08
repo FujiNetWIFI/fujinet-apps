@@ -182,11 +182,11 @@ unsigned int yoff[8] = { 0, 40, 80, 120, 160, 200, 240, 280 };
 
 void blit_text(unsigned char x, unsigned char y, char * txt) {
   int i;
-  unsigned int ybase, dest;
-  unsigned char yy, ch, pixels;
+  unsigned int ybase, dest, charbase;
+  unsigned char yy, ch, pixels, b;
   unsigned char px1, px2, px3, px4, px5, px6, px7, px8;
 
-  ybase = (unsigned int) (scr_mem + ((y << 3) * 40));
+  ybase = (unsigned int) (scr_mem + ((y << 3) * 40) + (x << 1));
 
   for (i = 0; txt[i] != '\0'; i++) {
     ch = txt[i];
@@ -197,18 +197,35 @@ void blit_text(unsigned char x, unsigned char y, char * txt) {
       ch = ch - 32;
     }
 
+    charbase = CHARSET + (ch << 3);
     for (yy = 0; yy < 8; yy++) {
-      pixels = PEEK(CHARSET + (ch << 3) + yy);
-      px1 = pxcolor[((pixels & 0x80) >> 7)];
-      px2 = pxcolor[((pixels & 0x40) >> 6)];
-      px3 = pxcolor[((pixels & 0x20) >> 5)];
-      px4 = pxcolor[((pixels & 0x10) >> 4)];
-      px5 = pxcolor[((pixels & 0x08) >> 3)];
-      px6 = pxcolor[((pixels & 0x04) >> 2)];
-      px7 = pxcolor[((pixels & 0x02) >> 1)];
-      px8 = pxcolor[(pixels & 0x01)];
+      pixels = PEEK(charbase + yy);
 
-      dest = ybase + yoff[yy] + ((x + i) << 1);
+      b = (pixels & 0x80) >> 7;
+      px1 = pxcolor[b];
+
+      b = (pixels & 0x40) >> 6;
+      px2 = pxcolor[b];
+
+      b = (pixels & 0x20) >> 5;
+      px3 = pxcolor[b];
+
+      b = (pixels & 0x10) >> 4;
+      px4 = pxcolor[b];
+
+      b = (pixels & 0x08) >> 3;
+      px5 = pxcolor[b];
+
+      b = (pixels & 0x04) >> 2;
+      px6 = pxcolor[b];
+
+      b = (pixels & 0x02) >> 1;
+      px7 = pxcolor[b];
+
+      b = (pixels & 0x01);
+      px8 = pxcolor[b];
+
+      dest = ybase + yoff[yy] + (i << 1);
       POKE(dest, (px1 << 6) | (px2 << 4) | (px3 << 2) | px4);
       POKE(dest + 1, (px5 << 6) | (px6 << 4) | (px7 << 2) | px8);
     }
