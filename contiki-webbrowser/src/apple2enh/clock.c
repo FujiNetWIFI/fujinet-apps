@@ -42,7 +42,7 @@
  */
 
 static unsigned char tick = 14;
-static clock_time_t time;
+static clock_time_t ct_time;
 
 /*-----------------------------------------------------------------------------------*/
 void
@@ -65,19 +65,19 @@ clock_update(void)
   count += tick;
   if(count > 1000) {
     count = 0;
-    ++time;
+    ++ct_time;
   }
 }
 /*-----------------------------------------------------------------------------------*/
 clock_time_t
 clock_time(void)
 {
-  return time;
+  return ct_time;
 }
 /*-----------------------------------------------------------------------------------*/
 unsigned long
 clock_seconds(void)
 {
-  return time / CLOCK_CONF_SECOND;
+  return ct_time / CLOCK_CONF_SECOND;
 }
 /*-----------------------------------------------------------------------------------*/
