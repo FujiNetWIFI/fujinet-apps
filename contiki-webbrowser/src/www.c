@@ -37,7 +37,6 @@
 #include <stdlib.h>
 
 #include "ctk.h"
-#include "ctk-textentry-cmdline.h"
 #include "contiki-net.h"
 #include "petsciiconv.h"
 #include "arg.h"
