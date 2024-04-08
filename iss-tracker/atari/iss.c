@@ -7,6 +7,9 @@
 #include "colors.h"
 #include "fujinet-network.h"
 
+/* FIXME: Get "XLXE" from Makefile; build two XEXes, one for XL/XE, one for 400/800 */
+#define XLXE
+
 /* FIXME: Get "VERSION" from Makefile */
 #define VERSION "2024-04-07 \"GOLD RUSH\"" /* commemorating a Calif. visit */
 
@@ -37,6 +40,9 @@ unsigned char old_x[4], old_y[4];
 
 #define BELL_ABORT 0
 #define BELL_GOOD 1
+
+void utf8toatascii();
+
 
 void bell(unsigned char bell_type) {
   unsigned char i;
@@ -165,7 +171,11 @@ unsigned char sprite[SPRITE_HEIGHT] = {
   0x04, /* ....|.X.. */
 };
 
-#define CHARSET 0xE000
+#ifdef XLXE
+#define CHARSET 0xCC00 // International character set
+#else
+#define CHARSET 0xE000 // Standard character set
+#endif
 
 unsigned char pxcolor[2] = { 2, 0 };
 unsigned int yoff[8] = { 0, 40, 80, 120, 160, 200, 240, 280 };
@@ -303,6 +313,10 @@ void main(void) {
   OS.color0 = 4;
   OS.color1 = 6;
   OS.color2 = 8;
+
+#ifdef XLXE
+  OS.chbas = 0xCC;
+#endif
 
   for (i = 0; i < 40; i++) {
     memcpy((unsigned char *) scr_mem + (39 - i) * 40, (unsigned char *) map_data + (39 - i) * 40, 40);
@@ -507,6 +521,7 @@ void main(void) {
           for (i = 0; i < n && key != KEY_ESC; i++) {
             sprintf(tmp, "/people/%d/name", i);
             parse_json(tmp); // FIXME: Detect and deal with errors
+            utf8toatascii();
 
             y = 6 - (strlen(json_part) / 40);
             ptr = json_part;
@@ -702,3 +717,127 @@ void main(void) {
 
   return;
 }
+
+#ifdef XLXE
+
+/* A map from the two-byte UTF-8 encoding for
+ * a Unicode character to the ATASCII international
+ * character, or most appropriate plain ASCII character.
+ * (Latin-1 Supplement; see https://en.wikipedia.org/wiki/List_of_Unicode_characters)
+ */
+char utf8_map[] = {
+  /* ¡ */ 0xC2, 0xA1, 0x60, '!',
+  /* £ */ 0xC2, 0xA3, 0x08, '#',
+  /* ¿ */ 0xC2, 0xBF, '?',  '?',
+  /* Á */ 0xC3, 0x81, 'A',  'A',
+  /* Â */ 0xC3, 0x82, 'A',  'A',
+  /* Ã */ 0xC3, 0x84, 'A',  'A',
+  /* Ä */ 0xC3, 0x84, 0x7B, 'A',
+  /* Å */ 0xC3, 0x85, 0x1A, 'A',
+  /* Æ */ 0xC3, 0x86, 'A',  'A', // FIXME "AE"
+  /* Ç */ 0xC3, 0x87, 'C',  'C',
+  /* È */ 0xC3, 0x88, 'E',  'E',
+  /* É */ 0xC3, 0x89, 0x03, 'E',
+  /* Ê */ 0xC3, 0x8A, 'E',  'E',
+  /* Ë */ 0xC3, 0x8B, 'E',  'E',
+  /* Ì */ 0xC3, 0x8C, 'I',  'I',
+  /* Í */ 0xC3, 0x8D, 'I',  'I',
+  /* Î */ 0xC3, 0x8E, 'I',  'I',
+  /* Ï */ 0xC3, 0x8F, 'I',  'I',
+  /* Ð */ 0xC3, 0x90, 'D',  'D',
+  /* Ñ */ 0xC3, 0x91, 0x02, 'N',
+  /* Ò */ 0xC3, 0x92, 'O',  'O',
+  /* Ó */ 0xC3, 0x93, 'O',  'O',
+  /* Ô */ 0xC3, 0x94, 'O',  'O',
+  /* Õ */ 0xC3, 0x95, 'O',  'O',
+  /* Ö */ 0xC3, 0x96, 0x0C, 'O',
+  /* Ø */ 0xC3, 0x98, 'O',  'O',
+  /* Ù */ 0xC3, 0x99, 'U',  'U',
+  /* Ú */ 0xC3, 0x9A, 'U',  'U',
+  /* Û */ 0xC3, 0x9B, 'U',  'U',
+  /* Ü */ 0xC3, 0x9C, 0x10, 'U',
+  /* Ý */ 0xC3, 0x9D, 'Y',  'Y',
+  /* Þ */ // FIXME
+  /* ß */ 0xC3, 0x9F, 'S',  'S', // FIXME "ss"
+  /* à */ 0xC3, 0xA0, 0x19, 'a',
+  /* á */ 0xC3, 0xA1, 0x00, 'a',
+  /* â */ 0xC3, 0xA2, 0x11, 'a',
+  /* ã */ 0xC3, 0xA3, 'a',  'a',
+  /* ä */ 0xC3, 0xA4, 0x0B, 'a',
+  /* å */ 0xC3, 0xA5, 0x18, 'a',
+  /* æ */ 0xC3, 0xA6, 'a',  'a', // FIXME "ae"
+  /* ç */ 0xC3, 0xA7, 0x04, 'c',
+  /* è */ 0xC3, 0xA8, 0x15, 'e',
+  /* é */ 0xC3, 0xA9, 0x14, 'e',
+  /* ê */ 0xC3, 0xAA, 0x17, 'e',
+  /* ì */ 0xC3, 0xAC, 0x07, 'i',
+  /* í */ 0xC3, 0xAD, 'i',  'i',
+  /* î */ 0xC3, 0xAE, 0x13, 'i',
+  /* ï */ 0xC3, 0xAF, 0x09, 'i',
+  /* ð */ 0xC3, 0xB0, 'd',  'd',
+  /* ñ */ 0xC3, 0xB1, 0x16, 'n',
+  /* ò */ 0xC3, 0xB2, 0x06, 'o',
+  /* ó */ 0xC3, 0xB3, 0x0E, 'o',
+  /* ô */ 0xC3, 0xB4, 0x05, 'o',
+  /* õ */ 0xC3, 0xB5, 'o',  'o',
+  /* ö */ 0xC3, 0xB6, 0x0F, 'o',
+  /* ø */ 0xC3, 0xB7, 'o',  'o',
+  /* ù */ 0xC3, 0xB9, 0x01, 'u',
+  /* ú */ 0xC3, 0xBA, 0x0D, 'u',
+  /* û */ 0xC3, 0xBB, 0x12, 'u',
+  /* ü */ 0xC3, 0xBC, 0x0A, 'u',
+  /* ý */ 0xC3, 0xBD, 'y',  'y',
+  /* þ */ // FIXME
+  /* ÿ */ 0xC3, 0xBF, 'y',  'y',
+};
+
+#else
+
+/* FIXME */
+char utf8_map[] = {
+};
+
+#endif
+
+
+/* Takes the string in `json_part`, replaces UTF-8 encoded
+ * characters that we support into International ATASCII
+ * (for XL/XE) or plain ASCII (if int'l ATASCII doesn't have
+ * it, or we're on a 400/800).
+ */
+void utf8toatascii() {
+  char c;
+  char out[80];
+  uint8_t i, j, l, found;
+
+  l = 0;
+
+  for (i = 0; json_part[i] != '\0'; i++) {
+    if ((json_part[i] & 0b11100000) == 0b11000000 && json_part[i + 1] != '\0') {
+      /* A two-byte UTF-8 representation of a character; find the best ATASCII mapping we can! */
+      c = '?';
+      found = 0;
+      for (j = 0; j < sizeof(utf8_map) && found == 0; j += 4) {
+        if (json_part[i] == utf8_map[j] && json_part[i + 1] == utf8_map[j + 1]) {
+#ifdef XLXE
+          c = utf8_map[j + 2];
+#else
+          c = utf8_map[j + 3];
+#endif
+          found = 1;
+        }
+      }
+      i++;
+    } else {
+      /* Dangerously assuming anything else is just 1-byte */
+      c = json_part[i];
+    }
+
+    out[l++] = c;
+  }
+
+  out[l] = '\0';
+
+  strcpy(json_part, out);
+}
+

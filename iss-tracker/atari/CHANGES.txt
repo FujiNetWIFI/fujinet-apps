@@ -1,8 +1,14 @@
-2024-04-05 "GOLD RUSH"
+2024-04-07 "GOLD RUSH"
+ * New features:
+   * Supports some Unicode characters in astronaut names;
+     uses those from International ATASCII font when possible
+     (requires XL/XE)
+
  * Build & implementation changes:
    * Now fetches and uses the fujinet network library.
      https://github.com/FujiNetWIFI/fujinet-lib
      (h/t Frank Rachel)
+
  * Other improvements:
    * Slightly faster text blitting
 

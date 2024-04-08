@@ -1,15 +1,15 @@
 TODO for ISS Tracker for #FujiNet
-2024-04-06
- * Switch to fujinet-lib needed some Makefile changes that were pulled from other projects, but they can probably be cleaned up a lot
 
+2024-04-07
 
-2022-05-29
+ * Switch to fujinet-lib needed some Makefile changes that were pulled
+   from other projects, but they can probably be cleaned up a lot
 
  * Better error handling! (See FIXMEs)
 
- * May need to deal with Unicode characters in astronaut names!
-
  * Handle VERSION number in one place (Makefile)
+
+ * Support 400/800 again (build two XEXes)
 
  * Allow adjusting colors.
    * Save colors to FujiNet (app key); reload on start-up.
