@@ -235,7 +235,7 @@ void message(int x, int y, char * txt) {
   }
 }
 
-unsigned char txt[80], url[128];
+char txt[80], url[128];
 
 unsigned char flash_colors[16] = {
   0x10, 0x12, 0x24, 0x26, 0x38, 0x3A, 0x3C, 0x4E,
@@ -247,29 +247,29 @@ unsigned char flash_colors[16] = {
  * @param url
  * @return 0 on success, else fujinet-network error code (See FN_ERR_* values)
  */
-uint8_t open_json(unsigned char * url) {
+uint8_t open_json(char * url) {
   uint8_t err;
 
-  err = network_open((char *) url, OPEN_MODE_HTTP_GET, OPEN_TRANS_NONE);
+  err = network_open(url, OPEN_MODE_HTTP_GET, OPEN_TRANS_NONE);
 
   if (err)
     return err; // ERROR! Return it & bail
 
-  err = network_json_parse((char *) url);
+  err = network_json_parse(url);
 
   return err; // SUCCESS or ERROR
 }
 
 
-unsigned char json_part[256];
-unsigned char query[256];
-unsigned char tmp[256];
+char json_part[256];
+char query[256];
+char tmp[256];
 
 /* Parse an element of json
  * @param element
  * @return 0 on success, or negative value (see FN_ERR_*) on error
  */
-int8_t parse_json(unsigned char * element) {
+int8_t parse_json(char * element) {
   int16_t stat;
 
   json_part[0] = '\0';
