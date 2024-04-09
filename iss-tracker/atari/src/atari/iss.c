@@ -4,14 +4,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "colors.h"
+#include "config/colors.h"
 #include "fujinet-network.h"
 
 /* FIXME: Get "XLXE" from Makefile; build two XEXes, one for XL/XE, one for 400/800 */
 #define XLXE
-
-/* FIXME: Get "VERSION" from Makefile */
-#define VERSION "2024-04-07 \"GOLD RUSH\"" /* commemorating a Calif. visit */
 
 /* How long to wait before auto-refresh */
 #define RTCLOK1_WAIT ((3 /* minutes */ * 60 /* seconds per minute */ * 60 /* 'jiffies' per second */) / 256 /* RTCLOK2 cycles per RTCLOK1 increment */)
@@ -315,7 +312,7 @@ int8_t parse_json(char * element) {
 }
 
 
-void main(void) {
+void run(void) {
   int i, j, lat, lon, last_space;
   unsigned char n, x, y, key, done;
   uint8_t err;
@@ -362,9 +359,9 @@ void main(void) {
   blit_text(2, 8, "and Bill Shupp's");
   blit_text(1, 9, "\"Where The ISS At?\"");
 
-  x = 16 - strlen(VERSION) / 2;
+  x = 16 - strlen(VERSION_STRING) / 2;
   message(x, 1, "Version ");
-  message(x + 8, 1, VERSION);
+  message(x + 8, 1, VERSION_STRING);
 
   message(MSG_CENTER, 0, "With help from Frank Rachel");
   message(MSG_CENTER, 3, "Press any key to continue...");

@@ -1,3 +1,23 @@
+2024-04-09 "GOLD RUSH" (still)
+ * Rewrite Makefiles and build/src structure to align with "new" standard build system for fujinet apps.
+   - This is something we're hacking on, someone has to be first, so I folded this is while doing the
+     fujinet-lib changes, emulator support, and VERSION string changes.
+
+ * Use fujinet-lib for appkey code and remove all direct SIO calls
+
+ * Use VERSION_STRING in makefiles/common.mk and pass it as a 'define' variable to the src code
+
+ * The new build structure supports platform target src code, and nested sub-directory src folders
+   - To illustrate the flexibility, code has been arranged into "atari", and "common" code befitting
+     whether it is platform specific or not. Note: colours are considered independent, but next implementation
+     may change that assumption, so files can be moved around.
+
+ * Add Altirra emulator support as well as atari800, defaults to Altirra for its Fujinet support
+   + To run the emulator:
+     - Define "ALTIRRA_HOME" or "ATARI800_HOME" to the paths of the executables
+     - For altirra: "make test"
+     - For atari800: "make test ATARI_EMULATOR=ATARI800"   
+
 2024-04-07 "GOLD RUSH"
  * New features:
    * Supports some Unicode characters in astronaut names;

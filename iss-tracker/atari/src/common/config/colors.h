@@ -1,7 +1,7 @@
 #ifndef COLORS_H
 #define COLORS_H
 
-#define DEFAULT_COLOR4 0x00 /* bored & tracking dots */
+#define DEFAULT_COLOR4 0x00 /* border & tracking dots */
 #define DEFAULT_COLOR0 0x8A /* oceans */
 #define DEFAULT_COLOR1 0x88 /* grid over oceans */
 #define DEFAULT_COLOR2 0xB4 /* continents */

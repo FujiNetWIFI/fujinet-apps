@@ -67,8 +67,9 @@ build/
 dist/
 obj/
 
-# altirra/applewin debugging... clue's in the name
+# emulator configs
 altirra-debug.ini
+atari800-debug.cfg
 AppleWin.log
 
 Makefile.options
