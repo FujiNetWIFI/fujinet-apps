@@ -1,14 +1,13 @@
 # Generic CC65 TARGETS makefile++
 #
 # Set the TARGETS and PROGRAM values as required.
-# Put any custom settings into 'makefiles/custom-<platform>.mk' in root folder, e.g. additional LDFLAGS, AUTOSTART etc.
-# see makefiles/build.mk for details on directory structure for src files
+# See makefiles/build.mk for details on directory structure for src files and how to add custom extensions to the build.
 
 TARGETS = atari
 PROGRAM := iss
 
 SUB_TASKS := clean disk test release
-.PHONY: all $(SUB_TASKS)
+.PHONY: all help $(SUB_TASKS)
 
 all:
 	@for target in $(TARGETS); do \

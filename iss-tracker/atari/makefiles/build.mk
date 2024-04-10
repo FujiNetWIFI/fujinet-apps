@@ -1,25 +1,34 @@
 # Generic Build script for CC65
 #
-# This file is responsible for compiling source code.
-# It has some hooks for additional behaviour, see additional files it sources below.
+# This file is only responsible for compiling source code.
+# It has some hooks for additional behaviour, see Additional Make Files below.
 # 
 # The compilation will look in following directories for source:
-# src/*.[c|s]               # considered the "top level" dir, you can keep everything in here if you like, will not recurse into subdirs
-# src/common/**/*.[c|s]     # ie. common files for all platforms not in root dir - allows for splitting functionality out into subdirs
-# src/<target>/**/*.[c|s]   # ie. including its subdirs - only CURRENT_TARGET files will be found
 #
-# This script sources the following files to add additional behaviour.
-#  makefiles/os.mk                 # for platform mappings (e.g. atarixl -> atari, apple2enh -> apple), emulator base settings
-#  makefiles/common.mk             # for things to be added for all platforms
-#  makefiles/custom-<platform>.mk  # for platform specific values, LDFLAGS etc for current PLATFORM (e.g. atari)
+#   src/*.[c|s]               # considered the "top level" dir, you can keep everything in here if you like, will not recurse into subdirs
+#   src/common/**/*.[c|s]     # ie. common files for all platforms not in root dir - allows for splitting functionality out into subdirs
+#   src/<target>/**/*.[c|s]   # ie. including its subdirs - only CURRENT_TARGET files will be found
 #
-# To add additional tasks to "all", in the sourced makefiles, add a value to "ALL_TASKS"
-# For creating platform specific DISK images, add the disk creating task to "DISK_TASKS"
-# Additional tasks in these makefiles MUST start with ".", e.g. ".po: ..."
-# To add a suffix to the generated executable, ensure "SUFFIX" value is set.
+# Additional Make Files
+#  This script sources the following files to add additional behaviour.
+#    makefiles/os.mk                 # for platform mappings (e.g. atarixl -> atari, apple2enh -> apple), emulator base settings
+#    makefiles/common.mk             # for things to be added for all platforms
+#    makefiles/custom-<platform>.mk  # for platform specific values, LDFLAGS etc for current PLATFORM (e.g. atari)
+#
+# Additional notes:
+#
+# - To add additional tasks to "all", in the sourced makefiles, add a value to "ALL_TASKS"
+# - For creating platform specific DISK images, add the disk creating task to "DISK_TASKS"
+# - Additional tasks in these makefiles MUST start with a ".", e.g. .atr, .po, .your-complex-rule
+# - To add a suffix to the generated executable, ensure "SUFFIX" variable is set in your platform specific makefile.
+# - All files referenced in this makefile are relative to the ORIGINAL Makefile in the root dir, not this dir
+# - This build supports a VERSION_FILE variable, this can point anywhere in your src tree, and will cause object files to recompile when changed
+#   Example usage:
+#     VERSION_FILE := src/version.txt
+#     VERSION_STRING := $(file < $(VERSION_FILE))
+#     CFLAGS += -DVERSION_STRING=\"$(VERSION_STRING)\"
 
-# NOTE: All files referenced in this makefile are relative to the ORIGINAL Makefile in the root dir, not this dir
-
+# Ensure WSL2 Ubuntu and other linuxes use bash by default instead of /bin/sh, which does not always like the shell commands.
 SHELL := /usr/bin/env bash
 ALL_TASKS =
 DISK_TASKS =
@@ -27,7 +36,6 @@ DISK_TASKS =
 -include makefiles/os.mk
 
 CC := cl65
-CL := cl65
 
 SRCDIR := src
 BUILD_DIR := build
@@ -99,14 +107,16 @@ endif
 # Transform the abstract OPTIONS to the actual cc65 options.
 $(foreach o,$(subst $(COMMA),$(SPACE),$(OPTIONS)),$(eval $(_$o_)))
 
-# Sanity check
 ifeq ($(BUILD_DIR),)
 BUILD_DIR := build
 endif
 
-# Sanity check
 ifeq ($(OBJDIR),)
 OBJDIR := obj
+endif
+
+ifeq ($(DIST_DIR),)
+DIST_DIR := dist
 endif
 
 .SUFFIXES:
@@ -130,20 +140,19 @@ SRC_INC_DIRS := \
 
 vpath %.c $(SRC_INC_DIRS)
 
-$(OBJDIR)/%.o: %.c | $(OBJDIR)
+$(OBJDIR)/%.o: %.c $(VERSION_FILE) | $(OBJDIR)
 	@$(call MKDIR,$(dir $@))
 	$(CC) -t $(CURRENT_PLATFORM) -c --create-dep $(@:.o=.d) $(CFLAGS) -o $@ $<
 
 vpath %.s $(SRC_INC_DIRS)
 
-$(OBJDIR)/%.o: %.s | $(OBJDIR)
+$(OBJDIR)/%.o: %.s $(VERSION_FILE) | $(OBJDIR)
 	@$(call MKDIR,$(dir $@))
 	$(CC) -t $(CURRENT_PLATFORM) -c --create-dep $(@:.o=.d) $(ASFLAGS) -o $@ $<
 
 
 $(BUILD_DIR)/$(PROGRAM_TGT): $(OBJECTS) $(LIBS) | $(BUILD_DIR)
 	$(CC) -t $(CURRENT_PLATFORM) $(LDFLAGS) -o $@ $^
-
 
 $(PROGRAM_TGT): $(BUILD_DIR)/$(PROGRAM_TGT) | $(BUILD_DIR)
 
@@ -152,6 +161,7 @@ test: $(PROGRAM_TGT)
 	$(EMUCMD) $(BUILD_DIR)\\$<
 	$(POSTEMUCMD)
 
+# Use "./" in front of all dirs being removed as a simple safety guard to ensure deleting from current dir, and not something like root "/".
 clean:
 	@for d in $(BUILD_DIR) $(OBJDIR) $(DIST_DIR); do \
       if [ -d "./$$d" ]; then \

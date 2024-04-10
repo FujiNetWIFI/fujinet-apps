@@ -32,7 +32,7 @@ ALTIRRA ?= $(ALTIRRA_HOME)/Altirra64.exe \
 #   $(XS)/debugcmd: ".loadsym build\$(PROGRAM).$(CURRENT_TARGET).lbl" \
 #   $(XS)/debugcmd: "bp _debug" \
 
-ATARI800 ?= $(ATARI800_HOME)/atari800.exe \
+ATARI800 ?= $(ATARI800_HOME)/atari800 \
   -xl -nobasic -ntsc -xl-rev custom -config atari800-debug.cfg -run
 
 atari_EMUCMD := $($(ATARI_EMULATOR))
