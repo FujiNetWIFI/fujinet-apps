@@ -31,7 +31,7 @@ help:
 	@echo "all       - do all compilation tasks, create app in build directory"
 	@echo "clean     - remove all build artifacts"
 	@echo "disk      - generate platform specific disk versions of application (PO/ATR etc)"
-	@echo "test      - run application in emulator for given platform.
+	@echo "test      - run application in emulator for given platform."
 	@echo "            specific platforms may expose additional variables to run with"
 	@echo "            different emulators, see makefiles/custom-<platform>.mk"
 	@echo "release   - create a release of the executable in the dist/ dir"
