@@ -73,6 +73,9 @@ OBJECTS_TG := $(OBJECTS_TG:$(SRCDIR)/%=$(OBJDIR)/%)
 
 OBJECTS += $(OBJECTS_TG)
 
+# Ensure make recompiles parts it needs to if src files change
+DEPENDS := $(OBJECTS:.o=.d)
+
 ASFLAGS += --asm-include-dir src/common --asm-include-dir src/$(CURRENT_TARGET)
 CFLAGS += --include-dir src/common --include-dir src/$(CURRENT_TARGET)
 
@@ -82,9 +85,6 @@ CFLAGS += --include-dir $(SRCDIR)
 # allow for additional flags etc
 -include ./makefiles/common.mk
 -include ./makefiles/custom-$(CURRENT_PLATFORM).mk
-
-STATEFILE := Makefile.options
--include $(STATEFILE)
 
 define _listing_
   CFLAGS += --listing $$(@:.o=.lst)
@@ -123,6 +123,10 @@ endif
 .PHONY: all clean release $(DISK_TASKS) $(BUILD_TASKS) $(PROGRAM).$(CURRENT_TARGET)
 
 all: $(ALL_TASKS) $(PROGRAM_TGT)
+
+STATEFILE := Makefile.options
+-include $(DEPENDS)
+-include $(STATEFILE)
 
 $(OBJDIR):
 	$(call MKDIR,$@)
