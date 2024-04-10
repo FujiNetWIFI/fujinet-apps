@@ -348,8 +348,8 @@ void run(void) {
 
   /* Draw title and credits */
   blit_text(0, 0, "International Space");
-  blit_text(0, 1, "Station Tracker for");
-  blit_text(6, 2, "#FujiNet");
+  blit_text(3, 1, "Station (ISS)");
+  blit_text(0, 2, "Tracker for #FujiNet");
 
   blit_text(1, 3, "Bill Kendrick, 2024");
 
@@ -363,7 +363,7 @@ void run(void) {
   message(x, 1, "Version ");
   message(x + 8, 1, VERSION_STRING);
 
-  message(MSG_CENTER, 0, "With help from Frank Rachel");
+  message(MSG_CENTER, 0, "Contribs by Frank Rachel & Mark Fisher");
   message(MSG_CENTER, 3, "Press any key to continue...");
 
   OS.ch = KEY_NONE;
