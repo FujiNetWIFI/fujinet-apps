@@ -1,14 +1,13 @@
 # Generic CC65 TARGETS makefile++
 #
 # Set the TARGETS and PROGRAM values as required.
-# Put any custom settings into 'makefiles/custom-<platform>.mk' in root folder, e.g. additional LDFLAGS, AUTOSTART etc.
-# see makefiles/build.mk for details on directory structure for src files
+# See makefiles/build.mk for details on directory structure for src files and how to add custom extensions to the build.
 
 TARGETS = atari
 PROGRAM := iss
 
 SUB_TASKS := clean disk test release
-.PHONY: all $(SUB_TASKS)
+.PHONY: all help $(SUB_TASKS)
 
 all:
 	@for target in $(TARGETS); do \
@@ -31,7 +30,7 @@ help:
 	@echo "all       - do all compilation tasks, create app in build directory"
 	@echo "clean     - remove all build artifacts"
 	@echo "disk      - generate platform specific disk versions of application (PO/ATR etc)"
-	@echo "test      - run application in emulator for given platform.
+	@echo "test      - run application in emulator for given platform."
 	@echo "            specific platforms may expose additional variables to run with"
 	@echo "            different emulators, see makefiles/custom-<platform>.mk"
 	@echo "release   - create a release of the executable in the dist/ dir"

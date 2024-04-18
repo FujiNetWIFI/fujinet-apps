@@ -1,11 +1,10 @@
-################################################################
 # COMPILE FLAGS
 
 # reserved memory for graphics
 # LDFLAGS += -Wl -D,__RESERVED_MEMORY__=0x2000
 
-LDFLAGS += --start-addr 0x4400
-LDFLAGS += -C cfg/atari.cfg
+#LDFLAGS += --start-addr 0x4400
+#LDFLAGS += -C cfg/atari.cfg
 
 ################################################################
 # DISK creation
@@ -15,7 +14,7 @@ DISK_TASKS += .atr
 
 .atr:
 	$(call MKDIR,$(DIST_DIR)/atr)
-	cp $(DIST_DIR)/$(PROGRAM_TGT).com $(DIST_DIR)/atr/$(PROGRAM).com
+	cp $(DIST_DIR)/$(PROGRAM_TGT)$(SUFFIX) $(DIST_DIR)/atr/$(PROGRAM)$(SUFFIX)
 	$(call RMFILES,$(DIST_DIR)/*.atr)
 	dir2atr -S $(DIST_DIR)/$(PROGRAM).atr $(DIST_DIR)/atr
 

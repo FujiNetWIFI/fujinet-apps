@@ -1,21 +1,22 @@
 TODO for ISS Tracker for #FujiNet
 
-2024-04-07
+2024-04-09
 
- * Switch to fujinet-lib needed some Makefile changes that were pulled
+ * The switch to fujinet-lib needed some Makefile changes that were pulled
    from other projects, but they can probably be cleaned up a lot
 
  * Better error handling! (See FIXMEs)
-
- * Handle VERSION number in one place (Makefile)
 
  * Support 400/800 again (build two XEXes)
 
  * Allow adjusting colors.
    * Save colors to FujiNet (app key); reload on start-up.
 
+ * Disk target should include a DOS (e.g., uDOS ("micro DOS")).
+
 Other ideas:
 
  * Show night/day
-   http://www.edesign.nl/examples/sunlightmap/index.php
+   https://web.archive.org/web/20161106110116/http://www.edesign.nl/examples/sunlightmap/index.php
+   https://web.archive.org/web/20230524094710/http://www.edesign.nl/2009/05/14/math-behind-a-world-sunlight-map/
 

@@ -1,4 +1,6 @@
-2024-04-09 "GOLD RUSH" (still)
+2024-04-09 "MAKEMAKE"
+(All changes by Mark Fisher <https://github.com/markjfisher>)
+
  * Rewrite Makefiles and build/src structure to align with "new" standard build system for fujinet apps.
    - This is something we're hacking on, someone has to be first, so I folded this is while doing the
      fujinet-lib changes, emulator support, and VERSION string changes.

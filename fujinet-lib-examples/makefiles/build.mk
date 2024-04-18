@@ -1,5 +1,9 @@
 # Generic Build script for CC65
 #
+# THIS VERSION IS SPECIFIC TO fujinet-lib-examples
+# THE ONLY DIFFERENCES BEING USING "../makefiles/" INSTEAD OF "./makefiles/" TO AVOID COPYING INTO EVERY APP DIR
+# AND INCLUDING "./application.mk" TO ALLOW FOR THE ANY APP SPECIFIC VALUES
+#
 # This file is only responsible for compiling source code.
 # It has some hooks for additional behaviour, see Additional Make Files below.
 # 
@@ -33,7 +37,7 @@ SHELL := /usr/bin/env bash
 ALL_TASKS =
 DISK_TASKS =
 
--include makefiles/os.mk
+-include ../makefiles/os.mk
 
 CC := cl65
 
@@ -62,14 +66,15 @@ SOURCES_TG += $(call rwildcard,$(SRCDIR)/$(CURRENT_TARGET)/,*.c)
 SOURCES := $(strip $(SOURCES))
 SOURCES_TG := $(strip $(SOURCES_TG))
 
-# convert from src/your/long/path/foo.[c|s] to obj/your/long/path/foo.o
+# convert from src/your/long/path/foo.[c|s] to obj/<target>/your/long/path/foo.o
+# we need the target because compiling for previous target does not pick up potential macro changes
 OBJ1 := $(SOURCES:.c=.o)
 OBJECTS := $(OBJ1:.s=.o)
-OBJECTS := $(OBJECTS:$(SRCDIR)/%=$(OBJDIR)/%)
+OBJECTS := $(OBJECTS:$(SRCDIR)/%=$(OBJDIR)/$(CURRENT_TARGET)/%)
 
 OBJ2 := $(SOURCES_TG:.c=.o)
 OBJECTS_TG := $(OBJ2:.s=.o)
-OBJECTS_TG := $(OBJECTS_TG:$(SRCDIR)/%=$(OBJDIR)/%)
+OBJECTS_TG := $(OBJECTS_TG:$(SRCDIR)/%=$(OBJDIR)/$(CURRENT_TARGET)/%)
 
 OBJECTS += $(OBJECTS_TG)
 
@@ -83,8 +88,11 @@ ASFLAGS += --asm-include-dir $(SRCDIR)
 CFLAGS += --include-dir $(SRCDIR)
 
 # allow for additional flags etc
--include ./makefiles/common.mk
--include ./makefiles/custom-$(CURRENT_PLATFORM).mk
+-include ../makefiles/common.mk
+-include ../makefiles/custom-$(CURRENT_PLATFORM).mk
+
+# allow for application specific config
+-include ./application.mk
 
 define _listing_
   CFLAGS += --listing $$(@:.o=.lst)
@@ -144,13 +152,13 @@ SRC_INC_DIRS := \
 
 vpath %.c $(SRC_INC_DIRS)
 
-$(OBJDIR)/%.o: %.c $(VERSION_FILE) | $(OBJDIR)
+$(OBJDIR)/$(CURRENT_TARGET)/%.o: %.c $(VERSION_FILE) | $(OBJDIR)
 	@$(call MKDIR,$(dir $@))
 	$(CC) -t $(CURRENT_PLATFORM) -c --create-dep $(@:.o=.d) $(CFLAGS) -o $@ $<
 
 vpath %.s $(SRC_INC_DIRS)
 
-$(OBJDIR)/%.o: %.s $(VERSION_FILE) | $(OBJDIR)
+$(OBJDIR)/$(CURRENT_TARGET)/%.o: %.s $(VERSION_FILE) | $(OBJDIR)
 	@$(call MKDIR,$(dir $@))
 	$(CC) -t $(CURRENT_PLATFORM) -c --create-dep $(@:.o=.d) $(ASFLAGS) -o $@ $<
 
@@ -165,7 +173,8 @@ test: $(PROGRAM_TGT)
 	$(EMUCMD) $(BUILD_DIR)\\$<
 	$(POSTEMUCMD)
 
-# Use "./" in front of all dirs being removed as a simple safety guard to ensure deleting from current dir, and not something like root "/".
+# Use "./" in front of all dirs being removed as a simple safety guard to
+# ensure deleting from current dir, and not something like root "/".
 clean:
 	@for d in $(BUILD_DIR) $(OBJDIR) $(DIST_DIR); do \
       if [ -d "./$$d" ]; then \
