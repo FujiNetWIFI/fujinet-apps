@@ -103,7 +103,7 @@ void main(void)
 
   if (sp_payload[0]==1)
     {
-      c=cgetc();
+      char c=cgetc();
       if (c == 'C' || c == 'c')
 	{
 	  screen_putc('C');
@@ -113,13 +113,11 @@ void main(void)
 	  sp_payload[2]=0;
 	  sp_control(dev,'B');
 	  for (i=0;i<16384;i++);
-	  break;
 	}
       else if (c == 'M' || c == 'm')
 	{
 	  screen_putc('M');
 	  dev = modem;
-	  break;
 	}      
     }
   
