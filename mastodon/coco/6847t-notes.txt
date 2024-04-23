@@ -1,0 +1,21 @@
+Thanks to L. Curtis Boyle.
+
+```
+6847 / 6847-T1 bit settings (POKE address 65314 or &HFF22)
+0000x000 - +$8 Color set
+           (for alpha: 0=green/dark green,1=dark orange/dark red)
+           (for graphics: 0=Green based color set, 1=White based color set)
+000x0000 - +$10 Lower case (1=real lower case,0=inverse video lowercase)
+00x00000 - +$20 Inverse video (1=Inverse video,0=regular video)
+0x000000 - +$40 Full border (1=full border,0=black box border)
+x0000000 - +$80 Graphics/alpha mode 1=graphics, 0=text/semigraphics
+
+NOTE that only color set and graphics/alpha mode are supported on the regular
+6847. All of others require the 6847-T1, CocoVGA, or GIME.
+(The plus values are cumulative for setting the "1" values; you can add them
+together to get a desired result (example: full border+lowercase+orange/red
+color set would be $40+$10+$08=$58, so do a POKE &HFF22,&H58 for the desired
+effect)).
+```
+
+NOTE: The Deluxe's T1 VDG supports color se, lower case, inverse video and graphics/alpha ... but NOT full border
