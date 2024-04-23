@@ -336,15 +336,18 @@ void net_set_json_query(byte devid, const char *qs)
         byte opcode;
         byte id;
         byte command;
-        int len;
+        byte aux1;
+        byte aux2;
+        char qs[256];
     } qj;
 
     qj.opcode = OP_NET;
     qj.id = devid;
     qj.command = CMD_QUERY_JSON;
-    qj.len = strlen(qs);
+    qj.aux1 = qj.aux2 = 0;
+    memset(qj.qs,0,256);
+    strcpy(qj.qs,qs);
 
     net_ready(devid);
     dwwrite((byte *)&qj, sizeof(qj));
-    dwwrite((byte *)qs, qj.len);
 }
