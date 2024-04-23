@@ -111,11 +111,24 @@ void mastodon(void)
 
 int main(void)
 {
+    unsigned char *sp = (unsigned char *)0x5FF;
+    unsigned char c=0x8F;
+    
     while(1)
     {
+        int t=200;
         cls(((unsigned char)rand())&0x03);
         mastodon();
-        sleep(30);
+        
+        while (t) // while timer is counting down.
+        {
+            *sp = c;    // update cursor
+            delay(6);   // wait a bit.
+            c+=0x10;    // shift to next color
+            if (c<0x8F) // If we're outside the SG4 charset, 
+                c=0x8f; // readjust.
+            t--;        // Count down.    
+        }        
     }
     
     
