@@ -20,6 +20,8 @@ void halt(void)
 
 int main(void)
 {
+    screen(0,1);
+    
     while(1)
     {
         switch(state)

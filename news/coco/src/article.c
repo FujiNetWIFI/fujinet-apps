@@ -102,8 +102,9 @@ ArticleState article_fetch(void)
  * @brief Display current article page
  */
 ArticleState article_display(void)
-{   
+{    
     cls(3);
+    
     printf("%-96s\n",articles_display_headline(title));
     bar(0);
     bar(1);

@@ -129,7 +129,7 @@ char *articles_display_headline(char *s)
 ArticlesState articles_display(void)
 {
     int i=0;
-    
+
     locate(0,0);
 
     articles_on_this_page=0;
@@ -142,10 +142,16 @@ ArticlesState articles_display(void)
 
     while (p != NULL)
     {
+        char stamp[33];
+
+        memset(&stamp[0],0x80,33);
+        stamp[32]=0x00;
+        
         article_ids[i++] = atol(p);
 
         p = strtok(NULL, delim);
-        printf("%32s",p);
+        memcpy(&stamp[13],p,19);
+        printf("%32s",stamp);
 
         p = strtok(NULL, "\n");
         printf("%-96s",articles_display_headline(p));
@@ -153,16 +159,20 @@ ArticlesState articles_display(void)
         p = strtok(NULL,delim);
     }
 
-    locate(0,0);
-    printf("%s",page);
 
     shadow(12,0x90);
 
     locate(0,13);
     printf("%s",topic_titles[selectedTopic]);
+
+    locate(0,13);
+    printf("%s",page);
+
     bar(13);
 
-    bar(article_cursor_pos*4);
+    bar(article_cursor_pos*4+1);
+    bar(article_cursor_pos*4+2);
+    bar(article_cursor_pos*4+3);
     
     return ARTICLES_MENU;
 }
@@ -174,8 +184,12 @@ void articles_bar(void)
 {
     if (article_cursor_pos_prev != article_cursor_pos)
     {
-        bar(article_cursor_pos_prev*4);
-        bar(article_cursor_pos*4);
+        bar(article_cursor_pos_prev*4+1);
+        bar(article_cursor_pos_prev*4+2);
+        bar(article_cursor_pos_prev*4+3);
+        bar(article_cursor_pos*4+1);
+        bar(article_cursor_pos*4+2);
+        bar(article_cursor_pos*4+3);
         article_cursor_pos_prev = article_cursor_pos;
     }
 }
@@ -221,6 +235,10 @@ ArticlesState articles_up(void)
         articles_bar();
         article_cursor_pos--;
     }
+    else
+    {
+        return ARTICLES_PREV_PAGE;
+    }
     
     return ARTICLES_MENU;
 }
@@ -230,10 +248,14 @@ ArticlesState articles_up(void)
  */
 ArticlesState articles_down(void)
 {
-    if (article_cursor_pos<3)
+    if (article_cursor_pos<2)
     {
         articles_bar();
         article_cursor_pos++;
+    }
+    else
+    {
+        return ARTICLES_NEXT_PAGE;
     }
     
     return ARTICLES_MENU;
