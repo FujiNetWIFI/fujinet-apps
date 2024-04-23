@@ -40,11 +40,9 @@ byte in(void)
 {
     net_status(0,&ns);
 
-    if (net_error(0)!=1)
-        return net_error(0);
-
     if (!ns.bytesWaiting)
     {
+        net_status(0,&ns);
         return net_error(0);
     }
     else if (ns.bytesWaiting > sizeof(rxBuf))
@@ -65,7 +63,7 @@ byte in(void)
     }
 
     putchar(0xAF); // cursor.
-    
+
     return net_error(0);
 }
 
