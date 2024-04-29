@@ -3,11 +3,19 @@
  * @author  Eric Carr, Thomas Cherryhomes, (insert names here)
  * @license gpl v. 3
  * @verbose main
- */ 
+ */
+
+#ifdef _CMOC_VERSION_
+#include <cmoc.h>
+typedef unsigned char bool;
+#define false 0
+#define true 1
+#else
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
+#endif /* _CMOC_VERSION_ */
 
 // FujiNet AppKey settings. These should not be changed
 #define AK_LOBBY_CREATOR_ID 1     // FUJINET Lobby
@@ -89,7 +97,12 @@ char *hand, *requestedMove;
 #include "gamelogic.h"
 #include "screens.h"
 
-void main(void) {
+#ifdef _CMOC_VERSION_
+int main(void)
+#else
+void main(void)
+#endif /* _CMOC_VERSION_ */
+{
 
   initGraphics();
   initSound();
@@ -119,4 +132,8 @@ void main(void) {
     }
     
   }
+
+#ifdef _CMOC_VERSION_
+  return 0;
+#endif /* CMOC_VERSION_  */
 }

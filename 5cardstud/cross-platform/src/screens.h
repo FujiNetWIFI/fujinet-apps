@@ -1,5 +1,8 @@
-
+#ifdef _CMOC_VERSION_
+#include <cmoc.h>
+#else
 #include <conio.h>
+#endif /* _CMOC_VERSION_ */
 
 /// @brief Convenience function to reset screen and draw border
 void resetScreenWithBorder() {
