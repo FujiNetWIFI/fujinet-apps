@@ -81,4 +81,18 @@ byte net_parse_json(byte devid);
  */
 void net_set_json_query(byte devid, const char *qs);
 
+/**
+ * @brief Set login for network channel
+ * @param devid device ID (0-255)
+ * @param s login to set (0-255 chars)
+ */
+void net_login(byte devid, const char *login);
+
+/**
+ * @brief Set password for network channel
+ * @param devid device ID (0-255)
+ * @param s password to set (0-255 chars)
+ */
+void net_password(byte devid, const char *password);
+
 #endif /* NET_H */

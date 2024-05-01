@@ -17,15 +17,30 @@ byte showCursor = 1;
 
 int open_connection(void)
 {
-    char *url;
-    
-    cls(3);
+    char *s;
+
+    char url[256], login[256], password[256];
+
+    width(40);
+    cls(5);
+
     printf("WELCOME TO NETCAT\n");
     printf("ENTER URL, e.g.\n");
     printf("N:TELNET://BBS.FOZZTEXX.COM/\n");
     printf("\n\n");
 
-    url = readline();
+    s = readline();
+    strcpy(url,s);
+
+    printf("\nENTER LOGIN, OR enter\nFOR NONE\n");
+    s = readline();
+    strcpy(login,s);
+    net_login(0,login);
+    
+    printf("\nENTER PASSWORD, OR enter\nFOR NONE\n");
+    s = readline();
+    strcpy(password,s);
+    net_password(0,password);
     
     return net_open(0,12,0,url);
 }
@@ -87,6 +102,8 @@ byte nc(void)
 
 int main(void)
 {
+    setCaseFlag(0);
+    
     if (!open_connection())
     {
         printf("OPEN ERR: %u\n",net_error(0));
@@ -99,5 +116,7 @@ int main(void)
     
     close_connection();
 
+    setCaseFlag(1);
+    
     return 0;
 }
