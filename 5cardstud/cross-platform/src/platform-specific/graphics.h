@@ -21,6 +21,7 @@ void drawStatusTimer();
 void drawText(unsigned char x, unsigned char y, char* s);
 void drawCard(unsigned char x, unsigned char y, unsigned char partial, const char* s);
 void drawChip(unsigned char x, unsigned char y);
+void drawBlank(unsigned char x, unsigned char y);
 void drawPointer(unsigned char x, unsigned char y);
 void drawLine(unsigned char x, unsigned char y, unsigned char w);
 void drawBox(unsigned char x, unsigned char y, unsigned char w, unsigned char h);

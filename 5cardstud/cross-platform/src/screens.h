@@ -127,7 +127,7 @@ void tableActionJoinServer() {
   // Replace space with + for player name
   i=strlen(query);
   while(--i)
-    if (query[i]==' ')
+    if (query[i]==' ' || query[i]=='&')
       query[i]='+';
   
 }
@@ -152,7 +152,7 @@ void showTableSelectionScreen() {
 
     drawLine(3,8,WIDTH-6);
 
-    if (apiCall("")) { // "tables"
+    if (apiCall("tables")) {
       updateState();
 
       if (tableCount>0) {
@@ -164,7 +164,7 @@ void showTableSelectionScreen() {
         centerText(12, "SORRY, NO TABLES ARE AVAILABLE");
       }
 
-      drawStatusText("R> REFRESH   H> HELP  C> COLOR   Q> QUIT");
+      drawStatusText("R-REFRESH    H-HELP    C-COLOR    Q-QUIT");
       drawBuffer();
 
       clearCommonInput();
@@ -174,14 +174,17 @@ void showTableSelectionScreen() {
         if (inputKey == 'h') {
           showHelpScreen();
           break;
-        } else if (inputKey == 'r') {
+        } else if (inputKey == 'r' || inputKey == 'R') {
           break;
         } else if (inputKey == 'q') {
           quit();
+        } else if (inputKey != 0) {
+          itoa(inputKey, tempBuffer, 10);
+          drawStatusText(tempBuffer);
         }
 
         if (tableCount>0) {
-          drawText(2,9+tableIndex*2," ");
+          drawBlank(2,9+tableIndex*2);
           tableIndex+=inputDirY;
           if (tableIndex==255) 
             tableIndex=tableCount-1;
@@ -208,15 +211,14 @@ void showTableSelectionScreen() {
         centerText(15, state.tables[tableIndex].name);
       }
     }
-    cgetc();
   }
-
+  
   centerText(18, "CONNECTING TO SERVER");
   drawBuffer();
   
   progressAnim(20);
   
-  tableActionJoinServer();
+  //tableActionJoinServer();
 }
 
 /// @brief Shows main game play screen (table and cards)

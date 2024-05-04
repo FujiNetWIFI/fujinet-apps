@@ -39,9 +39,9 @@
 */
 
 #define LINE_ENDING 0x0A
-#define ALT_LETTER_START 0x61
-#define ALT_LETTER_END 0x7A
-#define ALT_LETTER_AND 0x5f
+#define ALT_LETTER_START 0
+#define ALT_LETTER_END 0
+#define ALT_LETTER_AND 0
 
 /*
  Screen related variables

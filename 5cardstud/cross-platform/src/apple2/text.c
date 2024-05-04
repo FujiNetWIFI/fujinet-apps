@@ -36,7 +36,6 @@ void hires_double_buffer_draw()
   memcpy((void*)0x4000,(void*)0x2000,0x2000);
 }
 
-
 /*-----------------------------------------------------------------------*/
 void hires_putc(unsigned char x, unsigned char y, unsigned rop, unsigned char c)
 {
@@ -44,10 +43,18 @@ void hires_putc(unsigned char x, unsigned char y, unsigned rop, unsigned char c)
 }
 
 /*-----------------------------------------------------------------------*/
+void hires_putcU(unsigned char x, unsigned char y, unsigned rop, unsigned char c)
+{
+    if (c>=97 && c<=122)
+      c=c-32;
+    hires_Draw(x,y,1,CHAR_HEIGHT,rop,&charset[c<<3]);
+}
+
+/*-----------------------------------------------------------------------*/
 void hires_puts(unsigned char x, unsigned char y,unsigned rop, char *s)
 {
     while(*s)
-      hires_putc(x++,y,rop|rop_mod[x%2],*s++);
+      hires_putcU(x++,y,rop|rop_mod[x%2],*s++);
 }
 
 /*-----------------------------------------------------------------------*/

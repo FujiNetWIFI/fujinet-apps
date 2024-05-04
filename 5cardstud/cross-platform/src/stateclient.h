@@ -33,7 +33,7 @@ void updateState() {
     if (c==LINE_ENDING)
       POKE(line,0);
     
-    // Convert all letters to match CC65 platform specific lowercase mapping for key name comparisons
+    // Convert all letters to certain case if needed (e.g. C64)
     else if (c>=ALT_LETTER_START && c<=ALT_LETTER_END) 
       POKE(line,c & ALT_LETTER_AND);
     
