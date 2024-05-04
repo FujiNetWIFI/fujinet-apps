@@ -13,7 +13,7 @@
 # Space or comma separated list of cc65 supported target platforms to build for.
 
 # Supported targets: c64 apple2 (lowercase!)
-TARGETS := c64
+TARGETS := apple2
  
 # Name of the final, single-file executable.
 # Default: name of the current dir with target name appended
@@ -75,7 +75,10 @@ EMUCMD :=
 # quick iteration. More emulation handling for Apple is found further below.
 ifeq ($(OS),Windows_NT) 
   atari_EMUCMD := cmd /c start C:\atari\Altirra\Altirra64.exe /singleinstance /run
-  apple2_EMUCMD := taskkill /im applewin.exe >nul 2>nul & cmd /c start C:\Projects\AppleWin\Debug\applewin.exe -d1 "support/apple2/dist/$(PROGRAM_STUB).po" & REM
+  #apple2_EMUCMD := taskkill /im applewin.exe >nul 2>nul & cmd /c start C:\Projects\AppleWin\Debug\applewin.exe -d1 "support/apple2/dist/$(PROGRAM_STUB).po" & REM
+  #apple2_EMUCMD := taskkill /im applewin.exe >nul 2>nul & cmd /c start C:\Projects\apple-fujinet\applewin.exe -d1 "support/apple2/dist/$(PROGRAM_STUB).po" & REM
+  apple2_EMUCMD := cmd /c start C:\Projects\apple-fujinet\applewin.exe -d1 "support/apple2/dist/$(PROGRAM_STUB).po" & REM
+  
   c64_EMUCMD := taskkill /im x64sc.exe >nul 2>nul & cmd /c start x64sc -model c64ntsc -autostart
 else
   #atari_EMUCMD := osascript -e 'quit app "Atari800MacX"';open -n -a Atari800macx --args $(CURDIR)/$(PROGRAM);echo
@@ -341,8 +344,10 @@ $(PROGRAM): $(CONFIG) $(OBJECTS) $(LIBS)
 # Package target if needed
 ifeq ($(CC65TARGET),apple2) 
 ifeq ($(OS),Windows_NT) 
-  # Kill any Apple emulator that may have a lock on the .po file
-	@taskkill /im applewin.exe&
+# Kill any Apple emulator that may have a lock on the .po file, and the Fujinet process to restart it
+	taskkill /im applewin.exe /F >nul 2>nul &echo >nul
+	taskkill /im fujinet.exe /F >nul 2>nul &echo >nul
+	cmd /c "start C:\Projects\apple-fujinet\fnpc-apple2\fujinet.exe"
 	copy support\apple2\dist\bootable.po support\apple2\dist\$(PROGRAM_STUB).po
 else
 	cp support/apple2/dist/bootable.po support/apple2/dist/$(PROGRAM_STUB).po

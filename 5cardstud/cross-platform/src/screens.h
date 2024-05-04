@@ -66,7 +66,11 @@ void welcomeActionVerifyServerDetails() {
 /// @brief Action called in Welcome Screen to verify player has a name
 void welcomeActionVerifyPlayerName() {
   // Read player's name from app key
+  
   read_appkey(AK_LOBBY_CREATOR_ID,  AK_LOBBY_APP_ID, AK_LOBBY_KEY_USERNAME, playerName);
+ 
+    
+    strcpy(playerName,"ERICAPL2");
 
   // Quick and dirty input if they didn't come in from the lobby
   if (strlen(playerName) == 0) {
@@ -148,7 +152,7 @@ void showTableSelectionScreen() {
 
     drawLine(3,8,WIDTH-6);
 
-    if (apiCall("tables")) {
+    if (apiCall("")) { // "tables"
       updateState();
 
       if (tableCount>0) {
@@ -204,6 +208,7 @@ void showTableSelectionScreen() {
         centerText(15, state.tables[tableIndex].name);
       }
     }
+    cgetc();
   }
 
   centerText(18, "CONNECTING TO SERVER");

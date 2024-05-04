@@ -30,8 +30,10 @@ typedef unsigned char bool;
 #define AK_KEY_COLORTHEME 1       // Color theme
 
 // Store default server endpoint in case lobby did not set app key
-char serverEndpoint[64] = "https://5card.carr-designs.com/";
-char query[64] = ""; //?table=blue&player=C64ERIC";
+char serverEndpoint[64] = "N:https://5card.carr-designs.com/";
+//char serverEndpoint[64] = "N:http://api.open-notify.org/iss-now.json";
+
+char query[64] = ""; //?table=blue&player=ERICAPL2";
 char playerName[64] = "";
 
 typedef struct {
@@ -104,7 +106,7 @@ void main(void)
 #endif /* _CMOC_VERSION_ */
 {
 
-  initGraphics();
+  initGraphics(); 
   initSound();
   
   showWelcomScreen();  
