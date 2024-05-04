@@ -10,12 +10,18 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <sys/stat.h>
 #include "charset.h"
+
 
 void main(void)
 {
     int i;
     int f = open("charset",O_CREAT|O_TRUNC|O_RDWR);
+
+    // Ensure the file is accessible
+    fchmod(f,777);
+    
     char c = 0;
 
     for(i=0; i<sizeof(charset); ++i)

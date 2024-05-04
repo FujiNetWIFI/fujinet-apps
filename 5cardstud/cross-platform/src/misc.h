@@ -79,11 +79,19 @@ void readCommonInput() {
     case KEY_RIGHT_ARROW_3:
       inputDirX=1;
       break;
+    case KEY_UP_ARROW:
+    case KEY_UP_ARROW_2:
+    case KEY_UP_ARROW_3:
+      inputDirY=-1;
+      break;
+    case KEY_DOWN_ARROW:
+    case KEY_DOWN_ARROW_2:
+    case KEY_DOWN_ARROW_3:
+      inputDirY=1;
+      break;
     case KEY_RETURN:
     case KEY_SPACE:
       inputTrigger=true;
       break;
-    //default:
-//      cprintf("%i",inputKey);
   }
 }

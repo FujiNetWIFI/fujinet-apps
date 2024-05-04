@@ -133,7 +133,11 @@ void drawCard(unsigned char x, unsigned char y, unsigned char partial, const cha
 }
 
 void drawChip(unsigned char x, unsigned char y) {
- 
+  hires_putc(x,y*8-1,ROP_CPY,0x22);
+}
+
+void drawBlank(unsigned char x, unsigned char y) {
+  hires_putc(x,y*8-1,ROP_AND(0x2A),0);
 }
 
 void drawPointer(unsigned char x, unsigned char y) {
@@ -150,17 +154,6 @@ void drawBox(unsigned char x, unsigned char y, unsigned char w, unsigned char h)
 }
 
 void drawBorder() {
-  //  static unsigned char i;
-  // for(i=0;i<32;i+=4) { 
-  //   SET_COL(COL_RED);
-  //   cputsxy(4+i,1, "UV");
-  //   cputsxy(4+i,22, "UV");
-    
-  //   SET_COL(COL_BLACK);
-  //   cputsxy(6+i,1, "WX");
-  //   cputsxy(6+i,22, "WX");
-  //}
-
   drawCard(1,0,FULL_CARD, "as");
   drawCard(37,0,FULL_CARD, "ah");
   drawCard(1,17,FULL_CARD, "ad");
