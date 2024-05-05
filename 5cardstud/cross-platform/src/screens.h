@@ -12,11 +12,16 @@ void resetScreenWithBorder() {
 
 /// @brief Shows information about the game
 void showHelpScreen() {
+  clearStatusBar(); 
+  drawStatusTextAt(WIDTH/2-11, "LOADING INSTRUCTIONS..");
+  drawBuffer();
+
   // This COULD be retrieved from the server, especially if
   // this client were game agnostic.
   resetScreenWithBorder();
   
   centerText(3,"HOW TO PLAY 5 CARD STUD");
+  
   y=4;
                    // __________________________________
   y++;drawText(3,y, "PLAYERS ARE DEALT 5 CARDS OVER THE");
@@ -25,12 +30,12 @@ void showHelpScreen() {
   y+=2;
   centerText(y, "MOVES");
   y++;
-  y++;drawText(3,y, "FOLD   - QUIT THE HAND");y++;
-  y++;drawText(3,y, "CHECK  - FREE PASS");y++;
-  y++;drawText(3,y, "BET OR - INCREASE BET. OTHERS MUST");
-  y++;drawText(3,y, "RAISE    CALL TO STAY IN THE HAND");y++;
-  y++;drawText(3,y, "CALL   - MATCH THE CURRENT BET AND");
-  y++;drawText(3,y, "         STAY IN THE HAND");
+  y++;drawText(4,y, "FOLD  - QUIT THE HAND");y++;
+  y++;drawText(4,y, "CHECK - FREE PASS");y++;
+  y++;drawText(4,y, "BET / - INCREASE BET. OTHERS MUST");
+  y++;drawText(4,y, "RAISE   CALL TO STAY IN THE HAND");y++;
+  y++;drawText(4,y, "CALL  - MATCH THE CURRENT BET AND");
+  y++;drawText(4,y, "        STAY IN THE HAND");
   
   drawBuffer();
   drawStatusTextAt(WIDTH/2-12, "PRESS ANY KEY TO CONTINUE");
@@ -66,11 +71,9 @@ void welcomeActionVerifyServerDetails() {
 /// @brief Action called in Welcome Screen to verify player has a name
 void welcomeActionVerifyPlayerName() {
   // Read player's name from app key
-  
   read_appkey(AK_LOBBY_CREATOR_ID,  AK_LOBBY_APP_ID, AK_LOBBY_KEY_USERNAME, playerName);
  
-    
-    strcpy(playerName,"ERICAPL2");
+ //   strcpy(playerName,"ERICAPL2");
 
   // Quick and dirty input if they didn't come in from the lobby
   if (strlen(playerName) == 0) {
@@ -84,6 +87,8 @@ void welcomeActionVerifyPlayerName() {
 
     // 
     cscanf("%8s", playerName);
+    
+    drawText(13,13, "                ");
     
     enableDoubleBuffer();
     
@@ -105,15 +110,15 @@ void showWelcomScreen() {
   drawBuffer();
   
   // If first run, show the help screen
-  read_appkey(AK_CREATOR_ID, AK_APP_ID, AK_KEY_SHOWHELP, tempBuffer);
+  read_appkey(AK_CREATOR_ID, AK_APP_ID, AK_KEY_SHOWHELP, &tempBuffer);
   
   if (strlen(tempBuffer)==0) {
     strcpy(tempBuffer,"1");
     write_appkey(AK_CREATOR_ID, AK_APP_ID, AK_KEY_SHOWHELP, tempBuffer);
     pause(60);
     showHelpScreen();
-  }
-  //pause(30);
+  } 
+  pause(30);
 } 
 
 /// @brief Action in Table Selection Screen, joins the selected server
@@ -147,8 +152,8 @@ void showTableSelectionScreen() {
     resetScreen();
     drawBorder();
     centerText(4, "CHOOSE A TABLE TO JOIN");
-    drawText(3,7, "TABLE");
-    drawText(WIDTH-7-3,7, "PLAYERS");
+    drawText(3,6, "TABLE");
+    drawText(WIDTH-7-3,6, "PLAYERS");
 
     drawLine(3,8,WIDTH-6);
 
@@ -157,8 +162,8 @@ void showTableSelectionScreen() {
 
       if (tableCount>0) {
         for(i=0;i<tableCount;++i) {
-          drawText(3,9+i*2, state.tables[i].name);
-          drawText(WIDTH-3-strlen(state.tables[i].players), 9+i*2, state.tables[i].players);
+          drawText(3,8+i*2, state.tables[i].name);
+          drawText(WIDTH-3-strlen(state.tables[i].players), 8+i*2, state.tables[i].players);
         }
       } else {
         centerText(12, "SORRY, NO TABLES ARE AVAILABLE");
@@ -171,27 +176,27 @@ void showTableSelectionScreen() {
       while (!inputTrigger || !tableCount) {
         readCommonInput();
       
-        if (inputKey == 'h') {
+        if (inputKey == 'h' || inputKey == 'H') {
           showHelpScreen();
           break;
         } else if (inputKey == 'r' || inputKey == 'R') {
           break;
-        } else if (inputKey == 'q') {
+        } else if (inputKey == 'q' || inputKey == 'Q') {
           quit();
         } else if (inputKey != 0) {
-          itoa(inputKey, tempBuffer, 10);
-          drawStatusText(tempBuffer);
+          //itoa(inputKey, tempBuffer, 10);
+          //drawStatusText(tempBuffer);
         }
 
         if (tableCount>0) {
-          drawBlank(2,9+tableIndex*2);
+          drawText(1,8+tableIndex*2," ");
           tableIndex+=inputDirY;
           if (tableIndex==255) 
             tableIndex=tableCount-1;
           else if (tableIndex>=tableCount)
             tableIndex=0;
 
-          drawChip(2,9+tableIndex*2);
+          drawChip(1,8+tableIndex*2);
           drawBuffer();
         }
       }
@@ -265,6 +270,7 @@ void showInGameMenuScreen() {
     readCommonInput();
     switch (inputKey) {
       case 'h':
+      case 'H':
         showHelpScreen();
       case 3: // Esc
      
@@ -275,6 +281,7 @@ void showInGameMenuScreen() {
         return;
 
       case 'q':
+      case 'Q':
         resetScreenWithBorder();
         centerText(12, "PLEASE WAIT");
         drawBuffer();

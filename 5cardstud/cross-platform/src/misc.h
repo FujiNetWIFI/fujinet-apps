@@ -67,6 +67,7 @@ void readCommonInput() {
   inputKey = cgetc();
   switch (inputKey) {
     case 'c':
+    case 'C':
       cycleColors();
       break;
     case KEY_LEFT_ARROW:

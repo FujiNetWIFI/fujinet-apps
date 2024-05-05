@@ -99,13 +99,28 @@ char *hand, *requestedMove;
 #include "gamelogic.h"
 #include "screens.h"
 
+//#include <stdio.h>
+
 #ifdef _CMOC_VERSION_
 int main(void)
 #else
 void main(void)
 #endif /* _CMOC_VERSION_ */
 {
+  /*unsigned char result;
+  strcpy(playerName, "ERIC");
+  printf("Testing app keys\n");
+  result =  write_appkey(AK_LOBBY_CREATOR_ID,  AK_LOBBY_APP_ID, AK_LOBBY_KEY_USERNAME, playerName);
+  printf("Write Result: %i", result);
+  cgetc();
+  strcpy(playerName, "A");
+  result = read_appkey(AK_LOBBY_CREATOR_ID,  AK_LOBBY_APP_ID, AK_LOBBY_KEY_USERNAME, &playerName);
 
+  cprintf("Welcome: %i, %s", result, playerName);
+  
+
+  cgetc();
+  */
   initGraphics(); 
   initSound();
   
