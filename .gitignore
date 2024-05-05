@@ -73,3 +73,4 @@ atari800-debug.cfg
 AppleWin.log
 
 Makefile.options
+.DS_Store
