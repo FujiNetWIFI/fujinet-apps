@@ -38,28 +38,28 @@ int main(void)
 
   cputsxy(1, 5, "ENCODE");
 
-  if (fuji_base64_encode_input((char *)test_text, strlen(test_text)) != 0) {
+  if (!fuji_base64_encode_input((char *)test_text, strlen(test_text))) {
     cputsxy(0, 10, "BASE64 ENCODE INPUT FAILED\n");
     return 1;
   }
   gotox(9);
   cputc('X');
 
-  if (fuji_base64_encode_compute() != 0) {
+  if (!fuji_base64_encode_compute()) {
     cputsxy(0, 10, "BASE64 ENCODE COMPUTE FAILED\n");
     return 1;
   }
   gotox(13);
   cputc('X');
 
-  if (fuji_base64_encode_length(&encoded_len) != 0) {
+  if (!fuji_base64_encode_length(&encoded_len)) {
     cputsxy(0, 10, "BASE64 ENCODE LENGTH FAILED\n");
     return 1;
   }
   gotox(17);
   cprintf("%ld", encoded_len);
   
-  if (fuji_base64_encode_output(encoded_text, encoded_len) != 0) {
+  if (!fuji_base64_encode_output(encoded_text, encoded_len)) {
     cputsxy(0, 10, "BASE64 ENCODE OUTPUT FAILED\n");
     return 1;
   }
@@ -69,28 +69,28 @@ int main(void)
 
   cputsxy(1, 6, "DECODE");
 
-  if (fuji_base64_decode_input((char *)test_base64,strlen(test_base64)) != 0) {
+  if (!fuji_base64_decode_input((char *)test_base64,strlen(test_base64))) {
     cputsxy(0, 10, "BASE64 DECODE INPUT FAILED\n");
     return 1;
   }
   gotox(9);
   cputc('X');
 
-  if (fuji_base64_decode_compute() != 0) {
+  if (!fuji_base64_decode_compute()) {
     cputsxy(0, 10, "BASE64 DECODE COMPUTE FAILED\n");
     return 1;
   }
   gotox(13);
   cputc('X');
 
-  if (fuji_base64_decode_length(&decoded_len) != 0) {
+  if (!fuji_base64_decode_length(&decoded_len)) {
     cputsxy(0, 10, "BASE64 DECODE LENGTH FAILED\n");
     return 1;
   }
   gotox(17);
   cprintf("%ld", decoded_len);
 
-  if (fuji_base64_decode_output(decoded_text, decoded_len) != 0) {
+  if (!fuji_base64_decode_output(decoded_text, decoded_len)) {
     cputsxy(0, 10, "BASE64 ENCODE OUTPUT FAILED\n");
     return 1;
   }

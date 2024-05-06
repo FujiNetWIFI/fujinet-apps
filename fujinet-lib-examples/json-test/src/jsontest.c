@@ -20,7 +20,7 @@
 #include "jsontest.h"
 #include "fujinet-network.h"
 
-char iss_now[] = "N:HTTP://api.open-notify.org/iss-now.json";
+char iss_now[] = "n:http://api.open-notify.org/iss-now.json";
 char longitude_query[]  = "/iss_position/longitude";
 char latitude_query[]   = "/iss_position/latitude";
 char timestamp_query[]  = "/TIMESTAMP";

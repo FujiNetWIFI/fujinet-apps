@@ -99,6 +99,11 @@ define _labelfile_
   LDFLAGS += -Ln $$@.lbl
 endef
 
+
+STATEFILE := Makefile.options
+-include $(DEPENDS)
+-include $(STATEFILE)
+
 ifeq ($(origin _OPTIONS_),file)
 OPTIONS = $(_OPTIONS_)
 $(eval $(OBJECTS): $(STATEFILE))
@@ -123,10 +128,6 @@ endif
 .PHONY: all clean release $(DISK_TASKS) $(BUILD_TASKS) $(PROGRAM).$(CURRENT_TARGET)
 
 all: $(ALL_TASKS) $(PROGRAM_TGT)
-
-STATEFILE := Makefile.options
--include $(DEPENDS)
--include $(STATEFILE)
 
 $(OBJDIR):
 	$(call MKDIR,$@)

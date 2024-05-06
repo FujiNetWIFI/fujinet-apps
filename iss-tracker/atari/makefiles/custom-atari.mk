@@ -15,7 +15,7 @@ DISK_TASKS += .atr
 
 .atr:
 	$(call MKDIR,$(DIST_DIR)/atr)
-	cp $(DIST_DIR)/$(PROGRAM_TGT).com $(DIST_DIR)/atr/$(PROGRAM).com
+	cp $(DIST_DIR)/$(PROGRAM_TGT)$(SUFFIX) $(DIST_DIR)/atr/$(PROGRAM)$(SUFFIX)
 	$(call RMFILES,$(DIST_DIR)/*.atr)
 	dir2atr -S $(DIST_DIR)/$(PROGRAM).atr $(DIST_DIR)/atr
 
@@ -35,9 +35,13 @@ ALTIRRA ?= $(ALTIRRA_HOME)/Altirra64.exe \
 ATARI800 ?= $(ATARI800_HOME)/atari800 \
   -xl -nobasic -ntsc -xl-rev custom -config atari800-debug.cfg -run
 
+# split these out by all targets, this is needed so that in os.mk, it will get the right value as other platforms do run different emulators for targets
+# e.g. "vice" uses "x64sc", "xpet", ... for the different machines, unlike atari that uses Altirra for all different "models" (XL/XE etc).
 atari_EMUCMD := $($(ATARI_EMULATOR))
+atarixl_EMUCMD := $($(ATARI_EMULATOR))
 
 ifeq ($(ATARI_EMULATOR),)
 atari_EMUCMD := $(ALTIRRA)
+atarixl_EMUCMD := $(ALTIRRA)
 endif
 
