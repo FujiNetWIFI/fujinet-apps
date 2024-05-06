@@ -33,8 +33,8 @@ void clearStatusBar() {
   unsigned char i;
   
   for (i=0;i<40;i++) {
-    hires_putc(i,175,ROP_AND(0x2A),' ');
-    hires_putc(i,183,ROP_AND(0x2A),' ');
+   // hires_putc(i,175,ROP_CPY,' ');
+    hires_putc(i,183,ROP_CPY,' ');
   }
 }
 
@@ -53,10 +53,7 @@ void drawStatusTextAt(unsigned char x, char* s) {
       i=0;
       j+=8;
     } else
-      if (*s>=97 && *s<=122)
-        *s-=32;
-
-      hires_putc(i++,j,ROP_CPY,*s);
+      hires_putcU(i++,j,ROP_CPY,*s);
     s++;
   }
 }
@@ -73,26 +70,27 @@ void drawStatusTimer() {
 void drawText(unsigned char x, unsigned char y, char* s) {
   
   // Convert lowercase to upper
-  char*s2 = s;
-  unsigned char isSpace=1;
+  //char*s2 = s;
+  //unsigned char isSpace=1;
 
-  while (*s2) {
+ // Display small space runs as blank table color
+  /*while (*s2) {
    // if (*s2>=0x61 && *s2<=0x7a)
      // *s2-=0x20;
     if (*s2!=0x20)
       isSpace=0;
     s2++;
   }
-
-  // Display small space runs as blank table color
-  if (isSpace && strlen(s) < 6) {
+  */
+  
+  /*if (isSpace && strlen(s) < 6) {
     y=y*8-1;
     while (*s) {
       hires_Mask(x++,y,1,8,0xa955 - (0x2B*(x%2))); 
       s++;
     }
   }
-  else
+  else*/
     hires_puts(x,y*8-1,ROP_AND(0xFF), s);
 }
 
@@ -101,14 +99,19 @@ void drawChip(unsigned char x, unsigned char y) {
   //hires_putc(x-1,y*8-1,0xa955 - (0x2B*(x%2)), '1');
   //hires_putc(x,y*8-1,ROP_OR(0x55), 'O');
   // Solve gfx later once layout is finalized
-  hires_putc(x,y*8-1,ROP_OR(0x55), 'O');
+  //hires_putc(x,y*8-1,ROP_OR(0x55), 'O');
+  hires_putc(x,y*8,ROP_CPY, 0x22);
   
 }
 
 
 // Call to clear the screen to an empty table
 void resetScreen() { 
-  static int i;
+  hires_Mask(0,1,39,BOTTOM,0xa900);
+  //memset((void*)0x2000,0,0x2000);
+
+  // Starting with black background first to "get it working", and many have monochrome monitors
+  /*static int i;
   // Clear screen except for corners
   
   for (i=0;i<39;++i) {
@@ -121,9 +124,9 @@ void resetScreen() {
   hires_putc(39,0,ROP_AND(0x55),0x02);
   hires_putc(0,BOTTOM-8,ROP_AND(0x2A),0x03);
   hires_putc(39,BOTTOM-8,ROP_AND(0x55),0x04);
-
+  */
   // Reset screen to green background, black status bar, black char color
-  clearStatusBar(); 
+  //clearStatusBar(); 
 }
 
 void drawCard(unsigned char x, unsigned char y, unsigned char partial, const char* s) {
@@ -155,8 +158,8 @@ void drawCard(unsigned char x, unsigned char y, unsigned char partial, const cha
   }
 
   // Card top
-  hires_putcc(x,y,ROP_X,0x0506);
-
+  hires_putcc(x,y,ROP_X,0x0506); 
+  
   // Card value
   hires_putc(x,y+=8, red ? RED_VAL_1 :ROP_CPY ,val);
   hires_putc(x+1,y,red? RED_VAL_2 : ROP_CPY,++val);
@@ -164,7 +167,7 @@ void drawCard(unsigned char x, unsigned char y, unsigned char partial, const cha
   // Card middle, suit, bottom
   hires_putcc(x,y+=8,ROP_CPY,mid);
   hires_putcc(x,y+=8,ROP_CPY,suit);
-  hires_putcc(x,y+=8,ROP_X,0x0708);
+  hires_putcc(x,y+=8,ROP_X,0x0708); 
 }
 
 void drawPointer(unsigned char x, unsigned char y) {
@@ -208,6 +211,11 @@ void initGraphics() {
 }
 
 void waitvsync() {
+  int f, i;
+  for ( i=0;i<5;i++) {
+   f=f*2;
+   f=f/3;
+  }
   // Unsupported in Apple 2?
 }
 

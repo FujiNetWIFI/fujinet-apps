@@ -169,9 +169,9 @@ void drawCards() {
         }
       }
     }
-    xOffset++;
-    if (xOffset>1 || (state.round==5 && !finalFlip))
-      xOffset++;
+    xOffset+=2;
+    //if (xOffset>1 || (state.round==5 && !finalFlip))
+    //  xOffset++;
   }
 
   currentCard = cardIndex;
@@ -348,7 +348,7 @@ void requestPlayerMove() {
     drawStatusTextAt(x, state.validMoves[i].name);
 
     if (i == cursorX)
-      drawStatusTextAt(x-1, ">");
+      drawStatusTextAt(x-1, "\"");
     
     x += 2 + strlen(state.validMoves[i].name);
   }
@@ -386,7 +386,7 @@ void requestPlayerMove() {
       cursorX+=inputDirX;
       if (cursorX<validMoveCount) {
         drawStatusTextAt(moveLoc[cursorX-inputDirX]-1, " ");
-        drawStatusTextAt(moveLoc[cursorX]-1, ">");
+        drawStatusTextAt(moveLoc[cursorX]-1, "\"");
         drawBuffer();
         soundCursor();
       } else {
@@ -400,7 +400,7 @@ void requestPlayerMove() {
     if (inputKey == KEY_ESCAPE || inputKey == KEY_ESCAPE_ALT) {
       showInGameMenuScreen();
       return;
-    } else if (inputKey == 'h') {
+    } else if (inputKey == 'h' || inputKey == 'H') {
       return;
     }
   }

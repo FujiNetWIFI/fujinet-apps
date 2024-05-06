@@ -11,6 +11,7 @@
 void hires_putc(unsigned char x, unsigned char y, unsigned rop, unsigned char c);
 void hires_putcc(unsigned char x, unsigned char y,unsigned rop, unsigned cc);
 void hires_puts(unsigned char x, unsigned char y, unsigned rop, char *s);
+void hires_putcU(unsigned char x, unsigned char y, unsigned rop, unsigned char c);
 
 void hires_mask(char xpos,    char ypos,
                 char xsize,   char ysize,

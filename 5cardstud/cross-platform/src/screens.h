@@ -23,19 +23,19 @@ void showHelpScreen() {
   centerText(3,"HOW TO PLAY 5 CARD STUD");
   
   y=4;
-                   // __________________________________
-  y++;drawText(3,y, "PLAYERS ARE DEALT 5 CARDS OVER THE");
-  y++;drawText(3,y, "COURSE OF 4 ROUNDS. ON EACH ROUND");
-  y++;drawText(3,y, "PLAYERS BET, CALL, AND RE-RAISE.");
-  y+=2;
-  centerText(y, "MOVES");
-  y++;
-  y++;drawText(4,y, "FOLD  - QUIT THE HAND");y++;
-  y++;drawText(4,y, "CHECK - FREE PASS");y++;
-  y++;drawText(4,y, "BET / - INCREASE BET. OTHERS MUST");
-  y++;drawText(4,y, "RAISE   CALL TO STAY IN THE HAND");y++;
-  y++;drawText(4,y, "CALL  - MATCH THE CURRENT BET AND");
-  y++;drawText(4,y, "        STAY IN THE HAND");
+  //                  // __________________________________
+  // y++;drawText(3,y, "PLAYERS ARE DEALT 5 CARDS OVER THE");
+  // y++;drawText(3,y, "COURSE OF 4 ROUNDS. ON EACH ROUND");
+  // y++;drawText(3,y, "PLAYERS BET, CALL, AND RE-RAISE.");
+  // y+=2;
+  // centerText(y, "MOVES");
+  // y++;
+  // y++;drawText(4,y, "FOLD  - QUIT THE HAND");y++;
+  // y++;drawText(4,y, "CHECK - FREE PASS");y++;
+  // y++;drawText(4,y, "BET / - INCREASE BET. OTHERS MUST");
+  // y++;drawText(4,y, "RAISE   CALL TO STAY IN THE HAND");y++;
+  // y++;drawText(4,y, "CALL  - MATCH THE CURRENT BET AND");
+  // y++;drawText(4,y, "        STAY IN THE HAND");
   
   drawBuffer();
   drawStatusTextAt(WIDTH/2-12, "PRESS ANY KEY TO CONTINUE");
@@ -126,13 +126,13 @@ void tableActionJoinServer() {
   // Reset the game state
   clearGameState();
   
-  strcat(query,"&player=");
-  strcat(query,playerName);
+  strcat(query, "&player=");
+  strcat(query, playerName);
   
   // Replace space with + for player name
   i=strlen(query);
   while(--i)
-    if (query[i]==' ' || query[i]=='&')
+    if (query[i]==' ')
       query[i]='+';
   
 }
@@ -184,8 +184,8 @@ void showTableSelectionScreen() {
         } else if (inputKey == 'q' || inputKey == 'Q') {
           quit();
         } else if (inputKey != 0) {
-          //itoa(inputKey, tempBuffer, 10);
-          //drawStatusText(tempBuffer);
+          itoa(inputKey, tempBuffer, 10);
+          drawStatusText(tempBuffer);
         }
 
         if (tableCount>0) {
@@ -223,7 +223,7 @@ void showTableSelectionScreen() {
   
   progressAnim(20);
   
-  //tableActionJoinServer();
+  tableActionJoinServer();
 }
 
 /// @brief Shows main game play screen (table and cards)
