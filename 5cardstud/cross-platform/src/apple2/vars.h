@@ -39,9 +39,9 @@
 */
 
 #define LINE_ENDING 0x0A
-#define ALT_LETTER_START 0
-#define ALT_LETTER_END 0
-#define ALT_LETTER_AND 0
+#define ALT_LETTER_START 65
+#define ALT_LETTER_END 90
+#define ALT_LETTER_AND 32
 
 /*
  Screen related variables
@@ -50,7 +50,7 @@
 
 // Screen specific player/bet coordinates
 const unsigned char playerXMaster[] = { 17,1, 1, 1, 15, 37,37, 37 };
-const unsigned char playerYMaster[] = { 19, 18, 11, 3, 2,3,11,18 };
+const unsigned char playerYMaster[] = { 18, 18, 11, 3, 2,3,11,18 };
 
 const char playerDirMaster[] = { 1,1,1,1,1,-1,-1,-1 };
 const char playerBetXMaster[] = { 1,10,10,10,3,-8,-8,-8 };

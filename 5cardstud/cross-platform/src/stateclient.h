@@ -7,14 +7,17 @@
 #define POKEW(addr,val)    (*(unsigned*) (addr) = (val))
 #define PEEK(addr)         (*(unsigned char*) (addr))
 #define PEEKW(addr)        (*(unsigned*) (addr))
+#include<stdio.h>
 
-char rx_buf[1024];     // buffer for json payload
+char rx_buf[512];     // buffer for json payload
 
 void updateState() {
   static char *line, *nextLine, *end, *key, *value, *parent;
   static bool isKey, inArray;
   static char c;
+  unsigned int lineNum=0;
 
+  //write_appkey(0x9999,  1, 1, "US");
   // Reset state and vars
   isKey=true; inArray=false;
   playerCount=validMoveCount=tableCount=0;
@@ -35,9 +38,10 @@ void updateState() {
     
     // Convert all letters to certain case if needed (e.g. C64)
     else if (c>=ALT_LETTER_START && c<=ALT_LETTER_END) 
-      POKE(line,c & ALT_LETTER_AND);
+      POKE(line,c + ALT_LETTER_AND);
     
   }
+  //write_appkey(0x9999,  1, 2, rx_buf);
 
   line = rx_buf;
 
@@ -45,6 +49,7 @@ void updateState() {
     // Capture next line position, in case the current line is shortened 
     // in process of reading
     nextLine=line+strlen(line)+1;
+    lineNum++;
     if (isKey) {
       key = line;
 
@@ -64,7 +69,10 @@ void updateState() {
       value = line;
       if (value[0]==0)
         value = "";
-   
+
+     // sprintf(tempBuffer, "%i:%s (%i) %s=%s, name=%s", lineNum, parent, playerCount, key, value, state.players[playerCount].name);
+     // write_appkey(0x9999,  0x44, 0x44, tempBuffer);
+
       // Set our state variables based on the key
       if (strlen(key)==1) {
         switch (key[0]) {
@@ -78,69 +86,93 @@ void updateState() {
             strcpy(state.tables[tableCount].players, value); 
             break;
           case 'm': 
-            strcat(state.tables[tableCount].players, " / ");
-            strcat(state.tables[tableCount].players, value); 
+           // strcat(state.tables[tableCount].players, " / ");
+           // strcat(state.tables[tableCount].players, value); 
             tableCount++;
             break;
         }
-      } else if (strcmp(key,"lastresult")==0)
-        state.lastResult = value;
-      else if (strcmp(key,"round")==0)
-        state.round = atoi(value);
-      else if (strcmp(key,"pot")==0)
-        state.pot = atoi(value);
-      else if (strcmp(key,"activeplayer"  )==0)
-        state.activePlayer = atoi(value);
-      else if (strcmp(key,"viewing")==0)
-        state.viewing = value=="1";
-      else if (strcmp(key,"movetime")==0) {
-        state.moveTime = atoi(value);
-        //timer // Reset timer when we get an updated movetime
-      } else if (strcmp(parent,"validmoves")==0) { 
-        if (strcmp(key,"move")==0)
-          state.validMoves[validMoveCount].move = value;
-        else if (strcmp(key,"name")==0) {
-          state.validMoves[validMoveCount].name = value;
-          validMoveCount++;
-        } else {
-          parent="";
+      } else if (parent[0]== 'v') { //strcmp(parent,"validmoves")==0) { 
+        switch (key[0]) {
+          case 'm': // (if (strcmp(key,"move")==0) {
+            state.validMoves[validMoveCount].move = value;
+            break;
+          case 'n': //"name")==0) {
+            state.validMoves[validMoveCount].name = value;
+            validMoveCount++;
+            break;
+          default:
+            parent="";
         }
-      } else if (strcmp(parent,"players")==0) {
-        if (strcmp(key,"name")==0) {
-          // Cap name at 8 chars max
-          if (strlen(value)>8) 
-            value[8]=0; 
-          state.players[playerCount].name=value;
-        } else if (strcmp(key,"status")==0)
-          state.players[playerCount].status = atoi(value);
-        else if (strcmp(key,"bet")==0)
-          state.players[playerCount].bet = atoi(value);
-        else if (strcmp(key,"move")==0)
-          state.players[playerCount].move = value;
-        else if (strcmp(key,"purse")==0)
-          state.players[playerCount].purse = atoi(value);
-        else if (strcmp(key,"hand")==0) {
-          state.players[playerCount].hand = value;
-          playerCount++;
-        } else {
-          parent="";
+      } else if (parent[0]=='p') { //(parent,"players")==0) {
+        switch (key[0]) {
+          case 'n': //if (strcmp(key,"name")==0) {
+            // Cap name at 8 chars max
+            if (strlen(value)>8) 
+              value[8]=0; 
+            state.players[playerCount].name=value;
+            break;
+          case 's': //"status")==0) {
+           // state.players[playerCount].status = atoi(value);
+            break;
+          case 'b': //"bet")==0) {
+            //state.players[playerCount].bet = atoi(value);
+            break;
+          case 'm'://"move")==0) {
+            state.players[playerCount].move = value;
+            break;
+          case 'p'://"purse")==0) {
+            state.players[playerCount].purse = atoi(value);
+            break;
+          case 'h': //"hand")==0) {
+            state.players[playerCount].hand = value;
+            // Hand is the last property, so increase the player counter
+            playerCount++;
+            break;
+          default:
+            parent="";
         }
+      } else {
+       
+        switch (key[0]) {
+          case 'l': //"lastresult")==0) { 
+            state.lastResult = value;
+            break;
+          case 'r' : //"round")==0) {
+            state.round = atoi(value);
+            break;
+          case 'p': //"pot")==0) {
+            state.pot = atoi(value);
+            break;
+          case 'a': //"activeplayer"  )==0) {
+            state.activePlayer = atoi(value);
+            break;
+          case 'v': //"viewing")==0) {
+            state.viewing = value[0]=='1';//strcmp(value, "1")==0;
+            break;
+          case 'm': //"movetime")==0) {
+            state.moveTime = atoi(value);
+            break;
+          //timer // Reset timer when we get an updated movetime
+        } 
       }
-        
+      
     }
   
     isKey = !isKey;
     line=nextLine;
   }  
+
+ 
 }
 
 bool apiCall(const char *path) {
   strcpy(urlBuffer, serverEndpoint);
   strcat(urlBuffer, path);
   strcat(urlBuffer, query);
- // drawStatusText(urlBuffer);
+  //drawStatusText(urlBuffer);
   //drawBuffer();
   //cgetc();
+  //pause(10);
   if ((rx_len = getJsonResponse(urlBuffer, rx_buf, sizeof(rx_buf)))<1)
     return false;
 

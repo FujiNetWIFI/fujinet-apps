@@ -45,9 +45,9 @@ typedef struct {
 typedef struct {
   char * name;
   unsigned char status;
-  int bet;
+  uint16_t bet;
   char * move;
-  int purse;      
+  uint16_t purse;      
   char * hand;
 } Player;
 
@@ -69,8 +69,7 @@ typedef struct {
 
 } GameState;
 
-GameState state;
-
+static GameState state;
 
 
 // State helper vars
