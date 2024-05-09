@@ -6,11 +6,12 @@
 
 #define BASE_ADDRESS 0xC000
 
-char *version = "v1.0.2";
+char *version = "v1.0.3";
 
 void debug() {}
 
 int main(void) {
+    clrscr();
     printf("spinfo %s\n", version);
     sp_info();
     printf("\n");
