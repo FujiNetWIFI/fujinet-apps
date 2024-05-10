@@ -47,7 +47,7 @@ typedef union {
  * @param key_id The Key ID ($00-$FF)
  * @brief string output (64 chars max)
  */
-unsigned char read_appkey(unsigned int creator_id, unsigned char app_id, unsigned char key_id, char *data);
+void read_appkey(unsigned int creator_id, unsigned char app_id, unsigned char key_id, char *data);
 
 /**
  * @brief write a key from appkey var appkey
