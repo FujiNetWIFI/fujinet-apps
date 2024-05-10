@@ -17,75 +17,6 @@ typedef unsigned char bool;
 #include <string.h>
 #endif /* _CMOC_VERSION_ */
 
-// FujiNet AppKey settings. These should not be changed
-#define AK_LOBBY_CREATOR_ID 1     // FUJINET Lobby
-#define AK_LOBBY_APP_ID 1         // Lobby Enabled Game
-#define AK_LOBBY_KEY_USERNAME 0   // Lobby Username key
-#define AK_LOBBY_KEY_SERVER 1     // 5 Card Stud Client registered as Lobby appkey 1
-
-// 5 Card Stud client
-#define AK_CREATOR_ID 0xE41C      // Eric Carr//s creator id
-#define AK_APP_ID 1               // 5 Card/Poker App ID
-#define AK_KEY_SHOWHELP 0         // Shown help
-#define AK_KEY_COLORTHEME 1       // Color theme
-
-// Store default server endpoint in case lobby did not set app key
-char serverEndpoint[64] = "N:https://5card.carr-designs.com/";
-//char serverEndpoint[64] = "N:http://api.open-notify.org/iss-now.json";
-
-char query[64] = ""; //?table=blue&player=ERICAPL2";
-char playerName[64] = "";
-
-typedef struct {
-  char * table;
-  char * name;
-  char players[8];
-} Table;
-
-typedef struct {
-  char * name;
-  unsigned char status;
-  uint16_t bet;
-  char * move;
-  uint16_t purse;      
-  char * hand;
-} Player;
-
-typedef struct {
-  char * move;
-  char * name; 
-} ValidMove;
-
-typedef struct {
-  char * lastResult;
-  unsigned char round;
-  int pot;
-  signed char activePlayer;
-  unsigned char moveTime;
-  unsigned char viewing;
-  ValidMove validMoves[5];
-  Player players[8];
-  Table tables[10];
-
-} GameState;
-
-static GameState state;
-
-
-// State helper vars
-unsigned char playerCount, prevPlayerCount, validMoveCount, prevRound, tableCount, currentCard, cardIndex, xOffset, fullFirst, cursorX, cursorY, waitCount, inputKey, wasViewing;
-signed char inputDirX, inputDirY;
-int prevPot, rx_len, maxJifs;
-
-unsigned char playerX[8], playerY[8], moveLoc[5];
-signed char playerBetX[8], playerBetY[8], playerDir[8];
-bool noAnim, doAnim, finalFlip, inputTrigger;
-
-// Common local scope temp variables
-unsigned char h, i, j, k, x, y, xx;
-char tempBuffer[255];
-char *hand, *requestedMove;
-
 #include "platform-specific/graphics.h"
 #include "platform-specific/util.h"
 #include "platform-specific/input.h"
@@ -98,6 +29,32 @@ char *hand, *requestedMove;
 #include "gamelogic.h"
 #include "screens.h"
 
+// Store default server endpoint in case lobby did not set app key
+char serverEndpoint[50] = "N:https://5card.carr-designs.com/";
+//char serverEndpoint[64] = "N:http://api.open-notify.org/iss-now.json";
+
+char query[50] = ""; //?table=blue&player=ERICAPL2";
+char playerName[12] = "";
+
+GameState state;
+
+// State helper vars
+unsigned char playerCount, prevPlayerCount, validMoveCount, prevRound, tableCount, currentCard, cardIndex, xOffset, fullFirst, cursorX, cursorY, waitCount, inputKey, wasViewing;
+signed char inputDirX, inputDirY;
+int prevPot, rx_len, maxJifs;
+bool noAnim, doAnim, finalFlip, inputTrigger;
+
+unsigned char playerX[8], playerY[8], moveLoc[5];
+signed char playerBetX[8], playerBetY[8], playerDir[8];
+
+// Common local scope temp variables
+unsigned char h, i, j, k, x, y, xx;
+char tempBuffer[128];
+
+char *hand, *requestedMove;
+
+
+
 //#include <stdio.h>
 
 #ifdef _CMOC_VERSION_
@@ -105,25 +62,10 @@ int main(void)
 #else
 void main(void)
 #endif /* _CMOC_VERSION_ */
-{
-  /*unsigned char result;
-  strcpy(playerName, "ERIC");
-  printf("Testing app keys\n");
-  result =  write_appkey(AK_LOBBY_CREATOR_ID,  AK_LOBBY_APP_ID, AK_LOBBY_KEY_USERNAME, playerName);
-  printf("Write Result: %i", result);
-  cgetc();
-  strcpy(playerName, "A");
-  result = read_appkey(AK_LOBBY_CREATOR_ID,  AK_LOBBY_APP_ID, AK_LOBBY_KEY_USERNAME, &playerName);
-
-  cprintf("Welcome: %i, %s", result, playerName);
-  
-
-  cgetc();
-  */
+{  
   initGraphics(); 
   initSound();
-  
-  showWelcomScreen();  
+  showWelcomScreen();      
   showTableSelectionScreen();
   
   // Main in-game loop
@@ -134,7 +76,7 @@ void main(void)
       showGameScreen();
       requestPlayerMove();
     } else {
-      pause(10);
+       pause(10);
     }
     
     // Handle other key presses
@@ -146,6 +88,7 @@ void main(void)
         showInGameMenuScreen();  
         break;
     }
+   
     
   }
 

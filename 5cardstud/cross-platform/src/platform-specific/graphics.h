@@ -28,8 +28,9 @@ void drawBox(unsigned char x, unsigned char y, unsigned char w, unsigned char h)
 void drawBorder();
 void drawLogo();
 
-unsigned char cycleNextColor();
-
 void initGraphics();
-
 void waitvsync();
+
+void cycleNextColor();
+void setColorMode();
+extern unsigned char colorMode;
