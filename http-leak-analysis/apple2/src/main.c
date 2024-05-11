@@ -53,6 +53,7 @@ void http_parse(void)
         
         network_close(http_url);
         printf("ATTEMPT #%u - BW: %u BYTES. PRESS ENTER. ",retries,bw);
+        getchar();
     }
 }
 
@@ -89,6 +90,7 @@ void https_parse(void)
         
         network_close(https_url);
         printf("ATTEMPT #%u - BW: %u BYTES. PRESS ENTER. ",retries,bw);
+        getchar();
     }
 }
 
@@ -98,15 +100,11 @@ void main(void)
 
     network_init();
     
-    for (i=0;i<5;i++)
-        http_no_parse();
+    http_no_parse();
 
-    for (i=0;i<5;i++)
-        http_parse();
+    http_parse();
 
-    for (i=0;i<5;i++)
-        https_no_parse();
+    https_no_parse();
 
-    for (i=0;i<5;i++)
-        https_parse();
+    https_parse();
 }
