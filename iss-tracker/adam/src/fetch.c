@@ -40,8 +40,8 @@ const char timestamp_query[]="Q/timestamp";
 
 const char longitude0_tracking_query[]="Q/0/longitude";
 const char longitude1_tracking_query[]="Q/1/longitude";
-const char latitude0_tracking_query[]="Q/0/longitude";
-const char latitude1_tracking_query[]="Q/1/longitude";
+const char latitude0_tracking_query[]="Q/0/latitude";
+const char latitude1_tracking_query[]="Q/1/latitude";
 
 struct _oc
 {
