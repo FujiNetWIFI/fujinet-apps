@@ -10,7 +10,7 @@
 static AppKeyDataBlock data;
 char *test_data = "fujinet rocks";
 
-unsigned char openkey(unsigned char open_mode)
+bool openkey(unsigned char open_mode)
 {
     data.open.creator = TEST_CREATOR_ID;
     data.open.app = TEST_APP_ID;
@@ -18,33 +18,34 @@ unsigned char openkey(unsigned char open_mode)
     data.open.mode = open_mode;
     data.open.reserved = 0x00;
 
+    // success is returned as true
     return fuji_appkey_open(&data.open);
 }
 
 int main(void)
 {
-    unsigned char r;
+    bool r;
 
     cputs("\rFujiNet APPKEY Example\r\n");
     cputs("\r\nPress key to start...\r\n");
     cgetc();
 
     cputs("OPEN:  ");
-    r = openkey(1);         // WRITE
+    r = openkey(1);         // WRITE, success is returned as true
     cprintf("%hd\r\n", r);
 
     cputs("WRITE: ");
     strcpy((char *) data.write.value, test_data);
     cprintf("(size: %d) ", strlen(test_data));
-    r = fuji_appkey_write(strlen(test_data), &data.write);
+    r = fuji_appkey_write(strlen(test_data), &data.write); // success is returned as true
     cprintf("%hd\r\n", r);
 
     cputs("OPEN:  ");
-    r = openkey(0);         // READ
+    r = openkey(0);
     cprintf("%hd\r\n", r);
 
     cputs("READ:  ");
-    r = fuji_appkey_read(&data.read);
+    r = fuji_appkey_read(&data.read); // success is returned as true
     cprintf("%hd\r\n", r);
 
     cprintf("len=%u val='%s'\r\n", data.read.length, data.read.value);

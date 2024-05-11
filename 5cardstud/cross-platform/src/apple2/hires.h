@@ -9,8 +9,8 @@
 #define ROP_CONST(val)          0xA980|(val)
 #define ROP_BLACK               0xA980
 #define ROP_WHITE               0xA9FF
-#define ROP_X                   0x4900
-#define ROP_XOR(val)            ROP_X|(val)
+//#define ROP_X                   0x4900
+//#define ROP_XOR(val)            ROP_X|(val)
 #define ROP_CPY                 0x4980
 #define ROP_INV                 0x49FF
 #define ROP_A                   0x2900

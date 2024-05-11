@@ -4,7 +4,6 @@
  * @brief Text routines
  * @author Oliver Schmidt
  */
-#include<peekpoke.h>
 #include<string.h>
 #include "hires.h"
 #include "charset.h"
@@ -18,6 +17,7 @@
 extern unsigned char charset[];
 unsigned char rop_mod[] = {0x55,0x2A};
 
+/*
 unsigned char hgr_draw_page=0;
 unsigned char hgr_visible_page=0;
 
@@ -29,13 +29,12 @@ void hires_double_buffer_on()
 void hires_double_buffer_off() 
 {
   POKE(0xc054,1);
-}
+}*/
 
 void hires_double_buffer_draw()
 {
   memcpy((void*)0x4000,(void*)0x2000,0x2000);
 }
-
 
 /*-----------------------------------------------------------------------*/
 void hires_putc(unsigned char x, unsigned char y, unsigned rop, unsigned char c)
@@ -43,12 +42,17 @@ void hires_putc(unsigned char x, unsigned char y, unsigned rop, unsigned char c)
     hires_Draw(x,y,1,CHAR_HEIGHT,rop,&charset[c<<3]);
 }
 
+
 /*-----------------------------------------------------------------------*/
-void hires_puts(unsigned char x, unsigned char y,unsigned rop, char *s)
-{
-    while(*s)
-      hires_putc(x++,y,rop|rop_mod[x%2],*s++);
-}
+// void hires_puts(unsigned char x, unsigned char y, char *s)
+// {
+//   static unsigned char c;
+//   while(*s) {
+//     c=*s++;
+//     if (c>=97 && c<=122) c=c-32;
+//     hires_putc(x++,y,ROP_CPY,c);
+//   }   
+// }
 
 /*-----------------------------------------------------------------------*/
 void hires_putcc(unsigned char x, unsigned char y,unsigned rop, unsigned cc)

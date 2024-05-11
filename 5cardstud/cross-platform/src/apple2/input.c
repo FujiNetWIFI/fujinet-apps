@@ -3,7 +3,7 @@
 #include <peekpoke.h>
 
 unsigned char readJoystick() {
-  return 127-PEEK(0xDC00); // joystick 2
+  return 0; // todo - give real value
 }
 
 #endif /* __APPLE2__ */

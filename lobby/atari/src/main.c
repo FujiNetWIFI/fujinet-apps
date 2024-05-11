@@ -22,7 +22,7 @@
 #define KEY_ID     0x00   /* USERNAME */
 #define SERVER     "N2:TCP://fujinet.online:7373/"
 #define LOBBY_ENDPOINT "N:http://fujinet.online:8080/view?platform=atari"
-#define PAGE_SIZE  5   /* # of results to show per page of servers */
+#define PAGE_SIZE  14   /* # of results to show per page of servers */
 #define SCREEN_WIDTH 40
 #define CHAT_Y 17
 
@@ -313,44 +313,57 @@ void display_servers(int old_server)
 {
   ServerDetails* server;
   unsigned char j,y;
+  char * prevGame = NULL;
+  y=0;
 
   for (j=0;j<server_count;j++ )
   {
-    // If just moving the selection, only redraw the old and new server
-    if (old_server>=0 && j != old_server && j != selected_server)
-      continue;
 
-    server = &serverList[j];
-    y = 3*j+2;
+    server = &serverList[j]; 
+  
+    if (prevGame == NULL || strcmp(server->game, prevGame) !=0)
+    {
+      y+=2;
+      prevGame = server->game;
+
+      if (old_server<0)
+      {
+        cputsxy(0,y,prevGame);
+        if (j>0) 
+        {
+           cclear(39-strlen(prevGame));
+        }
+        else 
+        {
+          cclear(33-strlen(prevGame));
+          cputs("PLAYERS");
+        }
+      }
+
+    }
+    y++;
+        // If just moving the selection, only redraw the old and new server
+    // Also temp guard for servers until paging is implemented
+    if (y>PAGE_SIZE || (old_server>=0 && j != old_server && j != selected_server))
+      continue;
 
     // Show the selected server in reverse
     // Printing full space to overwrite the existing server, a bit convoluted but
     // prevents flickering. TODO: Use PMG like the config screen.
     revers(j == selected_server ? 1 : 0);
-
     cputcxy(0,y,' ');
-    cputs(server->game);
+    cputs(server->server);    
 
-    cclear(server->online + 37-strlen(server->game)-6);
-    cputs( server->online == 1 ? "ONLINE " : "OFFLINE ");
+    sprintf((char *)buf, "%i/%i ", server->players, server->max_players);
+    cclear(39-strlen(server->server)-strlen((char *)buf));
+    cputs((char *)buf);
 
-    cputcxy(0,y+1,' ');
-    cputs(server->server);
-
-    if (server->online == 1)
-    {
-      sprintf((char *)buf, "%i/%i ", server->players, server->max_players);
-      cclear(39-strlen(server->server)-strlen((char *)buf));
-      cputs((char *)buf);
-    }
-    else
-    {
-      cclear(39-strlen(server->server));
-    }
+     // Reset reverse
+     if (j == selected_server)
+        revers(0);
   }
 
-  // Reset cursor and reverse
-  revers(0);
+ 
   //gotoxy(0,19);
 
   if (skip_server_instructions)
@@ -426,8 +439,15 @@ void refresh_servers()
           case 'g':
                     // Assume "g" is the first property of a new server
                     // Only read up to the page size to avoid buffer overrun
+                    
 
-                    if (i+1 >= PAGE_SIZE)
+                    // If previous server is offline, ignore it
+                    if (i>0 && serverList[i].online == 0)
+                    {
+                      i--;
+                    }
+
+                    if (i >= PAGE_SIZE)
                       break;
 
                     i++;
@@ -446,6 +466,11 @@ void refresh_servers()
         }
 
         key = strtok(NULL, "\n");
+      }
+
+      // If last server is offline, ignore it              
+      if (i>0 && serverList[i].online == 0) {
+        i--;
       }
       server_count = i+1;
       nclose(LOBBY_ENDPOINT);

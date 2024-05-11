@@ -32,13 +32,11 @@ bool open_appkey(unsigned char mode) {
 void read_settings(void) {
   bool is_error;
 
-  is_error = open_appkey(0);
-  if (is_error) {
+  if (!open_appkey(0)) {
     return;
   }
 
-  is_error = fuji_appkey_read(&data.read);
-  if (is_error) {
+  if (!fuji_appkey_read(&data.read)) {
     return;
   }
 
@@ -56,8 +54,7 @@ void read_settings(void) {
 unsigned char write_settings(void) {
   bool is_error;
 
-  is_error = open_appkey(0);
-  if (is_error) {
+  if (!open_appkey(0)) {
     return false;
   }
 
@@ -66,7 +63,6 @@ unsigned char write_settings(void) {
   data.write.value[2] = color2;
   data.write.value[3] = color4;
 
-  is_error = fuji_appkey_write(4, &data.write);
-  return !is_error;
+  return fuji_appkey_write(4, &data.write);
 
 }
