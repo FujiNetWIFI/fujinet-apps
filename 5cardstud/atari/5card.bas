@@ -14,6 +14,7 @@ AK_LOBBY_KEY_SERVER = 1     ' 5 Card Stud Client registered as Lobby appkey 1
 AK_CREATOR_ID = $E41C       ' Eric Carr's creator id
 AK_APP_ID = 1               ' 5 Card/Poker App ID
 AK_KEY_SHOWHELP = 0         ' Shown help
+AK_KEY_COLORTHEME = 1       ' Color theme
 
 DATA NAppKeyBlock()=0,0,0
 
@@ -108,8 +109,14 @@ DIM Screen,__print_inverse, move_color, __print_reverse, noAnim, cursorY, cursor
 dim move_loc(7), move_bits(7) BYTE
 
 ' DLI Colors 
-data background_color()B.=$B4,$B4,0
+data background_color()B.=$0,0,0
 data text_color()B.=$0E,$0E,0
+
+' Color Themes: (Background & ard border)
+' Themes: Green, Blue, Brown, Gray
+DATA colorThemeMap()      =  $B4,$88,  $84,$08, $22,$28, $04,$08,' NTSC
+DATA                      =  $A4,$78,  $74,$08, $12,$18, $04,$08 ' PAL 
+colorTheme=-1
 
 ' Player hand and bet locations onscreen
 DIM playerX(7), playerY(7), playerDir(7), playerBetX(7), playerBetY(7)
@@ -130,6 +137,39 @@ DATA playerCountIndex() = 0,4,0,0,0,0,0,0, 0,2,6,0,0,0,0,0, 0,2,4,6,0,0,0,0,
 '       5                6                 7                8
 DATA  = 0,2,3,5,6,0,0,0, 0,2,3,4,5,6,0,0,  0,2,3,4,5,6,7,0, 0,1,2,3,4,5,6,7
 
+
+
+
+PROC CycleColorTheme
+  ' First time called? Load from app key
+  if colorTheme = -1
+    colorTheme = 0
+    temp$=""
+    @NReadAppKey AK_CREATOR_ID, AK_APP_ID, AK_KEY_COLORTHEME, &temp$
+    if len(temp$)=1 then colorTheme = val(temp$)
+  else
+    ' Otheriwse, just cycle theme
+    sound 0, 220,10,5
+    pause 4
+    sound 0, 200,10,5
+    
+    colorTheme = (colorTheme + 1) mod 4 
+  endif
+
+  ' Set new theme colors (NTSC/PAL + theme index)
+  i = (PEEK(53268)=1)*2*4 + 2*colorTheme
+  h=colorThemeMap(i)
+  j=colorThemeMap(i+1)
+
+  pause 2
+  background_color(0)= colorThemeMap(i)
+  background_color(1)= colorThemeMap(i)
+  POKE 708, colorThemeMap(i+1)
+
+  ' Store in app key to recall on next program start
+  @NWriteAppKey AK_CREATOR_ID, AK_APP_ID, AK_KEY_COLORTHEME, &STR$(colorTheme)
+  sound
+ENDPROC
 
 ' ============================================================================
 ' (Utility Functions) Convert string to upper case, replace character in string
@@ -601,6 +641,9 @@ Proc GetCommonInput __dirAdr __triggerAdr __keyPress
   __val = 0
   if key()
      get __val
+
+     ' Cycle color if C is pressed (works on any screen so handle here)
+     if __val=67 then @CycleColorTheme
   endif
   dpoke __keyPress, __val
 
@@ -621,6 +664,7 @@ Proc GetCommonInput __dirAdr __triggerAdr __keyPress
   ' Update the value addresses passed in
   dpoke __dirAdr, __valD
   dpoke __triggerAdr, __valT
+
   
 endproc
 
@@ -764,7 +808,6 @@ PROC SelectTable
     
     index=0
   
-    firstOpen = 1
     ' Display screen to select table
     while query$="" 
       
@@ -780,9 +823,6 @@ PROC SelectTable
       @PrintAt 4,7, &"TABLE"
       @PrintAt 29,7, &"PLAYERS"
       @PrintAt 4,8, &"@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
-
-      
-      firstOpen=0
 
       playerCount = 0
       @ApiCall &"tables"
@@ -801,7 +841,7 @@ PROC SelectTable
         @PrintAt 5,12, &"SORRY, NO TABLES ARE AVAILABLE"
       endif
       @PrintAt 0,25, &"":@PrintSpaceRest
-      @PrintAt 0,25, &"Rx REFRESH     Hx HOW TO PLAY    Qx QUIT"
+      @PrintAt 0,25, &"Rx REFRESH   Hx HELP  Cx COLOR   Qx QUIT"
       
       ' Clear out any queued key presses
       @ClearKeyQueue
@@ -1027,7 +1067,7 @@ PROC RenderActivePlayer
     y = playery(activePlayer)-1
 
     @Printat x, y, &"xy"[1+(dir<0),1]
-    @MoveHighlightToLocation 52+4*(x-(wid+1)*(dir<0)), 32+8*y, wid 
+    @MoveHighlightToLocation 52+4*(x-(wid+1)*(dir<0)), 28+8*y, wid, 0
 
   endif
 ENDPROC
@@ -1175,7 +1215,6 @@ ENDPROC
 
 PROC RenderNamePurse
 
-  activePlayerLoc=0
   for i=0 to playerCount-1
     
     ' Print name, left or right justified based on direction
@@ -1288,7 +1327,7 @@ PROC ClearCursor
   mset pm.2+cursorY,2,0
 ENDPROC
 
-PROC MoveHighlightToLocation __x __y __len
+PROC MoveHighlightToLocation __x __y __len __lineStyle
   mset pm.2,256,0
   bit=128:total=0
   for j=1 to __len
@@ -1311,7 +1350,7 @@ PROC MoveHighlightToLocation __x __y __len
     endif
 
     pause
-    mset pm.2+ny,2,total
+    mset pm.2+ny,2+__lineStyle,total
     PMHPOS 2,nx
     y=ny:x=nx
   until x=cursorX and y=cursorY
@@ -1348,7 +1387,7 @@ PROC WaitOnPlayerMove
   ' Setup move player line indicator
   move = validMoveCount>1
   x = 52+4*move_loc(move)
-  @MoveHighlightToLocation x, 235, len(validMove$(move))
+  @MoveHighlightToLocation x, 232, len(validMove$(move)), 1
   x=cursorX
 
  ' Fade in moves and play ding-ding sound
@@ -1433,7 +1472,7 @@ PROC WaitOnPlayerMove
       else
         ' Can move
         sound 1,100,10,8
-        mset pm.2+cursorY,2,move_bits(move)
+        mset pm.2+cursorY,3,move_bits(move)
         cursorX = 52+4*move_loc(move)
       endif
     endif
@@ -1468,6 +1507,10 @@ Proc HidePlayerSecretCardMask
   PMHPOS 1,0
 endproc
 
+Proc ShowPlayerSecretCardMask
+  PMHPOS 1,116
+endproc
+
 ' ===================================
 ' Update "player 1" to be a mask of the player's hidden card, so it can be
 ' displayed as darker to indicate it is hidden from other players
@@ -1476,32 +1519,32 @@ PROC CreatePlayerSecretCardMask
   ' If viewing a game, there is nothing to mask
   if viewing then exit
 
-  i = screen+40*playerY(0)+playerX(0)+40
-  
   ' Move the mask offscreen when creating
   @HidePlayerSecretCardMask
 
+  ' Left characters
+  i = screen+40*playerY(0)+playerX(0)+40
   for j= 0 to 23
     if j mod 8 = 0 
       val = peek(i) mod 128:  src = &charBuffer+val*8: i = i + 40
     endif
     v = peek(src+j mod 8)
-    poke pm.1+191+j,  (v&$C0<$C0)*$80 + (v&$30<$30)*$40 + (v&$0C<$0C)*$20 + (v&$03<$03)*$10
+    poke pm.1+187+j,  (v&$C0<$C0)*$80 + (v&$30<$30)*$40 + (v&$0C<$0C)*$20 + (v&$03<$03)*$10
   next
 
+  ' Right characters
   i = screen+40*playerY(0)+playerX(0)+41
   for j= 0 to 23
     if j mod 8 = 0 
       val = peek(i) mod 128:  src = &charBuffer+val*8: i = i + 40
     endif
     v = peek(src+j mod 8)
-    poke pm.1+191+j, peek(pm.1+191+j) + (v&$C0<$C0)*$08 + (v&$30<$30)*$04 + (v&$0C<$0C)*$02
+    poke pm.1+187+j, peek(pm.1+187+j) + (v&$C0<$C0)*$08 + (v&$30<$30)*$04 + (v&$0C<$0C)*$02
   next
 
-  poke pm.1+190,$7e:poke pm.1+215,$7e
+  poke pm.1+186,$7e:poke pm.1+211,$7e
 
-  ' Move the mask into view
-  PMHPOS 1,116
+  @ShowPlayerSecretCardMask
 ENDPROC
 
 proc AskToLeave
@@ -1522,9 +1565,11 @@ proc AskToLeave
   INC Y:@PrintAt x,y, &"?":@PrintAt x+22,y, &"?"
   INC Y:@PrintAt x,y, &"?    H: HOW TO PLAY   ?"
   INC Y:@PrintAt x,y, &"?":@PrintAt x+22,y, &"?"
+  INC Y:@PrintAt x,y, &"?    C: TABLE COLOR   ?"
+  INC Y:@PrintAt x,y, &"?":@PrintAt x+22,y, &"?"
   INC Y:@PrintAt x,y, &"?  ESC: KEEP PLAYING  ?"
   INC Y:@PrintAt x,y, &"?":@PrintAt x+22,y, &"?"
-  INC Y:@PrintAt x,y, &"?":@PrintAt x+21,y, &""$1c"?"
+  INC Y:@PrintAt x,y, &"?":@PrintAt x+21,y, &""$1c"?" 
   INC Y:@PrintAt x,y, &"=@@@@@@@@@@@@@@@@@@@@@>"
   
   @DrawBorder
@@ -1764,11 +1809,15 @@ PROC GetKeyPress
       k = 72: poke 732,0
     else
       get K 
+      ' Cycle color if C is pressed (works on any screen so handle here)
+      if k=67 then @CycleColorTheme
     endif
   else
     K = 0
   endif
 ENDPROC
+
+
 
 ' ============================================================================
 ' Init screen/graphics - leaves screen blank. ShowScreen must be called afer
@@ -1806,8 +1855,6 @@ PROC InitScreen
   if PEEK(53268)=1 ' Check if we are running PAL on GTIA machines
     ' PAL colors
     move &""$00$0a$fa$00$78$0E$00$24$00+1, 704, 9
-    background_color(0) = $A4
-    background_color(1) = $A4
     move_color = $EE
   else
     ' NTSC colors
@@ -1816,7 +1863,8 @@ PROC InitScreen
   endif
 
   text_color(2) = move_color
-  
+
+  @CycleColorTheme  
 
   ' ============= PLAYFIELD =============
   @DisableDoubleBuffer
@@ -1828,7 +1876,7 @@ PROC InitScreen
   P.756,&charBuffer/256
 
   ' Custom Display List to give us 2 more rows (40x26) with DLI for coloring
-  DL$ = ""$60$F0$44$00$00$04$04$04$04$04$04$04$04$04$04$04$04$04$04$04$04$04$04$04$04$04$04$84$84$20$04$41$00$00
+  DL$ = ""$20$F0$44$00$00$04$04$04$04$04$04$04$04$04$04$04$04$04$04$04$04$04$04$04$04$04$04$84$84$20$04$41$00$00
   
   ' Copy the display list from the string to memory.
   displayList = &DL$+1
@@ -1896,6 +1944,7 @@ do
       if query$=""
         @SelectTable
       else
+        @ShowPlayerSecretCardMask
         @UpdateScreen
       endif
     elif k=72 ' H
