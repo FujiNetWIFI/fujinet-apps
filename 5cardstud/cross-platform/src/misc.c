@@ -14,6 +14,7 @@
 #endif /* _CMOC_VERSION_ */
 #include "platform-specific/graphics.h"
 #include "platform-specific/input.h"
+#include "platform-specific/sound.h"
 #include "misc.h"
 
 #include <stdbool.h>
@@ -95,6 +96,10 @@ void readCommonInput() {
     case KEY_RETURN:
     case KEY_SPACE:
       inputTrigger=true;
+      break;
+    case 'S':
+    case 's':
+      toggleSound();
       break;
   }
 }

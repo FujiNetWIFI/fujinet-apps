@@ -246,9 +246,8 @@ void initGraphics() {
 
 void waitvsync() {
   static uint16_t i;
-  for ( i=0;i<500;i++);
-
-  // Unsupported in Apple 2?
+  // Aproximate a jiffy for the timer countdown
+  for ( i=0;i<630;i++);
 }
 
 #endif /* __APPLE2__ */

@@ -13,7 +13,7 @@
 #include "platform-specific/input.h"
 #include "platform-specific/appkey.h"
 #include "platform-specific/util.h"
-
+#include "platform-specific/sound.h"
 #include <string.h>
 
 #define PLAYER_NAME_MAX 8
@@ -49,7 +49,7 @@ void showHelpScreen() {
   y=4;
   //                  // __________________________________
   y++;drawText(3,y, "PLAYERS ARE DEALT 5 CARDS OVER THE");
-  y++;drawText(3,y, "COURSE OF 4 ROUNDS. ON EACH ROUND");
+  y++;drawText(3,y, "COURSE OF 4 ROUNDS. IN EACH ROUND");
   y++;drawText(3,y, "PLAYERS BET, CALL, AND RE-RAISE.");
   y+=2;
   centerText(y, "MOVES");
@@ -183,8 +183,9 @@ void tableActionJoinServer() {
 
 /// @brief Shows a screen to select a table to join
 void showTableSelectionScreen() {
+  static uint8_t shownChip;
   static unsigned char tableIndex=0;
- 
+  
   // An empty query means a table needs to be selected
   while (strlen(query)==0) {
 
@@ -218,9 +219,11 @@ void showTableSelectionScreen() {
       //cprintf("Tables: %i\n", tableCount);
         
 
-      drawStatusText("R-REFRESH    H-HELP    C-COLOR    Q-QUIT");
+      //drawStatusText("R-REFRESH    H-HELP    C-COLOR    Q-QUIT");
+      drawStatusText("R-EFRESH  H-ELP   C-OLOR   S-OUND  Q-UIT");
       drawBuffer();
-
+      disableDoubleBuffer();
+      shownChip=0;
       clearCommonInput();
       while (!inputTrigger || !tableCount) {
         readCommonInput();
@@ -240,7 +243,8 @@ void showTableSelectionScreen() {
           drawStatusText(tempBuffer);
         }*/
         
-        if (tableCount>0) {
+        if (!shownChip || (tableCount>0 && inputDirY)) {
+
           drawText(1,8+tableIndex*2," ");
           tableIndex+=inputDirY;
           if (tableIndex==255) 
@@ -249,11 +253,22 @@ void showTableSelectionScreen() {
             tableIndex=0;
 
           drawChip(1,8+tableIndex*2);
-          drawBuffer();
+
+          soundCursor();
+          shownChip=1;
         }
       }
-
+      
+      enableDoubleBuffer();
+      
       if (inputTrigger) {
+        soundSelectMove();
+
+        // Clear screen and write server name
+        resetScreenWithBorder();
+        clearStatusBar();
+        centerText(15, state.tables[tableIndex].name);
+        
         strcpy(query, "?table=");
         strcat(query, state.tables[tableIndex].table);
         strcpy(tempBuffer, serverEndpoint);
@@ -262,9 +277,6 @@ void showTableSelectionScreen() {
         //  Update server app key in case of reboot 
         write_appkey(AK_LOBBY_CREATOR_ID,  AK_LOBBY_APP_ID, AK_LOBBY_KEY_SERVER, tempBuffer);
 
-        // Clear screen and write server name
-        resetScreenWithBorder();
-        centerText(15, state.tables[tableIndex].name);
       }
     }
   }
@@ -329,7 +341,8 @@ void showInGameMenuScreen() {
       case 'H':
         showHelpScreen();
         i=0;
-      case 3: // Esc
+      case KEY_ESCAPE:
+      case KEY_ESCAPE_ALT:
         i=0;
         break;
       case 'q':

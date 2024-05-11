@@ -4,6 +4,8 @@
 #ifndef SOUND_H
 #define SOUND_H
 
+#include <stdbool.h>
+
 void initSound();
 void soundJoinGame();
 void soundMyTurn();
@@ -15,5 +17,6 @@ void soundPlayerLeft();
 void soundSelectMove();
 void soundCursor();
 void soundCursorInvalid();
+bool toggleSound();
 
 #endif /* SOUND_H */

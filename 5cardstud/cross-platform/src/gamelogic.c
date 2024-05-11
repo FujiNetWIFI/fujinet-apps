@@ -7,6 +7,8 @@
 #include "misc.h"
 #include "stateclient.h"
 #include "screens.h"
+#include <stdio.h>
+#include "platform-specific/appkey.h"
 
 void progressAnim(unsigned char y) {
   for(i=0;i<3;++i) {
@@ -140,6 +142,7 @@ void drawCards() {
   
   while (cardIndex <= state.round) {
     doAnim = state.round<5 && !noAnim && cardIndex >= currentCard;
+    //doAnim = !noAnim && cardIndex >= currentCard;
     if (doAnim)
       pause(20);
     
@@ -164,6 +167,9 @@ void drawCards() {
         if (doAnim) {
           drawBuffer();
           soundDealCard();
+
+          // Again, need to pause here to avoid AppleWin playing the sound again
+          pause(20);
           // for vol=2 to 0 step -1
           //   pause :sound 1,0,0,vol
           // next
@@ -225,16 +231,6 @@ void checkIfPlayerCountChanged() {
       drawStatusText(state.lastResult);
       drawBuffer();
       soundPlayerLeft();
-    }
-  
-    if (playerCount > prevPlayerCount) {
-      // for j = 1 to 30 step 5
-      //   sound j,20,0,1+j/5:pause 2
-      //   for vol=j/5 to 0 step -1
-      //     sound j,20,0,vol:pause
-      //   next
-      //   pause 3
-      // next
     }
     
     pause(40);
@@ -335,7 +331,7 @@ void drawGameStatus() {
 
 void requestPlayerMove() {
   requestedMove=NULL;
-  
+
   if (state.viewing || state.activePlayer != 0)
     return;
 
@@ -350,7 +346,7 @@ void requestPlayerMove() {
     drawStatusTextAt(x, state.validMoves[i].name);
 
     if (i == cursorX)
-      drawStatusTextAt(x-1, "\"");
+      drawStatusTextAt(x-1, "+");
     
     x += 2 + strlen(state.validMoves[i].name);
   }
@@ -360,7 +356,7 @@ void requestPlayerMove() {
 
   drawBuffer();
   soundMyTurn();
-
+  disableDoubleBuffer();
   resetTimer();
   maxJifs = 60*state.moveTime;
   waitCount=0;
@@ -388,14 +384,13 @@ void requestPlayerMove() {
       cursorX+=inputDirX;
       if (cursorX<validMoveCount) {
         drawStatusTextAt(moveLoc[cursorX-inputDirX]-1, " ");
-        drawStatusTextAt(moveLoc[cursorX]-1, "\"");
-        drawBuffer();
+        drawStatusTextAt(moveLoc[cursorX]-1, "+");
         soundCursor();
       } else {
         cursorX-=inputDirX;
         soundCursorInvalid();
       }
-
+      getTime();
     }
 
     // Pressed Esc
@@ -404,18 +399,22 @@ void requestPlayerMove() {
       case KEY_ESCAPE_ALT:
         showInGameMenuScreen();
         return;
-      case 'h': case 'H':
-        return;
     }
   }
 
   // Request the highlighted move
   if (cursorX<255) {
     requestedMove = state.validMoves[cursorX].move;
+    enableDoubleBuffer();
     clearStatusBar();
     drawStatusTextAt(moveLoc[cursorX], state.validMoves[cursorX].name);
     drawBuffer();
     soundSelectMove();
+
+    // For some unknown reason, if I don't delay for a bit here, 
+    // the selectMove sound plays twice in the AppleWin emulator.
+    pause(30); 
+    
   }
 
 }

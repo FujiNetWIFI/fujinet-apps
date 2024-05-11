@@ -13,7 +13,7 @@
 #include "misc.h"
 #include "platform-specific/network.h"
 
-char rx_buf[1024];     // buffer for json payload
+char rx_buf[2048];     // buffer for json payload
 char urlBuffer[128];
 
 void updateState() {
