@@ -1,56 +1,47 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <conio.h>
+
 #include "fujinet-fuji.h"
+#include "edit_string.h"
 
 #define TEST_CREATOR_ID 0x0100
 #define TEST_APP_ID 0x1F
 #define TEST_KEY_ID 0xCC
 
-static AppKeyDataBlock data;
-char *test_data = "fujinet rocks";
+char write_buffer[65];
+char read_buffer[65];
 
-bool openkey(unsigned char open_mode)
-{
-    data.open.creator = TEST_CREATOR_ID;
-    data.open.app = TEST_APP_ID;
-    data.open.key = TEST_KEY_ID;
-    data.open.mode = open_mode;
-    data.open.reserved = 0x00;
-
-    // success is returned as true
-    return fuji_appkey_open(&data.open);
-}
+char *version = "v1.0.1";
 
 int main(void)
 {
-    bool r;
+	bool r;
+	uint16_t read_count = 0;
+	uint16_t write_count;
 
-    cputs("\rFujiNet APPKEY Example\r\n");
-    cputs("\r\nPress key to start...\r\n");
-    cgetc();
+	clrscr();
+	cprintf("FujiNet APPKEY Test %s\r\n", version);
+	cputs("Enter a string to write to key:\r\n");
 
-    cputs("OPEN:  ");
-    r = openkey(1);         // WRITE, success is returned as true
-    cprintf("%hd\r\n", r);
+    cputcxy(0, 3, '>');
+    cputcxy(21, 3, '<');
+    edit_string(write_buffer, 64, 1, 3, 20, false);
 
-    cputs("WRITE: ");
-    strcpy((char *) data.write.value, test_data);
-    cprintf("(size: %d) ", strlen(test_data));
-    r = fuji_appkey_write(strlen(test_data), &data.write); // success is returned as true
-    cprintf("%hd\r\n", r);
+    gotoxy(0,5);
+	write_count = strlen(write_buffer);
 
-    cputs("OPEN:  ");
-    r = openkey(0);
-    cprintf("%hd\r\n", r);
+	fuji_set_appkey_details(TEST_CREATOR_ID, TEST_APP_ID, DEFAULT);
 
-    cputs("READ:  ");
-    r = fuji_appkey_read(&data.read); // success is returned as true
-    cprintf("%hd\r\n", r);
+	r = fuji_write_appkey(TEST_KEY_ID, write_count, (uint8_t *) &write_buffer[0]);;
+	cprintf("WRITE size: %d r: %hd\r\n", write_count, r);
 
-    cprintf("len=%u val='%s'\r\n", data.read.length, data.read.value);
-    cputs("Press a key");
-    cgetc();
+	r = fuji_read_appkey(TEST_KEY_ID, &read_count, (uint8_t *) &read_buffer[0]); // success is returned as true
+	cprintf("READ r: %hd\r\n", r);
+	cprintf("len=%u val='%s'\r\n", read_count, read_buffer);
+	cputs("\r\nPress a key\r\n");
+	cgetc();
 
-    return 0;
+	return 0;
 }
