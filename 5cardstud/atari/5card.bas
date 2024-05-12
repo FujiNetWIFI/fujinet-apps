@@ -43,8 +43,8 @@ if serverEndpoint$<>""
   next
 else
   ' Default to known server if not specified by lobby. Override for local testing
-  'serverEndpoint$="https://5card.carr-designs.com/"
-  serverEndpoint$="http://192.168.2.41:8080/"
+  serverEndpoint$="https://5card.carr-designs.com/"
+  'serverEndpoint$="http://192.168.2.41:8080/"
   'query$="?table=dev7"
 endif
 
