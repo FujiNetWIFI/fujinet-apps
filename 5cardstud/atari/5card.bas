@@ -43,9 +43,9 @@ if serverEndpoint$<>""
   next
 else
   ' Default to known server if not specified by lobby. Override for local testing
-  serverEndpoint$="https://5card.carr-designs.com/"
-  'serverEndpoint$="http://192.168.2.41:8080/"
-  'query$="?table=den"
+  'serverEndpoint$="https://5card.carr-designs.com/"
+  serverEndpoint$="http://192.168.2.41:8080/"
+  'query$="?table=dev7"
 endif
 
 ' Silence the loud SIO noise
@@ -383,6 +383,8 @@ PROC ApiCall apiPath
   temp$ =+ query$
   temp$ =+ ""$9B
 
+  stateIsTables = $(apiPath) = "tables"
+
   ' Open connection
   pause
   NOPEN 8, 12, 0, temp$
@@ -469,7 +471,7 @@ PROC UpdateState
     key$= line$
     
     ' Special case - "players" and "validMoves" keys are arrays of key/value pairs
-    if key$="players" or key$="validMoves" or key$="NULL"
+    if key$="pl" or key$="vm" or key$="NULL"
 
       ' If the key is a NULL object, we effectively break out of the array by setting parent to empty
       if key$="NULL" then key$=""
@@ -481,40 +483,10 @@ PROC UpdateState
     endif
   else
     value$ = line$
-    ' Set our state variables based on the key
-    if   key$="lastResult"    : lastResult$ = value$
-    elif key$="round"         : round = val(value$)
-    elif key$="pot"           : pot = val(value$) 
-    elif key$="activePlayer"  : activePlayer = val(value$)
-    elif key$="prompt"        : prompt$ = value$
-    elif key$="viewing"       : viewing = val(value$)
-    elif key$="moveTime"      : 
-      moveTime = val(value$)
-      timer ' Reset timer when we get an updated movetime
-    elif parent$="validMoves" 
-      if key$="move"
-        @ToUpper &value$ 
-         validMoveCode$(validMoveCount) = value$
-      elif key$="name" 
-        @ToUpper &value$ 
-        validMove$(validMoveCount) = value$
-        inc validMoveCount
-      else :parent$="": endif
-    elif parent$="players"
-      if key$="name" 
-        @ToUpper &value$
-        if len(value$)>8 then value$=value$[1,8]
-        player_name$(playerCount) = value$
-      elif key$="status"       : player_status(playerCount) = val(value$)
-      elif key$="bet"           : player_bet(playerCount) = val(value$)
-      elif key$="move"          : player_move$(playerCount) = value$
-      elif key$="purse"         : player_purse(playerCount) = val(value$)
-      elif key$="hand"          : player_hand$(playerCount) = value$: inc playerCount 
-      else :parent$="": endif
-      
-    ' Handle /tables call here. String space is at a premium, so reuse 
-    ' the player_name and player_hand strings for the server details
-      elif key$="t" : player_name$(playerCount) = value$
+    if stateIsTables
+      ' Handle /tables call here. String space is at a premium, so reuse 
+      ' the player_name and player_hand strings for the server details
+      if key$="t" : player_name$(playerCount) = value$
       elif key$="n" : player_hand$(playerCount) = value$: @ToUpper &player_hand$(playerCount)
       elif key$="p"
         player_move$(playerCount) = value$
@@ -522,6 +494,41 @@ PROC UpdateState
         player_move$(playerCount) =+ " / "
         player_move$(playerCount) =+ value$
         inc playerCount 
+      endif
+    ' Valid Move properties
+    elif parent$="vm" 
+      if key$="m"
+        @ToUpper &value$ 
+         validMoveCode$(validMoveCount) = value$
+      elif key$="n" 
+        @ToUpper &value$ 
+        validMove$(validMoveCount) = value$
+        inc validMoveCount
+      else :parent$="": endif
+    ' Player properties
+    elif parent$="pl"
+      if key$="n" 
+        @ToUpper &value$
+        if len(value$)>8 then value$=value$[1,8]
+        player_name$(playerCount) = value$
+      elif key$="s"       : player_status(playerCount) = val(value$)
+      elif key$="b"           : player_bet(playerCount) = val(value$)
+      elif key$="m"          : player_move$(playerCount) = value$
+      elif key$="p"         : player_purse(playerCount) = val(value$)
+      elif key$="h"          : player_hand$(playerCount) = value$: inc playerCount 
+      else
+        parent$=""
+      endif
+    ' State level properties
+    elif key$="l" : lastResult$ = value$
+    elif key$="r" : round = val(value$)
+    elif key$="p" : pot = val(value$) 
+    elif key$="a" : activePlayer = val(value$)
+    elif key$="p" : prompt$ = value$
+    elif key$="v" : viewing = val(value$)
+    elif key$="m" : 
+      moveTime = val(value$)
+      timer ' Reset timer when we get an updated movetime
     endif
   endif
 
@@ -1009,7 +1016,7 @@ PROC CheckIfPlayerCountChanged
 endproc
 
 PROC ResetStateIfNewGame
-     if round >= prevRound then exit
+  if round >= prevRound then exit
  
   if prevRound<> 99
     @SetStatusBarHeight 1
@@ -1024,6 +1031,8 @@ PROC ResetStateIfNewGame
   
   ' If the round is already past 1, we are joining a game in progress. Skip animation this update
   if round>1 then noAnim=1
+
+  @HidePlayerSecretCardMask
 ENDPROC
 
 PROC RenderPot
@@ -1083,7 +1092,18 @@ PROC RenderGameStatus
     @PrintUpper &player_name$(activePlayer)
 
   elif activePlayer< 0 and (round = 5 or round = 0)
-    @HidePlayerSecretCardMask
+   ' If everyone but the player folded, don't indicate their card was flipped
+    ii=1
+    if round=5 and player_status(0)=1
+      ii=0
+      for i=1 to playerCount-1
+        if player_status(i)=1 then ii=1
+      next
+    endif
+
+    if ii=1 then @HidePlayerSecretCardMask
+    
+
     ' End of (or in between) games
      if round=5 and prevRound <> round 
       sound 1,200,10,8:pause 2
@@ -1112,9 +1132,9 @@ PROC RenderGameStatus
     
     if round=5 and prevRound <> round 
       sound 1,150,10,8:pause 2
-      sound 1,140,10,8:pause 2
+      sound 1,140,10,8:pause 3
       sound 1,135,10,8:pause 2
-      sound 1,132,10,8:pause 2
+      sound 1,132,10,8:pause 3
       sound
     endif
   endif
@@ -1254,6 +1274,7 @@ PROC RenderCards
   cardIndex = 0
   xOffset = 0
   finalFlip = prevRound<round and round=5
+  
   while cardIndex <= round
     doAnim = (round<5 and not noAnim and cardIndex >= currentCard)' or (round=5 and prevRound<round and cardIndex=4)
     if doAnim 
@@ -1280,7 +1301,7 @@ PROC RenderCards
           sound
         endif
     
-        if doAnim then pause 5
+        if doAnim and cardIndex >1 then pause 5
       endif
     next
     inc xOffset
@@ -1291,7 +1312,17 @@ PROC RenderCards
   ' End of game reveal or player folded
   
   if round=5 or player_status(0) <> 1
-    @HidePlayerSecretCardMask
+    
+    ' If everyone else folded, don't flip the winner's card
+    ii=1
+    if round=5 and player_status(0)=1
+      ii=0
+      for i=1 to playerCount-1
+        if player_status(i)=1 then ii=1
+      next
+    endif
+
+    if ii=1 then @HidePlayerSecretCardMask
   elif currentCard = 0 and round<5 
     @CreatePlayerSecretCardMask
   endif
