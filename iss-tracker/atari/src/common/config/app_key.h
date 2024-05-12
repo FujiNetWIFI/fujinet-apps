@@ -1,6 +1,8 @@
 #ifndef APP_KEY_H
 #define APP_KEY_H
 
+#include <stdbool.h>
+
 /* Bill Kendrick's App Key "Creator ID"
    (see https://github.com/FujiNetWIFI/fujinet-platformio/wiki/SIO-Command-%24DC-Open-App-Key) */
 
@@ -10,7 +12,7 @@
 #define APP_ID 0x02
 #define KEY_ID 0x01
 
-void read_settings(void);
-unsigned char write_settings(void);
+bool read_settings(void);
+bool write_settings(void);
 
 #endif // APP_KEY_H
