@@ -1,0 +1,10 @@
+{
+    "configurations": [
+        {
+            "defines": [
+                "__APPLE2__"
+            ]
+        }
+    ],
+    "version": 4
+}

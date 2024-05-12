@@ -359,8 +359,12 @@ ifneq ($(OS),Windows_NT)
 	# Start the Apple Fujinet, as it needs to be restarted before each Apple2 boot
 	#cd ~/Documents/projects/fujinet-firmware/build_apple/dist;./run-fujinet&
 	cd ~/Documents/fujinet-pc-apple/dist;./run-fujinet&
-
 endif
+endif
+ifeq ($(OS),Windows_NT) 
+	@echo ........................................................................ & dir $(PROGRAM) | find "$(PROGRAM)" &echo ........................................................................
+else
+	sleep2;@echo ........................................................................ ;ls -l $(PROGRAM);echo ........................................................................;echo ........................................................................; sleep 3 
 endif
 
 test: $(PROGRAM)

@@ -2,9 +2,16 @@
  Platform specific graphics commands
 */
 
+#ifndef GRAPHICS_H
+#define GRAPHICS_H
+
 #define PARTIAL_LEFT 1
 #define PARTIAL_RIGHT 2
 #define FULL_CARD 3
+
+#include <stdint.h>
+#include <stdbool.h>
+#include "../misc.h"
 
 void enableDoubleBuffer();
 void disableDoubleBuffer();
@@ -19,11 +26,12 @@ void drawStatusText(char* s);
 void drawStatusTimer();
 
 void drawText(unsigned char x, unsigned char y, char* s);
-void drawCard(unsigned char x, unsigned char y, unsigned char partial, const char* s);
+void drawCard(unsigned char x, unsigned char y, unsigned char partial, const char* s, bool isHidden);
 void drawChip(unsigned char x, unsigned char y);
 void drawBlank(unsigned char x, unsigned char y);
 void drawPointer(unsigned char x, unsigned char y);
 void drawLine(unsigned char x, unsigned char y, unsigned char w);
+void hideLine(unsigned char x, unsigned char y, unsigned char w);
 void drawBox(unsigned char x, unsigned char y, unsigned char w, unsigned char h);
 void drawBorder();
 void drawLogo();
@@ -31,6 +39,8 @@ void drawLogo();
 void initGraphics();
 void waitvsync();
 
-void cycleNextColor();
+uint8_t cycleNextColor();
 void setColorMode();
 extern unsigned char colorMode;
+
+#endif /* GRAPHICS_H */
