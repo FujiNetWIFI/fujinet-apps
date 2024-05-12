@@ -2,7 +2,7 @@
 #define STAECLIENT_H
 #include <stdbool.h>
 
-void updateState();
+void updateState(bool isTables);
 bool getStateFromServer();
 bool apiCall(const char *path);
 

@@ -4,7 +4,6 @@
   Graphics functionality
 */
 
-
 #include "hires.h"
 #include "text.h"
 #include<peekpoke.h>
@@ -16,12 +15,17 @@
 #define RED_VAL_1 ROP_OR(0b11010110)
 #define RED_VAL_2 ROP_OR(0b10101010)
 
-unsigned char colorMode=1;
+unsigned char colorMode=0;
 
-void cycleNextColor() {
+unsigned char cycleNextColor() {
   ++colorMode;
   if (colorMode>1)
     colorMode=0;
+  return colorMode;
+}
+
+void setColorMode(unsigned char mode) {
+  colorMode = mode;
 }
 
 void enableDoubleBuffer() {
@@ -32,9 +36,18 @@ void disableDoubleBuffer() {
  POKE(0xc054,1);
 }
 
+void drawTextAt(unsigned char x, unsigned char y, char*s) {
+  static unsigned char c;
+  while(*s) {
+    c=*s++;
+    if (c>=97 && c<=122) c=c-32;
+    hires_putc(x++,y,ROP_CPY,c);
+  }  
+}
+
 void clearStatusBar() {
   //unsigned char i;
-  hires_Mask(0,183,40,8,0xa900);
+  hires_Mask(0,175,40,17,0xa900);
   //for (i=0;i<40;i++) {
    // hires_putc(i,175,ROP_CPY,' ');
    // hires_putc(i,183,ROP_CPY,' ');
@@ -46,40 +59,32 @@ void drawBuffer() {
 }
 
 void drawStatusTextAt(unsigned char x, char* s) {
-  //hires_puts(x, BOTTOM+8, s);
-  drawText(x, BOTTOM+8, s);
-
-  /*unsigned char i,j;
-  
-  i=x;
-  j=BOTTOM+8;
-  
-  while(*s){
-    if (*s=='\n') {
-      i=0;
-      j+=8;
-    } else
-      hires_putcU(i++,j,ROP_CPY,*s);
-    s++;
-  }*/
+  drawTextAt(x, BOTTOM+5, s);
 }
 
 void drawStatusText(char* s) {
+  static char* comma;
   clearStatusBar();
-  drawStatusTextAt(0, s);
+  if (strlen(s)>40) {
+    comma = s;
+    while (*comma++!=',');
+    comma[0]=0;
+    comma++;
+    drawTextAt(0, BOTTOM-1, s);
+    drawTextAt(0, BOTTOM+8, comma);
+  } else {
+    drawStatusTextAt(0, s);
+  }
+  
 }
 
 void drawStatusTimer() {
- 
+  hires_putcc(38,BOTTOM+5,ROP_CPY, 0x2829);
 }
   
+
 void drawText(unsigned char x, unsigned char y, char* s) {
-  static unsigned char c;
-  while(*s) {
-    c=*s++;
-    if (c>=97 && c<=122) c=c-32;
-    hires_putc(x++,y*8-1,ROP_CPY,c);
-  }   
+  drawTextAt(x,y*8-4, s);
 
   // Convert lowercase to upper
   //char*s2 = s;
@@ -96,7 +101,7 @@ void drawText(unsigned char x, unsigned char y, char* s) {
   */
   
   /*if (isSpace && strlen(s) < 6) {
-    y=y*8-1;
+    y=y*8-4;
     while (*s) {
       hires_Mask(x++,y,1,8,0xa955 - (0x2B*(x%2))); 
       s++;
@@ -104,23 +109,41 @@ void drawText(unsigned char x, unsigned char y, char* s) {
   }
   else*/
 
-  //  hires_puts(x,y*8-1, s);
+  //  hires_puts(x,y*8-4, s);
 }
 
 
 void drawChip(unsigned char x, unsigned char y) {
-  //hires_putc(x-1,y*8-1,0xa955 - (0x2B*(x%2)), '1');
-  //hires_putc(x,y*8-1,ROP_OR(0x55), 'O');
+  //hires_putc(x-1,y*8-4,0xa955 - (0x2B*(x%2)), '1');
+  //hires_putc(x,y*8-4,ROP_OR(0x55), 'O');
   // Solve gfx later once layout is finalized
-  //hires_putc(x,y*8-1,ROP_OR(0x55), 'O');
-  hires_putc(x,y*8,ROP_CPY, 0x22);
+  //hires_putc(x,y*8-4,ROP_OR(0x55), 'O');
+  hires_putc(x,y*8-3,ROP_CPY, 0x22);
   
 }
 
 
 // Call to clear the screen to an empty table
 void resetScreen() { 
-  hires_Mask(0,1,39,BOTTOM,0xa900);
+  hires_Mask(0,1,39,174,0xa900);
+  /*hires_Mask(0,2,1,1, 0xa9ff); 
+  hires_Mask(1,1,38,1, 0xa9ff); 
+  hires_Mask(39,2,1,1, 0xa9ff); 
+
+  hires_Mask(0,2,1,1, 0xa9ff); 
+  hires_Mask(1,1,38,1, 0xa9ff); 
+  hires_Mask(39,2,1,1, 0xa9ff); */
+  
+  hires_putc(0,0,ROP_CPY,0x01);
+  hires_putc(39,0,ROP_CPY,0x02);
+  hires_Mask(1,1,38,1, 0xa9ff); 
+  
+  hires_putc(0,BOTTOM-8,ROP_CPY,0x03);
+  hires_putc(39,BOTTOM-8,ROP_CPY,0x04);
+  hires_Mask(1,BOTTOM-2,38,1, 0xa9ff); 
+  hires_Mask(0,8,1,BOTTOM-16,ROP_CONST(0b00000110));
+  hires_Mask(39,8,1,BOTTOM-16,ROP_CONST(0b00110000));
+
   //memset((void*)0x2000,0,0x2000);
 
   // Starting with black background first to "get it working", and many have monochrome monitors
@@ -131,24 +154,23 @@ void resetScreen() {
     hires_Mask(i,0,1,BOTTOM,0xa92A);
     hires_Mask(++i,0,1,BOTTOM,0xa955);
   }  
-
+*/
   // Draw rounded table corners
-  hires_putc(0,0,ROP_AND(0x2A),0x01);
-  hires_putc(39,0,ROP_AND(0x55),0x02);
-  hires_putc(0,BOTTOM-8,ROP_AND(0x2A),0x03);
-  hires_putc(39,BOTTOM-8,ROP_AND(0x55),0x04);
-  */
+  // hires_putc(0,0,ROP_AND(0x2A),0x01);
+  // hires_putc(39,0,ROP_AND(0x55),0x02);
+  // hires_putc(0,BOTTOM-8,ROP_AND(0x2A),0x03);
+  // hires_putc(39,BOTTOM-8,ROP_AND(0x55),0x04);
+  
   // Reset screen to green background, black status bar, black char color
   //clearStatusBar(); 
 }
 
-void drawCard(unsigned char x, unsigned char y, unsigned char partial, const char* s) {
-  static unsigned char val, red, i;
-  static unsigned suit, mid;
-  mid = 0x0900;
-  y*=8;
-  y--;
- 
+void drawCardAt(unsigned char x, unsigned char y, unsigned char partial, const char* s, bool isHidden) {
+  static unsigned char val, red, i, suit;
+  static unsigned mid;
+  mid = isHidden ? 0x7D7E : 0x0900;
+  //mid = 0x0900;
+
   // Card value
   switch (s[0]) {
     case 't': val=0x71; break;
@@ -163,46 +185,73 @@ void drawCard(unsigned char x, unsigned char y, unsigned char partial, const cha
  
   // Card suit
   switch (s[1]) {
-    case 'h' : suit=0x0A0B; red=1; break;
-    case 'd' : suit=0x0C0D; red=1; break;
-    case 'c' : suit=0x0E0F; red=0; break;
-    case 's' : suit=0x1011; red=0; break;
-    default: suit=0x7B7C; red=0; break;
+    case 'h' : suit=0x0A; red=1; break;
+    case 'd' : suit=0x0C; red=1; break;
+    case 'c' : suit=0x0E; red=0; break;
+    case 's' : suit=0x10; red=0; break;
+    default: suit=0x7B; red=0; break;
   }
   
   // Card top
-  hires_putcc(x,y,ROP_CPY,0x0506); 
+  //hires_putcc(x,y,ROP_O,0x0506); 
+  hires_Mask(x,y+7,1,1, ROP_CONST(0b01111100)); 
+  hires_Mask(x+1,y+7,1,1, ROP_CONST(0b00111111)); 
 
   // Card value
   hires_putc(x,y+=8, colorMode && red ? RED_VAL_1 :ROP_CPY ,val);
   hires_putc(x+1,y, colorMode && red ? RED_VAL_2 : ROP_CPY,++val);
   
-  // Card middle, suit, bottom
+  // Card middle
   hires_putcc(x,y+=8,ROP_CPY,mid);
-  hires_putcc(x,y+=8,ROP_CPY,suit);
-  hires_putcc(x,y+=8,ROP_CPY,0x0708); 
+ 
+  // Suit
+  hires_putc(x,y+=8,colorMode && red ? RED_VAL_1 :ROP_CPY ,suit);
+  hires_putc(x+1,y,colorMode && red ? RED_VAL_2 : ROP_CPY,++suit);
+
+  // Card bottom
+  //hires_putcc(x,y+=8,ROP_CPY,0x0708); 
+  hires_Mask(x,y+=8,1,1, ROP_CONST(0b01111100)); 
+  hires_Mask(x+1,y,1,1, ROP_CONST(0b00111111)); 
+
+ 
+}
+
+void drawCard(unsigned char x, unsigned char y, unsigned char partial, const char* s, bool isHidden) {
+  y*=8;
+  y-=7;
+  drawCardAt(x, y, partial, s, isHidden);
 }
 
 void drawPointer(unsigned char x, unsigned char y) {
  
 }
 
-
 void drawLine(unsigned char x, unsigned char y, unsigned char w) {
- 
+   hires_Mask(x,y*8-3,w,2, 0xa9ff); 
+}
+
+void hideLine(unsigned char x, unsigned char y, unsigned char w) {
+   hires_Mask(x,y*8-3,w,2, 0xa900); 
 }
 
 void drawBox(unsigned char x, unsigned char y, unsigned char w, unsigned char h) {
-  y=y*8-1;
+  y=y*8-4;
 
   // Top Corners
   hires_putc(x,y,ROP_CPY, 0x3b);hires_putc(x+w+1,y,ROP_CPY, 0x3c);
   
+  // Accents if height > 1
+  if (h>1) {
+    hires_putc(x+1,y+8,ROP_CPY, 1);
+  }
+
   // Top/bottom lines
   for(i=x+w;i>x;--i) {
     hires_putc(i,y,ROP_CPY, 0x40);
     hires_putc(i,y+(h+1)*8,ROP_CPY, 0x40);
   }
+
+
   
   // Sides
   for(i=0;i<h;++i) {
@@ -211,17 +260,23 @@ void drawBox(unsigned char x, unsigned char y, unsigned char w, unsigned char h)
     hires_putc(x+w+1,y,ROP_CPY, 0x3f);
   }
   
+    // Accents if height > 1
+  if (h>1) {
+    hires_putc(x+w,y,ROP_CPY, 4);
+  }
+
   y+=8;
   // Bottom Corners
   hires_putc(x,y,ROP_CPY, 0x3d);hires_putc(x+w+1,y,ROP_CPY, 0x3e);
   
+
 }
 
 void drawBorder() {
-  drawCard(1,0,FULL_CARD, "as");
-  drawCard(37,0,FULL_CARD, "ah");
-  drawCard(1,18,FULL_CARD, "ad");
-  drawCard(37,18,FULL_CARD, "ac");
+  drawCardAt(1,0,FULL_CARD, "as", 0);
+  drawCardAt(37,0,FULL_CARD, "ah", 0);
+  drawCardAt(1,134,FULL_CARD, "ad", 0);
+  drawCardAt(37,134,FULL_CARD, "ac", 0);
 }
 
 void drawLogo() {

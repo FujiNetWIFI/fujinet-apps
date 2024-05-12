@@ -13,6 +13,8 @@ void drawCards();
 void checkIfSpectatorStatusChanged();
 void checkIfPlayerCountChanged();
 void drawStatusTimeLeft();
+void highlightActivePlayer();
+void animateChipsToPotOnRoundEnd();
 void drawGameStatus();
 void requestPlayerMove();
 void clearGameState();

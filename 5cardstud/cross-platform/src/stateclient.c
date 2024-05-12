@@ -16,7 +16,7 @@
 char rx_buf[2048];     // buffer for json payload
 char urlBuffer[128];
 
-void updateState() {
+void updateState(bool isTables) {
   static char *line, *nextLine, *end, *key, *value, *parent;
   static bool isKey, inArray;
   static char c;
@@ -65,8 +65,8 @@ void updateState() {
     if (isKey) {
       key = line;
 
-      // Special case - "players" and "validMoves" keys are arrays of key/value pairs
-      if (strcmp(key,"players")==0 || strcmp(key,"validmoves")==0 || strcmp(key,"null")==0) {
+      // Special case - "pl" (players) and "vm" (valid moves) keys are arrays of key/value pairs
+      if (strcmp(key,"pl")==0 || strcmp(key,"vm")==0 || strcmp(key,"null")==0) {
 
         // If the key is a NULL object, we effectively break out of the array by setting parent to empty
         if (strcmp(key,"null")==0)
@@ -84,7 +84,7 @@ void updateState() {
 
    
       // Set our state variables based on the key
-      if (strlen(key)==1) {
+      if (isTables) {
         switch (key[0]) {
           case 't': 
             state.tables[tableCount].table = value;
@@ -144,7 +144,6 @@ void updateState() {
             parent="";
         }
       } else {
-       
         switch (key[0]) {
           case 'l': //"lastresult")==0) { 
             state.lastResult = value;
@@ -203,7 +202,7 @@ bool getStateFromServer()
   }
   
   if (apiCall(tempBuffer)) {
-    updateState();
+    updateState(false);
     return true;
   }
   return false;

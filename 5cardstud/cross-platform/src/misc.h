@@ -16,6 +16,8 @@
 #endif /* _CMOC_VERSION_ */
 #include "platform-specific/graphics.h"
 #include "platform-specific/input.h"
+#include <stdbool.h>
+#include <stdint.h>
 
 // FujiNet AppKey settings. These should not be changed
 #define AK_LOBBY_CREATOR_ID 1     // FUJINET Lobby
@@ -26,11 +28,11 @@
 // 5 Card Stud client
 #define AK_CREATOR_ID 0xE41C      // Eric Carr//s creator id
 #define AK_APP_ID 1               // 5 Card/Poker App ID
-#define AK_KEY_SHOWHELP 0         // Shown help
-#define AK_KEY_COLORTHEME 1       // Color theme
+#define AK_KEY_PREFS 0            // Preferences
 
-#include <stdbool.h>
-#include <stdint.h>
+#define PREF_HELP 0  // 1/2 seen help screen no/yes
+#define PREF_COLOR 1 // 1/2 - Color mode mono/color
+#define PREF_SOUND 2 // 1/2 - Sound Enabled yes/no
 
 typedef struct {
   char * table;
@@ -82,6 +84,7 @@ extern unsigned char h, i, j, k, x, y, xx;
 extern unsigned char playerX[8], playerY[8], moveLoc[5];
 extern signed char playerBetX[8], playerBetY[8], playerDir[8];
 extern char *hand, *requestedMove;
+extern char prefs[4];
 
 
 // Screen specific player/bet coordinates
@@ -96,11 +99,10 @@ extern const char playerBetYMaster[] ;
 // Downside is new players will cause existing player positions to move.
 extern const char playerCountIndex[] ;
 
-
-
 void pause(unsigned char frames);
-void cycleColors();
 void clearCommonInput();
 void readCommonInput();
+void loadPrefs();
+void savePrefs();
 
 #endif /* MISC_H */
