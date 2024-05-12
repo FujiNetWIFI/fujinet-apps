@@ -1,68 +1,52 @@
 #include <atari.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 #include "app_key.h"
 #include "colors.h"
 #include "fujinet-fuji.h"
 
-static AppKeyDataBlock data;
-
-/**
- * Open our app key store on the FujiNet
- * (used by the read & write routines, below).
- *
- * @param byte mode - 0=read, 1=write
- * @return fujinet ERROR status, true if there is an error
- */
-bool open_appkey(unsigned char mode) {
-  data.open.creator = CREATOR_ID;
-  data.open.app = APP_ID;
-  data.open.key = KEY_ID;
-  data.open.mode = mode;
-  data.open.reserved = 0x00;
-
-  return fuji_appkey_open(&data.open);
-}
+// max data a key can contain. The key only contains what we write to it, but we should allocate enough space for full key
+static char key_data[64];
 
 /**
  * Read ISS Tracker settings from FujiNet app key store.
  *
- * Note: Fails silently.
+ * @return success status (true = success)
  */
-void read_settings(void) {
-  bool is_error;
+bool read_settings(void) {
+  uint16_t read_count = 0;
 
-  if (!open_appkey(0)) {
-    return;
+  fuji_set_appkey_details(CREATOR_ID, APP_ID, DEFAULT);
+  if (!fuji_read_appkey(KEY_ID, &read_count, (uint8_t *) &key_data[0])) {
+    return false;
+  }
+  if (read_count != 4) {
+    return false;
   }
 
-  if (!fuji_appkey_read(&data.read)) {
-    return;
-  }
+  color0 = key_data[0];
+  color1 = key_data[1];
+  color2 = key_data[2];
+  color4 = key_data[3];
 
-  color0 = data.read.value[0];
-  color1 = data.read.value[1];
-  color2 = data.read.value[2];
-  color4 = data.read.value[3];
+  return true;
 }
 
 /**
  * Write ISS Tracker settings to FujiNet app key store.
  *
- * @return bool whether it seemed to succeed
+ * @return success status (true = success)
  */
-unsigned char write_settings(void) {
+bool write_settings(void) {
   bool is_error;
 
-  if (!open_appkey(0)) {
-    return false;
-  }
+  key_data[0] = color0;
+  key_data[1] = color1;
+  key_data[2] = color2;
+  key_data[3] = color4;
 
-  data.write.value[0] = color0;
-  data.write.value[1] = color1;
-  data.write.value[2] = color2;
-  data.write.value[3] = color4;
-
-  return fuji_appkey_write(4, &data.write);
+  fuji_set_appkey_details(CREATOR_ID, APP_ID, DEFAULT);
+  return fuji_write_appkey(KEY_ID, 4, (uint8_t *) &key_data[0]);
 
 }

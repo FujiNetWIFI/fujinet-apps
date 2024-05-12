@@ -810,36 +810,6 @@ void sp_list_devs()
   }
 }
 
-int8_t sp_find_modem()
-{
-  const char modem[5] = "MODEM";
-  const uint8_t modem_len = sizeof(modem);
-  int8_t err, num, i, j;
-
-  err = sp_status(0x00, 0x00); // get number of devices
-
-  if (err)
-    return -err;
-
-  num = sp_payload[0];
-  num+=2;
-
-  for (i = 1; i < num; i++)
-    {
-      err = sp_status(i, 0x03); // get DIB
-
-      if (sp_payload[4] == modem_len)
-	{
-	  for (j = 0; j < modem_len; j++)
-	    if (modem[j]!=sp_payload[5+j])
-	      return 0;
-
-	  return i;
-	}
-    }
-  return 0;
-}
-
 /**
  * Apple // SmartPort routines for CC65
  *

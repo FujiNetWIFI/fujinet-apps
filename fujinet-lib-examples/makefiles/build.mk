@@ -107,6 +107,10 @@ define _labelfile_
   LDFLAGS += -Ln $$@.lbl
 endef
 
+STATEFILE := Makefile.options
+-include $(DEPENDS)
+-include $(STATEFILE)
+
 ifeq ($(origin _OPTIONS_),file)
 OPTIONS = $(_OPTIONS_)
 $(eval $(OBJECTS): $(STATEFILE))
@@ -132,10 +136,6 @@ endif
 
 all: $(ALL_TASKS) $(PROGRAM_TGT)
 
-STATEFILE := Makefile.options
--include $(DEPENDS)
--include $(STATEFILE)
-
 $(OBJDIR):
 	$(call MKDIR,$@)
 
@@ -154,17 +154,17 @@ vpath %.c $(SRC_INC_DIRS)
 
 $(OBJDIR)/$(CURRENT_TARGET)/%.o: %.c $(VERSION_FILE) | $(OBJDIR)
 	@$(call MKDIR,$(dir $@))
-	$(CC) -t $(CURRENT_PLATFORM) -c --create-dep $(@:.o=.d) $(CFLAGS) -o $@ $<
+	$(CC) -t $(CURRENT_TARGET) -c --create-dep $(@:.o=.d) $(CFLAGS) -o $@ $<
 
 vpath %.s $(SRC_INC_DIRS)
 
 $(OBJDIR)/$(CURRENT_TARGET)/%.o: %.s $(VERSION_FILE) | $(OBJDIR)
 	@$(call MKDIR,$(dir $@))
-	$(CC) -t $(CURRENT_PLATFORM) -c --create-dep $(@:.o=.d) $(ASFLAGS) -o $@ $<
+	$(CC) -t $(CURRENT_TARGET) -c --create-dep $(@:.o=.d) $(ASFLAGS) -o $@ $<
 
 
 $(BUILD_DIR)/$(PROGRAM_TGT): $(OBJECTS) $(LIBS) | $(BUILD_DIR)
-	$(CC) -t $(CURRENT_PLATFORM) $(LDFLAGS) -o $@ $^
+	$(CC) -t $(CURRENT_TARGET) $(LDFLAGS) -o $@ $^
 
 $(PROGRAM_TGT): $(BUILD_DIR)/$(PROGRAM_TGT) | $(BUILD_DIR)
 
