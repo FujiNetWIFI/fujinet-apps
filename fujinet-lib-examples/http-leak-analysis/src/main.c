@@ -6,21 +6,28 @@
  * @verbose Repeated calls of HTTP read and parse.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <conio.h>
 #include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+
 #include <fujinet-network.h>
 
-char *http_url = "N:HTTP://api.open-notify.org/astros.json";
-char *https_url = "N:HTTPS://oldbytes.space/api/v1/timelines/public?limit=1";
-char *tcp_url = "N:TCP://TMA-2:6502/";
-char *tnfs_url = "N:TNFS://TMA-2/TEST.DAT";
+char *http_url = "n:http://api.open-notify.org/astros.json";
+char *https_url = "n:https://oldbytes.space/api/v1/timelines/public?limit=1";
+char tcp_url[80];   // = "N:TCP://TMA-2:6502/";
+char tnfs_url[80];  // = "N:TNFS://TMA-2/TEST.DAT";
 
 uint8_t buf[16384];
 uint16_t bw;
 uint8_t c;
 uint8_t err;
+
+void set_urls()
+{
+    sprintf(tcp_url, "n:tcp://%s:%s/", TCP_SERVER_ADDRESS, TCP_SERVER_PORT);    
+    sprintf(tnfs_url, "n:tnfs://%s", TNFS_FILE_PATH);    
+}
 
 void http_no_parse(void)
 {
@@ -146,19 +153,21 @@ void tcp_open_close(void)
 
 void main(void)
 {
+    set_urls();
+
     network_init();
 
     tcp_open_close();
     
-    /* http_open_close(); */
+    http_open_close();
     
-    /* http_no_parse(); */
+    http_no_parse();
 
-    /* http_parse(); */
+    http_parse();
 
-    /* https_no_parse(); */
+    https_no_parse();
 
-    /* https_parse(); */
+    https_parse();
 
-    /* tnfs_test(); */
+    tnfs_test();
 }
