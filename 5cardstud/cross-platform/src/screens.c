@@ -13,7 +13,7 @@
 #include "platform-specific/input.h"
 #include "platform-specific/appkey.h"
 #include "platform-specific/util.h"
-
+#include "platform-specific/sound.h"
 #include <string.h>
 
 #define PLAYER_NAME_MAX 8
@@ -38,6 +38,7 @@ void resetScreenWithBorder() {
 /// @brief Shows information about the game
 void showHelpScreen() {
   static unsigned char y;
+  enableDoubleBuffer();
   centerStatusText("LOADING INSTRUCTIONS..");
   drawBuffer();
 
@@ -45,23 +46,22 @@ void showHelpScreen() {
   // this client were game agnostic.
   resetScreenWithBorder();
   
-  centerText(3,"HOW TO PLAY 5 CARD STUD");
+  centerText(2,"HOW TO PLAY 5 CARD STUD");
   y=4;
   //                  // __________________________________
   y++;drawText(3,y, "PLAYERS ARE DEALT 5 CARDS OVER THE");
-  y++;drawText(3,y, "COURSE OF 4 ROUNDS. ON EACH ROUND");
+  y++;drawText(3,y, "COURSE OF 4 ROUNDS. IN EACH ROUND");
   y++;drawText(3,y, "PLAYERS BET, CALL, AND RE-RAISE.");
   y+=2;
   centerText(y, "MOVES");
   y++;
-  y++;drawText(4,y, "FOLD  - QUIT THE HAND");y++;
-  y++;drawText(4,y, "CHECK - FREE PASS");y++;
-  y++;drawText(4,y, "BET / - INCREASE BET. OTHERS MUST");
-  y++;drawText(4,y, "RAISE   CALL TO STAY IN THE HAND");y++;
-  y++;drawText(4,y, "CALL  - MATCH THE CURRENT BET AND");
-  y++;drawText(4,y, "        STAY IN THE HAND");
+  y++;drawText(4,y, "FOLD - QUIT THE HAND");y++;
+  y++;drawText(4,y, "CHECK- FREE PASS");y++;
+  y++;drawText(4,y, "BET /- INCREASE BET. OTHERS MUST");
+  y++;drawText(4,y, "RAISE  CALL TO STAY IN THE HAND");y++;
+  y++;drawText(4,y, "CALL - MATCH THE CURRENT BET AND");
+  y++;drawText(4,y, "       STAY IN THE HAND");
   
-  drawBuffer();
   centerStatusText("PRESS ANY KEY TO CONTINUE");
   drawBuffer();
 
@@ -143,7 +143,7 @@ void welcomeActionVerifyPlayerName() {
 void showWelcomScreen() {
   resetScreenWithBorder();
   drawLogo();
-
+  
   welcomeActionVerifyPlayerName();
   welcomeActionVerifyServerDetails();
 
@@ -151,15 +151,12 @@ void showWelcomScreen() {
   strcat(tempBuffer, playerName);
   centerText(13,tempBuffer);  
   drawBuffer();
-  pause(60);
+  pause(45);
 
   // If first run, show the help screen
-  read_appkey(AK_CREATOR_ID, AK_APP_ID, AK_KEY_SHOWHELP, tempBuffer);
-  
-  if (strlen(tempBuffer)==0) {
-    strcpy(tempBuffer,"1");
-    write_appkey(AK_CREATOR_ID, AK_APP_ID, AK_KEY_SHOWHELP, tempBuffer);
-    pause(60);
+  if (prefs[PREF_HELP]!=2) {
+    prefs[PREF_HELP]=2;
+    savePrefs();
     showHelpScreen();
   } 
   pause(30);
@@ -183,14 +180,15 @@ void tableActionJoinServer() {
 
 /// @brief Shows a screen to select a table to join
 void showTableSelectionScreen() {
+  static uint8_t shownChip;
   static unsigned char tableIndex=0;
- 
+  
   // An empty query means a table needs to be selected
   while (strlen(query)==0) {
 
     // Show the status immediately before retrival
     centerStatusText("REFRESHING TABLE LIST..");
-    drawStatusTimer();
+    //drawStatusTimer();
     drawBuffer();
 
     resetScreenWithBorder();
@@ -199,17 +197,20 @@ void showTableSelectionScreen() {
     drawText(3,6, "TABLE");
     drawText(WIDTH-7-3,6, "PLAYERS");
 
-    drawLine(3,8,WIDTH-6);
+    drawLine(3,7,WIDTH-6);
     drawBuffer();
     //cprintf("here: \n");
     //cprintf("here1: \n");
     if (apiCall("tables")) {
    
-      updateState();
+      updateState(true);
       if (tableCount>0) {
         for(i=0;i<tableCount;++i) {
           drawText(3,8+i*2, state.tables[i].name);
           drawText(WIDTH-3-strlen(state.tables[i].players), 8+i*2, state.tables[i].players);
+          if (state.tables[i].players[0]>'0') {
+            drawText(WIDTH-3-strlen(state.tables[i].players)-2, 8+i*2, "*");
+          }
         }
       } else {
         centerText(12, "SORRY, NO TABLES ARE AVAILABLE");
@@ -218,9 +219,11 @@ void showTableSelectionScreen() {
       //cprintf("Tables: %i\n", tableCount);
         
 
-      drawStatusText("R-REFRESH    H-HELP    C-COLOR    Q-QUIT");
+      //drawStatusText("R-REFRESH    H-HELP    C-COLOR    Q-QUIT");
+      drawStatusText(" R+EFRESH  H+ELP  C+OLOR  S+OUND  Q+UIT");
       drawBuffer();
-
+      disableDoubleBuffer();
+      shownChip=0;
       clearCommonInput();
       while (!inputTrigger || !tableCount) {
         readCommonInput();
@@ -231,7 +234,8 @@ void showTableSelectionScreen() {
         } else if (inputKey == 'r' || inputKey =='R') {
           break;
         } else if (inputKey == 'c' || inputKey =='C') {
-          cycleColors();
+          prefs[PREF_COLOR] = cycleNextColor()+1;
+          savePrefs();
           break;
         } else if (inputKey == 'q' || inputKey =='Q') {
           quit();
@@ -240,7 +244,8 @@ void showTableSelectionScreen() {
           drawStatusText(tempBuffer);
         }*/
         
-        if (tableCount>0) {
+        if (!shownChip || (tableCount>0 && inputDirY)) {
+
           drawText(1,8+tableIndex*2," ");
           tableIndex+=inputDirY;
           if (tableIndex==255) 
@@ -249,11 +254,22 @@ void showTableSelectionScreen() {
             tableIndex=0;
 
           drawChip(1,8+tableIndex*2);
-          drawBuffer();
+
+          soundCursor();
+          shownChip=1;
         }
       }
-
+      
+      enableDoubleBuffer();
+      
       if (inputTrigger) {
+        soundSelectMove();
+
+        // Clear screen and write server name
+        resetScreenWithBorder();
+        clearStatusBar();
+        centerText(15, state.tables[tableIndex].name);
+        
         strcpy(query, "?table=");
         strcat(query, state.tables[tableIndex].table);
         strcpy(tempBuffer, serverEndpoint);
@@ -262,9 +278,6 @@ void showTableSelectionScreen() {
         //  Update server app key in case of reboot 
         write_appkey(AK_LOBBY_CREATOR_ID,  AK_LOBBY_APP_ID, AK_LOBBY_KEY_SERVER, tempBuffer);
 
-        // Clear screen and write server name
-        resetScreenWithBorder();
-        centerText(15, state.tables[tableIndex].name);
       }
     }
   }
@@ -281,7 +294,9 @@ void showTableSelectionScreen() {
 void showGameScreen() {
   checkIfSpectatorStatusChanged();
   checkIfPlayerCountChanged();
-  // TODO animateChipsToPotOnRoundEnd();
+  
+  // Animate chips to pot before drawing the new state
+  animateChipsToPotOnRoundEnd();
   
   resetScreen();
   resetStateIfNewGame();
@@ -295,63 +310,70 @@ void showGameScreen() {
   }
 
   drawGameStatus();
-  //highlightActivePlayer();
-
   drawBuffer();
+  highlightActivePlayer();
+
   prevRound = state.round;
 }
 
 /// @brief shows in-game menu
 void showInGameMenuScreen() {
   i=1;
-  resetScreenWithBorder();
-  
-  x = WIDTH/2-8;
-  y = HEIGHT/2-4;
-     
-  drawBox(x-3,y-2,20,9);
-  drawText(x,y,    "  Q: QUIT TABLE");
-  drawText(x,y+=2, "  H: HOW TO PLAY"); 
-  drawText(x,y+=2, "  C: TABLE COLOR"); 
-  drawText(x,y+=2, "ESC: KEEP PLAYING"); 
-  drawBuffer();
-
-  clearCommonInput();
   while (i) {
-    readCommonInput();
-    switch (inputKey) {
-      case 'c':
-      case 'C':
-          cycleColors();
+    enableDoubleBuffer();
+    resetScreenWithBorder();
+    drawBuffer();
+    
+    x = WIDTH/2-8;
+    y = HEIGHT/2-4;
+      
+    drawBox(x-3,y-3,21,13);
+    drawText(x,y,    "  Q: QUIT TABLE");
+    drawText(x,y+=2, "  H: HOW TO PLAY"); 
+    drawText(x,y+=2, "  C: COLOR TOGGLE"); 
+    drawText(x,y+=2, "  S: SOUND TOGGLE"); 
+    drawText(x,y+=2, "ESC: KEEP PLAYING"); 
+    drawBuffer();
+
+    clearCommonInput();
+    i=1;
+    while (i==1) {
+      readCommonInput();
+      switch (inputKey) {
+        case 'c':
+        case 'C':
+            prefs[PREF_COLOR] = cycleNextColor()+1;
+            savePrefs();
+            i=2;
+            break;
+        case 'h':
+        case 'H':
+          showHelpScreen();
+        case KEY_ESCAPE:
+        case KEY_ESCAPE_ALT:
           i=0;
           break;
-      case 'h':
-      case 'H':
-        showHelpScreen();
-        i=0;
-      case 3: // Esc
-        i=0;
-        break;
-      case 'q':
-      case 'Q':
-        resetScreenWithBorder();
-        centerText(12, "PLEASE WAIT");
-        drawBuffer();
+        case 'q':
+        case 'Q':
+          resetScreenWithBorder();
+          centerText(12, "PLEASE WAIT");
+          drawBuffer();
 
-        // Inform server player is leaving
-        apiCall("leave");
-        progressAnim(14);
-        
-        //  Clear server app key in case of reboot 
-        write_appkey(AK_LOBBY_CREATOR_ID,  AK_LOBBY_APP_ID, AK_LOBBY_KEY_SERVER, "");
+          // Inform server player is leaving
+          apiCall("leave");
+          progressAnim(14);
+          
+          //  Clear server app key in case of reboot 
+          write_appkey(AK_LOBBY_CREATOR_ID,  AK_LOBBY_APP_ID, AK_LOBBY_KEY_SERVER, "");
 
-        // Clear query so a new table will be selected
-        strcpy(query,"");
-        showTableSelectionScreen();
-        return;
+          // Clear query so a new table will be selected
+          strcpy(query,"");
+          showTableSelectionScreen();
+          return;
+      }
     }
   }
-  
+
   // Show game screen again before returning
   resetScreen();
   drawBuffer();

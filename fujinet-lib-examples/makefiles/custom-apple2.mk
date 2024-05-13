@@ -22,13 +22,17 @@ APPLE_TOOLS_DIR := ../../apple-tools
 
 # Applewin debug script
 .gendebug: $(PROGRAM_TGT)
-	@echo "Generating debug.scr script for AppleWin"
-	@echo 'echo "Loading symbols"' > build/debug.scr
-	@awk '{printf("sym %s = %s\n", substr($$3, 2), $$2)}' < build/$(PROGRAM_TGT).lbl >> build/debug.scr
-	@echo 'bpx _main' >> build/debug.scr
-	@echo 'bpx _debug' >> build/debug.scr
-	@echo 'bpx _network_open' >> build/debug.scr
-	@echo 'bpx _sp_init' >> build/debug.scr
+	@if [ -f "build/$(PROGRAM_TGT).lbl" ]; then \
+		echo "Generating debug.scr script for AppleWin"; \
+		echo 'echo "Loading symbols"' > build/debug.scr; \
+		awk '{printf("sym %s = %s\n", substr($$3, 2), $$2)}' < build/$(PROGRAM_TGT).lbl >> build/debug.scr; \
+		echo 'bpx _main' >> build/debug.scr; \
+		echo 'bpx _debug' >> build/debug.scr; \
+		echo 'bpx _network_open' >> build/debug.scr; \
+		echo 'bpx _sp_init' >> build/debug.scr; \
+	fi
+
+ALL_TASKS += .gendebug
 
 ################################################################
 # TESTING / EMULATOR

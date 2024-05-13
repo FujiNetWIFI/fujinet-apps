@@ -2,7 +2,7 @@
 
 #include<peekpoke.h>
 #include<stdlib.h>
-
+#include<stdint.h>
 /*
  Screen related variables
 */
@@ -10,11 +10,11 @@
 
 // Screen specific player/bet coordinates
 const unsigned char playerXMaster[] = { 17,1, 1, 1, 15, 37,37, 37 };
-const unsigned char playerYMaster[] = { 18, 18, 11, 3, 2,3,11,18 };
+const unsigned char playerYMaster[] = { 18, 17, 10, 3, 3,3,10,17 };
 
 const char playerDirMaster[] = { 1,1,1,1,1,-1,-1,-1 };
 const char playerBetXMaster[] = { 1,10,10,10,3,-8,-8,-8 };
-const char playerBetYMaster[] = { -3, -2, 1,4,5,4,1,-2 };
+const char playerBetYMaster[] = { -2, -2, 1,4,4,4,1,-2 };
 
 // Simple hard coded arrangment of players around the table based on player count.
 // These refer to index positions in the Master arrays above
@@ -28,14 +28,15 @@ const char playerCountIndex[] = {0,4,0,0,0,0,0,0, 0,2,6,0,0,0,0,0, 0,2,4,6,0,0,0
 
 
 void resetGraphics();
+uint16_t jiffieTimer;
 
 void resetTimer() {
-  POKE(162,0);
-  POKE(161,0);
+  jiffieTimer=0;
 }
 
 int getTime() {
-  return (PEEK(161)*256)+PEEK(162);
+  jiffieTimer+=3;
+  return jiffieTimer;
 }
 
 void quit() {

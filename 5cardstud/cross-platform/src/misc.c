@@ -9,11 +9,15 @@
 #include "adam/joystick.h"
 #else
 #include <joystick.h>
+#include <stdio.h>
+#include <string.h>
 #include <conio.h>
 #endif /* __ADAM__ */
 #endif /* _CMOC_VERSION_ */
 #include "platform-specific/graphics.h"
 #include "platform-specific/input.h"
+#include "platform-specific/sound.h"
+#include "platform-specific/appkey.h"
 #include "misc.h"
 
 #include <stdbool.h>
@@ -22,16 +26,10 @@
 unsigned char _lastJoy, _joy;
 
 void pause(unsigned char frames) {
-  unsigned char i;
+  static uint8_t i;
   for(i=0;i<frames;i++) {
       waitvsync();
   }
-}
-
-void cycleColors() {
-  cycleNextColor();
-  
-  //stub get/set app key to store colorMode
 }
 
 void clearCommonInput() {
@@ -96,5 +94,33 @@ void readCommonInput() {
     case KEY_SPACE:
       inputTrigger=true;
       break;
+    case 'S':
+    case 's':
+      prefs[PREF_SOUND] = toggleSound() ? 1 : 2;
+      savePrefs();
+      break;
   }
+}
+
+void applyPrefs() {
+
+}
+
+void loadPrefs() {
+  read_appkey(AK_CREATOR_ID, AK_APP_ID, AK_KEY_PREFS, tempBuffer);
+  
+  if (strlen(tempBuffer)==0) {
+    // Default all prefs to 1
+    memset(prefs,1,3);
+  } else {
+    strcpy(prefs, tempBuffer);
+  }
+
+  setSound(prefs[PREF_SOUND]==1);
+  setColorMode(prefs[PREF_COLOR]-1);
+}
+
+void savePrefs() {
+  prefs[3] = 0; // Terminate prefs end as a string
+  write_appkey(AK_CREATOR_ID, AK_APP_ID, AK_KEY_PREFS, prefs);
 }
