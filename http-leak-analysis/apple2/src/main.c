@@ -14,6 +14,8 @@
 
 char *http_url = "N:HTTP://api.open-notify.org/astros.json";
 char *https_url = "N:HTTPS://oldbytes.space/api/v1/timelines/public?limit=1";
+char *tcp_url = "N:TCP://TMA-2:6502/";
+char *tnfs_url = "N:TNFS://TMA-2/TEST.DAT";
 
 uint8_t buf[16384];
 uint16_t bw;
@@ -94,17 +96,69 @@ void https_parse(void)
     }
 }
 
+void tnfs_test(void)
+{
+    unsigned char retries = 5;
+    
+    printf("TNFS TEST, 5 ATTEMPTS.\n\n");
+
+    while(retries--)
+    {
+        network_open(tnfs_url,12,0);
+        network_status(tnfs_url,&bw,&c,&err);
+        network_read(tnfs_url,buf,512);
+        network_close(tnfs_url);
+
+        printf("ATTEMPT #%u - BW: 512 BYTES. PRESS ENTER. ",retries);
+        getchar();
+    }
+}
+
+void http_open_close(void)
+{
+    unsigned char retries=5;
+
+    printf("HTTP OPEN/CLOSE, 5 ATTEMPTS.\n\n");
+
+    while(retries--)
+    {
+        network_open(http_url,12,0);
+        network_close(http_url);
+        printf("ATTEMPT #%u - PRESS ENTER. ",retries);
+        getchar();
+    }
+}
+
+void tcp_open_close(void)
+{
+    unsigned char retries=5;
+
+    printf("TCP OPEN/CLOSE, 5 ATTEMPTS.\n\n");
+
+    while(retries--)
+    {
+        network_open(tcp_url,12,0);
+        network_close(tcp_url);
+        printf("ATTEMPT #%u - PRESS ENTER. ",retries);
+        getchar();
+    }    
+}
+
 void main(void)
 {
-    unsigned char i=0;
-
     network_init();
+
+    tcp_open_close();
     
-    http_no_parse();
+    /* http_open_close(); */
+    
+    /* http_no_parse(); */
 
-    http_parse();
+    /* http_parse(); */
 
-    https_no_parse();
+    /* https_no_parse(); */
 
-    https_parse();
+    /* https_parse(); */
+
+    /* tnfs_test(); */
 }
