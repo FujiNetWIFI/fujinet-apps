@@ -14,7 +14,7 @@ TARGETS := apple2
 
 # Name of the final, single-file executable.
 # Default: name of the current dir with target name appended
-PROGRAM := vt100.system
+PROGRAM := cpm.system
  
 # Path(s) to additional libraries required for linking the program
 # Use only if you don't want to place copies of the libraries in SRCDIR
@@ -242,7 +242,7 @@ CONFIG += $(wildcard $(SRCDIR)/*.cfg)
 # Select CONFIG file to use. Target specific cpms have higher priority.
 ifneq ($(word 2,$(CONFIG)),)
   CONFIG := $(firstword $(CONFIG))
-  $(info Using vt100 file $(CONFIG) for linking)
+  $(info Using cpm file $(CONFIG) for linking)
 endif
  
 .SUFFIXES:
@@ -316,8 +316,8 @@ test: $(PROGRAM)
 	$(POSTEMUCMD)
  
 dist: $(PROGRAM)
-	     cp dist.apple2/bootable.po dist.apple2/vt100.po
-	     java -jar dist.apple2/ac.jar -as dist.apple2/vt100.po vt100.system sys <vt100.system
+	     cp dist.apple2/bootable.po dist.apple2/cpm.po
+	     java -jar dist.apple2/ac.jar -as dist.apple2/cpm.po cpm.system sys <cpm.system
 
 clean:
 	$(call RMFILES,$(OBJECTS))

@@ -101,25 +101,23 @@ void main(void)
 
   sp_status(cpm,'B');
 
+  screen_puts("FujiNet CP/M.\r\n");
+  
   if (sp_payload[0]==1)
-    {
-      char c=cgetc();
-      if (c == 'C' || c == 'c')
-	{
-	  screen_putc('C');
-	  dev = cpm;
-	  sp_payload[0]=1;
-	  sp_payload[1]=0;
-	  sp_payload[2]=0;
-	  sp_control(dev,'B');
-	  for (i=0;i<16384;i++);
-	}
-      else if (c == 'M' || c == 'm')
-	{
-	  screen_putc('M');
-	  dev = modem;
-	}      
-    }
+  {
+      screen_puts("CP/M Device Found. Booting CP/M.\r\n\r\n");
+      dev = cpm;
+      sp_payload[0]=1;
+      sp_payload[1]=0;
+      sp_payload[2]=0;
+      sp_control(dev,'B');
+      for (i=0;i<16384;i++);
+  }
+  else
+  {
+      screen_puts("CP/M Not Found. Halted.");
+      while(1);
+  }
   
   screen_cr();
   screen_lf();
@@ -130,13 +128,9 @@ void main(void)
   sp_payload[1]=0;
   sp_payload[2]=0;
   
-  sp_control(cpm,'B');
-
-  for (i=0;i<16384;i++);
-
-    while (1)
-    {
+  while (1)
+  {
       in();
       out();
-    }
+  }
 }
