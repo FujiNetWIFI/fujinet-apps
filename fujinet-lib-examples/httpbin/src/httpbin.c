@@ -30,6 +30,7 @@ char *version = "v1.3.16";
 void debug() {}
 
 int main(void) {
+    clrscr();
     gotox(0);
     printf("httpbin %s\n", version);
     printf("Base URL: %s\n", httpbin);
