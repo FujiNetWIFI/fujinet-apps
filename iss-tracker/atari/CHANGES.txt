@@ -1,3 +1,12 @@
+2024-05-14 "DDT 411"
+(All changes by Mark Fisher <https://github.com/markjfisher>)
+ * Using fujinet-lib 4.1.1 with improved debugged code :D
+
+2024-05-12 "THE BIG 4"
+(All changes by Mark Fisher <https://github.com/markjfisher>)
+ * Using fujinet-lib 4.1.0 with latest appkey functions for getting/setting appkey data.
+   Not yet integrated into the app though yet.
+
 2024-04-09 "MAKEMAKE"
 (All changes by Mark Fisher <https://github.com/markjfisher>)
 

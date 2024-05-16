@@ -33,7 +33,7 @@ void http_no_parse(void)
 {
     unsigned char retries=5;
 
-    printf("HTTP NO PARSE, 5 ATTEMPTS.\n\n");
+    printf("\nHTTP NO PARSE, 5 ATTEMPTS.\n");
 
     while(retries--)
     {
@@ -41,7 +41,7 @@ void http_no_parse(void)
         network_status(http_url,&bw,&c,&err);
         network_read(http_url,buf,bw);
         network_close(http_url);
-        printf("ATTEMPT #%u - BW: %u BYTES. PRESS ENTER. ",retries,bw);
+        printf("#%u - BW: %u BYTES. PRESS ENTER.", retries, bw);
         getchar();
     }
 }
@@ -50,7 +50,7 @@ void http_parse(void)
 {
     unsigned char retries=5;
 
-    printf("HTTP JSON PARSE, 5 ATTEMPTS.\n\n");
+    printf("\nHTTP JSON PARSE, 5 ATTEMPTS.\n");
     
     while (retries--)
     {
@@ -61,7 +61,7 @@ void http_parse(void)
         network_json_parse(http_url);
         
         network_close(http_url);
-        printf("ATTEMPT #%u - BW: %u BYTES. PRESS ENTER. ",retries,bw);
+        printf("#%u - BW: %u BYTES. PRESS ENTER.", retries, bw);
         getchar();
     }
 }
@@ -70,7 +70,7 @@ void https_no_parse(void)
 {
     unsigned char retries=5;
 
-    printf("HTTPS NO PARSE, 5 ATTEMPTS.\n\n");
+    printf("\nHTTPS NO PARSE, 5 ATTEMPTS.\n");
 
     while(retries--)
     {
@@ -78,7 +78,7 @@ void https_no_parse(void)
         network_status(https_url,&bw,&c,&err);
         network_read(https_url,buf,bw);
         network_close(https_url);
-        printf("ATTEMPT #%u - BW: %u BYTES. PRESS ENTER. ",retries,bw);
+        printf("#%u - BW: %u BYTES. PRESS ENTER.", retries, bw);
         getchar();
     }
 }
@@ -87,7 +87,7 @@ void https_parse(void)
 {
     unsigned char retries=5;
 
-    printf("HTTPS JSON PARSE, 5 ATTEMPTS.\n\n");
+    printf("\nHTTPS JSON PARSE, 5 ATTEMPTS.\n");
     
     while (retries--)
     {
@@ -98,7 +98,7 @@ void https_parse(void)
         network_json_parse(https_url);
         
         network_close(https_url);
-        printf("ATTEMPT #%u - BW: %u BYTES. PRESS ENTER. ",retries,bw);
+        printf("#%u - BW: %u BYTES. PRESS ENTER.", retries, bw);
         getchar();
     }
 }
@@ -107,7 +107,7 @@ void tnfs_test(void)
 {
     unsigned char retries = 5;
     
-    printf("TNFS TEST, 5 ATTEMPTS.\n\n");
+    printf("\nTNFS TEST, 5 ATTEMPTS.\n");
 
     while(retries--)
     {
@@ -116,7 +116,7 @@ void tnfs_test(void)
         network_read(tnfs_url,buf,512);
         network_close(tnfs_url);
 
-        printf("ATTEMPT #%u - BW: 512 BYTES. PRESS ENTER. ",retries);
+        printf("#%u - BW: 512 BYTES. PRESS ENTER.", retries);
         getchar();
     }
 }
@@ -125,13 +125,13 @@ void http_open_close(void)
 {
     unsigned char retries=5;
 
-    printf("HTTP OPEN/CLOSE, 5 ATTEMPTS.\n\n");
+    printf("\nHTTP OPEN/CLOSE, 5 ATTEMPTS.\n");
 
     while(retries--)
     {
         network_open(http_url,12,0);
         network_close(http_url);
-        printf("ATTEMPT #%u - PRESS ENTER. ",retries);
+        printf("#%u - PRESS ENTER.", retries);
         getchar();
     }
 }
@@ -140,20 +140,23 @@ void tcp_open_close(void)
 {
     unsigned char retries=5;
 
-    printf("TCP OPEN/CLOSE, 5 ATTEMPTS.\n\n");
+    printf("\nTCP OPEN/CLOSE, 5 ATTEMPTS.\n");
 
     while(retries--)
     {
         network_open(tcp_url,12,0);
         network_close(tcp_url);
-        printf("ATTEMPT #%u - PRESS ENTER. ",retries);
+        printf("#%u - PRESS ENTER.", retries);
         getchar();
     }    
 }
 
-void main(void)
+int main(void)
 {
     set_urls();
+    clrscr();
+    printf("Leak Testing.\nPress a key to start.\n");
+    cgetc();
 
     network_init();
 
@@ -170,4 +173,9 @@ void main(void)
     https_parse();
 
     tnfs_test();
+
+    printf("Testing Complete.\nPress a key to reboot.\n");
+    cgetc();
+
+    return 0;
 }
