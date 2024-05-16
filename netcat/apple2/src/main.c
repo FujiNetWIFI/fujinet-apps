@@ -1,141 +1,126 @@
-#include <apple2enh.h>
-#include <stdio.h>
+/**
+ * @brief   NetCat - a simple Terminal Emulator
+ * @author  Thomas Cherryhomes
+ * @email   thom dot cherryhomes at gmail dot com
+ * @license gpl v. 3, see LICENSE for details.
+ * @verbose Main Program
+ */
+
+#include "read_line.h"
+#include <apple2.h>
+#include <fujinet-network.h>
 #include <conio.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include <string.h>
-#include "sp.h"
 
-char url[256];
-int8_t net;
+uint8_t rxbuf[8192];
 
-char username[64], password[64];
+char devicespec[256];
+uint16_t bw;
+uint8_t c;
+uint8_t err;
 
-void banner(void)
+bool connect(void)
 {
-  clrscr();
-  revers(1);
-  cprintf(" WELCOME TO NETCAT ");
-  revers(0);
-  cprintf("\r\n\r\n");
+    network_init();
+    videomode(VIDEOMODE_80COL);
+    clrscr();
+    
+    printf("WELCOME TO #FUJINET NETCAT V2.0\n");
+    printf("-------------------------------\n\n");
+
+    printf("ENTER A URL IN THE FORM:\n\n");
+    printf("N:PROTO://HOST.NAME:PORT/[PATH...]\n\n");
+
+    printf("EXAMPLES OF N: URLs:\n");
+    printf("--------------------\n");
+    printf("N:TELNET://BBS.FOZZTEXX.COM/\n");
+    printf("N:TCP://IRATA.ONLINE:6502/\n");
+    printf("N:SSH://MYLINUXHOST/\n");
+    printf("N:HTTPS://www.gnu.org/licenses/gpl-3.0.txt\n\n");
+
+    cursor(1);
+    read_line(devicespec,sizeof(devicespec),false);
+
+    printf("\n\n");
+
+    network_open(devicespec, OPEN_MODE_RW, OPEN_TRANS_NONE);
+    return true;
+    /* return network_open(devicespec, OPEN_MODE_RW, OPEN_TRANS_NONE); */
 }
 
-bool getURL(void)
+void esc_to_quit_or_restart(void)
 {
-  
-  cprintf("ENTER NETWORK URL:\r\n>> ");
-  gets(url);
-
-  return url[0]=='N' && url[1] == ':';
+    cprintf(" ESC TO QUIT, OR ANY KEY TO RESTART.");
+    
+    if (cgetc() == CH_ESC)
+        exit(1);
 }
 
-void getCreds(void)
+bool is_connected(void)
 {
-  cprintf("LOGIN, OR <RETURN> FOR NONE:\r\n>> ");
-  gets(username);
+    network_status(devicespec,&bw,&c,&err);
 
-  if (username[0]!=0x00)
+    return c;
+}
+
+void in(void)
+{
+    uint16_t i=0;
+    
+    if (bw)
     {
-      sp_payload[0]=strlen(username);
-      sp_payload[1]=0;
-      strcpy((char *)&sp_payload[2],username);
-      sp_control(net,0xFD);
-    }
-  
-  cprintf("\n\nPASSWORD, OR <RETURN> FOR NONE:\r\n>> ");
-  gets(password);
+        if (bw > sizeof(rxbuf))
+            bw = sizeof(rxbuf);
 
-  if (password[0]!=0x00)
-    {
-      sp_payload[0]=strlen(password);
-      sp_payload[1]=0;
-      strcpy((char *)&sp_payload[2],password);
-      sp_control(net,0xFE);
-    }
-}
-void connect(void)
-{
-  sp_open(net);
-  sp_payload[0]=0x02; // 258 bytes
-  sp_payload[1]=0x01;
-  sp_payload[2]=0x0C; // READ/WRITE (or GET)
-  sp_payload[3]=0x80; // NO TRANSLATION
-  memcpy(&sp_payload[4],url,256);
-  sp_control(net,'O'); // Do the open.  
-}
+        network_read(devicespec, rxbuf, bw);
 
-bool isConnected(void)
-{
-  sp_status(net,'S');
-  return sp_payload[2]; 
-}
+        putchar(0x08);
 
-void in()
-{
-  unsigned short bw; // Bytes waiting
-  unsigned short i;
-  
-  sp_status(net,'S');
+        for (i=0;i<bw;i++)
+            if (rxbuf[i]!=0x0D)
+                putchar(rxbuf[i]);
 
-  bw = sp_payload[0];
-  bw |= (sp_payload[1]) << 8;
-
-  if (bw==0)
-    return;
-
-  memset(sp_payload,0,sizeof(sp_payload));
-  
-  sp_read(net,bw);
-
-  for (i=0;i<bw;i++)
-    if (sp_payload[i]!='\r')
-      putchar(sp_payload[i]);
-}
-
-void out()
-{
-  if (kbhit())
-    {
-      memset(sp_payload,0,sizeof(sp_payload));
-      sp_payload[0]=1;
-      sp_payload[1]=0;
-      sp_payload[2]=cgetc();
-      sp_control(net,'W');
+        revers(1);
+        putchar(0x20);
+        revers(0);
     }
 }
 
-bool done(void)
+void out(void)
 {
-  return false;
+    if (kbhit())
+    {
+        char c = cgetc();
+        network_write(devicespec,(uint8_t *)&c,1);
+    }
 }
 
-void main(void)
+void netcat(void)
 {
-  videomode(VIDEOMODE_80x24);
+    in();
+    out();
+}
 
-  banner();
-
-  sp_init();
-  net = sp_find_network();
-
-  
-  cprintf("NET DEV IS %d\r\n",net);
-  
-  while(!getURL());
-
-  getCreds();
-  
-  connect();
-
-  cprintf("CONNECTED to ");
-  cprintf(url);
-  cprintf(".\n");
-  
-  do 
+int main(void)
+{
+ restart:
+    while (!connect())
     {
-      in();
-      out();
+        printf("COULD NOT CONNECT. ");
+        esc_to_quit_or_restart();
     }
-  while (1);
+
+    revers(1);
+    putchar(0x20);
+    revers(0);
+    
+    while (is_connected())
+        netcat();
+
+    printf("DISCONNECTED. ");
+    esc_to_quit_or_restart();
+    goto restart;
 }
