@@ -6,11 +6,11 @@
  * @verbose Main Program
  */
 
+#include "text.h"
 #include "read_line.h"
 #include <apple2.h>
 #include <fujinet-network.h>
 #include <conio.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -27,32 +27,31 @@ bool connect(void)
     network_init();
     clrscr();
     
-    printf("WELCOME TO #FUJINET NETCAT V2.0\n");
-    printf("-------------------------------\n\n");
+    outs("WELCOME TO #FUJINET NETCAT V2.0\n");
+    outs("-------------------------------\n\n");
 
-    printf("ENTER A URL IN THE FORM:\n\n");
-    printf("N:PROTO://HOST.NAME:PORT/[PATH...]\n\n");
+    outs("ENTER A URL IN THE FORM:\n\n");
+    outs("N:PROTO://HOST.NAME:PORT/[PATH...]\n\n");
 
-    printf("EXAMPLES OF N: URLs:\n");
-    printf("--------------------\n");
-    printf("N:TELNET://BBS.FOZZTEXX.COM/\n");
-    printf("N:TCP://IRATA.ONLINE:6502/\n");
-    printf("N:SSH://MYLINUXHOST/\n");
-    printf("N:HTTPS://www.gnu.org/licenses/gpl-3.0.txt\n\n");
+    outs("EXAMPLES OF N: URLs:\n");
+    outs("--------------------\n");
+    outs("N:TELNET://BBS.FOZZTEXX.COM/\n");
+    outs("N:TCP://IRATA.ONLINE:6502/\n");
+    outs("N:SSH://MYLINUXHOST/\n");
+    outs("N:HTTPS://www.gnu.org/licenses/gpl-3.0.txt\n\n");
 
     cursor(1);
     read_line(devicespec,sizeof(devicespec),false);
 
-    printf("\n\n");
+    outs("\n\n");
 
     network_open(devicespec, OPEN_MODE_RW, OPEN_TRANS_NONE);
     return true;
-    /* return network_open(devicespec, OPEN_MODE_RW, OPEN_TRANS_NONE); */
 }
 
 void esc_to_quit_or_restart(void)
 {
-    cprintf(" ESC TO QUIT, OR ANY KEY TO RESTART.");
+    outs(" ESC TO QUIT, OR ANY KEY TO RESTART.");
     
     if (cgetc() == CH_ESC)
         exit(1);
@@ -76,14 +75,14 @@ void in(void)
 
         network_read(devicespec, rxbuf, bw);
 
-        putchar(0x08);
+        outc(0x08);
 
         for (i=0;i<bw;i++)
             if (rxbuf[i]!=0x0D)
-                putchar(rxbuf[i]);
+                outc(rxbuf[i]);
 
         revers(1);
-        putchar(0x20);
+        outc(0x20);
         revers(0);
     }
 }
@@ -108,18 +107,18 @@ int main(void)
  restart:
     while (!connect())
     {
-        printf("COULD NOT CONNECT. ");
+        outs("COULD NOT CONNECT. ");
         esc_to_quit_or_restart();
     }
 
     revers(1);
-    putchar(0x20);
+    outc(0x20);
     revers(0);
     
     while (is_connected())
         netcat();
 
-    printf("DISCONNECTED. ");
+    outs("DISCONNECTED. ");
     esc_to_quit_or_restart();
     goto restart;
 }
