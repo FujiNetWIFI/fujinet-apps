@@ -28,6 +28,18 @@ void init80(void)
 }
 
 /**
+ * @brief Get character into return
+ * @return key pressed
+ */
+unsigned char __fastcall__ inc(void)
+{
+    __asm__("sta $C082"); // page in ROM
+    __asm__("jsr $FD35"); // Key into A
+    __asm__("and #$7F");  // Mask strobe bit.
+    __asm__("sta $C080"); // page in RAM
+}
+
+/**
  * @brief internal wrapper to call COUT
  */
 static void __fastcall__ out(char c)

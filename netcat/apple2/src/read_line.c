@@ -25,12 +25,13 @@ char read_line(char *s, uint16_t len, bool password)
 {
     uint16_t i=0;
     char c=0;
+
+    // Clear line buffer.
+    memset(s,0x00,len);
     
     while (c != CH_ENTER)
     {
-        place_cursor();
-        c=cgetc();
-        outc(0x08);
+        c=inc();
 
         if ((c == CH_CURS_LEFT) || (c == CH_DEL))
         {

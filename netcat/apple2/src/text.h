@@ -32,6 +32,12 @@ void check80column(void);
 bool is80column(void);
 
 /**
+ * @brief Get character into return
+ * @return key pressed
+ */
+unsigned char __fastcall__ inc(void);
+
+/**
  * @brief Output a character using COUT
  * @param c Character to output
  */

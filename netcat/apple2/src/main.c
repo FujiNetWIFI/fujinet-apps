@@ -55,7 +55,7 @@ void esc_to_quit_or_restart(void)
 {
     outs(" ESC TO QUIT, OR ANY KEY TO RESTART.");
     
-    if (cgetc() == CH_ESC)
+    if (inc() == CH_ESC)
         exit(1);
 }
 
@@ -91,7 +91,7 @@ void out(void)
 {
     if (kbhit())
     {
-        char c = cgetc();
+        char c = inc();
         network_write(devicespec,(uint8_t *)&c,1);
     }
 }
