@@ -10,6 +10,7 @@
 #include <conio.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <string.h>
 #include "text.h"
 
 #define CH_DEL 0x7F
