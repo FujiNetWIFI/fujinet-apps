@@ -12,6 +12,11 @@
 #include <stdbool.h>
 
 /**
+ * @brief place cursor character at position via COUT 
+ */
+void __fastcall__ place_cursor(void);
+
+/**
  * @brief called to initialize 80 column using PR#3
  */
 void init80(void);

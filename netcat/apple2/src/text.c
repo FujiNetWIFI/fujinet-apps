@@ -38,6 +38,15 @@ static void __fastcall__ out(char c)
     __asm__("sta $C080"); // page in RAM
 }
 
+/**
+ * @brief place cursor character at position via COUT 
+ */
+void __fastcall__ place_cursor(void)
+{
+    __asm__("lda #$20");  // Cursor character $20
+    __asm__("jsr $FDED"); // Call COUT
+}
+
 // Restore previous optimizer settings
 #pragma warn (unused-param, pop)
 #pragma optimize (pop)
