@@ -36,7 +36,11 @@ const char *banner =
 
 bool connect(void)
 {
-    init80();
+    check80column();
+
+    if (is80column())
+        init80();
+    
     network_init();
 
     clrscr();
