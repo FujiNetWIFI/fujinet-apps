@@ -20,9 +20,15 @@
 #include "platform-specific/appkey.h"
 #include "misc.h"
 
+#ifdef _CMOC_VERSION_
+#include <cmoc.h>
+#include <coco.h>
+#define true 1
+#define false 0
+#else
 #include <stdbool.h>
 #include <stdint.h>
-
+#endif /* _CMOC_VERSION_ */
 unsigned char _lastJoy, _joy;
 
 void pause(unsigned char frames) {

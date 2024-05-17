@@ -1,8 +1,11 @@
 #ifdef _CMOC_VERSION_
 #include <cmoc.h>
+#define true 1
+#define false 0
 #else
 #include <stdlib.h>
 #include <conio.h>
+#include <string.h>
 #endif /* _CMOC_VERSION_ */
 #include "stateclient.h"
 #include "screens.h"
@@ -14,7 +17,6 @@
 #include "platform-specific/appkey.h"
 #include "platform-specific/util.h"
 #include "platform-specific/sound.h"
-#include <string.h>
 
 #define PLAYER_NAME_MAX 8
 

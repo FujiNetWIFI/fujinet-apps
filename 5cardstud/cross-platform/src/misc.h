@@ -16,9 +16,13 @@
 #endif /* _CMOC_VERSION_ */
 #include "platform-specific/graphics.h"
 #include "platform-specific/input.h"
+#ifdef _CMOC_VERSION_
+#include <cmoc.h>
+#include <coco.h>
+#else
 #include <stdbool.h>
 #include <stdint.h>
-
+#endif /* _CMOC_VERSION_ */
 // FujiNet AppKey settings. These should not be changed
 #define AK_LOBBY_CREATOR_ID 1     // FUJINET Lobby
 #define AK_LOBBY_APP_ID 1         // Lobby Enabled Game
@@ -71,7 +75,11 @@ typedef struct {
 extern unsigned char playerCount, prevPlayerCount, validMoveCount, prevRound, tableCount, currentCard, cardIndex, xOffset, fullFirst, cursorX, cursorY, waitCount, inputKey, wasViewing;
 extern signed char inputDirX, inputDirY;
 extern int prevPot, rx_len, maxJifs;
+#ifdef _CMOC_VERSION_
+extern unsigned char noAnim, doAnim, finalFlip, inputTrigger;
+#else
 extern bool noAnim, doAnim, finalFlip, inputTrigger;
+#endif /* _CMOC_VERSION_ */
 extern char tempBuffer[128];
 extern char query[50];
 extern char playerName[12];

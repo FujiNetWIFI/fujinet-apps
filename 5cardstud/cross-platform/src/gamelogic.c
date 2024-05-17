@@ -1,5 +1,14 @@
+#ifdef _CMOC_VERSION_
+#include <cmoc.h>
+#include <coco.h>
+#define true 1
+#define false 0
+#else
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
+#endif /* _CMOC_VERSION_ */
+
 #include "platform-specific/graphics.h"
 #include "platform-specific/sound.h"
 #include "platform-specific/util.h"
@@ -7,7 +16,6 @@
 #include "misc.h"
 #include "stateclient.h"
 #include "screens.h"
-#include <stdio.h>
 #include "platform-specific/appkey.h"
 
 void progressAnim(unsigned char y) {

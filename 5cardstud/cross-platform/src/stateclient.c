@@ -1,14 +1,16 @@
 #ifdef _CMOC_VERSION_
 #include <cmoc.h>
+#define true 1
+#define false 0
 #else
 #include <string.h>
-#endif /* CMOC_VERSION */
 #include <stdlib.h>
+#include <stdio.h>
+#endif /* CMOC_VERSION */
 #define POKE(addr,val)     (*(unsigned char*) (addr) = (val))
 #define POKEW(addr,val)    (*(unsigned*) (addr) = (val))
 #define PEEK(addr)         (*(unsigned char*) (addr))
 #define PEEKW(addr)        (*(unsigned*) (addr))
-#include<stdio.h>
 #include "stateclient.h"
 #include "misc.h"
 #include "platform-specific/network.h"
@@ -16,9 +18,9 @@
 char rx_buf[2048];     // buffer for json payload
 char urlBuffer[128];
 
-void updateState(bool isTables) {
+void updateState(unsigned char isTables) {
   static char *line, *nextLine, *end, *key, *value, *parent;
-  static bool isKey, inArray;
+  static unsigned char isKey, inArray;
   static char c;
   static unsigned int lineNum;
 
@@ -178,7 +180,7 @@ void updateState(bool isTables) {
  
 }
 
-bool apiCall(char *path) {
+unsigned char apiCall(char *path) {
   //cprintf("apicall: ");
  // cprintf("%s:%s:%s\n", serverEndpoint, path, query);
   
@@ -191,7 +193,7 @@ bool apiCall(char *path) {
   return rx_len>=0;
 }
 
-bool getStateFromServer()
+unsigned char getStateFromServer()
 {
   if (requestedMove) {    
     strcpy(tempBuffer, "move/");

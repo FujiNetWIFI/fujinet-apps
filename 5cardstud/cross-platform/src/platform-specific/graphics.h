@@ -9,8 +9,13 @@
 #define PARTIAL_RIGHT 2
 #define FULL_CARD 3
 
+#ifdef _CMOC_VERSION_
+#include <cmoc.h>
+#include <coco.h>
+#else
 #include <stdint.h>
 #include <stdbool.h>
+#endif /* _CMOC_VERSION_  */
 #include "../misc.h"
 
 void enableDoubleBuffer();
@@ -26,7 +31,7 @@ void drawStatusText(char* s);
 void drawStatusTimer();
 
 void drawText(unsigned char x, unsigned char y, char* s);
-void drawCard(unsigned char x, unsigned char y, unsigned char partial, const char* s, bool isHidden);
+void drawCard(unsigned char x, unsigned char y, unsigned char partial, const char* s, unsigned char isHidden);
 void drawChip(unsigned char x, unsigned char y);
 void drawBlank(unsigned char x, unsigned char y);
 void drawPointer(unsigned char x, unsigned char y);
