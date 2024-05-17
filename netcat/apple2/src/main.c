@@ -17,6 +17,8 @@
 
 uint8_t rxbuf[8192];     // Receive buffer
 char devicespec[256];    // Buffer for the device spec
+char username[256];      // Username credentials
+char password[256];      // Password credentials
 uint16_t bw;             // # of bytes waiting (0-65535)
 uint8_t c;               // Connected? (0=false, 1=true)
 uint8_t err;             // Error code from most recent status
@@ -49,8 +51,16 @@ bool connect(void)
     
     read_line(devicespec,sizeof(devicespec),false);
 
-    outs("\n\n");
-
+    /* outs("\nUsername, or RETURN for none: "); */
+    /* read_line(username,sizeof(username),false); */
+    /* network_set_username(devicespec,username,len); */
+    
+    /* outs("\nPassword, or RETURN for none:"); */
+    /* read_line(password,sizeof(password),true); */
+    /* network_set_password(devicespec,password,len); */    
+    
+    clrscr();
+    
     network_open(devicespec, OPEN_MODE_RW, OPEN_TRANS_NONE);
     return true;
 }
