@@ -43,8 +43,10 @@ static void __fastcall__ out(char c)
  */
 void __fastcall__ place_cursor(void)
 {
+    __asm__("sta $C082"); // page in ROM
     __asm__("lda #$20");  // Cursor character $20
     __asm__("jsr $FDED"); // Call COUT
+    __asm__("sta $C080"); // page in RAM
 }
 
 // Restore previous optimizer settings
