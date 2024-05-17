@@ -1,6 +1,6 @@
 # COMPILE FLAGS
 
-LDFLAGS += -C apple2enh-system.cfg
+LDFLAGS += -C apple2-system.cfg
 
 ################################################################
 # DISK creation
