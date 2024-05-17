@@ -8,9 +8,9 @@
 
 #include <apple2.h>
 #include <conio.h>
-#include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include "text.h"
 
 #define CH_DEL 0x7F
 
@@ -25,22 +25,18 @@ char read_line(char *s, uint16_t len, bool password)
 {
     uint16_t i=0;
     char c=0;
-
-    cursor(0);
     
     while (c != CH_ENTER)
     {
-        revers(1);
-        putchar(0x20);
-        revers(0);
+        place_cursor();
         c=cgetc();
-        putchar(0x08);
+        outc(0x08);
 
         if ((c == CH_CURS_LEFT) || (c == CH_DEL))
         {
             if (i)
             {
-                putchar(0x08);
+                outc(0x08);
                 i--;
             }
         }
@@ -66,11 +62,11 @@ char read_line(char *s, uint16_t len, bool password)
             {
                 if (password)
                 {
-                    putchar('X');
+                    outc('X');
                 }
                 else
                 {    
-                    putchar(c);
+                    outc(c);
                 }
                 
                 s[i++] = c;
