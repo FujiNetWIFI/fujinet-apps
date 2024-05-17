@@ -25,7 +25,6 @@ uint8_t err;
 bool connect(void)
 {
     network_init();
-    videomode(VIDEOMODE_80COL);
     clrscr();
     
     printf("WELCOME TO #FUJINET NETCAT V2.0\n");

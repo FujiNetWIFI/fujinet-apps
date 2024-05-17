@@ -12,6 +12,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#define CH_DEL 0x7F
+
 /**
  * @brief read an input line.
  * @param s The output buffer. Must be at least len bytes.
