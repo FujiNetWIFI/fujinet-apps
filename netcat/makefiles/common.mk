@@ -8,4 +8,4 @@ else
 VERSION_STRING := $(file < $(VERSION_FILE))
 endif
 
-CFLAGS += -Osir
+CFLAGS += -Os
