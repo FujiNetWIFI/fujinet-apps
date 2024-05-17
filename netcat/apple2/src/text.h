@@ -9,6 +9,8 @@
 #ifndef TEXT_H
 #define TEXT_H
 
+#include <stdbool.h>
+
 /**
  * @brief called to initialize 80 column using PR#3
  */
