@@ -67,7 +67,7 @@ bool connect(void)
 
 void esc_to_quit_or_restart(void)
 {
-    outs(" ESC TO QUIT, OR ANY KEY TO RESTART.");
+    outs(" ANY KEY TO RESTART.");
     
     if (inc() == CH_ESC)
         exit(1);
@@ -91,6 +91,8 @@ void in(void)
 
         network_read(devicespec, rxbuf, bw);
 
+        outc(CH_CURS_LEFT);
+        outc(0xA0);
         outc(CH_CURS_LEFT);
 
         for (i=0;i<bw;i++)
@@ -130,6 +132,12 @@ int main(void)
     while (is_connected())
         netcat();
 
+    // Get rid of cursor turd.
+    outc(0x08);
+    outc(0xA0);
+    outc(0x08);
+    outc(0x0A);
+    
     outs("DISCONNECTED. ");
     esc_to_quit_or_restart();
     goto restart;

@@ -44,6 +44,7 @@ char read_line(char *s, uint16_t len, bool password)
         }
         else if (c == CH_ENTER)
         {
+            outc(0xA0);
             continue;
         }
         else if (c == CH_CURS_RIGHT)
