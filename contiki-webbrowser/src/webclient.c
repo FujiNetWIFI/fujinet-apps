@@ -110,7 +110,7 @@ read_header(char *buffer, int buflen)
 static void
 webclient_poll(void)
 {
-  uint16_t retval;
+  int16_t retval;
 
   if(!s.open) {
     return;
