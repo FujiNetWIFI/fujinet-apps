@@ -1,16 +1,17 @@
 # COMPILE FLAGS
 
-LDFLAGS += -C apple2-system.cfg
+# reserved memory for graphics
+# LDFLAGS += -Wl -D,__RESERVED_MEMORY__=0x2000
+
+#LDFLAGS += --start-addr 0x4400
+#LDFLAGS += -C cfg/atari.cfg
 
 ################################################################
 # DISK creation
 
-# -l: autostart via SYSTEM loader
-# -a: autostart via STARTUP directly
-AUTOBOOT := -l
-
 SUFFIX =
 DISK_TASKS += .po
+AUTOBOOT := -l
 APPLE_TOOLS_DIR := ../../apple-tools
 
 .po:
