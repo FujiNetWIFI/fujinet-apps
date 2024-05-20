@@ -107,6 +107,11 @@ define _labelfile_
   LDFLAGS += -Ln $$@.lbl
 endef
 
+.SUFFIXES:
+.PHONY: all clean release $(DISK_TASKS) $(BUILD_TASKS) $(PROGRAM_TGT) $(ALL_TASKS)
+
+all: $(ALL_TASKS) $(PROGRAM_TGT)
+
 STATEFILE := Makefile.options
 -include $(DEPENDS)
 -include $(STATEFILE)
@@ -130,11 +135,6 @@ endif
 ifeq ($(DIST_DIR),)
 DIST_DIR := dist
 endif
-
-.SUFFIXES:
-.PHONY: all clean release $(DISK_TASKS) $(BUILD_TASKS) $(PROGRAM).$(CURRENT_TARGET)
-
-all: $(ALL_TASKS) $(PROGRAM_TGT)
 
 $(OBJDIR):
 	$(call MKDIR,$@)
