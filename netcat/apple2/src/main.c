@@ -33,15 +33,15 @@ const char *banner =
     "N:TELNET://BBS.FOZZTEXX.COM             N:TCP://IRATA.ONLINE:6502/\n"
     "N:SSH://MYLINUXHOST/\n"
     "\n\n"
-    "ENTER URL\n\n"
+    "Enter URL\n\n"
     ">> ";
 
 bool connect(void)
 {
-    check80column();
-
-    if (is80column())
+    if (has80column())
+    {
         init80();
+    }
     
     network_init();
 
@@ -49,15 +49,15 @@ bool connect(void)
     
     outs(banner);
     
-    read_line(devicespec,sizeof(devicespec),false);
+    read_line(devicespec, sizeof(devicespec), false);
 
-    /* outs("\nUsername, or RETURN for none: "); */
-    /* read_line(username,sizeof(username),false); */
-    /* network_set_username(devicespec,username,len); */
+    // outs("\nUsername, or RETURN for none: ");
+    // read_line(username, sizeof(username), false);
+    // network_set_username(devicespec, username, len);
     
-    /* outs("\nPassword, or RETURN for none:"); */
-    /* read_line(password,sizeof(password),true); */
-    /* network_set_password(devicespec,password,len); */    
+    // outs("\nPassword, or RETURN for none:");
+    // read_line(password, sizeof(password), true);
+    // network_set_password(devicespec, password, len);    
     
     clrscr();
     
@@ -67,37 +67,43 @@ bool connect(void)
 
 void esc_to_quit_or_restart(void)
 {
-    outs(" ANY KEY TO RESTART.");
+    outs("\nAny key to restart or ESC to quit.");
     
-    if (inc() == CH_ESC)
+    if (cgetc() == CH_ESC)
+    {
         exit(1);
+    }
 }
 
 bool is_connected(void)
 {
-    network_status(devicespec,&bw,&c,&err);
+    network_status(devicespec, &bw, &c, &err);
 
     return c;
 }
 
 void in(void)
 {
-    uint16_t i=0;
+    uint16_t i;
     
     if (bw)
     {
         if (bw > sizeof(rxbuf))
+        {
             bw = sizeof(rxbuf);
+        }
 
         network_read(devicespec, rxbuf, bw);
 
-        outc(CH_CURS_LEFT);
-        outc(0xA0);
-        outc(CH_CURS_LEFT);
+        remove_cursor();
 
-        for (i=0;i<bw;i++)
-            if (rxbuf[i]!=0x0D)
+        for (i = 0; i < bw; i++)
+        {
+            if (rxbuf[i] != '\r')
+            {
                 outc(rxbuf[i]);
+            }
+        }
 
         place_cursor();
     }
@@ -107,8 +113,8 @@ void out(void)
 {
     if (kbhit())
     {
-        char c = inc();
-        network_write(devicespec,(uint8_t *)&c,1);
+        char c = cgetc();
+        network_write(devicespec, (uint8_t *)&c, 1);
     }
 }
 
@@ -118,27 +124,26 @@ void netcat(void)
     out();
 }
 
-int main(void)
+void main(void)
 {
  restart:
     while (!connect())
     {
-        outs("COULD NOT CONNECT. ");
+        outs("Could not connect.");
         esc_to_quit_or_restart();
     }
 
     place_cursor();
     
     while (is_connected())
+    {
         netcat();
+    }
 
-    // Get rid of cursor turd.
-    outc(0x08);
-    outc(0xA0);
-    outc(0x08);
-    outc(0x0A);
+    remove_cursor();
     
-    outs("DISCONNECTED. ");
+    outs("\nDisconnected.");
     esc_to_quit_or_restart();
+
     goto restart;
 }

@@ -15,10 +15,9 @@
 /**
  * @brief read an input line.
  * @param s The output buffer. Must be at least len bytes.
- * @param len Allowable # of characters.
+ * @param len Allowable # of characters (incl. \0).
  * @param password Obscure character output.
- * @return last character emitted.
  */
-char read_line(char *s, uint16_t len, bool password);
+void read_line(char *s, uint16_t len, bool password);
 
 #endif /* READ_LINE_H */
