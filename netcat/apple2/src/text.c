@@ -8,14 +8,15 @@
 
 #include <apple2.h>
 #include <ctype.h>
+#include <stdint.h>
 #include <stdbool.h>
+
+#include "text.h"
 
 // The following pragmas temporarily disable the optimizer
 // as the optimizer will even try to optimize in-line assembler.
 #pragma optimize (push, off)
 #pragma warn (unused-param, push, off)
-
-bool is_2e = false;
 
 /**
  * @brief called to initialize 80 column using PR#3
@@ -23,19 +24,7 @@ bool is_2e = false;
 void init80(void)
 {
     __asm__("sta $C082"); // page in ROM
-    __asm__("jsr $C300"); // Call PR#3
-    __asm__("sta $C080"); // page in RAM
-}
-
-/**
- * @brief Get character into return
- * @return key pressed
- */
-unsigned char __fastcall__ inc(void)
-{
-    __asm__("sta $C082"); // page in ROM
-    __asm__("jsr $FD35"); // Key into A
-    __asm__("and #$7F");  // Mask strobe bit.
+    __asm__("jsr $C300"); // call PR#3
     __asm__("sta $C080"); // page in RAM
 }
 
@@ -45,19 +34,8 @@ unsigned char __fastcall__ inc(void)
 static void __fastcall__ out(char c)
 {
     __asm__("sta $C082"); // page in ROM
-    __asm__("ora #$80");  // set high bit in c
+    __asm__("eor #$80");  // invert high bit in c
     __asm__("jsr $FDED"); // call COUT
-    __asm__("sta $C080"); // page in RAM
-}
-
-/**
- * @brief place cursor character at position via COUT 
- */
-void __fastcall__ place_cursor(void)
-{
-    __asm__("sta $C082"); // page in ROM
-    __asm__("lda #$20");  // Cursor character $20
-    __asm__("jsr $FDED"); // Call COUT
     __asm__("sta $C080"); // page in RAM
 }
 
@@ -66,19 +44,11 @@ void __fastcall__ place_cursor(void)
 #pragma optimize (pop)
 
 /**
- * @brief Check if 80 column
- */
-void check80column(void)
-{
-    is_2e = get_ostype() >= APPLE_IIE;
-}
-
-/**
  * @brief return if 80 column detected
  */
-bool is80column(void)
+bool has80column(void)
 {
-    return is_2e;
+    return *(uint8_t *)0xBF98 /* MACHID */ & 0x02 ? true : false;
 }
 
 /**
@@ -87,12 +57,11 @@ bool is80column(void)
  */
 void outc(char c)
 {
-    if (!is_2e)
+    if (!has80column())
     {
         c = toupper(c); // upper it.
     }
-    
-  out(c == '\n' ? '\r' : c);
+    out(c == '\n' ? '\r' : c);
 }
 
 /**
@@ -101,7 +70,26 @@ void outc(char c)
  */
 void outs(const char *s)
 {
-  while (*s) {
-    outc(*s++);
-  }
+    while (*s)
+    {
+        outc(*s++);
+    }
+}
+
+/**
+ * @brief place cursor character at position via inverted blank 
+ */
+void place_cursor(void)
+{
+    outc(' ' | 0x80);
+}
+
+/**
+ * @brief remove cursor character at position via BS + blank + BS
+ */
+void remove_cursor(void)
+{
+    outc(CH_CURS_LEFT);
+    outc(' ');
+    outc(CH_CURS_LEFT);
 }

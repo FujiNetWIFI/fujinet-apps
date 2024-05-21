@@ -6,76 +6,60 @@
  * @verbose Gosh I love writing these things, really, I do... #@(%#@)_%@
  */
 
-#include <apple2.h>
+#include <ctype.h>
 #include <conio.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include <string.h>
 #include "text.h"
+
+#include "read_line.h"
 
 #define CH_DEL 0x7F
 
 /**
  * @brief read an input line.
  * @param s The output buffer. Must be at least len bytes.
- * @param len Allowable # of characters.
+ * @param len Allowable # of characters (incl. \0).
  * @param password Obscure character output.
- * @return last character emitted.
  */
-char read_line(char *s, uint16_t len, bool password)
+void read_line(char *s, uint16_t len, bool password)
 {
-    uint16_t i=0;
-    char c=0;
+    uint16_t i = 0;
+    char c;
 
-    // Clear line buffer.
-    memset(s,0x00,len);
-    
-    while (c != CH_ENTER)
+    for (;;)
     {
-        c=inc();
+        place_cursor();
+        c = cgetc();
+        remove_cursor();
 
-        if ((c == CH_CURS_LEFT) || (c == CH_DEL))
+        if (c == CH_ENTER)
+        {
+            s[i] = '\0';
+            break;
+        }
+        else if ((c == CH_CURS_LEFT) || (c == CH_DEL))
         {
             if (i)
             {
-                outc(0x08);
-                i--;
+                outc(CH_CURS_LEFT);
+                --i;
             }
         }
-        else if (c == CH_ENTER)
+        else if (isprint(c))
         {
-            outc(0xA0);
-            continue;
-        }
-        else if (c == CH_CURS_RIGHT)
-        {
-            continue;
-        }
-        else if (c < 0x20 || c > 0x7E) // Non printable ignored.
-        {
-            continue;
-        }
-        else // print and append character in buffer.
-        {
-            if ((i+1) > len)
-            {
-                continue;
-            }
-            else
+            if (i < (len - 1))
             {
                 if (password)
                 {
-                    outc('X');
+                    outc('*');
                 }
                 else
                 {    
                     outc(c);
                 }
-                
                 s[i++] = c;
             }
         }
     }
-
-    return c;
 }

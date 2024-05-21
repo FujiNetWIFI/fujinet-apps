@@ -12,41 +12,35 @@
 #include <stdbool.h>
 
 /**
- * @brief place cursor character at position via COUT 
- */
-void __fastcall__ place_cursor(void);
-
-/**
  * @brief called to initialize 80 column using PR#3
  */
 void init80(void);
 
 /**
- * @brief Check if 80 column
- */
-void check80column(void);
-
-/**
  * @brief return if 80 column detected
  */
-bool is80column(void);
-
-/**
- * @brief Get character into return
- * @return key pressed
- */
-unsigned char __fastcall__ inc(void);
+bool has80column(void);
 
 /**
  * @brief Output a character using COUT
  * @param c Character to output
  */
-void outc(char c);
+void __fastcall__ outc(char c);
 
 /**
  * @brief send character string using outc()
  * @param s The NULL-terminated string to send through outc()
  */
 void outs(const char *s);
+
+/**
+ * @brief place cursor character at position via inverted blank 
+ */
+void place_cursor(void);
+
+/**
+ * @brief remove cursor character at position via BS + blank + BS
+ */
+void remove_cursor(void);
 
 #endif /* TEXT_H */
