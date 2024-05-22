@@ -6,7 +6,7 @@ Bill Kendrick <bill@newbreedsoftware.com>
 Released under the GNU General Public License 3 (GPL-3);
 see COPYING
 
-2021-05-17 - 2024-04-09
+2021-05-17 - 2024-05-21
 
 ## Purpose
 View the current position of the International Space Station
@@ -65,8 +65,8 @@ and Bill Shupp (Where The ISS At?).
 Updates to fetch and use the FujiNet Network Lib library
 by Frank Rachel <https://github.com/frachel>
 
-Build system / Makefile reworking
-by Mark Fisher <https://github.com/markjfisher>
+Build system / Makefile reworking; more FujiNet-Lib work
+by Mark Fisher (fenrock) <https://github.com/markjfisher>
 
 ## Requirements
 This requires a #FujiNet with firmware capable of parsing and
