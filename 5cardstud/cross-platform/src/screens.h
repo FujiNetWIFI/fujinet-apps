@@ -1,6 +1,8 @@
 #ifndef SCREENS_H
 #define SCREENS_H
 
+#include <stdint.h>
+
 /// @brief Convenience function to reset screen and draw border
 void resetScreenWithBorder();
 
@@ -28,5 +30,11 @@ void showGameScreen();
 /// @brief shows in-game menu
 void showInGameMenuScreen();
 
+/// @brief Allow the player to modify their name
+void showPlayerNameScreen();
+
+/// @brief Handles available key strokes for the defined input box (player name and chat). Returns true if user hits enter
+
+bool inputFieldCycle(uint8_t x, uint8_t y, uint8_t max, uint8_t* buffer);
 
 #endif /*SCREENS_H*/

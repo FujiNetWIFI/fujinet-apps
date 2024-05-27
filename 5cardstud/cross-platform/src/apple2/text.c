@@ -4,9 +4,8 @@
  * @brief Text routines
  * @author Oliver Schmidt
  */
-#include<string.h>
+#include <string.h>
 #include "hires.h"
-#include "charset.h"
 
 #define CHAR_HEIGHT             8
 #define SCREEN_WIDTH            40

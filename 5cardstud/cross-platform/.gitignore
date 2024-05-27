@@ -2,7 +2,6 @@ obj
 fcs
 fcs_*
 fcs.*
-.vscode/settings.json
+
 gen/gencharset
 gen/charset
-!.vscode

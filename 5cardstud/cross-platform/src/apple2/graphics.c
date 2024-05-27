@@ -12,7 +12,7 @@
 #include "../misc.h"
 
 #define BOTTOM 175
-#define RED_VAL_1 ROP_OR(0b11010110)
+#define RED_VAL_1 ROP_OR(0b11010100)
 #define RED_VAL_2 ROP_OR(0b10101010)
 
 unsigned char colorMode=0;
@@ -134,13 +134,21 @@ void resetScreen() {
   hires_Mask(1,1,38,1, 0xa9ff); 
   hires_Mask(39,2,1,1, 0xa9ff); */
   
+  // Top corners
   hires_putc(0,0,ROP_CPY,0x01);
   hires_putc(39,0,ROP_CPY,0x02);
+  
+  // Top horizontal
   hires_Mask(1,1,38,1, 0xa9ff); 
   
+  // Bottom corners
   hires_putc(0,BOTTOM-8,ROP_CPY,0x03);
   hires_putc(39,BOTTOM-8,ROP_CPY,0x04);
+
+  // Bottom hor
   hires_Mask(1,BOTTOM-2,38,1, 0xa9ff); 
+  
+  // Sides
   hires_Mask(0,8,1,BOTTOM-16,ROP_CONST(0b00000110));
   hires_Mask(39,8,1,BOTTOM-16,ROP_CONST(0b00110000));
 
@@ -220,10 +228,6 @@ void drawCard(unsigned char x, unsigned char y, unsigned char partial, const cha
   y*=8;
   y-=7;
   drawCardAt(x, y, partial, s, isHidden);
-}
-
-void drawPointer(unsigned char x, unsigned char y) {
- 
 }
 
 void drawLine(unsigned char x, unsigned char y, unsigned char w) {

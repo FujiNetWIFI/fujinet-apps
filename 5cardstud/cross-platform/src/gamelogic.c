@@ -18,6 +18,7 @@
 #include "screens.h"
 #include "platform-specific/appkey.h"
 
+
 void progressAnim(unsigned char y) {
   for(i=0;i<3;++i) {
     pause(10);
@@ -81,11 +82,6 @@ void drawNamePurse() {
 
       drawText(xx, y, state.players[i].name);
 
-       // Clear current player pointer
-      // if (state.activePlayer!=i)
-      //   drawText(x-playerDir[i],y, " ");
-      // else
-      //   drawPointer(x-playerDir[i],y);
       if (state.activePlayer!=i)
         hideLine(xx, y+1, strlen(state.players[i].name));
       else {
@@ -146,29 +142,34 @@ void drawBets() {
   }
 }
 
+void checkFinalFlip() {
+  if (prevRound<state.round && state.round == 5)
+    drawCards(true);
+}
 
-
-void drawCards() {
+void drawCards(bool finalFlip) {
   static bool shouldMaskPlayerCard;
   cardIndex=xOffset=fullFirst=0;
-  shouldMaskPlayerCard = false;
+  shouldMaskPlayerCard = true;
 
   if (state.round<1)
     return;
   
-  finalFlip = prevRound<state.round && state.round == 5;
-
+  
   // Check that at least players are still in the final round, otherwise 
   // if everyone folded, the winning player does not need to flip/reveal their hand.
- 
-  h=0;
-  for (i=0;i<playerCount;i++)
-    if (state.players[i].status == 1)
-      ++h;
-  
-  if (h<2) {
-    finalFlip = false;
-    shouldMaskPlayerCard = true;
+  if (state.round == 5) {
+    h=0;
+    for (i=0;i<playerCount;i++)
+      if (state.players[i].status == 1)
+        ++h;
+    
+    if (h<2) {
+      finalFlip = false;
+      shouldMaskPlayerCard = true;
+    } else if (!finalFlip) {
+      shouldMaskPlayerCard = false;
+    }
   }
 
 
@@ -391,22 +392,18 @@ void drawGameStatus() {
     if (state.round==5 && prevRound != state.round) {
       drawBuffer();
       soundGameDone();
+      pause(30);
     }
   }
 
 
-  if (state.round < 5) {    
-    if (state.round == 0) { 
-      // Waiting for a player to join
-     waitCount = (waitCount + 1) % 3;
-     drawText(30+waitCount,HEIGHT-2,".");
-     pause(40);
-    } else {
-      //' Waiting on a plaer to make a move
-      if (state.moveTime>0)
-        drawStatusTimeLeft();
-    }
-  }
+  // Waiting for a player to join - show animation
+  if (state.round == 0) {  
+    waitCount = (waitCount + 1) % 3;
+    drawText(30+waitCount,HEIGHT-2,".");
+    pause(40);
+  } 
+
 }
 
 void requestPlayerMove() {

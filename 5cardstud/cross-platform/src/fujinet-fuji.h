@@ -118,31 +118,11 @@ typedef struct
 } NewDisk;
 #endif
 
-typedef struct
-{
-    unsigned int creator;
-    unsigned char app;
-    unsigned char key;
-    unsigned char mode;
-    unsigned char reserved;
-} AppKeyOpen;
-
-typedef struct
-{
-    unsigned int length;
-    unsigned char value[MAX_APPKEY_LEN];
-} AppKeyRead;
-
-typedef struct
-{
-    unsigned char value[MAX_APPKEY_LEN];
-} AppKeyWrite;
-
-typedef union {
-    AppKeyOpen open;
-    AppKeyRead read;
-    AppKeyWrite write;
-} AppKeyDataBlock;
+// WIP, only 64 fully supported at the moment.
+enum AppKeySize {
+    DEFAULT  // 64 original size
+    // SIZE_256
+};
 
 typedef struct
 {
@@ -155,7 +135,6 @@ enum HashType {
     SHA256,
     SHA512
 };
-
 
 /*
  * Closes the currently open directory
@@ -398,26 +377,49 @@ bool fuji_unmount_disk_image(uint8_t ds);
  */
 bool fuji_unmount_host_slot(uint8_t hs);
 
-// app key
-uint8_t fuji_appkey_open(AppKeyOpen *buffer);
-uint8_t fuji_appkey_read(AppKeyRead *buffer);
-uint8_t fuji_appkey_write(uint16_t count, AppKeyWrite *buffer);
+/*
+ * @brief  Opens and reads from appkey using the provided details
+ * @param  key_id the specific key id of this application
+ * @param  count a pointer to an int for the number of bytes that were read
+ * @param  data a pointer to the memory to write the data back to.
+ * @return success status of the call. If either the initial OPEN or subsequent READ fail, will return false.
+ */
+bool fuji_read_appkey(uint8_t key_id, uint16_t *count, uint8_t *data);
+
+/*
+ * @brief  Writes to an appkey using the provided details previously setup with fuji_set_appkey_details
+ * @param  key_id the specific key id of this application
+ * @param  count the number of bytes in the buffer to write to the appkey.
+ * @param  data a pointer to the memory to write from.
+ * @return success status of the call. If either the initial OPEN or subsequent WRITE fail, will return false.
+ */
+bool fuji_write_appkey(uint8_t key_id, uint16_t count, uint8_t *data);
+
+/*
+ * @brief  Sets the base details for appkeys. This must be called before using read or write operations on appkeys.
+ * @param  creator_id the id of the creator of the appkey
+ * @param  app_id the id of the application from the creator
+ * @param  keysize type: AppKeySize, set to DEFAULT for 64 byte appkeys, or SIZE_256 for 256 byte keys
+ */
+void fuji_set_appkey_details(uint16_t creator_id, uint8_t app_id, enum AppKeySize keysize);
 
 // Base64
-uint8_t fuji_base64_decode_compute();
-uint8_t fuji_base64_decode_input(char *s, uint16_t len);
-uint8_t fuji_base64_decode_length(unsigned long *len);
-uint8_t fuji_base64_decode_output(char *s, uint16_t len);
+// ALL RETURN VALUES ARE SUCCESS STATUS VALUE, i.e. true == success 
+bool fuji_base64_decode_compute();
+bool fuji_base64_decode_input(char *s, uint16_t len);
+bool fuji_base64_decode_length(unsigned long *len);
+bool fuji_base64_decode_output(char *s, uint16_t len);
 
-uint8_t fuji_base64_encode_compute();
-uint8_t fuji_base64_encode_input(char *s, uint16_t len);
-uint8_t fuji_base64_encode_length(unsigned long *len);
-uint8_t fuji_base64_encode_output(char *s, uint16_t len);
+bool fuji_base64_encode_compute();
+bool fuji_base64_encode_input(char *s, uint16_t len);
+bool fuji_base64_encode_length(unsigned long *len);
+bool fuji_base64_encode_output(char *s, uint16_t len);
 
 // Hash
-uint8_t fuji_hash_compute(uint8_t type);
-uint8_t fuji_hash_input(char *s, uint16_t len);
-uint8_t fuji_hash_length(uint8_t mode);
-uint8_t fuji_hash_output(uint8_t output_type, char *s, uint16_t len);
+// ALL RETURN VALUES ARE SUCCESS STATUS VALUE, i.e. true == success 
+bool fuji_hash_compute(uint8_t type);
+bool fuji_hash_input(char *s, uint16_t len);
+bool fuji_hash_length(uint8_t mode);
+bool fuji_hash_output(uint8_t output_type, char *s, uint16_t len);
 
 #endif /* FN_FUJI_H */

@@ -100,11 +100,11 @@ void readCommonInput() {
     case KEY_SPACE:
       inputTrigger=true;
       break;
-    case 'S':
-    case 's':
-      prefs[PREF_SOUND] = toggleSound() ? 1 : 2;
-      savePrefs();
-      break;
+    // case 'S':
+    // case 's':
+    //   prefs[PREF_SOUND] = toggleSound() ? 1 : 2;
+    //   savePrefs();
+    //   break;
   }
 }
 
@@ -122,7 +122,7 @@ void loadPrefs() {
     strcpy(prefs, tempBuffer);
   }
 
-  setSound(prefs[PREF_SOUND]==1);
+  //setSound(prefs[PREF_SOUND]==1);
   setColorMode(prefs[PREF_COLOR]-1);
 }
 

@@ -6,7 +6,7 @@
 ;
 ;
 
-;; .export _hires_CharSet, _hires_Pieces
+.export _charset
 .export _hires_Init, _hires_Done, _hires_Text, _hires_Draw,  _hires_Mask
 
 .include "apple2.inc"
@@ -189,3 +189,7 @@ ymax:   cpx     #$FF        ; Patched
         rts
 
 .endproc
+
+.segment "XDATA"
+_charset:
+.incbin "support/apple2/gen/charset"

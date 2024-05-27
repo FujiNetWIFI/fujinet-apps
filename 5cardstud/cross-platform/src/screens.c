@@ -93,6 +93,84 @@ void welcomeActionVerifyServerDetails() {
   }
 }
 
+
+
+
+bool inputFieldCycle(uint8_t x, uint8_t y, uint8_t max, uint8_t* buffer) {
+  static uint8_t done, curx, lastY;
+  
+  // Initialize first call to input box
+  //i=strlen(buffer);
+  if (done == 1 || lastY != y) {
+    done=0;
+    lastY=y;
+    curx = strlen(buffer);
+    drawText(x,y, buffer);
+    drawChip(x+curx,y);
+  }
+   // curx=i;
+   // done=0;
+ // }
+
+
+
+
+  // Process any waiting keystrokes
+  if (kbhit()) {
+    done=0;
+    disableDoubleBuffer();
+    inputKey = cgetc();
+    
+    if (inputKey == KEY_RETURN && curx>1) {
+      done=1;
+      // remove cursor
+      drawText(x+1+i,y," ");
+    } else if (inputKey == KEY_BACKSPACE && curx>0) {
+      buffer[--curx]=0;
+      drawText(x+1+curx,y," ");
+    } else if (
+      curx < max && ((curx>0 && inputKey == KEY_SPACE) || (inputKey>= 48 && inputKey <=57) || (inputKey>= 65 && inputKey <=90))    // 0-9 A-Z
+    ) {
+      buffer[curx]=inputKey;
+      buffer[++curx]=0;
+    }
+
+    drawText(x,y, buffer);
+    drawChip(x+curx,y);
+
+    return done==1;
+  }
+
+  return false;
+  
+}
+
+void showPlayerNameScreen() {
+  enableDoubleBuffer();
+  resetScreenWithBorder();
+  drawLogo();
+
+  drawBuffer();
+  disableDoubleBuffer();
+
+  drawText(13,13, "ENTER YOUR NAME:");
+  drawBox(15,16,PLAYER_NAME_MAX+1,1);
+  //drawText(16,17, playerName);
+  //i=strlen(playerName);
+  
+  clearCommonInput();
+  //while (inputKey != KEY_RETURN || i<2) {
+  while (!inputFieldCycle(16, 17, PLAYER_NAME_MAX, playerName)) ;
+  
+  enableDoubleBuffer();
+  for (y=13;y<19;++y)
+    drawText(13,y, "                 ");
+  
+  drawBuffer();
+
+  write_appkey(AK_LOBBY_CREATOR_ID,  AK_LOBBY_APP_ID, AK_LOBBY_KEY_USERNAME, playerName);
+}
+
 /// @brief Action called in Welcome Screen to verify player has a name
 void welcomeActionVerifyPlayerName() {
   // Read player's name from app key
@@ -102,43 +180,8 @@ void welcomeActionVerifyPlayerName() {
   strcpy(playerName,tempBuffer);
 
   // Capture username if player didn't come in from the lobby
-  if (strlen(playerName) == 0) {
-   
-    drawBuffer();
-    disableDoubleBuffer();
-
-    drawText(13,13, "ENTER YOUR NAME:");
-    drawBox(15,16,PLAYER_NAME_MAX+1,1);
-    
-    clearCommonInput();
-    i=0;
-    while (inputKey != KEY_RETURN || i<2) {
-      drawChip(16+i,17);
-      while (!kbhit());
-      inputKey = cgetc();
-    
-      if (inputKey == KEY_BACKSPACE && i>0) {
-        playerName[--i]=0;
-        drawText(17+i,17," ");
-      } else if (
-        i < PLAYER_NAME_MAX && ((i>0 && inputKey == KEY_SPACE) || (inputKey>= 48 && inputKey <=57) || (inputKey>= 65 && inputKey <=90))    // 0-9 A-Z
-      ) {
-        playerName[i]=inputKey;
-        playerName[++i]=0;
-      }
-     
-      drawText(16,17, playerName);
-    }
-    
-    enableDoubleBuffer();
-    for (y=13;y<19;++y)
-      drawText(13,y, "                 ");
-    
-    drawBuffer();
-
-    
-    write_appkey(AK_LOBBY_CREATOR_ID,  AK_LOBBY_APP_ID, AK_LOBBY_KEY_USERNAME, playerName);
-  }
+  if (strlen(playerName) == 0)
+    showPlayerNameScreen();
 }
 
 /// @brief Shows the Welcome Screen with Logo. Asks player's name
@@ -195,37 +238,35 @@ void showTableSelectionScreen() {
 
     resetScreenWithBorder();
       
-    centerText(4, "CHOOSE A TABLE TO JOIN");
-    drawText(3,6, "TABLE");
-    drawText(WIDTH-7-3,6, "PLAYERS");
+    centerText(3, "CHOOSE A TABLE TO JOIN");
+    drawText(6,6, "TABLE");
+    drawText(WIDTH-13,6, "PLAYERS");
+    drawLine(6,7,WIDTH-12);
 
-    drawLine(3,7,WIDTH-6);
     drawBuffer();
-    //cprintf("here: \n");
-    //cprintf("here1: \n");
+    waitvsync();
+  
     if (apiCall("tables")) {
    
       updateState(true);
       if (tableCount>0) {
         for(i=0;i<tableCount;++i) {
-          drawText(3,8+i*2, state.tables[i].name);
-          drawText(WIDTH-3-strlen(state.tables[i].players), 8+i*2, state.tables[i].players);
+          drawText(6,8+i*2, state.tables[i].name);
+          drawText(WIDTH-6-strlen(state.tables[i].players), 8+i*2, state.tables[i].players);
           if (state.tables[i].players[0]>'0') {
-            drawText(WIDTH-3-strlen(state.tables[i].players)-2, 8+i*2, "*");
+            drawText(WIDTH-6-strlen(state.tables[i].players)-2, 8+i*2, "*");
           }
         }
       } else {
         centerText(12, "SORRY, NO TABLES ARE AVAILABLE");
       }
 
-      //cprintf("Tables: %i\n", tableCount);
-        
-
-      //drawStatusText("R-REFRESH    H-HELP    C-COLOR    Q-QUIT");
-      drawStatusText(" R+EFRESH  H+ELP  C+OLOR  S+OUND  Q+UIT");
+      //drawStatusText(" R+EFRESH  H+ELP  C+OLOR  S+OUND  Q+UIT");
+      drawStatusText("R+EFRESH   H+ELP  C+OLOR   N+AME   Q+UIT");
       drawBuffer();
       disableDoubleBuffer();
       shownChip=0;
+
       clearCommonInput();
       while (!inputTrigger || !tableCount) {
         readCommonInput();
@@ -239,6 +280,9 @@ void showTableSelectionScreen() {
           prefs[PREF_COLOR] = cycleNextColor()+1;
           savePrefs();
           break;
+         } else if (inputKey == 'n' || inputKey =='N') {
+          showPlayerNameScreen();
+          break;
         } else if (inputKey == 'q' || inputKey =='Q') {
           quit();
         } /*else if (inputKey != 0) {
@@ -248,14 +292,14 @@ void showTableSelectionScreen() {
         
         if (!shownChip || (tableCount>0 && inputDirY)) {
 
-          drawText(1,8+tableIndex*2," ");
+          drawText(4,8+tableIndex*2," ");
           tableIndex+=inputDirY;
           if (tableIndex==255) 
             tableIndex=tableCount-1;
           else if (tableIndex>=tableCount)
             tableIndex=0;
 
-          drawChip(1,8+tableIndex*2);
+          drawChip(4,8+tableIndex*2);
 
           soundCursor();
           shownChip=1;
@@ -284,10 +328,10 @@ void showTableSelectionScreen() {
     }
   }
   
-  centerText(18, "CONNECTING TO SERVER");
+  centerText(17, "CONNECTING TO SERVER");
   drawBuffer();
   
-  progressAnim(20);
+  progressAnim(19);
   
   tableActionJoinServer();
 }
@@ -300,6 +344,8 @@ void showGameScreen() {
   // Animate chips to pot before drawing the new state
   animateChipsToPotOnRoundEnd();
   
+  checkFinalFlip();
+
   resetScreen();
   resetStateIfNewGame();
 
@@ -308,7 +354,7 @@ void showGameScreen() {
   if (playerCount>1) {
     drawNamePurse();
     drawBets();
-    drawCards();
+    drawCards(false);
   }
 
   drawGameStatus();
@@ -329,11 +375,11 @@ void showInGameMenuScreen() {
     x = WIDTH/2-8;
     y = HEIGHT/2-4;
       
-    drawBox(x-3,y-3,21,13);
+    drawBox(x-3,y-3,21,11);
     drawText(x,y,    "  Q: QUIT TABLE");
     drawText(x,y+=2, "  H: HOW TO PLAY"); 
     drawText(x,y+=2, "  C: COLOR TOGGLE"); 
-    drawText(x,y+=2, "  S: SOUND TOGGLE"); 
+    //drawText(x,y+=2, "  S: SOUND TOGGLE"); 
     drawText(x,y+=2, "ESC: KEEP PLAYING"); 
     drawBuffer();
 
@@ -358,12 +404,12 @@ void showInGameMenuScreen() {
         case 'q':
         case 'Q':
           resetScreenWithBorder();
-          centerText(12, "PLEASE WAIT");
+          centerText(10, "PLEASE WAIT");
           drawBuffer();
 
           // Inform server player is leaving
           apiCall("leave");
-          progressAnim(14);
+          progressAnim(12);
           
           //  Clear server app key in case of reboot 
           write_appkey(AK_LOBBY_CREATOR_ID,  AK_LOBBY_APP_ID, AK_LOBBY_KEY_SERVER, "");

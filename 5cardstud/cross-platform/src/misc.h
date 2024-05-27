@@ -36,7 +36,7 @@
 
 #define PREF_HELP 0  // 1/2 seen help screen no/yes
 #define PREF_COLOR 1 // 1/2 - Color mode mono/color
-#define PREF_SOUND 2 // 1/2 - Sound Enabled yes/no
+//#define PREF_SOUND 2 // 1/2 - Sound Enabled yes/no
 
 typedef struct {
   char * table;
@@ -74,7 +74,8 @@ typedef struct {
 
 extern unsigned char playerCount, prevPlayerCount, validMoveCount, prevRound, tableCount, currentCard, cardIndex, xOffset, fullFirst, cursorX, cursorY, waitCount, inputKey, wasViewing;
 extern signed char inputDirX, inputDirY;
-extern int prevPot, rx_len, maxJifs;
+
+extern uint16_t prevPot, rx_len, maxJifs;
 #ifdef _CMOC_VERSION_
 extern unsigned char noAnim, doAnim, finalFlip, inputTrigger;
 #else

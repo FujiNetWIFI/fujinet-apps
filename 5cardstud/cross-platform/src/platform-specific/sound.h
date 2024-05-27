@@ -13,8 +13,12 @@
 #endif /* _CMOC_VERSION_ */
 
 void initSound();
-unsigned char toggleSound();
+
+
+/* Will bring back sound toggle if there is a platform with no controllable sound volume
+bool toggleSound();
 void setSound();
+*/
 
 void soundJoinGame();
 void soundMyTurn();
