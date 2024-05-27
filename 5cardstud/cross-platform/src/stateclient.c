@@ -32,14 +32,11 @@ void updateState(unsigned char isTables) {
   // Load state by looping through result and extracting each string at each EOL character
   end = rx_buf + rx_len;
   
-  POKE(0xBE00, rx_buf);
-  POKE(0xBE08, rx_len);
-  POKE(0xBE10, end);
+  parent = NULL;
 
   // Replace line endings with null terminator
   rx_buf[rx_len]=0;
-  rx_buf[rx_len]=0;
-
+  
   //POKE(end+1,0xff);
   //cgetc();
   // Normalize state receive buffer in preparation for parsing

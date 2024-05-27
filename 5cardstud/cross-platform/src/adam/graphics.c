@@ -51,10 +51,6 @@ void drawChip(unsigned char x, unsigned char y)
 {
 }
 
-void drawPointer(unsigned char x, unsigned char y)
-{
-}
-
 void drawLine(unsigned char x, unsigned char y, unsigned char w)
 {
 }

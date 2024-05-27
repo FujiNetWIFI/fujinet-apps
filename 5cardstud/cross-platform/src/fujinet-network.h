@@ -33,7 +33,12 @@ extern uint16_t fn_bytes_read;
  */
 extern uint8_t fn_device_error;
 
+/**
+ * Convert device specific error in code to FujiNet Network library error, agnostic of device.
+ * Library code calls this when it encounters an error to return value applications should use.
+ */
 uint8_t fn_error(uint8_t code);
+
 /*
  * Network status values. These are set during network_read. You can capture your own using network_status.
  * bw      : bytes waiting

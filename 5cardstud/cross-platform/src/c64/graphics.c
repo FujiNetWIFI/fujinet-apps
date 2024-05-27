@@ -191,12 +191,6 @@ void drawChip(unsigned char x, unsigned char y) {
   cputcxy(x,y,'J');
 }
 
-void drawPointer(unsigned char x, unsigned char y) {
-  SET_COL(COL_BLACK);
-  cputcxy(x,y,'Z');
-}
-
-
 void drawLine(unsigned char x, unsigned char y, unsigned char w) {
   SET_COL(COL_BLACK);
   cputcxy(x,y, 'A');

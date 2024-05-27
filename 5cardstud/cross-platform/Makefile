@@ -357,8 +357,7 @@ endif
 	java -jar "support/apple2/dist/ac.jar" -as "support/apple2/dist/$(PROGRAM_STUB).po" $(PROGRAM_STUB) bin <$(PROGRAM)
 ifneq ($(OS),Windows_NT)
 	# Start the Apple Fujinet, as it needs to be restarted before each Apple2 boot
-	#cd ~/Documents/projects/fujinet-firmware/build_apple/dist;./run-fujinet&
-	cd ~/Documents/fujinet-pc-apple/dist;./run-fujinet&
+	cd ~/Documents/projects/fujinet-firmware/build_apple/dist;./run-fujinet&
 endif
 endif
 ifeq ($(OS),Windows_NT) 

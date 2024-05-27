@@ -12,6 +12,7 @@ void drawBets();
 void drawCards();
 void checkIfSpectatorStatusChanged();
 void checkIfPlayerCountChanged();
+void checkFinalFlip();
 void drawStatusTimeLeft();
 void highlightActivePlayer();
 void animateChipsToPotOnRoundEnd();

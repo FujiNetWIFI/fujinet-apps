@@ -32,7 +32,6 @@ typedef unsigned char bool;
 // Store default server endpoint in case lobby did not set app key
 char serverEndpoint[50] = "N:https://5card.carr-designs.com/";
 //char serverEndpoint[50] = "N:http://192.168.2.41:8080/";
-//char serverEndpoint[64] = "N:http://api.open-notify.org/iss-now.json";
 
 char query[50] = ""; //?table=blue&player=ERICAPL2";
 char playerName[12] = "";
@@ -42,7 +41,7 @@ GameState state;
 // State helper vars
 unsigned char playerCount, prevPlayerCount, validMoveCount, prevRound, tableCount, currentCard, cardIndex, xOffset, fullFirst, cursorX, cursorY, waitCount, inputKey, wasViewing;
 signed char inputDirX, inputDirY;
-int prevPot, rx_len, maxJifs;
+uint16_t prevPot, rx_len, maxJifs;
 bool noAnim, doAnim, finalFlip, inputTrigger;
 
 unsigned char playerX[8], playerY[8], moveLoc[5];
@@ -56,7 +55,6 @@ char prefs[4];
 
 char *hand, *requestedMove;
 
-//#include <stdio.h>
 
 #ifdef _CMOC_VERSION_
 int main(void)
