@@ -32,10 +32,8 @@
 unsigned char _lastJoy, _joy;
 
 void pause(unsigned char frames) {
-  static uint8_t i;
-  for(i=0;i<frames;i++) {
-      waitvsync();
-  }
+  while (frames--)
+    waitvsync();
 }
 
 void clearCommonInput() {
