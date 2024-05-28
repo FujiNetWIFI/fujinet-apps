@@ -30,7 +30,7 @@ void soundPlayerLeft();
 void soundSelectMove();
 void soundCursor();
 void soundCursorInvalid();
-void soundTakeChip(uint8_t counter);
+void soundTakeChip(uint16_t counter);
 
 
 #endif /* SOUND_H */

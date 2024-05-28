@@ -98,7 +98,7 @@ void soundCursorInvalid() {
   tone(118,5,0);
 }
 
-void soundTakeChip(uint8_t counter) {
+void soundTakeChip(uint16_t counter) {
   tone(118-counter*3,5,60);
 }
 #endif /* __APPLE2__ */

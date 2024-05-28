@@ -48,7 +48,7 @@ void showHelpScreen() {
   // this client were game agnostic.
   resetScreenWithBorder();
   
-  centerText(2,"HOW TO PLAY 5 CARD STUD");
+  centerText(3,"HOW TO PLAY 5 CARD STUD");
   y=4;
   //                  // __________________________________
   y++;drawText(3,y, "PLAYERS ARE DEALT 5 CARDS OVER THE");
@@ -227,16 +227,19 @@ void tableActionJoinServer() {
 void showTableSelectionScreen() {
   static uint8_t shownChip;
   static unsigned char tableIndex=0;
-  
+  static uint8_t skipApiCall;
+  skipApiCall=0;
   // An empty query means a table needs to be selected
   while (strlen(query)==0) {
+    
+    if (!skipApiCall) {
+      // Show the status immediately before retrival
+      centerStatusText("REFRESHING TABLE LIST..");
+           //drawStatusTimer();
+      drawBuffer();
+      resetScreenWithBorder();
+    }
 
-    // Show the status immediately before retrival
-    centerStatusText("REFRESHING TABLE LIST..");
-    //drawStatusTimer();
-    drawBuffer();
-
-    resetScreenWithBorder();
       
     centerText(3, "CHOOSE A TABLE TO JOIN");
     drawText(6,6, "TABLE");
@@ -245,10 +248,12 @@ void showTableSelectionScreen() {
 
     drawBuffer();
     waitvsync();
-  
-    if (apiCall("tables")) {
-   
-      updateState(true);
+
+    if (skipApiCall || apiCall("tables")) {
+      if (!skipApiCall) {
+        updateState(true);
+      }
+      skipApiCall=0;
       if (tableCount>0) {
         for(i=0;i<tableCount;++i) {
           drawText(6,8+i*2, state.tables[i].name);
@@ -262,7 +267,7 @@ void showTableSelectionScreen() {
       }
 
       //drawStatusText(" R+EFRESH  H+ELP  C+OLOR  S+OUND  Q+UIT");
-      drawStatusText("R+EFRESH   H+ELP  C+OLOR   N+AME   Q+UIT");
+      drawStatusText("R-EFRESH   H-ELP  C-OLOR   N-AME   Q-UIT");
       drawBuffer();
       disableDoubleBuffer();
       shownChip=0;
@@ -279,6 +284,8 @@ void showTableSelectionScreen() {
         } else if (inputKey == 'c' || inputKey =='C') {
           prefs[PREF_COLOR] = cycleNextColor()+1;
           savePrefs();
+          enableDoubleBuffer();
+          skipApiCall=1;
           break;
          } else if (inputKey == 'n' || inputKey =='N') {
           showPlayerNameScreen();
@@ -366,6 +373,7 @@ void showGameScreen() {
 
 /// @brief shows in-game menu
 void showInGameMenuScreen() {
+  hideLine(0,0,0);
   i=1;
   while (i) {
     enableDoubleBuffer();
@@ -404,7 +412,7 @@ void showInGameMenuScreen() {
         case 'q':
         case 'Q':
           resetScreenWithBorder();
-          centerText(10, "PLEASE WAIT");
+        centerText(10, "PLEASE WAIT");
           drawBuffer();
 
           // Inform server player is leaving

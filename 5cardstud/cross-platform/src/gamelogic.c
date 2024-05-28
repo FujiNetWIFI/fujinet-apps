@@ -82,9 +82,9 @@ void drawNamePurse() {
 
       drawText(xx, y, state.players[i].name);
 
-      if (state.activePlayer!=i)
+      if (state.activePlayer!=i) {
         hideLine(xx, y+1, strlen(state.players[i].name));
-      else {
+      } else {
         cursorX=xx;
         cursorY=y;
       }
@@ -148,8 +148,8 @@ void checkFinalFlip() {
 }
 
 void drawCards(bool finalFlip) {
-  static bool shouldMaskPlayerCard;
-  cardIndex=xOffset=fullFirst=0;
+  static bool shouldMaskPlayerCard, doNotFlipCards;
+  cardIndex=xOffset=fullFirst=doNotFlipCards=0;
   shouldMaskPlayerCard = true;
 
   if (state.round<1)
@@ -167,6 +167,7 @@ void drawCards(bool finalFlip) {
     if (h<2) {
       finalFlip = false;
       shouldMaskPlayerCard = true;
+      doNotFlipCards=true;
     } else if (!finalFlip) {
       shouldMaskPlayerCard = false;
     }
@@ -203,33 +204,35 @@ void drawCards(bool finalFlip) {
         
         if (doAnim) {
           soundDealCard();
-          pause(cardIndex == 1 ? 10 : 18);
+          pause(cardIndex == 1 ? 1 : 10);
         }
       }
     }
-    xOffset+=2;
 
-    // Apple 2 we don't want to offset for simplicity
-    //if (xOffset>1 || (state.round==5 && !finalFlip))
-    //  xOffset++;
+    xOffset++;
+
+    // Apple 2 doesn't render half cards correctly - rather, the offset cards switch colors, so always_render_full_cards is true for now
+    if (always_render_full_cards || xOffset>1 || (state.round==5 && !finalFlip && !doNotFlipCards))
+      xOffset++;
   }
 
   if (finalFlip) {
 
     drawBuffer();
     disableDoubleBuffer();
-    pause(70);
 
     for (h=1;h<=playerCount;h++) {
       i = h % playerCount;
-      if (state.players[i].status != 1)
+
+      // Don't flip a player that doesn't have a visible hand
+      if (state.players[i].status != 1 || state.players[i].hand[0]=='?')
         continue;
       
-      soundTick();
-      soundTick();
-      drawCard(playerX[i], playerY[i], FULL_CARD, state.players[i].hand, false);
+      for (j=1;j<=9; j+=2) {
+        drawCard(playerX[i]+(j-1)*playerDir[i], playerY[i], FULL_CARD,state.players[i].hand+j-1, false);
+      }
       soundDealCard();
-      pause(70);
+      pause(35);
     }
   }
   
@@ -333,6 +336,7 @@ void animateChipsToPotOnRoundEnd() {
     return;
 
   clearStatusBar();
+  pause(50);
 
   // Hide moves
   for (i=0;i<playerCount;i++) {
@@ -399,8 +403,9 @@ void drawGameStatus() {
 
   // Waiting for a player to join - show animation
   if (state.round == 0) {  
+    drawStatusTextAt(30+waitCount," ");
     waitCount = (waitCount + 1) % 3;
-    drawText(30+waitCount,HEIGHT-2,".");
+    drawStatusTextAt(30+waitCount,".");
     pause(40);
   } 
 
@@ -433,14 +438,20 @@ void requestPlayerMove() {
   // Zoom in the cursor
   i=strlen(state.validMoves[cursorX].name);
   h=moveLoc[cursorX];
+ 
+
+// Hack for now (only do this for apple2)
+if (always_render_full_cards) {
   drawLine(0,HEIGHT-1, h+h+i);
   pause(5);
-
   for (j=h;j>0;--j) {
     hideLine(h-j,HEIGHT-1,1);
     hideLine(h+i+j-1,HEIGHT-1,1);
     pause(2);
   }
+}
+
+  drawLine(h,HEIGHT-1,i);
 
   soundMyTurn();
 

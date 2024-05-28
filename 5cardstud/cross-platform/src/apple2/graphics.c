@@ -15,6 +15,8 @@
 #define RED_VAL_1 ROP_OR(0b11010100)
 #define RED_VAL_2 ROP_OR(0b10101010)
 
+bool always_render_full_cards = 1;
+
 unsigned char colorMode=0;
 
 unsigned char cycleNextColor() {

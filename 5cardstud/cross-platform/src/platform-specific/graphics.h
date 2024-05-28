@@ -18,6 +18,8 @@
 #endif /* _CMOC_VERSION_  */
 #include "../misc.h"
 
+extern bool always_render_full_cards;
+
 void enableDoubleBuffer();
 void disableDoubleBuffer();
 void drawBuffer();

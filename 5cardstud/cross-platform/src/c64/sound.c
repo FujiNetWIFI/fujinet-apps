@@ -5,6 +5,8 @@
 
 #include <c64.h>
 #include <string.h>
+#include <stdint.h>
+#include "../misc.h"
 
 void waitvsync();
 
@@ -15,8 +17,7 @@ void playNote(unsigned f) {
    static unsigned char i;
    SID.v1.freq=f;
    SID.v1.ctrl = 0x11;
-   for(i=delay;--i;)
-    waitvsync();
+   pause(delay);
    SID.v1.ctrl = 0x10;
 }
 
@@ -24,8 +25,7 @@ void playNoise(unsigned f) {
    static unsigned char i;
    SID.v2.freq=f;
    SID.v2.ctrl = 0x81;
-   for(i=delay;--i;)
-    waitvsync();
+   pause(delay);
    SID.v2.ctrl = 0x80;
 }
 
@@ -110,6 +110,12 @@ void soundCursor() {
 void soundCursorInvalid() {
   delay=3;
   playNote(0x121e);
+}
+
+void soundTakeChip(uint16_t counter) {
+  delay=2;
+  playNote(0x800+ counter*40);
+  pause(3);
 }
 
 #endif /* __C64__ */
