@@ -65,11 +65,11 @@ SOURCES_TG := $(strip $(SOURCES_TG))
 # convert from src/your/long/path/foo.[c|s] to obj/your/long/path/foo.o
 OBJ1 := $(SOURCES:.c=.o)
 OBJECTS := $(OBJ1:.s=.o)
-OBJECTS := $(OBJECTS:$(SRCDIR)/%=$(OBJDIR)/%)
+OBJECTS := $(OBJECTS:$(SRCDIR)/%=$(OBJDIR)/$(CURRENT_TARGET)/%)
 
 OBJ2 := $(SOURCES_TG:.c=.o)
 OBJECTS_TG := $(OBJ2:.s=.o)
-OBJECTS_TG := $(OBJECTS_TG:$(SRCDIR)/%=$(OBJDIR)/%)
+OBJECTS_TG := $(OBJECTS_TG:$(SRCDIR)/%=$(OBJDIR)/$(CURRENT_TARGET)/%)
 
 OBJECTS += $(OBJECTS_TG)
 
@@ -144,13 +144,13 @@ SRC_INC_DIRS := \
 
 vpath %.c $(SRC_INC_DIRS)
 
-$(OBJDIR)/%.o: %.c $(VERSION_FILE) | $(OBJDIR)
+$(OBJDIR)/$(CURRENT_TARGET)/%.o: %.c $(VERSION_FILE) | $(OBJDIR)
 	@$(call MKDIR,$(dir $@))
 	$(CC) -t $(CURRENT_PLATFORM) -c --create-dep $(@:.o=.d) $(CFLAGS) -o $@ $<
 
 vpath %.s $(SRC_INC_DIRS)
 
-$(OBJDIR)/%.o: %.s $(VERSION_FILE) | $(OBJDIR)
+$(OBJDIR)/$(CURRENT_TARGET)/%.o: %.s $(VERSION_FILE) | $(OBJDIR)
 	@$(call MKDIR,$(dir $@))
 	$(CC) -t $(CURRENT_PLATFORM) -c --create-dep $(@:.o=.d) $(ASFLAGS) -o $@ $<
 

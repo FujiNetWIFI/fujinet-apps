@@ -8,6 +8,7 @@
 #include "fujinet-network.h"
 
 #include "httpbin.h"
+#include "version.h"
 
 /* 
  * This is an example of doing JSON queries to httpbin.org, and then doing post/put/delete protocol
@@ -25,14 +26,12 @@ uint8_t connected;
 uint8_t conn_err;
 uint8_t trans_type = OPEN_TRANS_CRLF;
 
-char *version = "v1.3.16";
-
 void debug() {}
 
 int main(void) {
     clrscr();
     gotox(0);
-    printf("httpbin %s\n", version);
+    printf("httpbin %s\n", get_version());
     printf("Base URL: %s\n", httpbin);
 
     setup();
