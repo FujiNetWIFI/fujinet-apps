@@ -298,7 +298,7 @@ int8_t parse_json(char * element) {
 
   json_part[0] = '\0';
 
-  sprintf(query, "N1:%s%c", element, CH_EOL);
+  sprintf(query, "%s%c", element, CH_EOL);
   stat = network_json_query(url, query, json_part);
 
   if (stat < 0)
