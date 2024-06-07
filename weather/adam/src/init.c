@@ -1,5 +1,5 @@
 /**
- * Weather 
+ * Weather
  *
  * Based on @bocianu's code
  *
@@ -10,7 +10,4 @@
 
 #include "screen.h"
 
-void init(void)
-{
-  screen_init();
-}
+void init(void) { screen_init(); }

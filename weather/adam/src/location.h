@@ -1,5 +1,5 @@
 /**
- * Weather 
+ * Weather
  *
  * Based on @bocianu's code
  *
@@ -13,11 +13,11 @@
 
 typedef struct _location
 {
-  char city[41];
-  char region_code[3];
-  char country_code[3];
-  char latitude[8];
-  char longitude[8];
+    char city[41];
+    char region_code[3];
+    char country_code[3];
+    char latitude[8];
+    char longitude[8];
 } Location;
 
 void location(void);

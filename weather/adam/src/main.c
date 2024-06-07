@@ -1,5 +1,5 @@
 /**
- * Weather 
+ * Weather
  *
  * Based on @bocianu's code
  *
@@ -17,29 +17,29 @@
 #include "constants.h"
 #include "forecast.h"
 
-State state=LOCATION;
+State state = LOCATION;
 
 void main(void)
 {
-  init();
-  welcome();
-  options();
-  
-  while (1)
-  {
-    switch(state)
-      {
-      case LOCATION:
-	location();
-	break;
-      case WEATHER:
-	weather();
-	break;
-      case FORECAST:
-	forecast();
-	break;
-      case DONE:
-	break;
-      }
-  }
+    init();
+    welcome();
+    options();
+
+    while (1)
+    {
+        switch (state)
+        {
+        case LOCATION:
+            location();
+            break;
+        case WEATHER:
+            weather();
+            break;
+        case FORECAST:
+            forecast();
+            break;
+        case DONE:
+            break;
+        }
+    }
 }

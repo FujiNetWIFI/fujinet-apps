@@ -13,13 +13,13 @@
 
 typedef struct _ftime
 {
-  unsigned short year;
-  unsigned char month;
-  unsigned char day;
-  unsigned char hour;
-  unsigned char min;
-  unsigned char sec;
-  unsigned char dow;
+    unsigned short year;
+    unsigned char month;
+    unsigned char day;
+    unsigned char hour;
+    unsigned char min;
+    unsigned char sec;
+    unsigned char dow;
 } Timestamp;
 
 void timestamp(unsigned long t, Timestamp *ts);

@@ -1,5 +1,5 @@
 /**
- * Weather 
+ * Weather
  *
  * Based on @bocianu's code
  *
