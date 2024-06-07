@@ -16,6 +16,7 @@
 #include "io.h"
 #include "options.h"
 #include "ftime.h"
+#include "utils.h"
 
 #define NET_DEV  0x09
 #define FUJI_DEV 0x0F
@@ -284,7 +285,8 @@ bool io_weather(char *j)
 
     if (!io_json_query("/timezone", tmp))
         return false;
-    strcpy(timezone, tmp);
+
+    ellipsizeString(&tmp[0], &timezone[0], sizeof(timezone));
 
     if (!io_json_query("/current/sunrise", tmp))
         return false;

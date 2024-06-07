@@ -19,7 +19,7 @@ INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 
 $(BUILD_DIR)/$(TARGET_EXEC): $(OBJS)
 	$(CC) $(LDFLAGS) $(OBJS)
-	cp weather.ddp /mnt/z
+#	cp weather.ddp /mnt/z
 
 # c source
 $(BUILD_DIR)/%.c.o: %.c
