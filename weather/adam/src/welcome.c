@@ -11,4 +11,6 @@
 #include "welcome.h"
 #include "screen.h"
 
-void welcome(void) { screen_welcome(); }
+void welcome(void) { 
+    screen_welcome(); 
+}

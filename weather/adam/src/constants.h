@@ -28,6 +28,17 @@
 #define ICON_SNOW             7
 #define ICON_MIST             8
 
+#define NET_DEV  0x09
+#define FUJI_DEV 0x0F
+#define CHANNEL_MODE_JSON 0x01
+#define ACK 0x80
+
+#define READ_WRITE 12
+
+#define OW_KEY "2e8616654c548c26bc1c86b1615ef7f1"
+#define IP_KEY "d05a249425c32e0b231ba79e3f9af478"
+
+
 typedef enum _state
 {
     WEATHER,

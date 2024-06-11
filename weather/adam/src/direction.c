@@ -9,11 +9,11 @@
  */
 #include "direction.h"
 
-const char directions[] = {"N ", "NE", "E ", "SE", "S ", "SW", "W ", "NW"};
+const char *directions[] = {"N ", "NE", "E ", "SE", "S ", "SW", "W ", "NW"};
 
 const char *degToDirection(unsigned short a)
 {
     unsigned short i = (a / 45) % 8;
 
-    return &directions[i];
+    return directions[i];
 }

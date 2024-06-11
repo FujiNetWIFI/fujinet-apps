@@ -32,7 +32,9 @@ typedef struct _optionsdata
     char unused[10];
 } OptionsData;
 
-void options_save(OptionsData *o);
+bool options_load(OptionsData *o);
+bool options_save(OptionsData *o);
+
 void options(void);
 
 #endif /* OPTIONS_H */

@@ -1,7 +1,7 @@
 #include <string.h>
 #include <stdio.h>
 
-void ellipsizeString(const char *src, char *dst, size_t maxLen)
+void ellipsizeString(char *src, char *dst, size_t maxLen)
 {
     size_t srcLen = strlen(src);
     if (maxLen == 0)

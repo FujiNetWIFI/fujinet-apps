@@ -21,12 +21,14 @@ State state = LOCATION;
 
 void main(void)
 {
+    int i;
     init();
     welcome();
     options();
 
     while (1)
     {
+
         switch (state)
         {
         case LOCATION:

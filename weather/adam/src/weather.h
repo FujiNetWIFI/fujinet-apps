@@ -12,5 +12,6 @@
 #define WEATHER_H
 
 void weather(void);
+void weather_hpa_to_inhg(char *p);
 
 #endif /* WEATHER_H */

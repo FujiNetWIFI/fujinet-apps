@@ -12,6 +12,8 @@
 #include "icon.h"
 #include "constants.h"
 
+ // https://openweathermap.org/weather-conditions
+ 
 unsigned char icon_get(char *c)
 {
     if (strcmp(c, "01d") == 0 || strcmp(c, "01n") == 0)
