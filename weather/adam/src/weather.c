@@ -9,16 +9,17 @@
  */
 
 #include <conio.h>
+#include "constants.h"
 #include "weather.h"
 #include "options.h"
 #include "location.h"
 #include "screen.h"
 #include "io.h"
-#include "faux_json.h"
 #include "direction.h"
 #include "icon.h"
 #include "ftime.h"
 #include "input.h"
+#include "utils.h"
 
 extern OptionsData optData;
 extern Location locData;
@@ -43,6 +44,7 @@ char wind_txt[16];
 char description[24];
 char loc[48];
 char timezone[24];
+char temp[24];
 unsigned char icon;
 
 /*
@@ -65,19 +67,182 @@ void weather_date(char *c, unsigned long d, short offset)
 {
     Timestamp ts;
 
-    timestamp(d + offset, &ts);
+    if (d != 0)
+    {
+        timestamp(d + offset, &ts);
 
-    sprintf(c, "%u %s %u, %s", ts.day, time_month(ts.month), ts.year, time_dow(ts.dow));
+        sprintf(c, "%u %s %u, %s", ts.day, time_month(ts.month), ts.year, time_dow(ts.dow));
+    } else
+        strcpy(c, "Unknown");
 }
 
 void weather_time(char *c, unsigned long d, short offset)
 {
     Timestamp ts;
 
-    timestamp(d + offset, &ts);
+    if (d != 0)
+    {
+        timestamp(d + offset, &ts);
 
-    sprintf(c, "%02u:%02u", ts.hour, ts.min);
+        sprintf(c, "%02u:%02u", ts.hour, ts.min);
+    } else
+        strcpy(c, "Unknown");
 }
+/*
+weather_parse 
+- Open the url containing the json data for the daily weather 
+
+Returns
+    true: Success
+   false: Could not open the website, or could not find one of the json elements
+ 
+*/
+bool weather_parse(void)
+{
+    int success = 1;
+    char units[14];
+    char cc = 'C';
+    unsigned char res;
+    char failure[2] = {"?"};
+    unsigned char tmp[128];
+    char url[256];
+    char *p;
+
+    if (optData.units == METRIC)
+        strcpy(units, "metric");
+    else if (optData.units == IMPERIAL)
+        strcpy(units, "imperial");
+
+    // if any json fails, then have default values
+    dt = 0;
+    sunrise = 0;
+    sunset = 0;
+    strcpy(temp, failure);
+    strcpy(feels_like, failure);
+    timezone_offset = 0;
+    strcpy(pressure, failure);
+    strcpy(humidity, failure);
+    strcpy(dew_point, failure);
+    strcpy(clouds, failure);
+    strcpy(visibility, failure);
+    strcpy(wind_speed, failure);
+    strcpy(wind_dir, failure);
+    strcpy(description, failure);
+    icon = ICON_CLEAR_SKY;
+   
+
+    // http://api.openweathermap.org/data/2.5/onecall?lat=44.62335968017578&lon=-63.57278060913086&exclude=minutely,hourly,alerts,daily&units=%s&appid=2e8616654c548c26bc1c86b1615ef7f1
+
+    snprintf(url, sizeof(url),  "N:HTTP://%s//data/2.5/onecall?lat=%s&lon=%s&exclude=minutely,hourly,alerts,daily&units=%s&appid=%s", 
+                                OW_API, locData.latitude, locData.longitude, units,
+                                OW_KEY);
+
+    if (io_json_open(url))
+    {
+        return false;
+    }
+
+    // Grab the relevant bits
+    if (io_json_query("/current/dt", tmp, sizeof(tmp)))
+        return false;
+    dt = atol(tmp);
+
+
+    if (io_json_query("/timezone", tmp, sizeof(tmp)))
+        return false;
+    ellipsizeString( (char *) &tmp[0], &timezone[0], sizeof(timezone));
+
+
+    if (io_json_query("/current/sunrise", tmp, sizeof(tmp)))
+        return false;
+    sunrise = atol(tmp);
+
+
+    if (io_json_query("/current/sunset", tmp, sizeof(tmp)))
+        return false;
+    sunset = atol(tmp);
+
+
+    if (io_json_query("/current/temp", tmp, sizeof(tmp)))
+        return false;
+    io_decimals(tmp,2);
+    
+    sprintf(temp, "%s*%c", tmp, optData.units == IMPERIAL ? 'F' : 'C');
+
+
+    if (io_json_query("/current/feels_like", tmp, sizeof(tmp)))
+        return false;
+    io_decimals(tmp,2);
+    sprintf(feels_like, "%s *%c", tmp, optData.units == IMPERIAL ? 'F' : 'C');
+
+
+    if (io_json_query("/timezone_offset", tmp, sizeof(tmp)))
+        return false;
+    timezone_offset = atoi(tmp);
+
+
+    if (io_json_query("/current/pressure", tmp, sizeof(tmp)))
+        return false;
+
+    if (optData.units == IMPERIAL)
+        weather_hpa_to_inhg(tmp);
+    io_decimals(tmp,2);
+
+    sprintf(pressure, "%s %s", tmp, optData.units == IMPERIAL ? "\"Hg" : "mPa");
+
+
+    if (io_json_query("/current/humidity", tmp, sizeof(tmp)))
+        return false;
+    io_decimals(tmp,2);
+    sprintf(humidity, "%s%%", tmp);
+
+
+    if (io_json_query("/current/dew_point", tmp, sizeof(tmp)))
+        return false;
+    io_decimals(tmp,2);
+    sprintf(dew_point, "%s *%c", tmp, optData.units == IMPERIAL ? 'F' : 'C');
+
+
+    if (io_json_query("/current/clouds", tmp, sizeof(tmp)))
+        return false;
+    io_decimals(tmp,2);
+    sprintf(clouds, "%s%%", tmp);
+
+
+    if (io_json_query("/current/visibility", tmp, sizeof(tmp)))
+        return false;
+    io_decimals(tmp,2);
+    sprintf(visibility, "%d %s", atoi(tmp) / 1000, optData.units == IMPERIAL ? "mi" : "km");
+
+
+    if (io_json_query("/current/wind_speed", tmp, sizeof(tmp)))
+        return false;
+    io_decimals(tmp,2);
+    sprintf(wind_speed, "%s %s", tmp, optData.units == IMPERIAL ? "mph" : "kph");
+
+
+    if (io_json_query("/current/wind_deg", tmp, sizeof(tmp)))
+        return false;
+    io_decimals(tmp,2);
+    sprintf(wind_dir, "%s", degToDirection(atoi(tmp)));
+
+
+    if (io_json_query("/current/weather/0/description", tmp, sizeof(tmp)))
+        return false;
+    sprintf(description, "%s", tmp);
+    strcpy(description, strupr(description));
+
+
+    if (io_json_query("/current/weather/0/icon", tmp, sizeof(tmp)))
+        return false;
+    icon = icon_get(tmp);
+
+    // Close connection
+    io_json_close();
+
+    return true;
+}
+
 
 void weather(void)
 {
@@ -86,16 +251,16 @@ void weather(void)
 
     timer = 65535;
 
-    memset(json, 0, sizeof(json));
     screen_weather_parsing();
 
-    if (!io_weather(json))
+    if (!weather_parse())
+    {
         screen_weather_could_not_get();
-
-    weather_date(date_txt, dt, atoi(timezone_offset));
-    weather_time(time_txt, dt, timezone_offset);
+    }
+    weather_date(date_txt,         dt, atoi(timezone_offset));
+    weather_time(time_txt,         dt, timezone_offset);
     weather_time(sunrise_txt, sunrise, atoi(timezone_offset));
-    weather_time(sunset_txt, sunset, atoi(timezone_offset));
+    weather_time(sunset_txt,   sunset, atoi(timezone_offset));
 
     sprintf(wind_txt, "%s %s", wind_speed, wind_dir);
 
@@ -107,6 +272,7 @@ void weather(void)
 
     input_init();
 
+    timer = 10000; // ? 10 seconds
     while (timer > 0)
     {
         input_weather();

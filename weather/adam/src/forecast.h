@@ -27,5 +27,7 @@ typedef struct
 } ForecastData;
 
 void forecast(void);
+void forecast_parse(unsigned char i, ForecastData *f);
+void screen_forecast_init();
 
 #endif /* FORECAST_H */

@@ -4,6 +4,7 @@
  * Screen Routines
  */
 
+
 #include <video/tms99x8.h>
 #include <eos.h>
 #include <smartkeys.h>
@@ -14,10 +15,12 @@
 #include "constants.h"
 #include "ftime.h"
 #include "options.h"
+#include "forecast.h"
 
 char tmp[192]; // Temporary for screen formatting
 
 unsigned short screen_icon_counter;
+extern unsigned char forecast_offset;
 
 extern OptionsData optData;
 
@@ -76,6 +79,7 @@ const unsigned char spritedata[] = {
     // 11 Lightning 3
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x03, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x30, 0x60, 0xC0, 0x80, 0xFC, 0x18, 0x30, 0x60, 0xF0, 0xE0, 0x80};
 
+// udgs = user defined graphics set
 const unsigned char udgs[] = {
     // Digits 0-9 as 16x16 chars
     0x03, 0x0F, 0x0C, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x0C, 0x0F, 0x03, 0xC0, 0xF0, 0x30, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x30, 0xF0, 0xC0,
@@ -118,7 +122,9 @@ const char logo_udgs[] = {
     0x22, 0x1c, 0x08, 0x08, 0x08, 0xff, 0x08, 0x08, 0x7c, 0x38, 0x38, 0x7c, 0xfe, 0xff, 0xfe, 0x7c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x04, 0x1f, 0x00, 0x08, 0x08, 0x08, 0x1c, 0x3e, 0x7f, 0xff,
     0x00, 0x00, 0x00, 0x00, 0x10, 0x10, 0x10, 0xfe, 0x08, 0x08, 0x08, 0x1f, 0x08, 0x00, 0x00, 0x00, 0x38, 0x10, 0x10, 0xff, 0x10, 0x10, 0x10, 0x00, 0x10, 0x10, 0x10, 0xfc, 0x10, 0x10, 0x00, 0x00};
 
-void screen_init(void) { clrscr(); }
+void screen_init(void) { 
+    clrscr(); 
+}
 
 void screen_colors(unsigned long d, short offset, unsigned char *fg, unsigned char *bg, bool *dayNight)
 {
@@ -134,22 +140,22 @@ void screen_colors(unsigned long d, short offset, unsigned char *fg, unsigned ch
     case 3:
     case 4:
         *dayNight = false;
-        *fg = INK_WHITE;
-        *bg = INK_BLACK;
+        *fg = VDP_INK_WHITE;
+        *bg = VDP_INK_BLACK;
         break;
     case 5:
     case 6:
     case 7:
         *dayNight = true;
-        *bg = INK_DARK_BLUE;
-        *fg = INK_WHITE;
+        *bg = VDP_INK_DARK_BLUE;
+        *fg = VDP_INK_WHITE;
         break;
     case 8:
     case 9:
     case 10:
         *dayNight = true;
-        *bg = INK_LIGHT_BLUE;
-        *fg = INK_WHITE;
+        *bg = VDP_INK_LIGHT_BLUE;
+        *fg = VDP_INK_WHITE;
         break;
     case 11:
     case 12:
@@ -158,23 +164,25 @@ void screen_colors(unsigned long d, short offset, unsigned char *fg, unsigned ch
     case 15:
     case 16:
         *dayNight = true;
-        *bg = INK_CYAN;
-        *fg = INK_BLACK;
+        *bg = VDP_INK_CYAN;
+        *fg = VDP_INK_BLACK;
         break;
     case 17:
     case 18:
     case 19:
         *dayNight = false;
-        *bg = INK_DARK_BLUE;
-        *fg = INK_WHITE;
+        *bg = VDP_INK_DARK_BLUE;
+        *fg = VDP_INK_WHITE;
         break;
     case 20:
     case 21:
     case 22:
     case 23:
         *dayNight = false;
-        *bg = INK_BLACK;
-        *fg = INK_WHITE;
+        *bg = VDP_INK_BLACK;
+        *fg = VDP_INK_WHITE;
+        break;
+    default:
         break;
     }
 }
@@ -246,20 +254,40 @@ void screen_bigprint(unsigned char x, unsigned char y, char *c)
     }
 }
 
-void screen_icon_reset(void) { screen_icon_counter = 0x1B00; }
+/*
+screen_icon_reset 
+- sets the global variable screen_icon_counter to the start of sprite data
+*/
+void screen_icon_reset(void) 
+{ 
+    screen_icon_counter = 0x1B00; 
+}
 
-void screen_icon(unsigned char x, unsigned char y, unsigned char o, unsigned char i, bool d)
+
+/*
+screen_icon 
+- positions a sprite for the weather on the screen
+
+Parameters
+- x - X position on screen (0 -> )
+- y - Y position on screen (0 -> )
+- unused
+- icon - Sprite to display, see constants.h
+- dayNight - use day sprite if true
+*/
+void screen_icon(unsigned char x, unsigned char y, unsigned char unused, unsigned char icon, bool dayNight)
 {
     // blast all sprites
     vdp_vfill(0x1b00, 0, 128);
+    screen_icon_reset();
 
-    switch (i)
+    switch (icon)
     {
     case ICON_CLEAR_SKY: // clear sky
         // Sun with clouds
         vdp_vpoke(screen_icon_counter++, y);
         vdp_vpoke(screen_icon_counter++, x);
-        vdp_vpoke(screen_icon_counter++, d == true ? 0x00 : 32);
+        vdp_vpoke(screen_icon_counter++, dayNight == true ? 0x00 : 32);
         vdp_vpoke(screen_icon_counter++, 0x0A);
         break;
     case ICON_FEW_CLOUDS: // few clouds
@@ -270,7 +298,7 @@ void screen_icon(unsigned char x, unsigned char y, unsigned char o, unsigned cha
 
         vdp_vpoke(screen_icon_counter++, y);
         vdp_vpoke(screen_icon_counter++, x);
-        vdp_vpoke(screen_icon_counter++, d == true ? 0x04 : 32);
+        vdp_vpoke(screen_icon_counter++, dayNight == true ? 0x04 : 32);
         vdp_vpoke(screen_icon_counter++, 0x0A);
         break;
     case ICON_SCATTERED_CLOUDS: // Scattered clouds
@@ -296,7 +324,7 @@ void screen_icon(unsigned char x, unsigned char y, unsigned char o, unsigned cha
         vdp_vpoke(screen_icon_counter++, 56);
         vdp_vpoke(screen_icon_counter++, 0x04);
 
-        if (d == true)
+        if (dayNight == true)
         {
             vdp_vpoke(screen_icon_counter++, y);
             vdp_vpoke(screen_icon_counter++, x);
@@ -317,7 +345,7 @@ void screen_icon(unsigned char x, unsigned char y, unsigned char o, unsigned cha
 
             vdp_vpoke(screen_icon_counter++, y);
             vdp_vpoke(screen_icon_counter++, x);
-            vdp_vpoke(screen_icon_counter++, d == true ? 0x04 : 32);
+            vdp_vpoke(screen_icon_counter++, dayNight == true ? 0x04 : 32);
             vdp_vpoke(screen_icon_counter++, 0x0A);
         }
         break;
@@ -390,9 +418,10 @@ void screen_icon(unsigned char x, unsigned char y, unsigned char o, unsigned cha
 }
 
 void screen_daily(char *date, unsigned char icon, char *temperature, char *pressure, char *description, char *location, char *wind, char *feels, char *dew, char *visibility, char *timezone,
-                  char *sunrise, char *sunset, char *humidity, char *clouds, char *time, unsigned char foregroundColor, unsigned char backgroundColor, bool dn)
+                  char *sunrise, char *sunset, char *humidity, char *clouds, char *time, unsigned char foregroundColor, unsigned char backgroundColor, bool dayNight)
 {
     void *param = &udgs;
+    int x_start;
 
     screen_icon_reset();
     console_ioctl(IOCTL_GENCON_SET_UDGS, &param);
@@ -407,18 +436,22 @@ void screen_daily(char *date, unsigned char icon, char *temperature, char *press
     else
         strcpy(tmp, "  SHOW\nFARENHEIT");
 
-    smartkeys_display(NULL, NULL, "LOCATION", NULL, tmp, " REFRESH");
+    smartkeys_display(NULL, NULL, "LOCATION", "FORE\nCAST", tmp, " REFRESH");
 
     vdp_color(foregroundColor, backgroundColor, backgroundColor);
 
     gotoxy(8, 0);
     cprintf("%s", date);
-    screen_icon(24, 24, 0, icon, dn);
+    screen_icon(24, 24, 0, icon, dayNight);
     screen_bigprint(2, 1, temperature);
     gotoxy(23, 4);
     cprintf("%s", pressure);
-    gotoxy(13, 7);
+    x_start = 36/2 - strlen(description)/2;
+    if (x_start < 0)
+        x_start = 0;
+    gotoxy(x_start, 7);
     cprintf("%s", description);
+
     gotoxy(12, 9);
     cprintf("%s", location);
 
@@ -429,24 +462,30 @@ void screen_daily(char *date, unsigned char icon, char *temperature, char *press
     smartkeys_puts(160, 96, tmp);
 }
 
+// initial splash screen
+
 void screen_welcome(void)
 {
     void *param = &logo_udgs;
 
+    // Use custom font
     console_ioctl(IOCTL_GENCON_SET_UDGS, &param);
     smartkeys_set_mode();
 
+             // Fujinet Logo
     printf("\x20\x20\x20\x20\x20\x9A\x9B\x9C\x20\x20\x20\x20\x20       OPEN WEATHER");
     printf("\x80\x81\x82\x83\x84\x94\x95\x96\x8A\x8B\x8C\x8D\x8e          CLIENT\n");
     printf("\x85\x86\x87\x88\x89\x97\x98\x99\x8F\x90\x91\x92\x93           for\n");
     printf("\x20\x20\x20\x20\x20\x20\x9D\x9E\x9F\x20\x20\x20\x20       COLECO  ADAM\n");
 }
 
+// Step 2
 void screen_options_init(void)
 {
     smartkeys_display(NULL, NULL, NULL, NULL, NULL, NULL);
     smartkeys_status("\n  INITIALIZING OPTIONS...");
 }
+
 
 void screen_options_init_not_found(void)
 {
@@ -472,12 +511,14 @@ void screen_weather_init(void)
     smartkeys_status("\n  RETRIEVING WEATHER INFORMATION...");
 }
 
+// step 4
 void screen_weather_could_not_get()
 {
     smartkeys_display(NULL, NULL, NULL, NULL, NULL, NULL);
     smartkeys_status("\n  COULD NOT RETRIEVE WEATHER DATA.");
 }
 
+// step 3
 void screen_weather_parsing()
 {
     smartkeys_display(NULL, NULL, NULL, NULL, NULL, NULL);
@@ -498,42 +539,84 @@ void screen_forecast_parsing(void)
     smartkeys_status("\n  PARSING FORECAST DATA, PLEASE WAIT...");
 }
 
-void screen_forecast(unsigned char i, ForecastData *f)
+void screen_forecast(unsigned char i, ForecastData *f, unsigned char foregroundColor, unsigned char backgroundColor, bool day)
 {
-    unsigned char o = i * 5;
-    screen_icon(8, i * 40, i, f->icon, true);
-    textbackground(1);
-    textcolor(15);
-    gotoxy(5, o);
-    cprintf("%18s%3s %5s", "", f->dow, f->date);
-    textbackground(9);
-    textcolor(15);
-    gotoxy(14, o + 1);
-    cprintf(" LO:%5s", f->lo);
-    textbackground(4);
-    textcolor(15);
-    gotoxy(23, o + 1);
-    cprintf(" HI:%5s", f->hi);
-    textbackground(15);
-    textcolor(1);
-    gotoxy(5, o + 1);
-    cprintf("%5s%s", f->pressure, optData.units == IMPERIAL ? "\"Hg " : " hPa");
-    textbackground(8);
-    textcolor(0);
-    gotoxy(5, o + 2);
-    cprintf("%27s", f->wind);
-    textbackground(15);
-    textcolor(1);
-    gotoxy(5, o + 3);
-    cprintf("%27s", f->desc);
+    //                    i  D  d   l   h
+    unsigned char x[5] = {0, 7, 13, 21, 27};
+    unsigned char iy[5] = {40, 80, 120, 160};
+    unsigned char y = (i % 4) * 4;
+    void *param = &udgs;
+
+    if (y == 0)
+    {
+        screen_icon_reset();
+        console_ioctl(IOCTL_GENCON_SET_UDGS, &param);
+        vdp_color(foregroundColor, backgroundColor, backgroundColor);
+        clrscr();
+
+        gotoxy(x[1],y);
+        vdp_color(backgroundColor, foregroundColor, foregroundColor);
+        cprintf("%25s", " ");
+
+        gotoxy(x[1],y);
+        cprintf(" DATE");
+
+        gotoxy(x[2],y);
+        cprintf(" DAY");
+
+        gotoxy(x[3],y);
+        cprintf("LOW");
+
+        gotoxy(x[4],y);
+        cprintf("HIGH");    
+    }
+
+    vdp_color(foregroundColor, backgroundColor, backgroundColor);
+    y += 2;
+
+    // icon
+    screen_icon(8, iy[i], 0, f->icon, day);
+
+    // date
+    gotoxy(x[1],y);
+    cprintf("%5s", f->date);
+
+    // day of week
+    gotoxy(x[2],y);
+    cprintf("%-5s", f->dow);
+
+    // Low
+    gotoxy(x[3],y);
+    cprintf("%5s", f->lo);
+
+    // High
+    gotoxy(x[4],y);
+    cprintf("%5s", f->hi);
+
+    y++;
+    gotoxy(x[1],y);
+    cprintf("%25s", f->desc);
+
 }
 
 void screen_forecast_keys(void)
 {
+    char tmp2[20];
+
     if (optData.units == IMPERIAL)
         strcpy(tmp, "  SHOW\n CELSIUS");
     else
         strcpy(tmp, "  SHOW\nFARENHEIT");
 
-    smartkeys_display(NULL, "  NEXT\n  PAGE", "LOCATION", "  SHOW\n DAILY", tmp, " REFRESH");
+    if (forecast_offset == 0)
+    {
+        forecast_offset = 0;
+        strcpy(tmp2, "  NEXT\n  PAGE");
+    } else
+    {
+        forecast_offset = 4;
+        strcpy(tmp2, "  PREV\n  PAGE");
+    }
+        
+    smartkeys_display(NULL, tmp2, "LOCATION", "  SHOW\n DAILY", tmp, " REFRESH");
 }
