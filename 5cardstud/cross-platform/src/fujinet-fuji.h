@@ -5,9 +5,13 @@
 
 // In general, bools return the "success" status, so true is good, false is bad.
 
+#ifdef _CMOC_VERSION_
+#include "coco/coco_bool.h"
+#else
 #include <stddef.h>
 #include <stdbool.h>
 #include <stdint.h>
+#endif
 
 #ifdef __CBM__
 #include <cbm.h>
@@ -107,6 +111,19 @@ typedef struct
 
 #ifdef __CBM__
 // TODO: what is this for commodore?
+typedef struct
+{
+  uint16_t numSectors;
+  uint16_t sectorSize;
+  uint8_t hostSlot;
+  uint8_t deviceSlot;
+  char filename[256];
+
+} NewDisk;
+#endif
+
+#ifdef _CMOC_VERSION_
+// TODO FIXME: set this up for the CoCo/Dragon
 typedef struct
 {
   uint16_t numSectors;

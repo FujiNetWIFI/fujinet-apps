@@ -1,8 +1,9 @@
 #ifdef _CMOC_VERSION_
 #include <cmoc.h>
 #include <coco.h>
-#define true 1
-#define false 0
+//#define true 1
+//#define false 0
+//typedef BOOL bool;
 #else
 #include <stdlib.h>
 #include <string.h>
@@ -78,18 +79,18 @@ void drawNamePurse() {
      
       // Reverse print right side players
       if (playerDir[i]<0) 
-        xx-=strlen(state.players[i].name)-1;
+        xx-=(unsigned char)strlen(state.players[i].name)-1;
 
       drawText(xx, y, state.players[i].name);
 
       if (state.activePlayer!=i) {
-        hideLine(xx, y+1, strlen(state.players[i].name));
+        hideLine(xx, y+1, (unsigned char)strlen(state.players[i].name));
       } else {
         cursorX=xx;
         cursorY=y;
       }
     } else {
-      drawText(x-5, playerY[i]+2, " YOU");
+      drawText(x-5, playerY[i]+2, (const char *)" YOU");
     }
 
     // Print purse (chip count)
@@ -104,7 +105,7 @@ void drawNamePurse() {
     itoa(state.players[i].purse, tempBuffer, 10);
 
     if (playerDir[i]<0 || i==0)
-      x-=strlen(tempBuffer);
+      x-=(unsigned char)strlen(tempBuffer);
 
     drawText(x,y, tempBuffer);
     drawChip(x-1,y);
@@ -125,7 +126,7 @@ void drawBets() {
       
       itoa(state.players[i].bet, tempBuffer, 10);
       if (playerDir[i]<0) 
-        x-=strlen(tempBuffer)+1;
+        x-=(unsigned char)strlen(tempBuffer)+1;
 
       drawText(x, y, tempBuffer);
       drawChip(x-1,y );
@@ -135,7 +136,7 @@ void drawBets() {
     x= playerX[i]+playerBetX[i];
     y--;
     if (playerDir[i]<0)
-     x-=strlen(state.players[i].move);  
+      x-=(unsigned char)strlen(state.players[i].move);  
  
     drawText(x, y, state.players[i].move);
 
@@ -317,13 +318,13 @@ void drawStatusTimeLeft() {
   drawStatusTimer();
   tempBuffer[0]=' ';
   itoa(state.moveTime, tempBuffer+1, 10);
-  drawStatusTextAt( WIDTH-strlen(tempBuffer)-2, tempBuffer);
+  drawStatusTextAt( (unsigned char)(WIDTH-strlen(tempBuffer)-2), tempBuffer);
   drawBuffer();
 }
 
 void highlightActivePlayer() {
  if (state.activePlayer>0 && playerCount>1) { 
-    i=strlen(state.players[state.activePlayer].name);
+   i=(unsigned char)strlen(state.players[state.activePlayer].name);
     for (j=2;j<=i;j++) {
       drawLine(cursorX, cursorY+1, j);
       drawBuffer();
@@ -426,7 +427,7 @@ void requestPlayerMove() {
   for (i=0;i<validMoveCount;i++) {
     moveLoc[i] = x;
     drawStatusTextAt(x, state.validMoves[i].name);
-    x += 2 + strlen(state.validMoves[i].name);
+    x += 2 + (unsigned char)strlen(state.validMoves[i].name);
   }
 
   // Prepare the countdown timer
@@ -436,7 +437,7 @@ void requestPlayerMove() {
   disableDoubleBuffer();
 
   // Zoom in the cursor
-  i=strlen(state.validMoves[cursorX].name);
+  i=(unsigned char)strlen(state.validMoves[cursorX].name);
   h=moveLoc[cursorX];
  
 
@@ -469,7 +470,7 @@ if (always_render_full_cards) {
     // Tick counter once per second   
     if (++waitCount>2) {
       waitCount=0;
-      i = (maxJifs-getTime())/60;
+      i = (unsigned char)((maxJifs-getTime())/60);
       if (i!= state.moveTime) {
         state.moveTime =i;
         drawStatusTimeLeft();
@@ -485,8 +486,8 @@ if (always_render_full_cards) {
       if (cursorX<validMoveCount) {
         //drawStatusTextAt(moveLoc[cursorX-inputDirX]-1, " ");
         //drawStatusTextAt(moveLoc[cursorX]-1, "+");
-        hideLine(moveLoc[cursorX-inputDirX],HEIGHT-1,strlen(state.validMoves[cursorX-inputDirX].name));
-        drawLine(moveLoc[cursorX],HEIGHT-1,strlen(state.validMoves[cursorX].name));
+        hideLine(moveLoc[cursorX-inputDirX],HEIGHT-1,(unsigned char)strlen(state.validMoves[cursorX-inputDirX].name));
+        drawLine(moveLoc[cursorX],HEIGHT-1,(unsigned char)strlen(state.validMoves[cursorX].name));
         soundCursor();
       } else {
         cursorX-=inputDirX;

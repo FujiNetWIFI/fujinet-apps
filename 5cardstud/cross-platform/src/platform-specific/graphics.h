@@ -10,8 +10,7 @@
 #define FULL_CARD 3
 
 #ifdef _CMOC_VERSION_
-#include <cmoc.h>
-#include <coco.h>
+#include "../coco/coco_bool.h"
 #else
 #include <stdint.h>
 #include <stdbool.h>

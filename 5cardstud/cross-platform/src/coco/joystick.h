@@ -1,4 +1,4 @@
-#ifdef __ADAM__
+#ifdef _CMOC_VERSION_
 
 /**
  * @brief Adam input routines
@@ -35,4 +35,4 @@
 /* End of joystick.h */
 #endif
 
-#endif /* __ADAM__ */
+#endif
