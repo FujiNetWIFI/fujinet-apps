@@ -1,7 +1,5 @@
 #ifdef _CMOC_VERSION_
-#include <cmoc.h>
-#define true 1
-#define false 0
+#include "coco/coco_bool.h"
 #else
 #include <stdlib.h>
 #include <conio.h>
@@ -20,15 +18,23 @@
 
 #define PLAYER_NAME_MAX 8
 
+char cgetc() {
+  return(inkey());
+}
+
+char kbhit() {
+  return(inkey());
+}
+
 /// @brief Convenience function to draw text centered at row Y
 void centerText(unsigned char y, char * text) {
-  drawText(WIDTH/2-strlen(text)/2, y, text);
+  drawText((unsigned char)(WIDTH/2-strlen(text)/2), y, text);
 }
 
 /// @brief Convenience function to draw status text centered
 void centerStatusText(char * text) {
   clearStatusBar();
-  drawStatusTextAt((WIDTH-strlen(text))>>1,text);
+  drawStatusTextAt((unsigned char)((WIDTH-strlen(text))>>1),text);
 }
 
 /// @brief Convenience function to reset screen and draw border
@@ -78,7 +84,7 @@ void welcomeActionVerifyServerDetails() {
   // Read server endpoint into server and query
   read_appkey(AK_LOBBY_CREATOR_ID,  AK_LOBBY_APP_ID, AK_LOBBY_KEY_SERVER, tempBuffer);
   
-  i=strlen(tempBuffer);
+  i=(unsigned char)strlen(tempBuffer);
   if (i) {
   
     // Split "server?query" into separate variables  
@@ -104,7 +110,7 @@ bool inputFieldCycle(uint8_t x, uint8_t y, uint8_t max, uint8_t* buffer) {
   if (done == 1 || lastY != y) {
     done=0;
     lastY=y;
-    curx = strlen(buffer);
+    curx = (unsigned char)strlen((char *)buffer);
     drawText(x,y, buffer);
     drawChip(x+curx,y);
   }
@@ -257,9 +263,9 @@ void showTableSelectionScreen() {
       if (tableCount>0) {
         for(i=0;i<tableCount;++i) {
           drawText(6,8+i*2, state.tables[i].name);
-          drawText(WIDTH-6-strlen(state.tables[i].players), 8+i*2, state.tables[i].players);
+          drawText((unsigned char)(WIDTH-6-strlen(state.tables[i].players)), 8+i*2, state.tables[i].players);
           if (state.tables[i].players[0]>'0') {
-            drawText(WIDTH-6-strlen(state.tables[i].players)-2, 8+i*2, "*");
+            drawText((unsigned char)(WIDTH-6-strlen(state.tables[i].players)-2), 8+i*2, "*");
           }
         }
       } else {

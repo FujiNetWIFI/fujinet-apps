@@ -7,8 +7,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #endif /* CMOC_VERSION */
-#define POKE(addr,val)     (*(unsigned char*) (addr) = (val))
-#define POKEW(addr,val)    (*(unsigned*) (addr) = (val))
+#define POKE(addr,val)     (*(unsigned char*) (addr) = ((unsigned char)(val)))
+#define POKEW(addr,val)    (*(unsigned*) (addr) = ((unsigned)(val)))
 #define PEEK(addr)         (*(unsigned char*) (addr))
 #define PEEKW(addr)        (*(unsigned*) (addr))
 #include "stateclient.h"
@@ -177,7 +177,7 @@ void updateState(unsigned char isTables) {
  
 }
 
-unsigned char apiCall(char *path) {
+unsigned char apiCall(const char *path) {
   //cprintf("apicall: ");
  // cprintf("%s:%s:%s\n", serverEndpoint, path, query);
   
