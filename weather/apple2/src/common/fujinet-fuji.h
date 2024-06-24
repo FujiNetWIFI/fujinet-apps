@@ -5,23 +5,25 @@
 
 // In general, bools return the "success" status, so true is good, false is bad.
 
-#ifdef _CMOC_VERSION_
-#include "coco/coco_bool.h"
-#else
 #include <stddef.h>
 #include <stdbool.h>
 #include <stdint.h>
-#endif
 
 #ifdef __CBM__
 #include <cbm.h>
 #define FUJI_CBM_DEV 30
+#define FUJI_CMD_CHANNEL 15
 #endif // __CBM__
 
 #define FILE_MAXLEN 36
 #define SSID_MAXLEN 33 /* 32 + NULL */
 #define MAX_APPKEY_LEN    64
+
+#ifdef __CBM__
+#define MAX_PASSWORD_LEN  65
+#else
 #define MAX_PASSWORD_LEN  64
+#endif
 
 
 enum WifiStatus {
@@ -111,19 +113,6 @@ typedef struct
 
 #ifdef __CBM__
 // TODO: what is this for commodore?
-typedef struct
-{
-  uint16_t numSectors;
-  uint16_t sectorSize;
-  uint8_t hostSlot;
-  uint8_t deviceSlot;
-  char filename[256];
-
-} NewDisk;
-#endif
-
-#ifdef _CMOC_VERSION_
-// TODO FIXME: set this up for the CoCo/Dragon
 typedef struct
 {
   uint16_t numSectors;
@@ -284,10 +273,18 @@ bool fuji_mount_disk_image(uint8_t ds, uint8_t mode);
 bool fuji_mount_host_slot(uint8_t hs);
 
 /*
- * Open the given directory on the given host slot
+ * Open the given directory on the given host slot.
+ * The path_filter is a buffer (not a string) of 256 bytes, with a separator of the \0 char between the path and filter parts.
  * @return true if successful, false otherwise
  */
 bool fuji_open_directory(uint8_t hs, char *path_filter);
+
+/*
+ * Open the given directory on the given host slot.
+ * path and filter are separate strings. If filter is not set, it is NULL
+ * @return true if successful, false otherwise
+ */
+bool fuji_open_directory2(uint8_t hs, char *path, char *filter);
 
 /*
  * Save `size` device slots to FN

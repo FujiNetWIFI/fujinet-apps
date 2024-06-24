@@ -1,7 +1,9 @@
 #ifndef SCREENS_H
 #define SCREENS_H
 
+#ifndef _CMOC_VERSION_
 #include <stdint.h>
+#endif
 
 /// @brief Convenience function to reset screen and draw border
 void resetScreenWithBorder();

@@ -4,8 +4,9 @@ BUILD_DIR ?= ./build
 SRC_DIRS ?= ./src
 
 CC=cmoc
+ASM=lwasm
 
-SRCS := $(shell find $(SRC_DIRS) -name *.c)
+SRCS := $(shell find $(SRC_DIRS) -name *.c) $(shell find $(SRC_DIRS)/coco -name *.s)
 OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
 DEPS := $(OBJS:.o=.d)
 
@@ -26,6 +27,12 @@ $(BUILD_DIR)/$(TARGET_EXEC): $(OBJS)
 $(BUILD_DIR)/%.c.o: %.c
 	$(MKDIR_P) $(dir $@)
 	$(CC) $(CFLAGS) -o $@ -c $<
+
+# assy source
+$(BUILD_DIR)/%.s.o: %.s
+	$(MKDIR_P) $(dir $@)
+	$(ASM) $(ASFLAGS) -fobj --output=$@ $<
+	
 
 .PHONY: clean
 

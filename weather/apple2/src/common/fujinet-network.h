@@ -8,16 +8,16 @@
 #define FUJINET_NETWORK_H
 
 #ifdef _CMOC_VERSION_
-#include "coco/coco_bool.h"
+#include <cmoc.h>
 #else
 #include <stdint.h>
 #include <stdbool.h>
 #endif /* _CMOC_VERSION_ */
 
 #ifdef _CMOC_VERSION_
-//typedef unsigned char uint8_t;
-//typedef unsigned short uint16_t;
-//typedef int int16_t;
+typedef unsigned char uint8_t;
+typedef unsigned short uint16_t;
+typedef int int16_t;
 #endif /* _CMOC_VERSION_ */
 
 /**
