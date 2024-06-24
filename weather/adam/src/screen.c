@@ -855,7 +855,7 @@ void screen_forecast_keys(void)
         strcpy(tmp2, "  PREV\n  PAGE");
     }
         
-    smartkeys_display("  OPTIONS", tmp2, " \nLOCATION", "  SHOW\n DAILY", tmp, " REFRESH");
+    smartkeys_display("  OPTIONS", tmp2, "LOCATION", "  SHOW\n DAILY", tmp, " REFRESH");
 }
 
 void screen_weather_keys(void)
