@@ -1,5 +1,5 @@
 /**
- * Weather
+ * Weather / weather.c
  *
  * Based on @bocianu's code
  *
@@ -15,17 +15,19 @@
 #include "location.h"
 #include "screen.h"
 #include "io.h"
+#include "sprite.h"
 #include "direction.h"
-#include "icon.h"
 #include "ftime.h"
 #include "input.h"
 #include "utils.h"
+#include "state.h"
 
 extern OptionsData optData;
 extern Location locData;
 
 unsigned long dt, sunrise, sunset;
 unsigned short timer = 65535;
+bool forceRefresh = true;
 
 char date_txt[32];
 char sunrise_txt[16];
@@ -43,7 +45,7 @@ char wind_dir[3];
 char wind_txt[16];
 char description[24];
 char loc[48];
-char timezone[24];
+char timezone[48];
 char temp[24];
 unsigned char icon;
 
@@ -108,9 +110,8 @@ bool weather_parse(void)
     char url[256];
     char *p;
 
-    if (optData.units == METRIC)
-        strcpy(units, "metric");
-    else if (optData.units == IMPERIAL)
+    strcpy(units, "metric");
+    if (optData.units == IMPERIAL)
         strcpy(units, "imperial");
 
     // if any json fails, then have default values
@@ -165,14 +166,14 @@ bool weather_parse(void)
 
     if (io_json_query("/current/temp", tmp, sizeof(tmp)))
         return false;
-    io_decimals(tmp,2);
+    io_decimals(tmp,optData.maxPrecision);
     
     sprintf(temp, "%s*%c", tmp, optData.units == IMPERIAL ? 'F' : 'C');
 
 
     if (io_json_query("/current/feels_like", tmp, sizeof(tmp)))
         return false;
-    io_decimals(tmp,2);
+    io_decimals(tmp,optData.maxPrecision);
     sprintf(feels_like, "%s *%c", tmp, optData.units == IMPERIAL ? 'F' : 'C');
 
 
@@ -186,44 +187,37 @@ bool weather_parse(void)
 
     if (optData.units == IMPERIAL)
         weather_hpa_to_inhg(tmp);
-    io_decimals(tmp,2);
 
     sprintf(pressure, "%s %s", tmp, optData.units == IMPERIAL ? "\"Hg" : "mPa");
 
 
     if (io_json_query("/current/humidity", tmp, sizeof(tmp)))
         return false;
-    io_decimals(tmp,2);
     sprintf(humidity, "%s%%", tmp);
 
 
     if (io_json_query("/current/dew_point", tmp, sizeof(tmp)))
         return false;
-    io_decimals(tmp,2);
     sprintf(dew_point, "%s *%c", tmp, optData.units == IMPERIAL ? 'F' : 'C');
 
 
     if (io_json_query("/current/clouds", tmp, sizeof(tmp)))
         return false;
-    io_decimals(tmp,2);
     sprintf(clouds, "%s%%", tmp);
 
 
     if (io_json_query("/current/visibility", tmp, sizeof(tmp)))
         return false;
-    io_decimals(tmp,2);
     sprintf(visibility, "%d %s", atoi(tmp) / 1000, optData.units == IMPERIAL ? "mi" : "km");
 
 
     if (io_json_query("/current/wind_speed", tmp, sizeof(tmp)))
         return false;
-    io_decimals(tmp,2);
     sprintf(wind_speed, "%s %s", tmp, optData.units == IMPERIAL ? "mph" : "kph");
 
 
     if (io_json_query("/current/wind_deg", tmp, sizeof(tmp)))
         return false;
-    io_decimals(tmp,2);
     sprintf(wind_dir, "%s", degToDirection(atoi(tmp)));
 
 
@@ -235,7 +229,7 @@ bool weather_parse(void)
 
     if (io_json_query("/current/weather/0/icon", tmp, sizeof(tmp)))
         return false;
-    icon = icon_get(tmp);
+    icon = get_sprite(tmp);
 
     // Close connection
     io_json_close();
@@ -246,37 +240,64 @@ bool weather_parse(void)
 
 void weather(void)
 {
-    bool dayNight;
-    unsigned char bg, fg;
+bool dayNight;
+unsigned char bg, fg;
+static  bool firstTime = true;    
+static  FUJI_TIME future_time;
+static  FUJI_TIME adjust_time;
 
-    timer = 65535;
-
-    screen_weather_parsing();
-
-    if (!weather_parse())
+    if (firstTime)
     {
-        screen_weather_could_not_get();
+        firstTime = false;
+        io_time(&future_time);
     }
-    weather_date(date_txt,         dt, atoi(timezone_offset));
-    weather_time(time_txt,         dt, timezone_offset);
-    weather_time(sunrise_txt, sunrise, atoi(timezone_offset));
-    weather_time(sunset_txt,   sunset, atoi(timezone_offset));
 
-    sprintf(wind_txt, "%s %s", wind_speed, wind_dir);
+    if (wait_for_time(future_time))
+    {
+        forceRefresh = false;
+        io_time(&future_time);
+        memset(adjust_time, 0, sizeof(FUJI_TIME));
 
-    sprintf(loc, "%s, %s %s", locData.city, locData.region_code, locData.country_code);
+        adjust_time.minute = optData.refreshIntervalMinutes;
+        add_time(future_time, future_time, adjust_time);
 
-    screen_colors(dt, timezone_offset, &fg, &bg, &dayNight);
+        screen_weather_parsing();
 
-    screen_daily(date_txt, icon, temp, pressure, description, loc, wind_txt, feels_like, dew_point, visibility, timezone, sunrise_txt, sunset_txt, humidity, clouds, time_txt, fg, bg, dayNight);
+        if (!weather_parse())
+            screen_weather_could_not_get();
 
+        weather_date(date_txt,         dt, atoi(timezone_offset));
+        weather_time(time_txt,         dt, timezone_offset);
+        weather_time(sunrise_txt, sunrise, atoi(timezone_offset));
+        weather_time(sunset_txt,   sunset, atoi(timezone_offset));
+
+        sprintf(wind_txt, "%s %s", wind_speed, wind_dir);
+
+        sprintf(loc, "%s, %s %s", locData.city, locData.region_code, locData.country_code);
+
+        screen_colors(dt, timezone_offset, &fg, &bg, &dayNight);
+
+        screen_daily(date_txt, icon, temp, pressure, description, loc, wind_txt, feels_like, 
+                     dew_point, visibility, timezone, sunrise_txt, sunset_txt, humidity, clouds, 
+                     time_txt, fg, bg, dayNight);
+    }
+    
     input_init();
 
-    timer = 10000; // ? 10 seconds
+    screen_weather_keys();
+
+    timer = 65535;
     while (timer > 0)
     {
-        input_weather();
+        if (input_weather() || forceRefresh)
+            io_time(&future_time);
+
         csleep(1);
+
+        if ((timer % CHECK_TIME_FREQUENCY) == 0)
+            if (wait_for_time(future_time))
+                timer = 1;
+
         timer--;
     }
 }

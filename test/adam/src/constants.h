@@ -17,7 +17,6 @@
 #define IP_API "api.ipstack.com"
 #define OW_API "api.openweathermap.org"
 #define OC_API "api.opencagedata.com"
-#define LIQ_API "locationiq.com"
 
 #define ICON_CLEAR_SKY        0
 #define ICON_FEW_CLOUDS       1
@@ -38,8 +37,14 @@
 
 #define OW_KEY "2e8616654c548c26bc1c86b1615ef7f1"
 #define IP_KEY "d05a249425c32e0b231ba79e3f9af478"
-#define LIQ_KEY "pk.e5e4ed6155f82872e7303a83744048a1"
 
 
+typedef enum _state
+{
+    WEATHER,
+    FORECAST,
+    LOCATION,
+    DONE
+} State;
 
 #endif /* CONSTANTS_H */

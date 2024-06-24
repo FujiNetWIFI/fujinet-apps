@@ -12,35 +12,31 @@
 #define LOCATION_H
 
 #define MAX_CITY_SIZE (41)
+#define MAX_IP (43)
 
 #define LOCATION_VERSION "1.0"
 
-typedef struct 
+typedef struct _location
 {
     char version[4];
+    char forceReadLocationByIP;
     char city[MAX_CITY_SIZE];
     char region_code[3];
     char country_code[3];
-    char latitude[13];
-    char longitude[13];
-    bool forceIPLocation;
-    bool forceManualLocation;
-    bool locationFound;
+    char latitude[8];
+    char longitude[8];
+    char ip[43];
 } Location;
 
-bool location_request(void);
+extern static Location locData;
 
+void location_defaults(void);
+void location_print(void) ;
 bool location_load(Location *o);
 bool location_save(Location *o);
-bool location_get_from_ip(void);
+bool location_get_from_ip(char *c);
 bool location_get_from_city(char *city, char *region, char *country);
-bool location_get_from_position(char *latitude, char *longitude);
-void location_print(void);
-bool location_parse_from_ip(void);
-void location_defaults(void);
 
 void location(void);
-
-extern Location locData;
 
 #endif /* LOCATION_H */

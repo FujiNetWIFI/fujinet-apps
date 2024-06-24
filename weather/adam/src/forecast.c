@@ -1,5 +1,5 @@
 /**
- * Weather 
+ * Weather / forecast.c
 s *
  * Based on @bocianu's code
  *
@@ -14,8 +14,9 @@ s *
 #include "location.h"
 #include "screen.h"
 #include "io.h"
+#include "sprite.h"
 #include "direction.h"
-#include "icon.h"
+#include "sprite.h"
 #include "ftime.h"
 #include "input.h"
 #include "forecast.h"
@@ -26,6 +27,7 @@ ForecastData forecastData;
 unsigned char forecast_offset = 0;
 
 extern unsigned short timer;
+extern bool forceRefresh;
 
 extern OptionsData optData;
 extern Location locData;
@@ -102,19 +104,22 @@ void forecast_parse(unsigned char i, ForecastData *f)
 
   snprintf(request, sizeof(request), "%sweather/0/icon", prefix);
   io_json_query(request, json_part, sizeof(json_part));
-  f->icon=icon_get(json_part);
+  f->icon=get_sprite(json_part);
 
   snprintf(request, sizeof(request), "%stemp/min", prefix);
   io_json_query(request, f->lo, sizeof(f->lo));
+  io_decimals(f->lo, optData.maxPrecision);
 
   snprintf(request, sizeof(request), "%stemp/max", prefix);
   io_json_query(request, f->hi, sizeof(f->hi));
+  io_decimals(f->hi, optData.maxPrecision);
 
   snprintf(request, sizeof(request), "%spressure", prefix);
   io_json_query(request, f->pressure, sizeof(f->pressure));
 
   snprintf(request, sizeof(request), "%swind_speed", prefix);
   io_json_query(request, json_part, sizeof(json_part));
+  io_decimals(json_part, optData.maxPrecision);
   snprintf(f->wind, sizeof(f->wind), "WIND:%s %s ",json_part,optData.units == IMPERIAL ? "mph" : "kph");
 
   snprintf(request,  sizeof(request),"%swind_deg", prefix);
@@ -137,31 +142,65 @@ void forecast(void)
 {
   unsigned char bg, fg;
   bool dayNight;
+static  bool firstTime = true;    
+static  FUJI_TIME future_time;
+static  FUJI_TIME adjust_time;
   
-  screen_forecast_init();
-  screen_colors(dt, timezone_offset, &fg, &bg, &dayNight);
-  
-  if (forecast_open())
-    screen_weather_could_not_get();
-  else
-  {   
-    for (int i=0;i<4;i++)
-    {
-      forecast_parse((unsigned char) (i + forecast_offset), &forecastData);
-      screen_forecast(i,&forecastData, fg, bg, dayNight);
-    }
-    forecast_close();
-    
+
+  if (firstTime)
+  {
+      firstTime = false;
+      io_time(&future_time);
   }
-  screen_forecast_keys();
+
+  if (wait_for_time(future_time) || forceRefresh)
+  {
+    forceRefresh = false;
+
+    io_time(&future_time);
+    memset(adjust_time, 0, sizeof(FUJI_TIME));
+
+    adjust_time.minute = optData.refreshIntervalMinutes;
+    add_time(future_time, future_time, adjust_time);
+
+    screen_forecast_init();
+    
+    screen_colors(dt, timezone_offset, &fg, &bg, &dayNight);
+    
+    if (forecast_open())
+      screen_weather_could_not_get();
+    else
+    { 
+      clear_all_sprites();  
+      for (int i=0;i<4;i++)
+      {
+        forecast_parse((unsigned char) (i + forecast_offset), &forecastData);
+        screen_forecast(i,&forecastData, fg, bg, true);
+      }
+      display_sprites();
+      forecast_close();
+      
+    }
+  }
+
+
   
   input_init();
 
-  timer = 10000; // 10 seconds?
+  screen_forecast_keys();
+
+  timer = 65535;
   while (timer > 0)
   {
-    input_forecast();
+    if (input_forecast() || forceRefresh)
+      io_time(&future_time);
+
     csleep(1);
+
+    if ((timer % CHECK_TIME_FREQUENCY) == 0)
+      if (wait_for_time(future_time))
+        timer = 1;
+
     timer--;
    }
 

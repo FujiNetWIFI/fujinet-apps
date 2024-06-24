@@ -11,11 +11,97 @@
 #ifndef IO_H
 #define IO_H
 
-//#define DISPLAY_DEBUG
-
 #include <stdbool.h>
 
-extern static unsigned char response[1024];
+#define DISPLAY_DEBUG 1
+#define DEBUG_DELAY (400)
+
+#define MAX_APP_DATA (128)
+#define MAX_URL      (256)
+#define MAX_QUERY    (128)
+
+extern unsigned char response[1024];
+
+
+
+typedef struct
+{
+     unsigned char century, // Century
+         year,              // Year
+         month,             // Month
+         day,               // Day
+         hour,              // Hour
+         minute,            // Minute
+         second;            // Second
+} FUJI_TIME;
+
+typedef struct
+{
+    unsigned char cmd;
+    unsigned short mode;
+    unsigned char trans;
+    unsigned char url[MAX_URL];
+} FUJI_CMD;
+
+typedef struct 
+{
+  unsigned char cmd;
+           char mode
+} FUJI_SET_CHANNEL;
+
+
+typedef struct 
+{
+  unsigned char cmd;
+  char query[MAX_QUERY];
+} FUJI_JSON_QUERY;
+
+
+typedef struct
+{
+    unsigned char cmd;
+    unsigned short creator;
+    unsigned char app;
+    unsigned char key;
+} FUJI_APP;
+
+ typedef struct
+{
+    unsigned char cmd;
+    unsigned short creator;
+    unsigned char app;
+    unsigned char key;
+    char data[MAX_APP_DATA];
+} FUJI_APP_DATA;
+
+char *strncpy2(char *dest, char *src, size_t size);
+void print_time(FUJI_TIME *ft);
+
+/*
+io_time 
+- This function gets the time from the fujinet device
+Parameters
+wait_until: FUJI_TIME representing the time to wait for.
+
+Returns
+    0: Success
+    1: Could not open website
+    3: Could not get result
+*/
+int io_time(FUJI_TIME *time);
+
+void add_time (FUJI_TIME *result, FUJI_TIME *time1, FUJI_TIME *add_time);
+
+/*
+wait_for_time 
+- This function will return true if the supplied time has exceeded
+Parameters
+wait_until: FUJI_TIME representing the time to wait for.
+
+Returns
+ true: current time is equal or exceeded 'wait_util'
+*/
+bool wait_for_time(FUJI_TIME *wait_until);
 
 /*
 io_json_open 
@@ -74,5 +160,11 @@ Parameters
 
 */
  void io_decimals(char *number, int decimals);
+ void debug_print(char *s);
+ char *io_get_next_string(char *start, char *result, int max_size);
+ char *io_get_next_int(char *start, int *result);
+ char *io_get_next_long(char *start, long *result);
+ char *io_get_next_bool(char *start, bool *result);
+
 
 #endif /* IO_H */

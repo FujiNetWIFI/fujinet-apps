@@ -11,6 +11,8 @@
 #ifndef FORECAST_H
 #define FORECAST_H
 
+#define MAX_FORECAST (25)
+
 typedef struct
 {
   char date[8];
@@ -23,11 +25,13 @@ typedef struct
   char rain[12];
   char snow[12];
   char pop[8];
-  char desc[18];
+  char desc[MAX_FORECAST];
 } ForecastData;
 
 void forecast(void);
 void forecast_parse(unsigned char i, ForecastData *f);
 void screen_forecast_init();
+
+extern unsigned char forecast_offset;
 
 #endif /* FORECAST_H */
