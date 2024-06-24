@@ -13,7 +13,7 @@
 
 #include <stdbool.h>
 
-
+#define OPTIONS_VERSION "1.1"
 
 typedef enum _units
 {
@@ -22,26 +22,22 @@ typedef enum _units
     UNKNOWN
 } Units;
 
-#define OPTIONS_VERSION "1.0"
-
-#define CHECK_TIME_FREQUENCY (4000)
-
 typedef struct _optionsdata
 {
     char version[4];
-    long refreshIntervalMinutes;
+    unsigned char refreshIntervalMinutes;
     Units units;
     bool showRegion;
     char theme[12];
-    int maxPrecision;
+    unsigned char decimalPlaces;
 } OptionsData;
+
+extern static OptionsData optData;
 
 bool options_load(OptionsData *o);
 bool options_save(OptionsData *o);
+void options_print();
 void options_defaults(void);
-
 void options(void);
-
-extern OptionsData optData;
 
 #endif /* OPTIONS_H */

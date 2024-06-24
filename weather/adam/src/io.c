@@ -1,10 +1,9 @@
 /**
- * Weather
+ * Weather / io.c
  *
  * Based on @bocianu's code
  *
- * @author Thomas Cherryhomes
- * @email thom dot cherryhomes at gmail dot com
+ * @author Norman Davie
  *
  */
 
@@ -14,72 +13,217 @@
 #include <conio.h>
 #include "constants.h"
 #include "io.h"
-#include "options.h"
 #include "ftime.h"
 #include "utils.h"
 #include "weather.h"
-#include "icon.h"
 
 
 
-static unsigned char response[1024];
+unsigned char response[1024];
+
+char *strncpy2(char *dest, char *src, size_t size)
+{
+    char *p;
+
+    p = strncpy(dest, src, size-1);
+    dest[size-1] = '\0';
+    return p;
+}
+
+char *io_get_next_string(char *start, char *result, int max_size)
+{
+    char *end;
+    char *p;
+    int i = 0;
+
+    if (start == NULL)
+        return NULL;
+
+    end = start;
+    if ((*end == '\0') || (*end == '\n'))
+        return NULL;
+
+    while (! ((*end == '|') || (*end == '\n') || (*end == '\0')))
+    {
+        if (i >= max_size-1)
+            break;
+
+        *result = *end;
+        result++;
+        end++;
+        i++;
+    }
+    *result = '\0';
+    
+    if ((*end == '|') || (*end == '\n'))
+        end++;
+
+    return end;
+}
+
+char *io_get_next_bool(char *start, bool *result)
+{
+    char temp[10];
+
+    if (start == NULL)
+        return NULL;
+
+    char *p = io_get_next_string(start, temp, sizeof(temp));
+    *result = (bool) (atoi(temp) != 0);
+    return p;
+}
+
+char *io_get_next_int(char *start, int *result)
+{
+    char temp[10];
+
+    if (start == NULL)
+    {
+        *result = 0;
+        return NULL;
+    }
+    char *p = io_get_next_string(start, temp, sizeof(temp));
+    *result = atoi(temp);
+    return p;
+}
+
+char *io_get_next_long(char *start, long *result)
+{
+    char temp[10];
+
+    if (start == NULL)
+    {
+        *result = 0L;
+        return NULL;
+    }   
+    char *p = io_get_next_string(start, temp, sizeof(temp));
+    *result = atol(temp);
+    return p;
+}
+
+
+void debug_print(char *s)
+{
+    if (s == NULL)
+        cprintf("NULL\n");
+    else
+        cprintf("%s\n",s);
+    csleep(DEBUG_DELAY);
+}
+
+/*** CLOCK ****/
+
+int io_time(FUJI_TIME *time)
+{
+ FUJI_CMD oc;
+
+    unsigned char r = 0;
+
+    oc.cmd = 0xD2; // Get Time
+
+    // request time
+    if (eos_write_character_device(FUJI_DEV, (unsigned char *)oc, (unsigned short)sizeof(oc)) != ACK)
+    {
+        return 1; // could not open
+    }
+
+    r = eos_read_character_device(FUJI_DEV, response, (unsigned short)sizeof(response));
+    if (r != ACK)
+    {
+        return 3; // did not get result
+    }
+
+    memcpy(time, response, sizeof(time));
+    return 0;
+}
+
+void add_time (FUJI_TIME *result, FUJI_TIME *time1, FUJI_TIME *add_time)
+{
+    memcpy(result, time1, sizeof(FUJI_TIME));
+
+    result->hour   += add_time->hour;
+    result->minute += add_time->minute;
+    result->second += add_time->second;
+
+    if (result->second > 59)
+    {
+        result->minute += (result->second / 60);
+        result->second %= 60;
+    }
+
+    if (result->minute > 59)
+    {
+        result->hour += (result->minute / 60);
+        result->minute %= 60;
+    }
+
+    if (result->hour > 23)
+    {
+        result->hour %= 24;
+    }
+
+}
+
+unsigned long time_in_seconds(FUJI_TIME *time) 
+{ 
+    return       time->second + 
+          60   * time->minute + 
+          3600 * time->hour; 
+}
+
+bool wait_for_time(FUJI_TIME *wait_until)
+{
+    FUJI_TIME  current;
+    bool past_time = false;
+    unsigned long   seconds_current;
+    unsigned long   seconds_waiting;
+
+
+    io_time(&current);
+
+    if (wait_until->hour < current.hour)
+        return false;
+
+    seconds_current = time_in_seconds(&current);
+    seconds_waiting = time_in_seconds(wait_until);
+
+    return seconds_current >= seconds_waiting;
+
+}
+
+
 
 /*** JSON ****/
 
 
 int io_json_open(char *url)
 {
+    FUJI_CMD oc;
+    FUJI_SET_CHANNEL scm;
 
-    struct _oc
-    {
-        unsigned char cmd;
-        char mode;
-        char trans;
-        char url[256];
-    } OC; // Open command
+    oc.cmd = 'O';
+    oc.mode = 12;
+    oc.trans = 3;
+    strncpy2(oc.url,url,sizeof(oc.url));
 
-    struct _scm
-    {
-        unsigned char cmd;
-        char mode;
-    } SCM; // Set Channel Mode command
+    scm.cmd = 0xFC;
+    scm.mode = CHANNEL_MODE_JSON;
 
-    OC.cmd = 'O';
-    OC.mode = 12;
-    OC.trans = 3;
-    strncpy(OC.url,url,256);
-
-    SCM.cmd = 0xFC;
-    SCM.mode = CHANNEL_MODE_JSON;
-  
     // open url
-    if (eos_write_character_device(NET_DEV,(unsigned char *)OC,sizeof(OC)) != ACK)
+    if (eos_write_character_device(NET_DEV,(unsigned char *)oc,sizeof(oc)) != ACK)
     {
-#ifdef DISPLAY_DEBUG        
-        cprintf("Could not open\n%s\n", OC.url);
-        csleep(10000);
-#endif
         return 1; // could not open
     }
   
     // set channel to json
-    if (eos_write_character_device(NET_DEV,(unsigned char *)SCM,sizeof(SCM)) != ACK)
+    if (eos_write_character_device(NET_DEV,(unsigned char *)scm,sizeof(scm)) != ACK)
     {
-#ifdef DISPLAY_DEBUG        
-        cprintf("Could not set channel to json mode");
-        csleep(10000);
-
-#endif
         return 2;  // could not set to json mode
     }
   
-    // set parsing mode
+    // set json parsing mode
     if (eos_write_character_device(NET_DEV,"P",1) != ACK)
     {
-#ifdef DISPLAY_DEBUG        
-        cprintf("Could not set parsing mode\n");
-        csleep(10000);
-#endif
         return 3; // could not set to parsing mode
     }
 
@@ -88,47 +232,28 @@ int io_json_open(char *url)
 
  int io_json_query(char *element, char *data, int max_buffer_size)
 {
-    struct _qcm
-    {
-        unsigned char cmd;
-        char query[128];
-    } qcm; // Query command
-
+    FUJI_JSON_QUERY qcm;
     unsigned char r = 0;
 
+    // zero out the response buffer
     memset(response, 0, sizeof(response));
-
-#ifdef DISPLAY_DEBUG        
-    cprintf("query: %s\n", element);
-#endif
 
     qcm.cmd = 'Q';
     strcpy(qcm.query, element);
     r = eos_write_character_device(NET_DEV, (unsigned char *)qcm, sizeof(qcm));
     if (r != ACK)
     {
-#ifdef DISPLAY_DEBUG        
-        cprintf("Did not ack query command\n");
-        csleep(10000);
-#endif
         return 1; // did not ack query command
     }
 
     r = eos_read_character_device(NET_DEV, response, sizeof(response));
-
-    memcpy(data, response, max_buffer_size);
     if (r != ACK)
     {
-#ifdef DISPLAY_DEBUG        
-        cprintf("Did not return response to query\n");
-        csleep(10000);
-#endif
         return 2; // did not get result
     }
 
-#ifdef DISPLAY_DEBUG        
-    cprintf("data: %s\n", data);
-#endif
+    response[max_buffer_size-1] = '\0';
+    memcpy(data, response, max_buffer_size);
     return 0;
 }
 
@@ -143,7 +268,7 @@ void io_decimals(char *d, int decimals)
     char *p = strchr(d, '.');
     if (p)
     {
-        p += decimals;
+        p += (decimals + 1);
         *p = '\0';
     }
 }

@@ -74,3 +74,6 @@ AppleWin.log
 
 Makefile.options
 .DS_Store
+weather/adam/weather_BOOTSTRAP.bin
+weather/adam/weather.ddp
+test/adam/.clang-format

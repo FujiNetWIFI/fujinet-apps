@@ -1,5 +1,5 @@
 /**
- * Weather
+ * Weather / init.c
  *
  * Based on @bocianu's code
  *

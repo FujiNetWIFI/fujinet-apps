@@ -1,5 +1,5 @@
 /**
- * Weather
+ * Weather / welcome.c
  *
  * Based on @bocianu's code
  *
@@ -11,6 +11,7 @@
 #include "welcome.h"
 #include "screen.h"
 
-void welcome(void) { 
+void welcome(void) 
+{ 
     screen_welcome(); 
 }

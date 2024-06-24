@@ -10,9 +10,10 @@
 
 #ifndef INPUT_H
 #define INPUT_H
+#include <stdbool.h>
 
 void input_init(void);
-void input_weather(void);
-void input_forecast(void);
+bool input_weather(void);
+bool input_forecast(void);
 
 #endif /* INPUT_H */

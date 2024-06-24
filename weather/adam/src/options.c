@@ -16,19 +16,27 @@
 #include "options.h"
 #include "screen.h"
 #include "io.h"
+#include "screen.h"
 
 OptionsData optData;
 
+void options_print()
+{
+    cprintf("Options print\n");
+    cprintf("refresh: %d\n", (int) optData.refreshIntervalMinutes);
+    cprintf("units:%d\n", (int) optData.units);
+    cprintf("theme:%s\n", optData.theme);
+    cprintf("maxPrecision:%d\n", (int) optData.maxPrecision);
+    csleep(DEBUG_DELAY);
+}
 bool options_load(OptionsData *o)
 {
-    bool ret;
-    struct
-    {
-        unsigned char cmd;
-        unsigned short creator;
-        unsigned char app;
-        unsigned char key;
-    } ak;
+    int num_found = 0;
+    bool ret = false;
+    FUJI_APP ak;
+    char temp[MAX_FORECAST];
+    char *p;
+    int units;
 
     ak.cmd = 0xDD;
     ak.creator = APPKEY_CREATOR_ID;
@@ -40,14 +48,21 @@ bool options_load(OptionsData *o)
     {
         DCB *dcb = eos_find_dcb(FUJI_DEV);
 
-        if (dcb->len == 1)
-            return false;
-
-        memcpy(o, response, sizeof(OptionsData));
-        ret = true;
+        if (dcb->len != 1)
+        {
+            p = io_get_next_string(response, o->version, sizeof(o->version));
+            if (strncmp(o->version, OPTIONS_VERSION, sizeof(o->version)) == 0)
+            {
+                p = io_get_next_long(p, &o->refreshIntervalMinutes);
+                p = io_get_next_int(p, &units);
+                o->units = units;
+                p = io_get_next_bool(p, &o->showRegion);
+                p = io_get_next_string(p, o->theme, sizeof(o->theme));
+                p = io_get_next_int(p, &o->maxPrecision);
+                ret = (p != NULL);
+            }
+        }
     }
-    else
-        ret = false;
 
     return ret;
 }
@@ -55,38 +70,42 @@ bool options_load(OptionsData *o)
 bool options_save(OptionsData *o)
 {
     bool ret;
-    struct
-    {
-        unsigned char cmd;
-        unsigned short creator;
-        unsigned char app;
-        unsigned char key;
-        char data[64];
-    } ak;
+    FUJI_APP_DATA ak;
+
+    screen_options_saving();
 
     ak.cmd = 0xDE;
     ak.creator = APPKEY_CREATOR_ID;
     ak.app = APPKEY_APP_ID;
     ak.key = APPKEY_CONFIG_KEY;
-    memcpy(ak.data, o, sizeof(OptionsData));
 
-    return eos_write_character_device(FUJI_DEV, ak, sizeof(ak)) == ACK;
+    strncpy2(o->version, OPTIONS_VERSION, sizeof(o->version));
+
+    snprintf(response,  sizeof(response), "%s|%ld|%d|%d|%s|%d\n",
+        o->version,
+        o->refreshIntervalMinutes,
+        o->units,
+        o->showRegion,
+        o->theme,
+        o->maxPrecision);
+
+    strncpy2(ak.data, response, sizeof(ak.data));
+    ret =  (eos_write_character_device(FUJI_DEV, ak, sizeof(ak)) == ACK);
+
+    return ret;
 }
 
 
 
 void options_defaults(void)
 {
-    screen_options_init_not_found();
-
-    memset(optData.apiKeyOW, 0, sizeof(optData.apiKeyOW));
-    strcpy(optData.apiKeyOW, "2e8616654c548c26bc1c86b1615ef7f1");
-    optData.refreshInterval = DEFAULT_REFRESH;
+    strncpy2(optData.version, OPTIONS_VERSION, sizeof(optData.version));
+    optData.refreshIntervalMinutes = DEFAULT_REFRESH;
     optData.units = UNKNOWN;
     optData.showRegion = false;
-    optData.detectLocation = true;
     optData.maxPrecision = 1;
-    strcpy(optData.theme, "DEFAULT.THM");
+    strncpy2(optData.theme, "DEFAULT.THM", sizeof(optData.theme));
+
     if (! options_save(optData))
         screen_options_could_not_save();
 }
@@ -96,7 +115,13 @@ void options_init(void)
     screen_options_init();
 
     if (!options_load(optData))
+    {
+        screen_options_load_failed();
         options_defaults();
+    } 
+        
 }
 
-void options(void) { options_init(); }
+void options(void) { 
+    options_init(); 
+}
