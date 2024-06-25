@@ -13,6 +13,10 @@
 
 #include "main.h"
 
+#ifdef __CBM__
+#include <ascii_charmap.h>
+#endif
+
 char *input_text_a = "a";
 
 // results from hashing string "a" with given algorithms
@@ -26,6 +30,11 @@ char *hash_sha512_text_a = "1f40fc92da241694750979ee6cf582f2d5d7d28e18335de05abc
 char *hash_sha1_text_aa = "e0c9035898dd52fc65c41454cec9c4d2611bfb37";
 char *hash_sha256_text_aa = "961b6dd3ede3cb8ecbaacbd68de040cd78eb2ed5889130cceb4c49268ea4d506";
 char *hash_sha512_text_aa = "f6c5600ed1dbdcfdf829081f5417dccbbd2b9288e0b427e65c8cf67e274b69009cd142475e15304f599f429f260a661b5df4de26746459a3cef7f32006e5d1c1";
+
+#ifdef __CBM__
+#include <cbm_petscii_charmap.h>
+#endif
+
 
 char *ok = "OK";
 char *bad = "BAD";
