@@ -78,3 +78,4 @@ weather/adam/weather_BOOTSTRAP.bin
 weather/adam/weather.ddp
 test/adam/.clang-format
 weather/_libs/
+**/_libs/
