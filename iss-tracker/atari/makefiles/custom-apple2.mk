@@ -14,11 +14,15 @@ DISK_TASKS += .po
 AUTOBOOT := -l
 APPLE_TOOLS_DIR := ../apple-tools
 
+PROG_XTRA :=
+ifeq ($(CURRENT_TARGET),apple2enh)
+    PROG_XTRA = -enh
+endif
+
 .po:
-	$(call RMFILES,$(DIST_DIR)/$(APP_NAME)*.po)
-	cp $(DIST_DIR)/$(PROGRAM_TGT)$(SUFFIX) $(DIST_DIR)/$(PROGRAM)$(SUFFIX)
-	$(APPLE_TOOLS_DIR)/mk-bitsy.sh $(DIST_DIR)/$(PROGRAM).po $(PROGRAM)$(SUFFIX)
-	$(APPLE_TOOLS_DIR)/add-file.sh $(AUTOBOOT) $(DIST_DIR)/$(PROGRAM).po $(DIST_DIR)/$(PROGRAM)$(SUFFIX) $(PROGRAM)
+	$(call RMFILES,$(DIST_DIR)/$(PROGRAM)$(PROG_XTRA).po)
+	$(APPLE_TOOLS_DIR)/mk-bitsy.sh $(DIST_DIR)/$(PROGRAM)$(PROG_XTRA).po $(PROGRAM_TGT)$(SUFFIX)
+	$(APPLE_TOOLS_DIR)/add-file.sh $(AUTOBOOT) $(DIST_DIR)/$(PROGRAM)$(PROG_XTRA).po $(DIST_DIR)/$(PROGRAM_TGT)$(SUFFIX) $(PROGRAM)
 
 # Applewin debug script
 .gendebug: $(PROGRAM_TGT)

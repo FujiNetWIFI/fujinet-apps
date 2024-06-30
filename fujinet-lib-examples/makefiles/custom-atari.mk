@@ -1,3 +1,4 @@
+################################################################
 # COMPILE FLAGS
 
 # reserved memory for graphics
@@ -15,8 +16,9 @@ DISK_TASKS += .atr
 .atr:
 	$(call MKDIR,$(DIST_DIR)/atr)
 	cp $(DIST_DIR)/$(PROGRAM_TGT)$(SUFFIX) $(DIST_DIR)/atr/$(PROGRAM)$(SUFFIX)
-	$(call RMFILES,$(DIST_DIR)/*.atr)
+	rm $(DIST_DIR)/$(PROGRAM).atr
 	dir2atr -S $(DIST_DIR)/$(PROGRAM).atr $(DIST_DIR)/atr
+	rm -rf $(DIST_DIR)/atr
 
 ################################################################
 # TESTING / EMULATOR

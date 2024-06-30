@@ -6,7 +6,7 @@
 
 #define BASE_ADDRESS 0xC000
 
-char *version = "v1.0.3";
+char *version = "v1.0.4";
 
 void debug() {}
 
@@ -60,9 +60,10 @@ void sp_info() {
     // printf("Checking 0x%04x\n", (unsigned int) p);
     if (p[1] == 0x20 && p[3] == 0x00 && p[5] == 0x03 && p[7] == 0x00) {
       dispatch_address = (unsigned int) &p[p[0xff]] + 3;
-      sp_dispatch_fn[0] = dispatch_address & 0xff;
-      sp_dispatch_fn[1] = (dispatch_address >> 8) & 0xff;
-      printf("SP card at %d, dispatch: 0x%02x%02x\n", i, sp_dispatch_fn[1], sp_dispatch_fn[0]);
+      debug();
+      sp_dispatch_address[0] = dispatch_address & 0xff;
+      sp_dispatch_address[1] = (dispatch_address >> 8) & 0xff;
+      printf("SP card at %d, dispatch: 0x%02x%02x\n", i, sp_dispatch_address[1], sp_dispatch_address[0]);
       sp_print_devices();
     }
   }
