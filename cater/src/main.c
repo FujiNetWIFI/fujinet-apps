@@ -112,6 +112,15 @@ void main(int argc, char *argv[])
     quit();
   }
 
+  puts("----Example URLs-------------");
+  puts("-                           -");
+  puts("- TELNET://bbs.diller.org   -");
+  puts("- SSH://user:password@host  -");
+  puts("-                           -");
+  puts("- use left arrow to delete  -");
+  puts("-                           -");
+  puts("-----------------------------");
+
   strcpy(device, "N:");
   if (argc == 2) {
     strcpy(device + 2, argv[1]);
@@ -120,6 +129,7 @@ void main(int argc, char *argv[])
     readline(device + 2);
   }
 
+  
   if (network_open(device, OPEN_MODE_RW, OPEN_TRANS_NONE) != FN_ERR_OK) {
     fputs("Network open error: ", stdout);
     puts(device + 2);
