@@ -9,8 +9,16 @@ ASM=lwasm
 SRCS := $(shell find $(SRC_DIRS) -name *.c) $(shell find $(SRC_DIRS)/coco -name *.s)
 OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
 DEPS := $(OBJS:.o=.d)
+CARDGAME_LIB = cardgame
+CARDGAME_LIB_DIR = ../../../cardgame
+
+BCONTROL_LIB = bcontrol
+BCONTROL_LIB_DIR = ../../../bcontrol
+
 LIBS = \
-       -L src/coco -lfujinet \
+	-L $(CARDGAME_LIB_DIR) -l$(CARDGAME_LIB) \
+	-L $(BCONTROL_LIB_DIR) -l$(BCONTROL_LIB) \
+    -L src/coco -lfujinet \
 
 CFLAGS=--verbose --decb -O2
 LDFLAGS=-o$(TARGET_EXEC).bin 
