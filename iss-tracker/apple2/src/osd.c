@@ -25,7 +25,7 @@ void osd(char *lon, char *lat,unsigned long ts) {
     gotoxy(2, 1);
     cprintf("Longitude: %-10s",lon);
     gotoxy(2, 2);
-    cprintf("Latitude: %-10s",lat);
-    gotoxy(5, 3);
-    cprintf("at the time: %s",ctime(&ts));
+    cprintf("Latitude:  %-10s",lat);
+    gotoxy(2, 3);
+    cprintf("at: %s",ctime(&ts));
 }
