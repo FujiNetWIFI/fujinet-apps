@@ -1,29 +1,26 @@
-# Generic CC65 TARGETS makefile++
+# Sample Makefile
+#
+# Copy this Makefile to your local project and edit as needed. It works with cc65 and this repo to create clean
+# easy builds that will pull down fujinet-lib for you automatically...
 #
 # Set the TARGETS and PROGRAM values as required.
+# Set the FujinetLib version you want to include.
 # See makefiles/build.mk for details on directory structure for src files and how to add custom extensions to the build.
-$(info |)
-$(info |)
-$(info Starting Build)
+#
+# delete all comments above this when you use this as your Makefile
 
 TARGETS = apple2enh apple2
-PROGRAM := iss
+PROGRAM := weather
 
-# We need to set this here to point to the relative path to the fujinet-build-tools repo
-#FUJINET-BUILD-TOOLS_DIR := ../../fujinet-build-tools
-
-export FUJINET_BUILD_TOOLS_DIR := ../
+# Edit below
+export FUJINET_BUILD_TOOLS_DIR := ../../fujinet-build-tools
 export FUJINET_LIB_VERSION := 4.3.1
 
-
-# Check if FUJINET_BUILD_TOOLS_DIR is set to a real directory
 ifeq ($(wildcard $(FUJINET_BUILD_TOOLS_DIR)),)
 $(error You must have FUJINET_BUILD_TOOLS_DIR set to the location of fujinet-build-tools repo)
 endif
 
-$(info >>>> Using FUJINET_BUILD_TOOLS_DIR=$(FUJINET_BUILD_TOOLS_DIR))
-
-SUB_TASKS := clean disk test release distlocal
+SUB_TASKS := clean disk test release
 .PHONY: all help $(SUB_TASKS)
 
 all:
@@ -40,11 +37,6 @@ all:
 		ls -1 ./dist; \
 	fi
 
-	@echo ""; 
-	@echo "Build Complete"; 
-	@echo ""; 
-
-
 $(SUB_TASKS): _do_all
 $(SUB_TASKS):
 	@:
@@ -59,7 +51,6 @@ help:
 	@echo "clean     - remove all build artifacts"
 	@echo "release   - create a release of the executable in the build/ dir"
 	@echo "disk      - generate platform specific disk images in dist/ dir"
-	@echo "deploy    - deploy dist/ images to a local TNFS or other server platform"
 	@echo "test      - run application in emulator for given platform."
 	@echo "            specific platforms may expose additional variables to run with"
 	@echo "            different emulators, see makefiles/custom-<platform>.mk"
