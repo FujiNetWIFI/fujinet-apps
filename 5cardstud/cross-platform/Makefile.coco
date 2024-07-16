@@ -9,15 +9,16 @@ ASM=lwasm
 SRCS := $(shell find $(SRC_DIRS) -name *.c) $(shell find $(SRC_DIRS)/coco -name *.s)
 OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
 DEPS := $(OBJS:.o=.d)
-LIBS = src/coco/libfujinet.a
+LIBS = \
+       -L src/coco -lfujinet \
 
-CFLAGS=
-LDFLAGS=-o$(TARGET_EXEC).bin
+CFLAGS=--verbose --decb -O2
+LDFLAGS=-o$(TARGET_EXEC).bin 
 
 INC_DIRS := $(shell find $(SRC_DIRS) -type d)
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
-$(BUILD_DIR)/$(TARGET_EXEC): $(OBJS) $(LIBS)
-	$(CC) $(LDFLAGS) $(OBJS) -l $(LIBS)
+$(BUILD_DIR)/$(TARGET_EXEC): $(OBJS)
+	$(CC) $(LDFLAGS) $(OBJS) $(LIBS)
 	$(RM) $(TARGET_EXEC)
 	decb dskini $(TARGET_EXEC).dsk
 	writecocofile $(TARGET_EXEC).dsk $(TARGET_EXEC).bin
