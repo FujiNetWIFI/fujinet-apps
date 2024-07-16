@@ -8,7 +8,7 @@ PROGRAM := cater
 SUB_TASKS := clean disk test release
 .PHONY: all help $(SUB_TASKS)
 
-export FUJINET_BUILD_TOOLS_DIR := .
+export FUJINET_BUILD_TOOLS_DIR := ../../fujinet-build-tools
 export FUJINET_LIB_VERSION := 4.3.1
 
 all:
