@@ -17,13 +17,30 @@
 #include "platform-specific/sound.h"
 
 #define PLAYER_NAME_MAX 8
+char lastchar=0;
 
+// lastchar is only set by kbhit, we're basically handling the case
+// where that key picked up by kbhit doesn't get lost.
 char cgetc() {
-  return(inkey());
+  char c;
+  if (lastchar==0)
+  {
+//    do{
+      c= inkey();
+//    } while(c==0);
+    return c;
+  }
+  c= lastchar;
+  lastchar= 0;
+  return(c);
 }
 
 char kbhit() {
-  return(inkey());
+  char c;
+
+  c= inkey();
+  lastchar= c;
+  return(c);
 }
 
 /// @brief Convenience function to draw text centered at row Y
@@ -126,11 +143,12 @@ bool inputFieldCycle(uint8_t x, uint8_t y, uint8_t max, uint8_t* buffer) {
     done=0;
     disableDoubleBuffer();
     inputKey = cgetc();
-    
+
     if (inputKey == KEY_RETURN && curx>1) {
       done=1;
       // remove cursor
       drawText(x+1+i,y," ");
+      printf("return");
     } else if (inputKey == KEY_BACKSPACE && curx>0) {
       buffer[--curx]=0;
       drawText(x+1+curx,y," ");
@@ -161,8 +179,8 @@ void showPlayerNameScreen() {
 
   drawText(13,13, "ENTER YOUR NAME:");
   drawBox(15,16,PLAYER_NAME_MAX+1,1);
-  //drawText(16,17, playerName);
-  //i=strlen(playerName);
+  drawText(16,17, playerName);
+  i=strlen(playerName);
   
   clearCommonInput();
   //while (inputKey != KEY_RETURN || i<2) {
@@ -255,7 +273,7 @@ void showTableSelectionScreen() {
     drawBuffer();
     waitvsync();
 
-    if (skipApiCall || apiCall("tables")) {
+    if (/* skipApiCall || */ apiCall("tables")) {
       if (!skipApiCall) {
         updateState(true);
       }

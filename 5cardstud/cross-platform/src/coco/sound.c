@@ -39,10 +39,11 @@ void tone(uint16_t period, uint8_t dur, uint8_t wait) {
 //     tone(i,50,0,0);
 //   }
 // }
-
+#if 0
 void initSound() {
  
 }
+#endif
 
 void soundJoinGame() {
   tone(34,40,115);

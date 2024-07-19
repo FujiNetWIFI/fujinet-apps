@@ -9,7 +9,7 @@
 	SECTION rodata
 	EXPORT  _charset
 	EXPORT  _charset_end
-	EXPORT  _hires_Init
+;	EXPORT  _hires_Init
 	EXPORT  _hires_Done
 	EXPORT  _hires_Text
 	EXPORT  _hires_Draw
@@ -46,7 +46,7 @@
 ; .code
 
 
-_hires_Init
+_hires_Init_old
 
 ; TODO port to 6809        bit     $C082       ; Switch in ROM
 ; TODO port to 6809
