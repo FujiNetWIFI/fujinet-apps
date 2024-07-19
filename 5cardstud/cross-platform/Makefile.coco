@@ -9,23 +9,37 @@ ASM=lwasm
 SRCS := $(shell find $(SRC_DIRS) -name *.c) $(shell find $(SRC_DIRS)/coco -name *.s)
 OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
 DEPS := $(OBJS:.o=.d)
+
+# Required libraries.
 CARDGAME_LIB = cardgame
 CARDGAME_LIB_DIR = ../../../cardgame
-
+# BControl is only used by the OS-9 version.
 BCONTROL_LIB = bcontrol
 BCONTROL_LIB_DIR = ../../../bcontrol
 
 LIBS = \
 	-L $(CARDGAME_LIB_DIR) -l$(CARDGAME_LIB) \
-	-L $(BCONTROL_LIB_DIR) -l$(BCONTROL_LIB) \
-    -L src/coco -lfujinet \
+	-L $(BCONTROL_LIB_DIR) -l$(BCONTROL_LIB) 
+#	-L ./src/coco -lfujinet
 
-CFLAGS=--verbose --decb -O2
-LDFLAGS=-o$(TARGET_EXEC).bin 
+
+
+PACKAGE = 5CARDm
+VERSION = 0.1.00
+TARGET = coco
+
+
+CFLAGS= \
+			-I $(CARDGAME_LIB_DIR) \
+			-I $(BCONTROL_LIB_DIR) \
+			-DVERSION=\"$(VERSION)\" 
+
+LDFLAGS=-o$(TARGET_EXEC).bin
 
 INC_DIRS := $(shell find $(SRC_DIRS) -type d)
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
-$(BUILD_DIR)/$(TARGET_EXEC): $(OBJS)
+
+$(BUILD_DIR)/$(TARGET_EXEC): $(OBJS) $(CARDGAME_LIB_DIR)/lib$(CARDGAME_LIB).a
 	$(CC) $(LDFLAGS) $(OBJS) $(LIBS)
 	$(RM) $(TARGET_EXEC)
 	decb dskini $(TARGET_EXEC).dsk
@@ -47,6 +61,7 @@ $(BUILD_DIR)/%.s.o: %.s
 
 clean:
 	$(RM) -r $(TARGET_EXEC)*
+	$(RM) -r $(BUILD_DIR)*
 
 -include $(DEPS)
 
