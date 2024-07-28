@@ -1,9 +1,10 @@
+#include <cc65.h>
 #include <conio.h>
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
-#include <ctype.h>
 
 #include "fujinet-network.h"
 
@@ -24,7 +25,15 @@ char *url;
 uint16_t conn_bw;
 uint8_t connected;
 uint8_t conn_err;
-uint8_t trans_type = OPEN_TRANS_CRLF;
+#ifdef __CBM__
+// #define TRANS_MODE_TEXT OPEN_TRANS_PET
+#define TRANS_MODE_TEXT OPEN_TRANS_NONE
+#else
+#define TRANS_MODE_TEXT OPEN_TRANS_NONE
+#endif
+uint8_t trans_type_text = TRANS_MODE_TEXT;
+
+uint8_t trans_type_binary = OPEN_TRANS_NONE;
 
 void debug() {}
 
@@ -36,29 +45,32 @@ int main(void) {
 
     setup();
 
-    // start_get();                        // save us having to keep closing/reopening.
-    // test_get_query("");                 // returns entire json *object* line by line. forces you to know structure if you use this (looking at you lobby)
+    start_get();                        // save us having to keep closing/reopening.
+    test_get_query("");                 // returns entire json *object* line by line. forces you to know structure if you use this (looking at you lobby)
 
-    // // example that does match
-    // test_get_query("/headers/host");    // returns value from httpbin.org
+    // example that does match
+    test_get_query("/headers/host");    // returns value from httpbin.org
 
-    // // examples that return nothing as the json path doesn't match output
-    // test_get_query("/");                // returns nothing, not the entire root.
-    // test_get_query("/foo/bar");         // path doesn't exist, returns nothing
+    // examples that return nothing as the json path doesn't match output
+    test_get_query("/");                // returns nothing, not the entire root.
+    test_get_query("/foo/bar");         // path doesn't exist, returns nothing
 
-    // end_get();                          // finally close resource
+    end_get();                          // finally close resource
 
     // examples of other protocols
-    // test_post();
-    // test_put();
-    // test_delete();
-    // test_simple_get();
+    test_post();
+    test_put();
+    test_delete();
+
+    test_simple_get();
 
     test_redir_headers();
 
-    printf("Press a key to exit.");
-    cgetc();
-    printf("\n");
+    if (doesclrscrafterexit()) {
+        printf("Press a key to exit.");
+        cgetc();
+        printf("\n");
+    }
 
     return 0;
 }
@@ -77,7 +89,7 @@ void setup() {
 
 void start_get() {
     url = create_url("get");
-    err = network_open(url, OPEN_MODE_HTTP_GET, trans_type);
+    err = network_open(url, OPEN_MODE_HTTP_GET, trans_type_text);
     handle_err("open");
 
     err = network_json_parse(url);
@@ -105,7 +117,7 @@ void end_get() {
 void test_post() {
     int n = 0;
     url = create_url("post");
-    err = network_open(url, OPEN_MODE_HTTP_POST, trans_type);
+    err = network_open(url, OPEN_MODE_HTTP_POST, trans_type_text);
     handle_err("post:open");
 
     set_json(url);
@@ -128,7 +140,7 @@ void test_post() {
 void test_put() {
     int n = 0;
     url = create_url("put");
-    err = network_open(url, OPEN_MODE_HTTP_PUT_H, trans_type);
+    err = network_open(url, OPEN_MODE_HTTP_PUT_H, trans_type_text);
     handle_err("put:open");
 
     set_json(url);
@@ -152,7 +164,7 @@ void test_put() {
 void test_delete() {
     int n = 0;
     url = create_url("delete");
-    err = network_http_delete(url, trans_type);
+    err = network_http_delete(url, trans_type_text);
     handle_err("del:open");
 
     set_json(url);
@@ -174,13 +186,13 @@ void test_simple_get() {
     int n = 0;
     url = create_url("get");
     // trans mode doesn't appear to be working, always coming back 0x9b on atari
-    err = network_open(url, OPEN_MODE_HTTP_GET, trans_type);
+    err = network_open(url, OPEN_MODE_HTTP_GET, trans_type_text);
     handle_err("open");
 
     // simply read without any fancy modes. FN resets the modes to normal body after closing a connection, so we don't even have to specify the BODY mode.
     // We are only going to read first 40 bytes of the results so we can display it easily.
     // TODO: block reading so very large payloads can be read into limited memory are not yet handled, and above 512 may be broken on apple2.
-    n = network_read(url, result, 40);
+    n = network_read(url, (uint8_t *) result, 40);
     if (n < 0) {
         err = -n;
         handle_err("simple_get");
@@ -205,19 +217,19 @@ void test_redir_headers() {
     printf("\nFull URL: %s\n", url);
 
     // must use OPEN_MODE_HTTP_GET_H to return headers, NOTE THE EXTRA "_H"
-    err = network_open(url, OPEN_MODE_HTTP_GET_H, OPEN_TRANS_NONE);
+    err = network_open(url, OPEN_MODE_HTTP_GET_H, trans_type_binary);
     handle_err("open");
 
     // first specify the headers we are interested in
     begin_collect_headers(url);
-    add_header_to_collect(url, "content-type\x9b");
-    add_header_to_collect(url, "location\x9b");
+    add_header_to_collect(url, "content-type");
+    add_header_to_collect(url, "location");
     end_collect_headers(url);
 
     // now perform the request, just get the header 4 bytes, should be hex 0x89, 0x50, 0x4E, 0x47, which is 0x89 followed by "PNG"
     printf("\nFile first 4 bytes:\n");
     debug();
-    n = network_read(url, result, 4);
+    n = network_read(url, (uint8_t *) result, 4);
     hex_dump(result, 4);
 
     // and fetch the values of the headers we were interested in
@@ -229,13 +241,15 @@ void test_redir_headers() {
         header_length = get_header_length(url);
         if (header_length > 0) {
             printf("fetching header, size: %d\n", header_length);
-            n = network_read(url, result, header_length);
+            n = network_read(url, (uint8_t *) result, header_length);
             if (n < 0) {
                 err = (-n) && 0xFF;
                 handle_err("reading header");
             }
-            // last char is 0x9b, convert to nul char for simple string
-            result[n - 1] = '\0';
+            // if the last char is 0x9b, convert to nul char for simple string
+            if (result[n - 1] == '\x9b') {
+                result[n - 1] = '\0';
+            }
             printf("H: >%s<\n", result);
         }
     } while (header_length > 0);
@@ -248,8 +262,10 @@ void test_redir_headers() {
 void handle_err(char *reason) {
     if (err) {
         printf("Error: %d (d: %d) %s\n", err, fn_device_error, reason);
-        cgetc();
         network_close(url);
+        if (doesclrscrafterexit()) {
+            cgetc();
+        }
         exit(1);
     }
 }
@@ -282,7 +298,7 @@ void add_header_to_collect(char *devicespec, char *header) {
 }
 
 uint16_t get_header_length(char *devicespec) {
-    err = network_status(url, &conn_bw, &connected, &conn_err);
+    err = network_status(devicespec, &conn_bw, &connected, &conn_err);
     handle_err("header length");
     return conn_bw;
 }

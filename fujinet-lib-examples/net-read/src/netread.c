@@ -33,13 +33,13 @@ int main(void) {
   new_screen();
   setup();
 
-  new_screen();
-  printf("read google page\n");
-  sure = ask();
-  if (sure) {
-    // show all of the page by using 0 as the count
-    do_long("n:https://www.google.com/");
-  }
+  // new_screen();
+  // printf("read google page\n");
+  // sure = ask();
+  // if (sure) {
+  //   // show all of the page by using 0 as the count
+  //   do_long("n:https://www.google.com/");
+  // }
 
   // simple read of 27 bytes
   new_screen();
@@ -58,7 +58,7 @@ int main(void) {
 
   // ask for more than available
   new_screen();
-  printf("Chunked 27/550 bytes\n"); 
+  printf("Chunked 27/500 bytes\n"); 
   do_chunked(27, 500);
 
   // ask for lots, only read a few, BW will be 13 at the end (not sure why it's not 3)

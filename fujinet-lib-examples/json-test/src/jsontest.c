@@ -20,14 +20,18 @@
 #include "jsontest.h"
 #include "fujinet-network.h"
 
+char chuck[] = "n:https://api.chucknorris.io/jokes/random";
+char chuck_query[] = "/value";
+
 char iss_now[] = "n:http://api.open-notify.org/iss-now.json";
 char longitude_query[]  = "/iss_position/longitude";
 char latitude_query[]   = "/iss_position/latitude";
 char timestamp_query[]  = "/TIMESTAMP";
 
-char five_card_stud_url[] = "n:https://5card.carr-designs.com/state?table=blue&player=THOMC";
-char round_query[] = "/round";
-char pot_query[] = "/pot";
+// Not getting data from this anymore
+// char five_card_stud_url[] = "n:https://5card.carr-designs.com/state?table=blue&player=THOMC";
+// char round_query[] = "/round";
+// char pot_query[] = "/pot";
 
 char httpbin_url[] = "n:https://httpbin.org/get";
 char host_query[] = "/headers/host";
@@ -52,9 +56,10 @@ int main(void) {
 
     printf("jsontest %s\n", version);
 
+    test_chuck();
     test_iss_json();
     test_httpbin_json();
-    test_5cs_json();
+    // test_5cs_json();
     test_fuji_http();
     test_fuji_https();
 
@@ -73,6 +78,17 @@ bool ask() {
   } else {
     return false;
   }
+}
+
+void test_chuck() {
+    printf("Chuck Norris Test\n");
+    sure = ask();
+    printf("\n");
+    if (!sure) return;
+
+    open_and_parse_json(chuck);
+    json_query(chuck_query);
+    close();
 }
 
 void test_iss_json() {
@@ -99,17 +115,17 @@ void test_httpbin_json() {
     close();
 }
 
-void test_5cs_json() {
-    printf("5 Card Stud Test\n");
-    sure = ask();
-    printf("\n");
-    if (!sure) return;
+// void test_5cs_json() {
+//     printf("5 Card Stud Test\n");
+//     sure = ask();
+//     printf("\n");
+//     if (!sure) return;
 
-    open_and_parse_json(five_card_stud_url);
-    json_query(round_query);
-    json_query(pot_query);
-    close();
-}
+//     open_and_parse_json(five_card_stud_url);
+//     json_query(round_query);
+//     json_query(pot_query);
+//     close();
+// }
 
 void test_fuji_http() {
     printf("Fujinet Online HTTP\n");
@@ -180,7 +196,7 @@ void json_query(char *path) {
 
 void get() {
     int count = 0;
-    count = network_read(url, result, 120);
+    count = network_read(url, (uint8_t *) result, 120);
     if (count < 0) {
         err = -count;
         handle_err("query");

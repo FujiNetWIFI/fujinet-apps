@@ -13,8 +13,9 @@ void close();
 
 void json_query(char *path);
 void get();
+void test_chuck();
 void test_iss_json();
-void test_5cs_json();
+// void test_5cs_json();
 void test_httpbin_json();
 void test_fuji_http();
 void test_fuji_https();

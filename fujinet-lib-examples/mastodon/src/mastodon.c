@@ -28,7 +28,7 @@ void main(void)
 		err = network_json_parse(url);
 		handle_err("parse");
 
-		count = network_json_query(url, display_name_query, buffer);
+		count = network_json_query(url, display_name_query, (char *) buffer);
 		if (count < 0) {
 			err = -count;
 			handle_err("query");
@@ -37,7 +37,7 @@ void main(void)
 		revers(1);
 		printf("%40s", buffer);
 
-		count = network_json_query(url, created_at_query, buffer);
+		count = network_json_query(url, created_at_query, (char *) buffer);
 		if (count < 0) {
 			err = -count;
 			handle_err("query");
@@ -45,7 +45,7 @@ void main(void)
 		printf("%40s", buffer);
 		revers(0);
 
-		count = network_json_query(url, content_query, buffer);
+		count = network_json_query(url, content_query, (char *) buffer);
 		if (count < 0) {
 			err = -count;
 			handle_err("query");
