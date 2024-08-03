@@ -114,7 +114,7 @@ int main(void)
 
 char* createQuotesUrl() {
   // This endpoint produces a single random quote, then the stream is closed, and the application opens a new one
-  sprintf(quotesUrl, "n:http://%s:%s/quotes/random/", REST_SERVER_ADDRESS, REST_SERVER_PORT);
+ // sprintf(quotesUrl, "n:http://%s:%s/quotes/random/", REST_SERVER_ADDRESS, REST_SERVER_PORT);
 
   return (char *)quotesUrl;
 }
