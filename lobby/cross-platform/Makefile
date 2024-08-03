@@ -13,7 +13,7 @@
 # Space or comma separated list of cc65 supported target platforms to build for.
 
 # Supported targets: atari c64 apple2 (lowercase!)
-TARGETS := atari
+TARGETS := atari c64 apple2
  
 # Name of the final, single-file executable.
 # Default: name of the current dir with target name appended
