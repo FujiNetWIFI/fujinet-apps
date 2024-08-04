@@ -24,6 +24,7 @@
 #include <stdint.h>
 
 unsigned char _lastJoy, _joy;
+bool _buttonReleased=true;
 
 void pause(unsigned char frames) {
   static uint8_t i;
@@ -56,8 +57,15 @@ void readCommonInput() {
     else if (JOY_DOWN(_joy))
       inputDirY = 1;
 
-    if (JOY_BTN_1(_joy))
+    // Trigger button press only if it was previously unpressed
+    if (JOY_BTN_1(_joy)) {
+      if (_buttonReleased) {
         inputTrigger=true;
+        _buttonReleased=false;
+      }
+    } else {
+      _buttonReleased = true;
+    }
 
     return;
   }
@@ -90,15 +98,9 @@ void readCommonInput() {
     case KEY_DOWN_ARROW_3:
       inputDirY=1;
       break;
-    case KEY_RETURN:
     case KEY_SPACEBAR:
       inputTrigger=true;
       break;
-    // case 'S':
-    // case 's':
-    //   prefs[PREF_SOUND] = toggleSound() ? 1 : 2;
-    //   savePrefs();
-    //   break;
   }
 }
 

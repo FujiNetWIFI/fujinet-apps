@@ -24,40 +24,25 @@ void updateState(bool isTables) {
   static char *line, *nextLine, *end, *key, *value, *parent, *arrayPart;
   static bool isKey, inArray;
   static char c;
-  static unsigned int lineNum, i;
+  static unsigned int i;
 
   //write_appkey(0x9999,  1, 1, "US");
   // Reset state and vars
   isKey=true; inArray=false;
-  playerCount=validMoveCount=tableCount=lineNum=0;
+  playerCount=tableCount=0;
   
   parent = NULL;
 
   // Load state by looping through result and extracting each string at each EOL character
   end = rx_buf + rx_len;
   
-  POKEW(0x9000, rx_buf);
-  POKEW(0x9004, rx_len);
-  POKEW(0x9008, end);
+  // debugging
+  // POKEW(0x9000, rx_buf);
+  // POKEW(0x9004, rx_len);
+  // POKEW(0x9008, end);
 
-  // Replace line endings with null terminator
+  // Ensure buffer ends with string terminator
   rx_buf[rx_len]=0;
-
-  //POKE(end+1,0xff);
-  //cgetc();
-  // Normalize state receive buffer in preparation for parsing
-  /*for(line=rx_buf;line<end;++line) {
-    c=PEEK(line);
-
-    // Convert line endings to string terminators 
-    if (c==LINE_ENDING)
-      POKE(line,0);
-    
-    // Convert all letters to certain case if needed (e.g. C64)
-    else if (c>=ALT_LETTER_START && c<=ALT_LETTER_END) 
-      POKE(line,c + ALT_LETTER_AND);
-    
-  }*/
 
   line = rx_buf;
 
@@ -65,7 +50,6 @@ void updateState(bool isTables) {
     // Capture next line position, in case the current line is shortened 
     // in process of reading
     nextLine=line+strlen(line)+1;
-    lineNum++;
     if (isKey) {
       key = line;
 
@@ -116,7 +100,7 @@ void updateState(bool isTables) {
             state.players[playerCount].name=value;
             break;
           case 'a':
-            state.players[playerCount].alias = value[0];
+            state.players[playerCount].alias = value;
             break;
           case 's':
             arrayPart = strtok(value, ",");
@@ -127,6 +111,7 @@ void updateState(bool isTables) {
 
             // Scores is the last property, so increase the player counter
             playerCount++;
+            forceReadyUpdates=1;
             break;
           default:
             parent="";
@@ -137,6 +122,8 @@ void updateState(bool isTables) {
             strcpy(hash, value);
             break;
           case 'p':
+            //if (strcmp(value, state.prompt)!=0)
+              promptChanged = true;
             state.prompt = value;
             break;
           case 'r' :
@@ -160,7 +147,7 @@ void updateState(bool isTables) {
           case 'k':
             state.kept = value;
             break;
-          case 's':
+          case 'c':
             arrayPart = strtok(value, ",");
             for(i = 0; arrayPart != NULL && i<14; i++) {
                 state.validScores[i] = atoi(arrayPart);
@@ -246,6 +233,11 @@ uint8_t apiCall(char *path, bool isAsync) {
   return API_CALL_SUCCESS;
 }
 
+void sendMove(char* move) {
+  skipApiCall=0;
+  requestedMove = move;
+}
+
 uint8_t getStateFromServer()
 {
   static uint8_t apiCallResult;
@@ -254,10 +246,9 @@ uint8_t getStateFromServer()
   // isn't already a request in progress
   if (rx_pos == 0) {
     if (requestedMove) {    
-      strcpy(tempBuffer, "move/");
-      strcat(tempBuffer, requestedMove);
+      strcpy(tempBuffer, requestedMove);
 
-      // Clear hash when sending move command
+      // Clear hash when sending a move
       strcpy(hash, "");
       requestedMove=NULL;
     } else {

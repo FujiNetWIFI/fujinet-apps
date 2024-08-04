@@ -41,20 +41,18 @@ char playerName[12] = "";
 GameState state;
 
 // State helper vars
-unsigned char playerCount, prevPlayerCount, validMoveCount, prevRound, tableCount, currentCard, cardIndex, xOffset, fullFirst, cursorX, cursorY, waitCount, inputKey, wasViewing;
-signed char inputDirX, inputDirY;
-uint16_t prevPot, rx_len, maxJifs;
-bool noAnim, doAnim, finalFlip, inputTrigger;
+unsigned char playerCount, prevPlayerCount, validMoveCount, prevRound, tableCount, cursorX, waitCount, inputKey, wasViewing, skipApiCall;
 
-//unsigned char playerX[8], playerY[8], moveLoc[5];
-//signed char playerBetX[8], playerBetY[8], playerDir[8];
+signed char inputDirX, inputDirY;
+uint16_t rx_len, maxJifs;
+bool noAnim, doAnim, inputTrigger, forceReadyUpdates, promptChanged;
+
+
 
 // Common local scope temp variables
 unsigned char h, i, j, k, x, y, xx;
 char tempBuffer[128];
-
 char prefs[4];
-
 char *hand, *requestedMove;
 
 #ifdef _CMOC_VERSION_
@@ -63,7 +61,7 @@ int main(void)
 void main(void)
 #endif /* _CMOC_VERSION_ */
 {
-  uint8_t skipApiCall=0, failedApiCalls=0;
+  uint8_t failedApiCalls=0;
   
   initGraphics(); 
   initSound();
@@ -72,49 +70,50 @@ void main(void)
   showWelcomeScreen();
   showTableSelectionScreen();
   
-  // Main in-game event loop
-  // Gets the state from server and checks for key presses to chat/invoke menu
+  // Main event loop - process state from server and input from keyboard/joystick
+  skipApiCall=0;
   while (true) {
-
-    if (skipApiCall) {
-      --skipApiCall;
+    
+    // Poll the server every so often.
+    if (skipApiCall--) {
+      // Not polling, so wait a frame.
+      waitvsync();  
     } else {
+      // Poll the server
       switch (getStateFromServer()) {
         case STATE_UPDATE_ERROR:
-          // Wait a bit to avoid hammering the server if getting bad responses
+          // ERROR - Wait a bit to avoid hammering the server if getting bad responses
           failedApiCalls++;
+
+          // Exponential (wait an additional second each consequtive error)
           skipApiCall=60*failedApiCalls;
+
+          // Don't wait more than 5 seconds
           if (skipApiCall>300)
             skipApiCall = 300;
 
+          // After a few failures, let the player know we are experiencing technical difficulties
           if (failedApiCalls>3) {
-            drawStatusText("CONNECTION LOST. RECONNECTING..."); 
-            
+            //drawStatusText("connection lost. reconnecting.."); 
           }
           break;
         
         case STATE_UPDATE_NOCHANGE:
-          // Wait a second before polling again
-          skipApiCall = 600;
+          // Wait a few frames before checking for more data
+          skipApiCall = 5;
           break;
 
         case STATE_UPDATE_CHANGE:
-          showGameScreen();
-          requestPlayerMove();
+          processStateChange();
+          
+          // Poll again in a bit
+          skipApiCall = 59;
+          break;
       }
     }
-    
-    pause(1);
 
-    // Chat
-    handleChat();
-
-    switch(inputKey) {
-      case KEY_ESCAPE: // Esc
-      case KEY_ESCAPE_ALT: // Esc Alt
-        showInGameMenuScreen();  
-        break;
-    }    
+    // Handle any input
+    processInput();
   }
 
 #ifdef _CMOC_VERSION_
