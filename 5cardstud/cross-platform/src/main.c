@@ -7,6 +7,7 @@
 
 #ifdef _CMOC_VERSION_
 #include "coco/coco_bool.h"
+#include <fujinet-network.h>
 #else
 #include <stdlib.h>
 #include <stdint.h>
@@ -27,7 +28,8 @@
 #include "screens.h"
 
 // Store default server endpoint in case lobby did not set app key
-char serverEndpoint[50] = "https://5card.carr-designs.com/";
+char serverEndpoint[50] = "N:https://5card.carr-designs.com/";
+//char serverEndpoint[50] = "N:http://192.168.247.3/";
 //char serverEndpoint[50] = "http://127.0.0.1:8080/"; // "N: for apple, but not C64"
 
 char query[50] = ""; //?table=blue&player=ERICAPL2";
@@ -52,6 +54,61 @@ char prefs[4];
 
 char *hand, *requestedMove;
 
+#ifdef _CMOC_CHECK_STACK_OVERFLOW_
+void stackOverflowHandler(void *addressOfFailedCheck, void *stackRegister)
+{
+    printf("[FAIL: %p, %p]\n", addressOfFailedCheck, stackRegister);
+    exit(1);
+}
+#endif
+
+char *http_url = "n:http://api.open-notify.org/astros.json";
+char *https_url = "n:https://oldbytes.space/api/v1/timelines/public?limit=1";
+
+uint8_t buf[384];
+  static uint16_t count, bw;
+  int n;
+  uint8_t c;
+static uint8_t err = 0;
+
+#if 0
+// test code only
+void http_no_parse(void)
+{
+    unsigned char retries=5;
+
+    printf("\nHTTP NO PARSE, 5 ATTEMPTS.\n");
+
+    while(retries--)
+    {
+printf("network open:\n");
+        network_open(serverEndpoint,12,1);
+printf("Enter to continue\n");
+readline();
+
+printf("network status:\n");
+        network_status(serverEndpoint,&bw,&c,&err);
+printf("Enter to continue\n");
+readline();
+
+        if(bw>sizeof(buf)) bw= sizeof(buf);
+
+printf("network read:\n");
+        network_read(serverEndpoint,buf,bw);
+        buf[sizeof(buf)-1]= 0;
+printf("Enter to continue\n");
+readline();
+
+
+printf("network close:\n");
+        network_close(serverEndpoint);
+        printf("#%u - BW: %u BYTES. PRESS ENTER.", retries, bw);
+        printf("%s\n", buf);
+readline();
+        //getchar();
+    }
+}
+#endif
 
 #ifdef _CMOC_VERSION_
 int main(void)
@@ -59,18 +116,57 @@ int main(void)
 void main(void)
 #endif /* _CMOC_VERSION_ */
 { 
-  initGraphics(); 
-  initSound();
+  int i;
 
-#ifdef _CMOC_VERSION_
-  //network_init();
+#ifdef _CMOC_CHECK_STACK_OVERFLOW_
+  set_stack_overflow_handler(stackOverflowHandler);
 #endif
 
+#if 0
+printf("network test: \n");
+sleep(1);
+
+printf("network_init: \n");
+  network_init();
+for (i=0; i<3; i++)
+{
+printf("apiCall: \n");
+  //apiCall("tables");
+  sleep(1);
+}
+printf("http_no_parse: \n");
+http_no_parse();
+
+return 0;
+#endif
+
+#if 1
+printf("initGraphics\n");
+  initGraphics(); 
+//  initSound();
+//sleep(10);
+//closeCardGame();
+//return 0;
+printf("test version\n");
+
+#ifdef _CMOC_VERSION_
+//  network_init();
+#endif
+
+#if 0
+  apiCall("tables");
+  return 0;
+#endif 
+
+printf("loadPrefs: \n");
   loadPrefs();
 
+printf("showWelcomScreen: \n");
   showWelcomScreen();
+printf("showTableSelectionScreen: \n");
   showTableSelectionScreen();
-  
+
+#if 0
   // Main in-game loop
   while (true) {
 
@@ -92,11 +188,13 @@ void main(void)
         showInGameMenuScreen();  
         break;
     }
-   
     
   }
+  #endif
+  #endif 
 
 #ifdef _CMOC_VERSION_
+  closeCardGame();
   return 0;
 #endif /* CMOC_VERSION_  */
 }

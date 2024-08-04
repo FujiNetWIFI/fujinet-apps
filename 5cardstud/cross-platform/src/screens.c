@@ -239,7 +239,7 @@ void tableActionJoinServer() {
   strcat(query, "&player=");
   strcat(query, playerName);
   
-  // Replace space with + for player name
+  // Replace space with + for pshowWelcomScreenlayer name
   i=strlen(query);
   while(--i)
     if (query[i]==' ')

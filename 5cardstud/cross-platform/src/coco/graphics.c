@@ -69,13 +69,14 @@ void disableDoubleBuffer() {
 }
 
 void drawTextAt(unsigned char x, unsigned char y, char*s) {
+#ifndef DISABLE_GRAPHICS  
   moveCursor(x,y);
-  printf(s);
+#endif  
 }
 
 void clearStatusBar() {
   //unsigned char i;
-  hires_Mask(0,175,40,17,0xa900);
+  //hires_Mask(0,175,40,17,0xa900);
   //for (i=0;i<40;i++) {
    // hires_putc(i,175,ROP_CPY,' ');
    // hires_putc(i,183,ROP_CPY,' ');
@@ -134,9 +135,10 @@ void resetScreen() {
 
     // Draw the deck as a face-down card.
     //
+#ifndef DISABLE_GRAPHICS    
     moveCursor(DECK_COL, DECK_ROW >> 3);
-    printf("Deck");
     drawFaceDownCard(DECK_ROW + PIXEL_ROWS_PER_TEXT_ROW, DECK_COL);
+#endif    
 
 //    basicHelpShown = FALSE;
 }
@@ -148,7 +150,7 @@ void drawCardAt(unsigned char x, unsigned char y, unsigned char partial, const c
   mid = isHidden ? 0x7D7E : 0x0900;
   //mid = 0x0900;
 
-printf("string is %s\n", s);
+//printf("string is %s\n", s);
   // Card suit
   switch (s[1]) {
     case 'h' : suit=0x0A; red=1; cardgameSuit=0; break;
@@ -171,9 +173,9 @@ printf("string is %s\n", s);
       cardgameVal=(s[0]-0x32); 
   }
   
- 
+#ifndef DISABLE_GRAPHICS    
   drawCompiledCard(cardgameVal, cardgameSuit, x, y);
-
+#endif
 #if 0  
   // Card top
   //hires_putcc(x,y,ROP_O,0x0506); 
@@ -206,11 +208,11 @@ void drawCard(unsigned char x, unsigned char y, unsigned char partial, const cha
 }
 
 void drawLine(unsigned char x, unsigned char y, unsigned char w) {
-   hires_Mask(x,y*8-3,w,2, 0xa9ff); 
+//   hires_Mask(x,y*8-3,w,2, 0xa9ff); 
 }
 
 void hideLine(unsigned char x, unsigned char y, unsigned char w) {
-   hires_Mask(x,y*8-3,w,2, 0xa900); 
+//   hires_Mask(x,y*8-3,w,2, 0xa900); 
 }
 
 void drawBox(unsigned char x, unsigned char y, unsigned char w, unsigned char h) {
@@ -275,7 +277,7 @@ void resetGraphics() {
 
 void initGraphics() {
   hires_Init();
-  enableDoubleBuffer();
+ // enableDoubleBuffer();
 }
 
 void waitvsync() {
