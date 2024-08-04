@@ -204,7 +204,9 @@ void drawCards(bool finalFlip) {
           j==1 && i==0 && (state.round < 5 || shouldMaskPlayerCard)); 
         
         if (doAnim) {
+#ifndef DISABLE_SOUND    
           soundDealCard();
+#endif          
           pause(cardIndex == 1 ? 1 : 10);
         }
       }
@@ -232,7 +234,9 @@ void drawCards(bool finalFlip) {
       for (j=1;j<=9; j+=2) {
         drawCard(playerX[i]+(j-1)*playerDir[i], playerY[i], FULL_CARD,state.players[i].hand+j-1, false);
       }
+#ifndef DISABLE_SOUND    
       soundDealCard();
+#endif      
       pause(35);
     }
   }
@@ -263,7 +267,9 @@ void checkIfSpectatorStatusChanged() {
 
     drawStatusText("YOU SIT DOWN AT THE TABLE");
     drawBuffer();
+#ifndef DISABLE_SOUND    
     soundJoinGame();
+#endif    
     pause(50);
   }
 }
@@ -278,8 +284,9 @@ void checkIfPlayerCountChanged() {
       
       drawStatusText("A PLAYER LEFT THE TABLE");    
       drawBuffer();
+#ifndef DISABLE_SOUND    
       soundPlayerLeft();
-
+#endif
       // for j=8 to 2 step -2
       //   sound 1,255-j*j,10,j:pause 2:sound:pause 8
       // next
@@ -287,7 +294,9 @@ void checkIfPlayerCountChanged() {
       state.lastResult = "A NEW PLAYER JOINS THE TABLE";
       drawStatusText(state.lastResult);
       drawBuffer();
+#ifndef DISABLE_SOUND    
       soundPlayerJoin();
+#endif      
     }
     
     pause(40);
@@ -369,7 +378,9 @@ void animateChipsToPotOnRoundEnd() {
       x-=3;
 
     drawText(x, y, "   ");
+#ifndef DISABLE_SOUND    
     soundTakeChip(i);
+#endif    
   }
 
   drawPot();
@@ -396,7 +407,9 @@ void drawGameStatus() {
     
     if (state.round==5 && prevRound != state.round) {
       drawBuffer();
+#ifndef DISABLE_SOUND    
       soundGameDone();
+#endif      
       pause(30);
     }
   }
@@ -454,8 +467,9 @@ if (always_render_full_cards) {
 
   drawLine(h,HEIGHT-1,i);
 
+#ifndef DISABLE_SOUND    
   soundMyTurn();
-
+#endif
 
   resetTimer();
 
@@ -474,7 +488,9 @@ if (always_render_full_cards) {
       if (i!= state.moveTime) {
         state.moveTime =i;
         drawStatusTimeLeft();
+#ifndef DISABLE_SOUND    
         soundTick();
+#endif        
       }
     } 
 
@@ -488,10 +504,14 @@ if (always_render_full_cards) {
         //drawStatusTextAt(moveLoc[cursorX]-1, "+");
         hideLine(moveLoc[cursorX-inputDirX],HEIGHT-1,(unsigned char)strlen(state.validMoves[cursorX-inputDirX].name));
         drawLine(moveLoc[cursorX],HEIGHT-1,(unsigned char)strlen(state.validMoves[cursorX].name));
+#ifndef DISABLE_SOUND    
         soundCursor();
+#endif        
       } else {
         cursorX-=inputDirX;
+#ifndef DISABLE_SOUND    
         soundCursorInvalid();
+#endif        
       }
       getTime();
     }
@@ -513,7 +533,9 @@ if (always_render_full_cards) {
     clearStatusBar();
     drawStatusTextAt(moveLoc[cursorX], state.validMoves[cursorX].name);
     drawBuffer();
+#ifndef DISABLE_SOUND    
     soundSelectMove();
+#endif    
 
     // For some unknown reason, if I don't delay for a bit here, 
     // the selectMove sound plays twice in the AppleWin emulator.
