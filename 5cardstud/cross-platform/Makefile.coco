@@ -76,15 +76,10 @@ OTHER_APPS := \
 
 $(BUILD_DIR)/$(TARGET_EXEC): $(OBJS) $(CARDGAME_LIB_DIR)/lib$(CARDGAME_LIB).a
 	$(CC) $(LDFLAGS) $(OBJS) $(LIBS)
-#	cmoc -c --coco -Wfor-condition-sizes -Werror -DNDEBUG  -O2 -fomit-frame-pointer  -o cardgame-demo.o cardgame-demo.c
-	$(CC) $(CFLAGS) -o cardgame-demo.c.o -c ~/Workspace/cardgame/cardgame-demo.c 
-	$(CC) $(LDFLAGS_TEST) cardgame-demo.c.o $(LIBS)
-#	cmoc -o testgame.bin --coco   cardgame-demo.c.o $(LIBS)
 	$(RM) $(TARGET_EXEC) $(TARGET_EXEC).dsk
 	decb dskini $(TARGET_EXEC).dsk
 	writecocofile $(TARGET_EXEC).dsk $(TARGET_EXEC).bin 
-	writecocofile $(TARGET_EXEC).dsk testgame.bin
-	$(foreach path,$(OTHER_APPS),writecocofile $(TARGET_EXEC).dsk $(path) ;) 
+#	$(foreach path,$(OTHER_APPS),writecocofile $(TARGET_EXEC).dsk $(path) ;) 
 	cp $(TARGET_EXEC).dsk ~/tnfs/
 
 # c source
