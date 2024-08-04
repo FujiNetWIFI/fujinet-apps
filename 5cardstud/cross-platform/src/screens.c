@@ -1,5 +1,6 @@
 #ifdef _CMOC_VERSION_
 #include "coco/coco_bool.h"
+#include <coco.h>
 #else
 #include <stdlib.h>
 #include <conio.h>
@@ -17,31 +18,18 @@
 #include "platform-specific/sound.h"
 
 #define PLAYER_NAME_MAX 8
-char lastchar=0;
 
+#ifndef _CMOC_VERSION_
 // lastchar is only set by kbhit, we're basically handling the case
 // where that key picked up by kbhit doesn't get lost.
 char cgetc() {
-  char c;
-  if (lastchar==0)
-  {
-//    do{
-      c= inkey();
-//    } while(c==0);
-    return c;
-  }
-  c= lastchar;
-  lastchar= 0;
-  return(c);
+  return inkey();
 }
 
 char kbhit() {
-  char c;
-
-  c= inkey();
-  lastchar= c;
-  return(c);
+  return inkey();
 }
+#endif
 
 /// @brief Convenience function to draw text centered at row Y
 void centerText(unsigned char y, char * text) {
