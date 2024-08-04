@@ -11,7 +11,6 @@
 static unsigned char delay;
 
 void initSound() {
- 
   // Silence SIO noise
   POKE(0x41, 0);
 

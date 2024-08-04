@@ -14,5 +14,6 @@
 void updateState(bool isTables);
 uint8_t getStateFromServer();
 uint8_t apiCall(char *path, bool isAsync);
+void sendMove(char* move);
 
 #endif /* STAECLIENT_H */

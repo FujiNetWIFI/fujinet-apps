@@ -17,33 +17,17 @@
 
 #define PLAYER_NAME_MAX 8
 
-/// @brief Convenience function to draw text centered at row Y
-void centerText(unsigned char y, char * text) {
-  drawText(WIDTH/2-strlen(text)/2, y, text);
-}
-
-/// @brief Convenience function to draw text centered at row Y in alternate color
-void centerTextAlt(unsigned char y, char * text) {
-  drawTextAlt(WIDTH/2-strlen(text)/2, y, text);
-}
-
-/// @brief Convenience function to draw status text centered
-void centerStatusText(char * text) {
-  clearStatusBar();
-  drawStatusTextAt((WIDTH-strlen(text))>>1,text);
-}
-
 /// @brief Convenience function to reset screen and draw border
 void resetScreenWithBorder() {
   resetScreen();
   
   // Draw dice corners
   drawDie(0,0,"1", 0);
-  //drawDie(0,HEIGHT/2-2,"2", 0);
+  //drawDie(0,HEIGHT/2-2,"5", 0);
   drawDie(0,HEIGHT-3,"3", 0);
 
   drawDie(WIDTH-3,0,"2", 0);
-  //drawDie(WIDTH-3,HEIGHT/2-2,"5", 0);
+  //drawDie(WIDTH-3,HEIGHT/2-2,"6", 0);
   drawDie(WIDTH-3,HEIGHT-3,"4", 0);
 }
 
@@ -51,13 +35,7 @@ void resetScreenWithBorder() {
 void showHelpScreen() {
   static unsigned char y;
   
-  centerStatusText("loading instructions..");
-  
-
-  // This COULD be retrieved from the server, especially if
-  // this client were game agnostic.
   resetScreenWithBorder();
-  
 
   drawTextAlt(10,1,"how to play fujitzee");
   drawLine(10,2,20);
@@ -84,8 +62,6 @@ void showHelpScreen() {
 
   centerStatusText("press any key to continue");
 
-  
-
   clearCommonInput();
   cgetc();
   resetScreen();
@@ -110,65 +86,6 @@ void welcomeActionVerifyServerDetails() {
       }
     }
   }
-}
-
-
-
-
-bool inputFieldCycle(uint8_t x, uint8_t y, uint8_t max, uint8_t* buffer) {
-  static uint8_t done, curx, lastY;
-  
-  // Initialize first call to input box
-  //i=strlen(buffer);
-  if (done == 1 || lastY != y) {
-    done=0;
-    lastY=y;
-    curx = strlen(buffer);
-    drawTextAlt(x,y, buffer);
-    drawTextCursor(x+curx,y);
-  }
-   // curx=i;
-   // done=0;
- // }
-
-
-
-
-  // Process any waiting keystrokes
-  if (kbhit()) {
-    done=0;
-    
-    inputKey = cgetc();
-
-    // Debugging - See what key was pressed
-    // itoa(inputKey, tempBuffer, 10);drawText(0,0, tempBuffer);
-
-    if (inputKey == KEY_RETURN && curx>1) {
-      done=1;
-      // remove cursor
-      drawText(x+1+i,y," ");
-    } else if (inputKey == KEY_BACKSPACE && curx>0) {
-      buffer[--curx]=0;
-      drawText(x+1+curx,y," ");
-    } else if (
-      curx < max && ((curx>0 && inputKey == KEY_SPACEBAR) || (inputKey>= 48 && inputKey <=57) || (inputKey>= 65 && inputKey <=90) || (inputKey>= 97 && inputKey <=122))    // 0-9 A-Z a-z
-    ) {
-      
-      if (inputKey>=65 && inputKey<=90)
-        inputKey+=32;
-
-      buffer[curx]=inputKey;
-      buffer[++curx]=0;
-    }
-
-    drawTextAlt(x,y, buffer);
-    drawTextCursor(x+curx,y);
-
-    return done==1;
-  }
-
-  return false;
-  
 }
 
 void drawLogo()
@@ -227,7 +144,7 @@ void showWelcomeScreen() {
   strcat(tempBuffer, playerName);
   centerText(13,tempBuffer);  
   
-  pause(45);
+  //pause(45);
 
   // If first run, show the help screen
   if (prefs[PREF_HELP]!=2) {
@@ -235,7 +152,7 @@ void showWelcomeScreen() {
     savePrefs();
     showHelpScreen();
   } 
-  pause(30);
+  //pause(30);
 } 
 
 /// @brief Action in Table Selection Screen, joins the selected server
@@ -295,8 +212,6 @@ void showTableSelectionScreen() {
       //drawStatusText("r>efresh   h+elp  c:olor   n+ame   q+uit");
       centerStatusText("Refresh Help Color Name Quit");
       
-      
-      
       shownChip=0;
 
       clearCommonInput();
@@ -345,7 +260,7 @@ void showTableSelectionScreen() {
 
         // Clear screen and write server name
         resetScreenWithBorder();
-        clearStatusBar();
+        //clearStatusBar();
         centerText(15, state.tables[tableIndex].name);
         
         strcpy(query, "?table=");
@@ -368,41 +283,12 @@ void showTableSelectionScreen() {
   tableActionJoinServer();
 }
 
-/// @brief Shows main game play screen (table and cards)
-void showGameScreen() {
-  // checkIfSpectatorStatusChanged();
-  // checkIfPlayerCountChanged();
-  
-  // // Animate chips to pot before drawing the new state
-  // animateChipsToPotOnRoundEnd();
-  
-  // checkFinalFlip();
-
-  // resetScreen();
-  // resetStateIfNewGame();
-
-  // drawPot();
-
-  // if (playerCount>1) {
-  //   drawNamePurse();
-  //   drawBets();
-  //   drawCards(false);
-  // }
-
-  // drawGameStatus();
-  // 
-  // highlightActivePlayer();
-
-  prevRound = state.round;
-}
-
 /// @brief shows in-game menu
 void showInGameMenuScreen() {
   i=1;
   while (i) {
     
     resetScreenWithBorder();
-    
     
     x = WIDTH/2-8;
     y = HEIGHT/2-5;
@@ -454,9 +340,8 @@ void showInGameMenuScreen() {
   }
 
   // Show game screen again before returning
-  resetScreen();
-  
-  showGameScreen();
+  forceRender();
+  renderBoardNamesMessages();
 }
 
 
