@@ -72,6 +72,7 @@ void drawTextAt(unsigned char x, unsigned char y, char*s) {
 #ifndef DISABLE_GRAPHICS  
   moveCursor(x,y);
 #endif  
+  printf("%s", s);
 }
 
 void clearStatusBar() {
