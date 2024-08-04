@@ -6,7 +6,8 @@ SRC_DIRS ?= ./src
 CC=cmoc
 ASM=lwasm
 
-SRCS := $(shell find $(SRC_DIRS) -name *.c) $(shell find $(SRC_DIRS)/coco -name *.s)
+#SRCS := $(shell find $(SRC_DIRS) -name *.c) $(shell find $(SRC_DIRS)/coco -name *.s) 
+SRCS := $(shell ls $(SRC_DIRS)/*.c) $(shell find $(SRC_DIRS)/coco -name *.c)
 OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
 DEPS := $(OBJS:.o=.d)
 
@@ -16,34 +17,74 @@ CARDGAME_LIB_DIR = ../../../cardgame
 # BControl is only used by the OS-9 version.
 BCONTROL_LIB = bcontrol
 BCONTROL_LIB_DIR = ../../../bcontrol
+FUJINET_LIB_DIR = ../../../fujinet-lib
+FUJINET_LIB = fujinet
 
 LIBS = \
 	-L $(CARDGAME_LIB_DIR) -l$(CARDGAME_LIB) \
-	-L $(BCONTROL_LIB_DIR) -l$(BCONTROL_LIB) 
-#	-L ./src/coco -lfujinet
+	-L ../../../fujinet-lib -l$(FUJINET_LIB) 
+
+#	-L $(BCONTROL_LIB_DIR) -l$(BCONTROL_LIB) \
+
+#	-L ./src/coco -lfujinet \
 
 
-
-PACKAGE = 5CARDm
+PACKAGE = 5CARD
 VERSION = 0.1.00
 TARGET = coco
 
 
 CFLAGS= \
+			--$(TARGET) \
+			--intdir ./intermediates \
+			--stack-space=512 \
+			-fomit-frame-pointer \
+			-DNDEBUG \
 			-I $(CARDGAME_LIB_DIR) \
-			-I $(BCONTROL_LIB_DIR) \
-			-DVERSION=\"$(VERSION)\" 
+			-I $(FUJINET_LIB_DIR) \
+			-DVERSION=\"$(VERSION)\" \
+			-O2 -DDISABLE_SOUND
+# -DDISABLE_GRAPHICS
+#			-I $(BCONTROL_LIB_DIR) \
 
-LDFLAGS=-o$(TARGET_EXEC).bin
+#			--check-null \
+#			-D_CMOC_CHECK_STACK_OVERFLOW_ --check-stack\
+
+
+LDFLAGS= 			--$(TARGET) \
+	-o$(TARGET_EXEC).bin
+
+
+LDFLAGS_TEST= 			--$(TARGET) \
+	-otestgame.bin
 
 INC_DIRS := $(shell find $(SRC_DIRS) -type d)
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 
+OTHER_APPS := \
+~/Workspace/bgraph-0.1.8/bgraph.bin \
+~/Workspace/bgraph-0.1.8/cmdemo.bin \
+~/Workspace/bgraph-0.1.8/cc3demo.bin \
+~/Workspace/bgraph-0.1.8/shapes.bin \
+~/Workspace/bgraph-0.1.8/testclip.bin \
+~/Workspace/cardgame/cardgame.bin \
+~/Workspace/color8-0.1.14/color8.bin
+
+
+
+
+
 $(BUILD_DIR)/$(TARGET_EXEC): $(OBJS) $(CARDGAME_LIB_DIR)/lib$(CARDGAME_LIB).a
 	$(CC) $(LDFLAGS) $(OBJS) $(LIBS)
-	$(RM) $(TARGET_EXEC)
+#	cmoc -c --coco -Wfor-condition-sizes -Werror -DNDEBUG  -O2 -fomit-frame-pointer  -o cardgame-demo.o cardgame-demo.c
+	$(CC) $(CFLAGS) -o cardgame-demo.c.o -c ~/Workspace/cardgame/cardgame-demo.c 
+	$(CC) $(LDFLAGS_TEST) cardgame-demo.c.o $(LIBS)
+#	cmoc -o testgame.bin --coco   cardgame-demo.c.o $(LIBS)
+	$(RM) $(TARGET_EXEC) $(TARGET_EXEC).dsk
 	decb dskini $(TARGET_EXEC).dsk
-	writecocofile $(TARGET_EXEC).dsk $(TARGET_EXEC).bin
+	writecocofile $(TARGET_EXEC).dsk $(TARGET_EXEC).bin 
+	writecocofile $(TARGET_EXEC).dsk testgame.bin
+	$(foreach path,$(OTHER_APPS),writecocofile $(TARGET_EXEC).dsk $(path) ;) 
 	cp $(TARGET_EXEC).dsk ~/tnfs/
 
 # c source

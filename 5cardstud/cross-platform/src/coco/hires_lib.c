@@ -36,8 +36,10 @@ void
 hires_Init()
 {
   screenBuffer = (void *) (((word) * (byte *) 0x00BC) << 8);
+//  screenBuffer = (void *) (((word) * (byte *) 0x000E) << 8);
+#ifndef DISABLE_GRAPHICS    
   openCardGame(screenBuffer, TRUE);
-
+#endif
 }
 
 
