@@ -43,7 +43,7 @@ typedef struct {
 
 typedef struct {
   char* name;
-  char alias;
+  char* alias;
   int16_t scores[16];
 } Player;
 
@@ -68,10 +68,11 @@ typedef struct {
 } GameState;
 
 
-extern unsigned char playerCount, prevPlayerCount, validMoveCount, prevRound, tableCount, currentCard, cardIndex, xOffset, fullFirst, cursorX, cursorY, waitCount, inputKey, wasViewing;
+extern unsigned char playerCount, prevPlayerCount, prevRound, tableCount, cursorX, waitCount, inputKey, wasViewing, skipApiCall;
+
 extern signed char inputDirX, inputDirY;
 extern uint16_t prevPot, rx_len, maxJifs;
-extern bool noAnim, doAnim, finalFlip, inputTrigger;
+extern bool noAnim, doAnim, inputTrigger, forceReadyUpdates, promptChanged;
 extern char tempBuffer[128];
 extern char query[50];
 extern char playerName[12];
@@ -81,23 +82,8 @@ extern GameState state;
 
 // Common local scope temp variables
 extern unsigned char h, i, j, k, x, y, xx;
-extern unsigned char playerX[PLAYER_MAX], playerY[PLAYER_MAX], moveLoc[5];
-extern signed char playerBetX[8], playerBetY[8], playerDir[8];
 extern char *hand, *requestedMove;
 extern char prefs[4];
-
-
-// Screen specific player/bet coordinates
-extern const unsigned char playerXMaster[] ;
-extern const unsigned char playerYMaster[] ;
-extern const char playerDirMaster[] ;
-extern const char playerBetXMaster[];
-extern const char playerBetYMaster[] ;
-
-// Simple hard coded arrangment of players around the table based on player count.
-// These refer to index positions in the Master arrays above
-// Downside is new players will cause existing player positions to move.
-extern const char playerCountIndex[] ;
 
 void pause(unsigned char frames);
 void clearCommonInput();
