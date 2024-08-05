@@ -13,31 +13,31 @@
  * Platform specific key map for common input
  */
 
-#define KEY_LEFT_ARROW      0x08
-#define KEY_LEFT_ARROW_2    0x9D
-#define KEY_LEFT_ARROW_3    0x2C // ,
+#define KEY_LEFT_ARROW      CH_CURS_LEFT
+#define KEY_LEFT_ARROW_2    1
+#define KEY_LEFT_ARROW_3    2 // ,
 
-#define KEY_RIGHT_ARROW     0x15
-#define KEY_RIGHT_ARROW_2   0x1D
-#define KEY_RIGHT_ARROW_3   0x2E // .
+#define KEY_RIGHT_ARROW     CH_CURS_RIGHT
+#define KEY_RIGHT_ARROW_2   3
+#define KEY_RIGHT_ARROW_3   4 // .
 
-#define KEY_UP_ARROW        0x0B
-#define KEY_UP_ARROW_2      0x91
-#define KEY_UP_ARROW_3      0x2D // -
+#define KEY_UP_ARROW        CH_CURS_UP
+#define KEY_UP_ARROW_2      5
+#define KEY_UP_ARROW_3      6 // -
 
-#define KEY_DOWN_ARROW      0x0A
-#define KEY_DOWN_ARROW_2    0x11
-#define KEY_DOWN_ARROW_3    0x3D // =
+#define KEY_DOWN_ARROW      CH_CURS_DOWN
+#define KEY_DOWN_ARROW_2    7
+#define KEY_DOWN_ARROW_3    8 // =
 
 //#define KEY_RETURN       0x0D
-#define KEY_ESCAPE       0x5F
-#define KEY_ESCAPE_ALT   0x03
+#define KEY_ESCAPE       CH_ESC
+#define KEY_ESCAPE_ALT   1
 
 #define KEY_SPACEBAR     0x20 // cc65's atari.h KEY_SPACE is wrong
-#define KEY_BACKSPACE    0x7E
+#define KEY_BACKSPACE    CH_DEL
 
 #undef KEY_RETURN
-#define KEY_RETURN       0x9B
+#define KEY_RETURN       CH_ENTER
 
 /*
   Mapping for converting incoming ALT letters to a standard case

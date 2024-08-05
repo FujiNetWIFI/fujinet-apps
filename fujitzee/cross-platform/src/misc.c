@@ -23,7 +23,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-unsigned char _lastJoy, _joy;
+unsigned char _lastJoy, _joy, _joySameCount=10;
 bool _buttonReleased=true;
 
 void pause(unsigned char frames) {
@@ -45,6 +45,9 @@ void readCommonInput() {
   _joy = readJoystick();
 
   if (_joy != _lastJoy) {
+    if (_lastJoy!=99)
+      _joySameCount=12;
+
     _lastJoy=_joy;
 
     if (JOY_LEFT(_joy))
@@ -66,8 +69,13 @@ void readCommonInput() {
     } else {
       _buttonReleased = true;
     }
-
+    
     return;
+  } else {
+    if (!_joySameCount--) {
+      _joySameCount=5;
+      _lastJoy=99;
+    }
   }
 
   inputKey=0;
