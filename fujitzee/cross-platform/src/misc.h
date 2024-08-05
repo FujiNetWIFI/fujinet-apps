@@ -53,6 +53,8 @@ typedef struct {
 } ValidMove;
 
 typedef struct {
+
+  // State received from server
   char* prompt;
   uint8_t round;
   uint8_t rollsLeft;
@@ -60,11 +62,21 @@ typedef struct {
   uint8_t moveTime;
   uint8_t viewing;
   char* dice;
-  char* kept;
+  char* keepRoll;
   Player players[PLAYER_MAX];
   int16_t validScores[15];
 
   Table tables[10];
+
+  // Internal state
+
+  uint8_t prevRollsLeft;
+  int8_t prevActivePlayer;
+
+  uint8_t rollFrames;
+  uint8_t rollDiceCount;
+  uint8_t rollDiceIndex[5];
+  
 } GameState;
 
 

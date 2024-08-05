@@ -5,6 +5,8 @@
 
 void processStateChange();
 void processInput();
+void handleAnimation();
+
 
 void clearGameState();
 void forceRender();
@@ -18,19 +20,11 @@ bool inputFieldCycle(uint8_t x, uint8_t y, uint8_t max, uint8_t* buffer);
 
 
 void renderBoardNamesMessages();
-void progressAnim(unsigned char y);
-void drawPot();
-void resetStateIfNewGame();
-void drawNamePurse();
-void drawBets();
-void drawCards();
-void checkIfSpectatorStatusChanged();
-void checkIfPlayerCountChanged();
-void drawStatusTimeLeft();
-void highlightActivePlayer();
-void drawGameStatus();
-void requestPlayerMove();
 
+void waitOnPlayerMove();
+
+
+void progressAnim(unsigned char y);
 
 
 #endif /*GAMELOGIC_H*/

@@ -75,10 +75,7 @@ void main(void)
   while (true) {
     
     // Poll the server every so often.
-    if (skipApiCall--) {
-      // Not polling, so wait a frame.
-      waitvsync();  
-    } else {
+    if (!skipApiCall--) {
       // Poll the server
       switch (getStateFromServer()) {
         case STATE_UPDATE_ERROR:
@@ -112,7 +109,8 @@ void main(void)
       }
     }
 
-    // Handle any input
+    // Animation and input
+    handleAnimation();
     processInput();
   }
 

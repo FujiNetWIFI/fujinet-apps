@@ -12,8 +12,7 @@ static unsigned char delay;
 
 void initSound() {
   // Silence SIO noise
-  POKE(0x41, 0);
-
+  OS.soundr = 0;
 }
 
 
@@ -71,6 +70,12 @@ void soundCursorSelect() {
 
 void soundCursorDeselect() {
 
+}
+
+void soundTick() {
+  _sound(0, 200,8,3);
+  waitvsync();
+  _sound(0,0,0,0);
 }
 
 

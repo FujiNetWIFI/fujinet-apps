@@ -20,7 +20,7 @@ extern unsigned char charset[];
 #define CHARSET_LOC 0xA800
 #define DISPLAY_LIST 0xB000
 
-#define xypos(x,y) (SCREEN_LOC + x + y*WIDTH)
+#define xypos(x,y) (SCREEN_LOC + x + (y)*WIDTH)
 
 unsigned char colorMode=0;
 
@@ -43,8 +43,6 @@ const unsigned char colors[] = {
  0x00, 0xFA, 0x0E, 0xBC,  0x74 // PAL
 };
 
-
-
 unsigned char diceChars[] = {
   // Normal color
   0x41, 0x40, 0x42, 0x40, 0x45, 0x40, 0x43, 0x40, 0x44, // 1
@@ -60,10 +58,17 @@ unsigned char diceChars[] = {
   0xC1, 0xC0, 0xC7, 0xC0, 0xC5, 0xC0, 0xC8, 0xC0, 0xC4, // 3
   0xC6, 0xC0, 0xC7, 0xC0, 0xC0, 0xC0, 0xC8, 0xC0, 0xC9, // 4
   0xC6, 0xC0, 0xC7, 0xC0, 0xC5, 0xC0, 0xC8, 0xC0, 0xC9, // 5
-  0xC6, 0xC0, 0xC7, 0xCA, 0xC0, 0xCB, 0xC8, 0xC0, 0xC9  // 6
+  0xC6, 0xC0, 0xC7, 0xCA, 0xC0, 0xCB, 0xC8, 0xC0, 0xC9, // 6
+
+  // "Roll" button
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 13 - Empty space
+  0xC1, 0xC0, 0xC2, 0xAB, 0xAC, 0xAD, 0xC3, 0xAF, 0xC4, // 14 - 1 Roll left
+  0xC1, 0xC0, 0xC2, 0xAB, 0xAC, 0xAD, 0xC3, 0xAE, 0xC4  // 15 - 2 Rolls left
+  
+  //0x41, 0x40, 0x42, 0x2B, 0x2C, 0x2D, 0x43, 0x2F, 0x44, // 13 - 1 Roll left
+  //0x41, 0x40, 0x42, 0x2B, 0x2C, 0x2D, 0x43, 0x2E, 0x44  // 14 - 2 Rolls left
+  
 };
-
-
 
 unsigned char cycleNextColor() {
   return 0;
@@ -138,10 +143,10 @@ void resetScreen() {
   memset((void*)SCREEN_LOC,0,WIDTH*HEIGHT);
 }
 
-void drawDie(unsigned char x, unsigned char y, const char* s, bool isSelected) {
+void drawDie(unsigned char x, unsigned char y, unsigned char s, bool isSelected) {
   static unsigned char *source, *dest;
   
-  source=diceChars + (s[0]-49)*9 ; // Locate the diceChar index for this die number
+  source=diceChars + (s-1)*9 ; // Locate the diceChar index for this die number
   
   // Change the dice color
   if (isSelected)
@@ -156,7 +161,11 @@ void drawDie(unsigned char x, unsigned char y, const char* s, bool isSelected) {
 
 
 void drawChip(unsigned char x, unsigned char y) {
-  POKE(xypos(x,y),0x21);
+  POKE(xypos(x,y),0x1D); // 0x21
+}
+
+void drawClock(unsigned char x, unsigned char y) {
+  POKE(xypos(x,y),0x37);
 }
 
 void drawBlank(unsigned char x, unsigned char y) {
@@ -164,18 +173,17 @@ void drawBlank(unsigned char x, unsigned char y) {
 }
 
 void drawSpace(unsigned char x, unsigned char y, unsigned char w) {
-  static unsigned char* pos;
-  pos = xypos(x,y);
-  while(w--) {
-    *pos++ = 0;
-  }  
+  memset(xypos(x,y),0,w);
 }
 
 void drawTextCursor(unsigned char x, unsigned char y) {
   POKE(xypos(x,y),0xD9);
 }
 
-char scores[]="one,two,three,four,five,six,+,total,bonus,+,set 3,set 4,house,s run,l run,count,+,+,SCORE";
+/// @brief Returns true if the screen location is empty
+bool isEmpty(unsigned char x, unsigned char y) {
+  return PEEK(xypos(x,y))==0;
+}
 
 void drawBoard() {
   static uint8_t y,x,c;
@@ -221,10 +229,8 @@ void drawBoard() {
 
   // Score names
   value = strtok(scores, ",");
-  for(y = 1; y<20; y++) {
-    if (value[0]!='+')
-      drawTextAlt(11,y,value);
-    value = strtok(NULL, ",");
+  for(y = 0; y<16; y++) {
+      drawTextAlt(11,scoreY[y],scores[y]);
   }
   
   // Fujitzee score!
@@ -239,7 +245,7 @@ void drawLine(unsigned char x, unsigned char y, unsigned char w) {
 void hideLine(unsigned char x, unsigned char y, unsigned char w) {
  
 }
-// 12453
+
 void drawBox(unsigned char x, unsigned char y, unsigned char w, unsigned char h) {
   static unsigned char i;
   static unsigned char* pos;
@@ -261,6 +267,48 @@ void drawBox(unsigned char x, unsigned char y, unsigned char w, unsigned char h)
   *(pos+=40)=87;
   memset(pos+1,82,w);
   *(pos+w+1)=90;
+}
+
+void drawCursor(unsigned char x, unsigned char y) {
+  static unsigned char i;
+  static unsigned char* pos;
+
+  pos = xypos(x-1,y-1);
+
+  // Top row
+  *pos=177;
+  memset(pos+1,182,3);
+  *(pos+4)=178;
+
+  // Sides
+  for(i=0;i<3;i++) {
+    pos+=40;
+    *pos=*(pos+4)=181;
+  }
+  
+  // Bottom row
+  *(pos+=40)=179;
+  memset(pos+1,182,3);
+  *(pos+4)=180;
+}
+
+void hideCursor(unsigned char x, unsigned char y) {
+static unsigned char i;
+  static unsigned char* pos;
+
+  pos = xypos(x-1,y-1);
+
+  // Top row
+  memset(pos,0,5);
+
+  // Sides
+  for(i=0;i<3;i++) {
+    pos+=40;
+    *pos=*(pos+4)=0;
+  }
+  
+  // Bottom row
+  memset(pos+40,0,5);
 }
 
 void resetGraphics() {
