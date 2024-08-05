@@ -8,8 +8,12 @@
 #include "stateclient.h"
 #include "screens.h"
 #include <stdio.h>
+#include <peekpoke.h>
 
 uint8_t chat[20]="";
+uint8_t scoreY[] = {1,2,3,4,5,6,8,9,11,12,13,14,15,16,17,19};
+char* scores[]={"one","two","three","four","five","six","total","bonus","set 3","set 4","house","s run","l run","count","","SCORE"};
+uint8_t prevCursorX, cursorXMin;
 
 void progressAnim(unsigned char y) {
   for(i=0;i<3;++i) {
@@ -18,39 +22,24 @@ void progressAnim(unsigned char y) {
   }
 }
 
-
 void processStateChange() {
 
   renderBoardNamesMessages();
-  
-  // // Animate chips to pot before drawing the new state
-  // animateChipsToPotOnRoundEnd();
-  
+  handleAnimation();
 
-  // resetScreen();
-  // resetStateIfNewGame();
-
-  // drawPot();
-
-  // if (playerCount>1) {
-  //   drawNamePurse();
-  //   drawBets();
-  //   drawCards(false);
-  // }
-
-  // drawGameStatus();
-  // 
-  // highlightActivePlayer();
-
+  state.prevActivePlayer = state.activePlayer;
+  state.prevRollsLeft = state.rollsLeft;
   prevRound = state.round;
 }
 
 
 void renderBoardNamesMessages() {
-  static uint8_t i;
+  static bool redraw;
 
-  // Draw board if we haven't drawn it yet
-  if (prevRound == 99) {
+  redraw = state.round < prevRound;
+  
+  // Draw board if we haven't drawn it yet, or a new game
+  if (redraw) {
     drawBoard();
 
       // Player ready indicators if waiting to start
@@ -59,15 +48,8 @@ void renderBoardNamesMessages() {
     }
   }
 
-  // Display prompt if changed in ready mode
-  if (state.round == 0 && promptChanged) {
-     
-      centerTextWide(HEIGHT-3,state.prompt); // "waiting for everyone to ready up."
-      promptChanged = false;
-  }
-
   // Draw player names if the count changed
-  if (playerCount != prevPlayerCount) {
+  if (redraw || playerCount != prevPlayerCount) {
     for(i=0;i<6;i++) {
       if (i<playerCount) {
         // Player name list
@@ -84,63 +66,215 @@ void renderBoardNamesMessages() {
     prevPlayerCount=playerCount;
   }
 
-  // Show players that are ready to start
-  if (forceReadyUpdates && state.round == 0) {
-    for(i=0;i<6;i++) {
-      if (i<playerCount && state.players[i].scores[0]) {
-       drawTextVert(18+i*4,2,"ready");
-       drawChip(0,i+1);
-      } else {
-       drawTextVert(18+i*4,2,"     ");
-       drawBlank(0,i+1);
+  // Round 0 (waiting to start) checks, or going into round 1
+  if (state.round ==0 || (state.round == 1 && prevRound==0)) {
+    // Display "waiting for players" prompt if changed in ready mode
+    if (state.round==0 && promptChanged) {
+        centerTextWide(HEIGHT-3,state.prompt);
+        promptChanged = false;
+    }
+
+    // Show players that are ready to start
+    if (forceReadyUpdates) {
+      for(i=0;i<6;i++) {
+        if (i<playerCount && state.players[i].scores[0]==1) {
+          drawTextVert(18+i*4,2,"ready");
+          drawChip(0,i+1);
+        } else {
+          drawTextVert(18+i*4,2,"     ");
+          drawBlank(0,i+1);
+        }
+      }
+
+      forceReadyUpdates = 0;
+    }
+  }
+
+  // Exit early as below text is for rounds > 0 
+  if (state.round == 0)
+    return;
+    
+  // Indicate active player if changed
+  if (state.activePlayer != state.prevActivePlayer) {
+
+    // Clear old indicator
+    if (state.prevActivePlayer>-1)
+      drawBlank(0,state.prevActivePlayer+1);
+    
+    // New active player
+    if (state.activePlayer>-1)
+      drawChip(0,state.activePlayer+1);
+
+    // Update scores on-screen - two pass - first highlights in green the new one
+    h = 0;
+    for (k=0;k<2;k++) {
+      for (i=0;i<playerCount;i++) {
+        for (j=0;j<16;j++) {
+          if (state.players[i].scores[j]>-1) {
+            itoa(state.players[i].scores[j], tempBuffer, 10);
+            if (isEmpty(19+i*4, scoreY[j])) {
+              drawTextAlt(20-strlen(tempBuffer)+i*4,scoreY[j],tempBuffer);
+              h++;
+            } else {
+              drawText(20-strlen(tempBuffer)+i*4,scoreY[j],tempBuffer);
+            }
+          }
+        }
+      }
+
+      // Pause unless a ton of numbers changed
+      if (h>0 && h<5)
+        pause(40);
+    }
+    
+    pause(30);
+
+    // Clear bottom of screen and update prompt
+    drawSpace(0,HEIGHT-5,200);
+    drawText(0,HEIGHT-3-(state.activePlayer==0), state.prompt);
+    pause(30);
+  }
+
+}
+
+void handleAnimation() {
+  waitvsync();  
+
+  if (state.rollsLeft != state.prevRollsLeft || state.activePlayer != state.prevActivePlayer )  {
+    state.rollFrames=31;
+    prevCursorX=5;
+    cursorX=1;
+  }
+
+  if (state.activePlayer<0 || !state.rollFrames)
+    return;
+
+  state.rollFrames--;
+  k = state.activePlayer==0;
+
+  // Draw the dice, randomly displaying the ones that are currently being rolled
+  for(i=0;i<5;i++) {
+    if (state.rollFrames && state.keepRoll[i]=='1' ) {
+      drawDie(20+4*i,HEIGHT-4,rand()%6+1,0);
+    } else {
+      drawDie(20+4*i,HEIGHT-4,state.dice[i]-48,state.rollsLeft<2 && k);
+    }
+  }
+
+  // Draw "Rolls" die if needed
+  if (k && !state.rollFrames) {
+    drawDie(15,HEIGHT-4,state.rollsLeft+13,0);
+    cursorXMin = state.rollsLeft ? 0 : 1; 
+
+    drawClock(8,HEIGHT-2);
+  }
+}
+
+void processInput() {
+  readCommonInput();
+
+  //if (state.viewing || state.activePlayer != 0)
+    
+  if (!state.viewing) {
+    // Toggle readiness if waiting to start game
+    if (state.round == 0 && inputTrigger) {
+      state.players[0].scores[0] = !state.players[0].scores[0];
+      forceReadyUpdates=true;
+      renderBoardNamesMessages();
+      sendMove("ready");
+      return;
+    }
+
+    // Wait on this player to make roll decisions
+    if (!state.rollFrames && state.activePlayer == 0) {
+      waitOnPlayerMove();
+    }
+
+  }
+
+
+  switch(inputKey) {
+      case KEY_ESCAPE: // Esc
+      case KEY_ESCAPE_ALT: // Esc Alt
+        showInGameMenuScreen();  
+        break;
+    }    
+
+  // static bool chatInit=false;
+  // if (kbhit()) {
+  //   //if (!chatInit) {
+  //   //  drawText(20,23,">>");
+  //   //  inputFieldCycle(22,23,18, chat);
+  //     //chat[0]=0;
+  //     //chatInit=true;
+  //   //}
+
+    
+  // }
+  //readCommonInput();
+}
+
+void waitOnPlayerMove() {
+  static int jifsPerSecond, seconds;
+  
+  resetTimer();
+
+  // Determine max jiffies for PAL and NTS
+  jifsPerSecond=PEEK(0xD014)==1 ? 50 : 60;
+
+  maxJifs = jifsPerSecond*state.moveTime;
+  waitCount=0;
+  
+  // Move selection loop
+  while (state.moveTime>0) {
+
+    // Update cursor location
+    cursorX+=inputDirX;
+    if (cursorX<0 || cursorX>5)
+      cursorX = prevCursorX;
+
+    // TODO - handle
+    if (inputTrigger) {
+      if (cursorX>0) {
+        i = state.keepRoll[cursorX-1]= state.keepRoll[cursorX-1]=='1' ? '0' : '1';
+        drawDie(16+4*cursorX,HEIGHT-4,state.dice[cursorX-1]-48,i == '0');
+        // MAYBE DISPLAY "ROLL" instead of dice value
       }
     }
 
-    forceReadyUpdates = 0;
-  }
-
-}
-
-
-
-void drawPot() {
-  
-}
-
-void resetStateIfNewGame() {
-  if (state.round >= prevRound)
-    return;
-
-  // Reset status bar and vars for a new game
-  if (prevRound != 99) {
-   // @SetStatusBarHeight 1  
-   //clearStatusBar(); 
-  } else {
-
-    // Force empty screen if coming from another screen.
-    // This is mainly to avoid color glitches on c64
-    // when setting the color memory - which is not (YET?) double buffered -
-    // before the screen is drawn. There may be a better solution.
+    // Draw cursor in new location
+    waitvsync();
+    if (cursorX != prevCursorX) {
+      hideCursor(4*prevCursorX-(prevCursorX==0)+16, HEIGHT-4);
+      drawCursor(4*cursorX-(cursorX==0)+16, HEIGHT-4);
+      prevCursorX = cursorX;
+    }
     
+    // Tick counter once per second   
+    if (++waitCount>5) {
+      waitCount=0;
+      i = (maxJifs-getTime())/jifsPerSecond; //((maxJifs-getTime())/jifsPerSecond);
+      if (i != state.moveTime) {
+        state.moveTime = i;
+        itoa(i, tempBuffer, 10);
+        drawTextAlt(8-strlen(tempBuffer), HEIGHT-2, tempBuffer);
+        soundTick();
+      }
+    } 
+
+    // Pressed Esc
+    switch (inputKey) {
+      case KEY_ESCAPE:
+      case KEY_ESCAPE_ALT:
+        showInGameMenuScreen();
+        prevCursorX=(cursorX+1)%6;
+        return;
+    }
+
+    // Read input for next iteration
+    readCommonInput();
   }
-
-  cursorX=128;
-  
-  // If the round is already past 1, we are joining a game in progress. Skip animation this update
-  if (state.round>1)
-    noAnim=1;
 }
-
-
-void drawNamePurse() {
-  
-}
-
-
-void drawBets() {
-  
-}
-
 
 void checkIfSpectatorStatusChanged() {
   // if (state.viewing == wasViewing)
@@ -167,24 +301,6 @@ void checkIfSpectatorStatusChanged() {
   // }
 }
 
-void checkIfPlayerCountChanged() {
-  if (playerCount == prevPlayerCount)
-    return;
-
-}
-
-void drawStatusTimeLeft() {
-
-}
-
-void highlightActivePlayer() {
- 
-}
-
-
-void drawGameStatus() {
-  
-}
 
 void clearGameState() {
   // Reset some variables
@@ -197,9 +313,10 @@ void clearGameState() {
 
 // Invalidate state variables that will trigger re-rendering of screen items
 void forceRender() {
-  prevRound = 99;
+  prevRound = 100;
   prevPlayerCount = 0;
-  forceReadyUpdates = 1;
+  state.prevActivePlayer = -1;
+  forceReadyUpdates = true;
 }
 
 
@@ -285,40 +402,3 @@ bool inputFieldCycle(uint8_t x, uint8_t y, uint8_t max, uint8_t* buffer) {
   return false;
   
 }
-
-void processInput() {
-  readCommonInput();
-
-  //if (state.viewing || state.activePlayer != 0)
-    
-  if (!state.viewing) {
-    // Toggle readiness if waiting to start game
-    if (state.round == 0 && inputTrigger) {
-      state.players[0].scores[0] = !state.players[0].scores[0];
-      forceReadyUpdates=true;
-      renderBoardNamesMessages();
-      sendMove("ready");
-      return;
-    }
-  }
-  switch(inputKey) {
-      case KEY_ESCAPE: // Esc
-      case KEY_ESCAPE_ALT: // Esc Alt
-        showInGameMenuScreen();  
-        break;
-    }    
-
-  // static bool chatInit=false;
-  // if (kbhit()) {
-  //   //if (!chatInit) {
-  //   //  drawText(20,23,">>");
-  //   //  inputFieldCycle(22,23,18, chat);
-  //     //chat[0]=0;
-  //     //chatInit=true;
-  //   //}
-
-    
-  // }
-  //readCommonInput();
-}
-

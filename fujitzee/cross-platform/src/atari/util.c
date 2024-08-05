@@ -3,17 +3,20 @@
 #include<peekpoke.h>
 #include<stdlib.h>
 #include<stdint.h>
+#include<atari.h>
+#include<string.h>
 
 void resetGraphics();
-uint16_t jiffieTimer;
 
 void resetTimer() {
-  jiffieTimer=0;
+ //bzero(0x12,3);
+ POKEW(0x13,0);
 }
 
 int getTime() {
-  jiffieTimer+=3;
-  return jiffieTimer;
+  return (PEEK(0x13)*256)+PEEK(0x14);
+//  return OS.rtclok[1]*256+OS.rtclok[2];
+  //return 
 }
 
 void quit() {

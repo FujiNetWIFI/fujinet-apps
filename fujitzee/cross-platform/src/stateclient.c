@@ -104,14 +104,14 @@ void updateState(bool isTables) {
             break;
           case 's':
             arrayPart = strtok(value, ",");
-            for(i = 0; arrayPart != NULL && i<15; i++) {
+            for(i = 0; arrayPart != NULL && i<16; i++) {
                 state.players[playerCount].scores[i] = atoi(arrayPart);
-                arrayPart = strtok(NULL,  ",");
+                arrayPart = strtok(NULL, ",");
             }
 
             // Scores is the last property, so increase the player counter
             playerCount++;
-            forceReadyUpdates=1;
+            forceReadyUpdates=true;
             break;
           default:
             parent="";
@@ -145,7 +145,7 @@ void updateState(bool isTables) {
             state.dice = value;
             break;
           case 'k':
-            state.kept = value;
+            state.keepRoll = value;
             break;
           case 'c':
             arrayPart = strtok(value, ",");

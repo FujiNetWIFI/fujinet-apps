@@ -22,13 +22,13 @@ void resetScreenWithBorder() {
   resetScreen();
   
   // Draw dice corners
-  drawDie(0,0,"1", 0);
+  drawDie(0,0,1, 0);
   //drawDie(0,HEIGHT/2-2,"5", 0);
-  drawDie(0,HEIGHT-3,"3", 0);
+  drawDie(0,HEIGHT-3,3, 0);
 
-  drawDie(WIDTH-3,0,"2", 0);
+  drawDie(WIDTH-3,0,2, 0);
   //drawDie(WIDTH-3,HEIGHT/2-2,"6", 0);
-  drawDie(WIDTH-3,HEIGHT-3,"4", 0);
+  drawDie(WIDTH-3,HEIGHT-3,4, 0);
 }
 
 /// @brief Shows information about the game
@@ -52,7 +52,7 @@ void showHelpScreen() {
   centerTextAlt(y, "turn details");
 
   y+=2;drawText(5,y, "1. re-roll dice up to 2 times");
-  y++;drawText(5,y, "2. choose an entry to score");
+  y++;drawText(5,y, "2. choose a row to score");
 
   y+=3;
   centerTextAlt(y, "upper bonus");
@@ -97,9 +97,6 @@ void showPlayerNameScreen() {
   
   resetScreenWithBorder();
   drawLogo();
-
-  
-  
 
   drawText(13,13, "enter your name:");
   drawBox(15,16,PLAYER_NAME_MAX+1,1);
@@ -239,7 +236,7 @@ void showTableSelectionScreen() {
         
         if (!shownChip || (tableCount>0 && inputDirY)) {
 
-          drawText(4,8+tableIndex*2," ");
+          drawBlank(4,8+tableIndex*2);
           tableIndex+=inputDirY;
           if (tableIndex==255) 
             tableIndex=tableCount-1;
