@@ -7,6 +7,7 @@
 
 #ifdef _CMOC_VERSION_
 #include "coco/coco_bool.h"
+#include "cardgame.h"
 #else
 #include <stdlib.h>
 #include <stdint.h>
@@ -61,7 +62,11 @@ void main(void)
 { 
   initGraphics(); 
   initSound();
-  
+
+#ifdef _CMOC_VERSION_
+  network_init();
+#endif
+
   loadPrefs();
 
   showWelcomScreen();
@@ -93,6 +98,7 @@ void main(void)
   }
 
 #ifdef _CMOC_VERSION_
+    closeCardGame();
   return 0;
 #endif /* CMOC_VERSION_  */
 }

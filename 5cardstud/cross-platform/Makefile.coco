@@ -6,21 +6,80 @@ SRC_DIRS ?= ./src
 CC=cmoc
 ASM=lwasm
 
-SRCS := $(shell find $(SRC_DIRS) -name *.c) $(shell find $(SRC_DIRS)/coco -name *.s)
+#SRCS := $(shell find $(SRC_DIRS) -name *.c) $(shell find $(SRC_DIRS)/coco -name *.s) 
+SRCS := $(shell ls $(SRC_DIRS)/*.c) $(shell find $(SRC_DIRS)/coco -name *.c)
 OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
 DEPS := $(OBJS:.o=.d)
 
-CFLAGS=
-LDFLAGS=-o$(TARGET_EXEC).bin
+# Required libraries.
+CARDGAME_LIB = cardgame
+CARDGAME_LIB_DIR = src/coco/lib/cardgame
+# BControl is only used by the OS-9 version.
+BCONTROL_LIB = bcontrol
+BCONTROL_LIB_DIR = ../../../bcontrol
+FUJINET_LIB_DIR = ../../../fujinet-lib
+FUJINET_LIB = fujinet
+
+LIBS = \
+	-L src/coco/lib/cardgame -l$(CARDGAME_LIB) \
+	-L ../../../fujinet-lib -l$(FUJINET_LIB) 
+
+#	-L $(BCONTROL_LIB_DIR) -l$(BCONTROL_LIB) \
+
+#	-L ./src/coco -lfujinet \
+
+
+PACKAGE = 5CARD
+VERSION = 0.1.00
+TARGET = coco
+
+
+CFLAGS= \
+			--$(TARGET) \
+			--intdir ./intermediates \
+			--stack-space=512 \
+			-fomit-frame-pointer \
+			-DNDEBUG \
+			-I $(CARDGAME_LIB_DIR) \
+			-I $(FUJINET_LIB_DIR) \
+			-DVERSION=\"$(VERSION)\" \
+			-O2 -DDISABLE_SOUND
+# -DDISABLE_GRAPHICS
+#			-I $(BCONTROL_LIB_DIR) \
+
+#			--check-null \
+#			-D_CMOC_CHECK_STACK_OVERFLOW_ --check-stack\
+
+
+LDFLAGS= 			--$(TARGET) \
+	-o$(TARGET_EXEC).bin
+
+
+LDFLAGS_TEST= 			--$(TARGET) \
+	-otestgame.bin
 
 INC_DIRS := $(shell find $(SRC_DIRS) -type d)
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 
-$(BUILD_DIR)/$(TARGET_EXEC): $(OBJS)
-	$(CC) $(LDFLAGS) $(OBJS)
-	$(RM) $(TARGET_EXEC)
+OTHER_APPS := \
+~/Workspace/bgraph-0.1.8/bgraph.bin \
+~/Workspace/bgraph-0.1.8/cmdemo.bin \
+~/Workspace/bgraph-0.1.8/cc3demo.bin \
+~/Workspace/bgraph-0.1.8/shapes.bin \
+~/Workspace/bgraph-0.1.8/testclip.bin \
+~/Workspace/cardgame/cardgame.bin \
+~/Workspace/color8-0.1.14/color8.bin
+
+
+
+
+
+$(BUILD_DIR)/$(TARGET_EXEC): $(OBJS) $(CARDGAME_LIB_DIR)/lib$(CARDGAME_LIB).a
+	$(CC) $(LDFLAGS) $(OBJS) $(LIBS)
+	$(RM) $(TARGET_EXEC) $(TARGET_EXEC).dsk
 	decb dskini $(TARGET_EXEC).dsk
-	writecocofile $(TARGET_EXEC).dsk $(TARGET_EXEC).bin
+	writecocofile $(TARGET_EXEC).dsk $(TARGET_EXEC).bin 
+#	$(foreach path,$(OTHER_APPS),writecocofile $(TARGET_EXEC).dsk $(path) ;) 
 	cp $(TARGET_EXEC).dsk ~/tnfs/
 
 # c source
@@ -38,6 +97,7 @@ $(BUILD_DIR)/%.s.o: %.s
 
 clean:
 	$(RM) -r $(TARGET_EXEC)*
+	$(RM) -r $(BUILD_DIR)*
 
 -include $(DEPS)
 

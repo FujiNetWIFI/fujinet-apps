@@ -7,7 +7,12 @@
 #include <coco.h>
 #define false 0
 #define true 1
-typedef BOOL bool;
+#ifndef BOOL_DEF
+#ifndef FN_FUJI_H
+#define BOOL_DEF 1
+typedef uint8_t  bool;
+#endif
+#endif
 
 #endif
 

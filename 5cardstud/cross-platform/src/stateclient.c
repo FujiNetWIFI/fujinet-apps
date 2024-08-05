@@ -178,15 +178,15 @@ void updateState(unsigned char isTables) {
 }
 
 unsigned char apiCall(const char *path) {
-  //cprintf("apicall: ");
- // cprintf("%s:%s:%s\n", serverEndpoint, path, query);
+  printf("apicall: ");
+  printf("%s:%s:%s\n", serverEndpoint, path, query);
   
   strcpy(urlBuffer, serverEndpoint);
   strcat(urlBuffer, path);
   strcat(urlBuffer, query);
   
   rx_len = getJsonResponse(urlBuffer, rx_buf, sizeof(rx_buf));
-  //cprintf("rx_len= %i\n", rx_len);
+  printf("rx_len= %i\n", rx_len);
   return rx_len>=0;
 }
 
