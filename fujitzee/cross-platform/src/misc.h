@@ -73,6 +73,8 @@ typedef struct {
   uint8_t prevRollsLeft;
   int8_t prevActivePlayer;
 
+  bool playerMadeMove;
+
   uint8_t rollFrames;
   uint8_t rollDiceCount;
   uint8_t rollDiceIndex[5];
