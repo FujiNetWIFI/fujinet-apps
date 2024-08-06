@@ -149,7 +149,7 @@ void updateState(bool isTables) {
             break;
           case 'c':
             arrayPart = strtok(value, ",");
-            for(i = 0; arrayPart != NULL && i<14; i++) {
+            for(i = 0; arrayPart != NULL && i<15; i++) {
                 state.validScores[i] = atoi(arrayPart);
                 arrayPart = strtok(NULL,  ",");
             }
@@ -245,8 +245,11 @@ uint8_t getStateFromServer()
   // Since we are making an asynchronous call, only update the path if there
   // isn't already a request in progress
   if (rx_pos == 0) {
-    if (requestedMove) {    
-      strcpy(tempBuffer, requestedMove);
+    if (requestedMove) {  
+
+      // Copy requested move to the temp buffer it is not already one and the same
+      if (requestedMove != tempBuffer)  
+        strcpy(tempBuffer, requestedMove);
 
       // Clear hash when sending a move
       strcpy(hash, "");

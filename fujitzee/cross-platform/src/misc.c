@@ -34,7 +34,7 @@ void pause(unsigned char frames) {
 }
 
 void clearCommonInput() {
-  inputTrigger=inputKey=inputDirY=inputDirX=_lastJoy=_joy=0;
+  inputTrigger=inputKey=inputDirY=inputDirX=_lastJoy=_joy=_buttonReleased=0;
   while (kbhit()) 
     cgetc();
 }
@@ -71,9 +71,9 @@ void readCommonInput() {
     }
     
     return;
-  } else {
+  } else if (_joy!=0) {
     if (!_joySameCount--) {
-      _joySameCount=5;
+      _joySameCount=0;
       _lastJoy=99;
     }
   }

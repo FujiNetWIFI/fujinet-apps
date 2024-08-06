@@ -29,6 +29,7 @@ bool isEmpty(unsigned char x, unsigned char y);
 void drawDie(unsigned char x, unsigned char y, unsigned char s, bool isSelected);
 void drawChip(unsigned char x, unsigned char y);
 void drawClock(unsigned char x, unsigned char y);
+void drawScoreCursor(unsigned char x, unsigned char y);
 void drawBlank(unsigned char x, unsigned char y);
 void drawSpace(unsigned char x, unsigned char y, unsigned char w);
 void drawLine(unsigned char x, unsigned char y, unsigned char w);
