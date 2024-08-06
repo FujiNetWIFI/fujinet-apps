@@ -253,7 +253,7 @@ void showTableSelectionScreen() {
       
       
       if (inputTrigger) {
-        soundSelectMove();
+        soundCursor();
 
         // Clear screen and write server name
         resetScreenWithBorder();
