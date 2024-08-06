@@ -6,4 +6,5 @@ fujitzee.prg
 gen/gencharset
 gen/charset
 
-!fujinet-lib
+fujinet-lib
+_libs

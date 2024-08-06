@@ -36,8 +36,7 @@ endif
 # Use only if you don't want to place copies of the libraries in SRCDIR
 # Default: none
 
-# When FujiNet library
-LIBS    := fujinet-lib/fujinet-$(TARGETS)-4.3.1.lib
+LIBS    :=
  
 # Custom linker configuration file
 # Use only if you don't want to place it in SRCDIR
@@ -234,7 +233,11 @@ endef
 TARGETLIST := $(subst $(COMMA),$(SPACE),$(TARGETS))
  
 ifeq ($(words $(TARGETLIST)),1)
- 
+
+# this downloads and adds fujinet-lib to the path in _libs ignored dir, and adds a dependency to "ALL_TASKS" value to kick it off
+CURRENT_TARGET=$(TARGETLIST)
+-include "fujinet-lib.mk"
+
  
 # Set SOURCES to something like 'src/foo.c src/bar.s'.
 # Use of assembler files with names ending differently than .s is deprecated!
@@ -271,9 +274,9 @@ ifneq ($(word 2,$(CONFIG)),)
 endif
  
 .SUFFIXES:
-.PHONY: all test clean zap love
+.PHONY: all test clean zap love .get_fujinet_lib
  
-all: $(PROGRAM)
+all: .get_fujinet_lib $(PROGRAM)
  
 -include $(DEPENDS)
 -include $(STATEFILE)
@@ -308,7 +311,6 @@ $(foreach o,$(subst $(COMMA),$(SPACE),$(OPTIONS)),$(eval $(_$o_)))
 # Strip potential variant suffix from the actual cc65 target.
 CC65TARGET := $(firstword $(subst .,$(SPACE),$(TARGETLIST)))
  
- 
 #ifneq ($($(CC65TARGET)_PROGRAM),)
 #override PROGRAM := $($(CC65TARGET)_PROGRAM)
 #override PROGRAM := $(PROGRAM)_$(CC65TARGET)
@@ -337,9 +339,9 @@ vpath %.a65 $(SRCDIR)/$(TARGETLIST) $(SRCDIR)
  
 $(TARGETOBJDIR)/%.o: %.a65 | $(TARGETOBJDIR)
 	$(CC) -t $(CC65TARGET) -c --create-dep $(@:.o=.d) $(ASFLAGS) -o $@ $<
- 
+
 $(PROGRAM): $(CONFIG) $(OBJECTS) $(LIBS)
-	$(CC) -t $(CC65TARGET) $(LDFLAGS) -o $@ $(patsubst %.cfg,-C %.cfg,$^)
+	$(CC) -t $(CC65TARGET) $(LDFLAGS) -o $@ $(patsubst %.cfg,-C %.cfg,$^) $(LIBS)
 
 # Package target if needed
 ifeq ($(CC65TARGET),apple2) 
