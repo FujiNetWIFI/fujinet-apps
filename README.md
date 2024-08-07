@@ -17,7 +17,7 @@ Various applications have been moved out into their own repositories including:
 ## Creating new applications
 
 If you want to create a new fujinet application, your best bet is using cc65 and fujinet-lib, as it contains the common code
-allowing you to easily write Network or FujiNet device applications for many platforms (as of writing this: atari, apple, c64, and coco).
+allowing you to easily write Network or FujiNet device applications for many platforms (as of writing this: atari, apple2, c64, and coco).
 
 Use the [fujinet-build-tools](https://github.com/FujiNetWIFI/fujinet-build-tools) repository as a basis for your new project,
 it has documentation on how to use it (which is basically to copy the files, and copy the Makefile sample to the root of your folder).
