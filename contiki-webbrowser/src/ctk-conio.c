@@ -184,13 +184,21 @@ draw_widget(struct ctk_widget *w,
 	  cputc('<');
 	} else {
 	  revers(wfocus != 0 && j == w->widget.textentry.ypos);
+#ifdef __CBM__
 	  cvlinexy(xpos, ypos, 1);
 	  gotoxy(xpos + 1, ypos);          
+#else
+    cputcxy(xpos, ypos, '|');
+#endif
 	  i = cputsn(text, w->w);
 	  if(w->w - i > 0) {
 	    cclear(w->w - i);
 	  }
+#ifdef __CBM__
 	  cvline(1);
+#else
+    cputc('|');
+#endif
 	}
       }
       ++ypos;
