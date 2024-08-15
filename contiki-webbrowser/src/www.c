@@ -331,6 +331,15 @@ open_url(void)
     strncpy(url, http_http, 7);
   }
 
+  /* Append slash if not present. */
+  for(urlptr = &url[8];
+      *urlptr != 0 && *urlptr != ISO_slash;
+      ++urlptr);
+  if(*urlptr == 0) {
+    *urlptr = ISO_slash;
+    *++urlptr = 0;
+  }
+
   /* We send out the initial GET request. */
   if(webclient_open(url) == 0) {
     show_statustext("URL error");
@@ -463,6 +472,7 @@ PROCESS_THREAD(www_process, ev, data)
         memcpy(url, editurl, WWW_CONF_MAX_URLLEN);
         petsciiconv_toascii(url, WWW_CONF_MAX_URLLEN);
         open_url();
+        show_url();
         CTK_WIDGET_FOCUS(&mainwindow, &gobutton);
 #if WWW_CONF_HISTORY_SIZE > 0
       } else if(w == (struct ctk_widget *)&backbutton) {
