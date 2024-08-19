@@ -84,6 +84,7 @@ $(BUILD_DIR)/$(TARGET_EXEC): $(OBJS) $(CARDGAME_LIB_DIR)/lib$(CARDGAME_LIB).a
 
 # c source
 $(BUILD_DIR)/%.c.o: %.c
+	$(MKDIR_P) intermediates
 	$(MKDIR_P) $(dir $@)
 	$(CC) $(CFLAGS) -o $@ -c $<
 
@@ -91,7 +92,6 @@ $(BUILD_DIR)/%.c.o: %.c
 $(BUILD_DIR)/%.s.o: %.s
 	$(MKDIR_P) $(dir $@)
 	$(ASM) $(ASFLAGS) -fobj --output=$@ $<
-	
 
 .PHONY: clean
 

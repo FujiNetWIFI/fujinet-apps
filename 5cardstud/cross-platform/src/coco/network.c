@@ -7,7 +7,7 @@
 //#include <string.h>
 //#include <conio.h>
 //#include <stdbool.h>
-#include <cmoc.h>
+#include <coco.h>
 
 #include "../platform-specific/appkey.h"
 #include <fujinet-fuji.h>
