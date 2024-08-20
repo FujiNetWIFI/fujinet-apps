@@ -1,5 +1,18 @@
+#ifdef _CMOC_VERSION_
+#include <cmoc.h>
+#include <coco.h>
+#include "fujinet-fuji.h"
+// Fill in for peekpoke.h (comes from cc65 on other platforms)
+#define POKE(addr,val)     (*(unsigned char*) (addr) = ((unsigned char)(val)))
+#define POKEW(addr,val)    (*(unsigned*) (addr) = ((unsigned)(val)))
+#define PEEK(addr)         (*(unsigned char*) (addr))
+#define PEEKW(addr)        (*(unsigned*) (addr))
+#else
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
+#include <peekpoke.h>
+#endif
 #include "platform-specific/graphics.h"
 #include "platform-specific/sound.h"
 #include "platform-specific/util.h"
@@ -7,8 +20,6 @@
 #include "misc.h"
 #include "stateclient.h"
 #include "screens.h"
-#include <stdio.h>
-#include <peekpoke.h>
 
 uint8_t chat[20]="";
 uint8_t scoreY[] = {1,2,3,4,5,6,8,9,11,12,13,14,15,16,17,19};
@@ -535,7 +546,7 @@ bool inputFieldCycle(uint8_t x, uint8_t y, uint8_t max, uint8_t* buffer) {
   if (done == 1 || lastY != y) {
     done=0;
     lastY=y;
-    curx = strlen(buffer);
+    curx = strlen((const char *)buffer);
     drawTextAlt(x,y, buffer);
     drawTextCursor(x+curx,y);
     enableKeySounds();

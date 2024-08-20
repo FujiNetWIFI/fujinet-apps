@@ -4,8 +4,13 @@
 #ifndef SOUND_H
 #define SOUND_H
 
+#ifdef _CMOC_VERSION_
+#include <cmoc.h>
+#include <coco.h>
+#else
 #include <stdbool.h>
 #include <stdint.h>
+#endif
 
 void initSound();
 

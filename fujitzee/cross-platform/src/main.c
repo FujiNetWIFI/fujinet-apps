@@ -7,9 +7,8 @@
 
 #ifdef _CMOC_VERSION_
 #include <cmoc.h>
-typedef unsigned char bool;
-#define false 0
-#define true 1
+#include <coco.h>
+#include "fujinet-fuji.h"
 #else
 #include <stdlib.h>
 #include <stdint.h>
@@ -27,7 +26,10 @@ typedef unsigned char bool;
 #include "gamelogic.h"
 #include "screens.h"
 
+#ifdef _CMOC_VERSION
+#else
 #include "fujinet-fuji.h"
+#endif
 
 // Store default server endpoint in case lobby did not set app key
 //char serverEndpoint[50] = "N:https://5card.carr-designs.com/";
