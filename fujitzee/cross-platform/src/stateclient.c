@@ -1,14 +1,16 @@
 #ifdef _CMOC_VERSION_
 #include <cmoc.h>
+#include <coco.h>
+#include "fujinet-fuji.h"
 #else
 #include <string.h>
-#endif /* CMOC_VERSION */
 #include <stdlib.h>
+#include <stdio.h>
+#endif /* CMOC_VERSION */
 #define POKE(addr,val)     (*(unsigned char*) (addr) = (val))
 #define POKEW(addr,val)    (*(unsigned*) (addr) = (val))
 #define PEEK(addr)         (*(unsigned char*) (addr))
 #define PEEKW(addr)        (*(unsigned*) (addr))
-#include<stdio.h>
 #include "stateclient.h"
 #include "misc.h"
 #include "fujinet-network.h"

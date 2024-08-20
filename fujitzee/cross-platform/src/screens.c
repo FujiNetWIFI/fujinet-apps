@@ -1,5 +1,7 @@
 #ifdef _CMOC_VERSION_
 #include <cmoc.h>
+#include <coco.h>
+#include "fujinet-fuji.h"
 #else
 #include <stdlib.h>
 #include <conio.h>
@@ -13,7 +15,11 @@
 #include "platform-specific/input.h"
 #include "platform-specific/util.h"
 #include "platform-specific/sound.h"
+
+#ifdef _CMOC_VERSION_
+#else
 #include <string.h>
+#endif
 
 #define PLAYER_NAME_MAX 8
 
@@ -326,7 +332,7 @@ void showInGameMenuScreen() {
           progressAnim(12);
           
           //  Clear server app key in case of reboot 
-          write_appkey(AK_LOBBY_CREATOR_ID,  AK_LOBBY_APP_ID, AK_LOBBY_KEY_SERVER, "");
+          write_appkey(AK_LOBBY_CREATOR_ID,  AK_LOBBY_APP_ID, AK_LOBBY_KEY_SERVER, (unsigned char *)"");
 
           // Clear query so a new table will be selected
           strcpy(query,"");

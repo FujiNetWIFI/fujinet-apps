@@ -5,6 +5,8 @@
  */
 
 #ifdef _CMOC_VERSION_
+#include <cmoc.h>
+#include <coco.h>
 #include "coco/joystick.h"
 #else
 #ifdef __ADAM__
@@ -13,11 +15,11 @@
 #include <joystick.h>
 #include <conio.h>
 #endif /* __ADAM__ */
+#include <stdbool.h>
+#include <stdint.h>
 #endif /* _CMOC_VERSION_ */
 #include "platform-specific/graphics.h"
 #include "platform-specific/input.h"
-#include <stdbool.h>
-#include <stdint.h>
 
 // FujiNet AppKey settings. These should not be changed
 #define AK_LOBBY_CREATOR_ID 1     // FUJINET Lobby
