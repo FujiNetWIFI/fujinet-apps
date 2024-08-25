@@ -13,6 +13,8 @@ Various applications have been moved out into their own repositories including:
 - [weather](https://github.com/FujiNetWIFI/fujinet-weather)
 - [cater](https://github.com/FujiNetWIFI/fujinet-cater)
 - [iss-tracker](https://github.com/FujiNetWIFI/fujinet-iss-tracker)
+- [contiki-webbrowser](https://github.com/FujiNetWIFI/fujinet-contiki-webbrowser)
+
 
 ## Creating new applications
 
