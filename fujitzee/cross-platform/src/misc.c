@@ -4,6 +4,8 @@
 
 #ifdef _CMOC_VERSION_
 #include "coco/joystick.h"
+#include "coco.h"
+#include "fujinet-fuji.h"
 #else
 #ifdef __ADAM__
 #include "adam/joystick.h"
@@ -18,10 +20,16 @@
 #include "platform-specific/input.h"
 #include "platform-specific/sound.h"
 #include "misc.h"
+#ifdef _CMOC_VERSION_
+#else
 #include "fujinet-fuji.h"
+#endif
 
+#ifdef _CMOC_VERSION_
+#else
 #include <stdbool.h>
 #include <stdint.h>
+#endif
 
 unsigned char _lastJoy, _joy, _joySameCount=10;
 bool _buttonReleased=true;
@@ -149,5 +157,5 @@ void read_appkey(uint16_t creator_id, uint8_t app_id, uint8_t key_id, uint8_t* d
 void write_appkey(uint16_t creator_id, uint8_t app_id, uint8_t key_id, uint8_t *inputString)
 {
   fuji_set_appkey_details(creator_id, app_id, DEFAULT);
-  fuji_write_appkey(key_id, strlen(inputString), inputString);
+  fuji_write_appkey(key_id, strlen((const char *)inputString), inputString);
 }

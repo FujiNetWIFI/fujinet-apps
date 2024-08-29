@@ -205,7 +205,7 @@ byte net_status(byte devid, NetworkStatus *ns)
 
     net_ready(devid);
     dwwrite((byte *)&sc, sizeof(sc));
-    net_get_response(devid,(byte *)ns, sizeof(ns));
+    net_get_response(devid,(byte *)ns, sizeof(NetworkStatus));
     
     return net_error(devid);
 }

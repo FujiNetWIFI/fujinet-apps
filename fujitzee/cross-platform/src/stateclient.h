@@ -1,7 +1,13 @@
 #ifndef STAECLIENT_H
 #define STAECLIENT_H
+
+#ifdef _CMOC_VERSION_
+#include <cmoc.h>
+#include <coco.h>
+#else
 #include <stdbool.h>
 #include <stdint.h>
+#endif
 
 #define API_CALL_ERROR (0)
 #define API_CALL_SUCCESS (1)

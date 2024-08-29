@@ -9,8 +9,13 @@
 #define PARTIAL_RIGHT 2
 #define FULL_CARD 3
 
+#ifdef _CMOC_VERSION_
+#include <cmoc.h>
+#include <coco.h>
+#else
 #include <stdint.h>
 #include <stdbool.h>
+#endif
 #include "../misc.h"
 
 
