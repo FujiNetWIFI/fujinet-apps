@@ -8,7 +8,7 @@
 
 #include <cmoc.h>
 #include <coco.h>
-#include "net.h"
+#include <fujinet-network.h>
 #include "util.h"
 
 extern uint8_t default_device;
@@ -22,5 +22,5 @@ void cd(char *t)
     else
         strcpy(cd_buf,t);
     
-    net_cd(cd_buf);
+    network_fs_cd(cd_buf);
 }

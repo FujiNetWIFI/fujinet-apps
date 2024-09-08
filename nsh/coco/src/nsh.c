@@ -9,7 +9,7 @@
 #include <cmoc.h>
 #include <coco.h>
 #include "stdbool.h"
-#include "net.h"
+#include <fujinet-network.h>
 
 #define PROMPT_FORMAT "N%u:%s>"
 
@@ -21,7 +21,7 @@ char default_prefix[256];
 void nsh_prompt(void)
 {
     sprintf(default_devicespec,"N%u:",default_device);
-    net_pwd(default_devicespec,&default_prefix);
+    // net_pwd(default_devicespec,&default_prefix);
     printf("N%u:%s>",default_device,default_prefix);
 }
 
