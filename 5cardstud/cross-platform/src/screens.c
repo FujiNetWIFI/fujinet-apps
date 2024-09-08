@@ -19,7 +19,7 @@
 
 #define PLAYER_NAME_MAX 8
 
-#ifndef _CMOC_VERSION_
+#ifdef _CMOC_VERSION_
 // lastchar is only set by kbhit, we're basically handling the case
 // where that key picked up by kbhit doesn't get lost.
 char cgetc() {
@@ -136,7 +136,6 @@ bool inputFieldCycle(uint8_t x, uint8_t y, uint8_t max, uint8_t* buffer) {
       done=1;
       // remove cursor
       drawText(x+1+i,y," ");
-      printf("return");
     } else if (inputKey == KEY_BACKSPACE && curx>0) {
       buffer[--curx]=0;
       drawText(x+1+curx,y," ");
