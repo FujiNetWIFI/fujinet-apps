@@ -234,8 +234,11 @@ endef
 TARGETLIST := $(subst $(COMMA),$(SPACE),$(TARGETS))
  
 ifeq ($(words $(TARGETLIST)),1)
- 
- 
+
+# this downloads and adds fujinet-lib to the path in _libs ignored dir, and adds a dependency to "ALL_TASKS" value to kick it off
+CURRENT_TARGET=$(TARGETLIST)
+-include "fujinet-lib.mk"
+
 # Set SOURCES to something like 'src/foo.c src/bar.s'.
 # Use of assembler files with names ending differently than .s is deprecated!
 SOURCES := $(wildcard $(SRCDIR)/*.c)
@@ -271,9 +274,9 @@ ifneq ($(word 2,$(CONFIG)),)
 endif
  
 .SUFFIXES:
-.PHONY: all test clean zap love
+.PHONY: all test clean zap love .get_fujinet_lib
  
-all: $(PROGRAM)
+all: .get_fujinet_lib $(PROGRAM)
  
 -include $(DEPENDS)
 -include $(STATEFILE)
@@ -339,7 +342,7 @@ $(TARGETOBJDIR)/%.o: %.a65 | $(TARGETOBJDIR)
 	$(CC) -t $(CC65TARGET) -c --create-dep $(@:.o=.d) $(ASFLAGS) -o $@ $<
  
 $(PROGRAM): $(CONFIG) $(OBJECTS) $(LIBS)
-	$(CC) -t $(CC65TARGET) $(LDFLAGS) -o $@ $(patsubst %.cfg,-C %.cfg,$^)
+	$(CC) -t $(CC65TARGET) $(LDFLAGS) -o $@ $(patsubst %.cfg,-C %.cfg,$^) $(LIBS)
 
 # Package target if needed
 ifeq ($(CC65TARGET),apple2) 
@@ -357,7 +360,7 @@ endif
 	java -jar "support/apple2/dist/ac.jar" -as "support/apple2/dist/$(PROGRAM_STUB).po" $(PROGRAM_STUB) bin <$(PROGRAM)
 ifneq ($(OS),Windows_NT)
 	# Start the Apple Fujinet, as it needs to be restarted before each Apple2 boot
-	cd ~/Documents/projects/fujinet-firmware/build_apple/dist;./run-fujinet&
+	cd ~/Documents/fujinetpc-apple;./run-fujinet&
 endif
 endif
 ifeq ($(OS),Windows_NT) 
