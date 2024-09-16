@@ -404,12 +404,14 @@ StatParam:  .byte   $03               ; #params
             .byte   $00               ; Unit
             .word   Buffer            ; Status list pointer for Result
 StatCode:   .byte   $00               ; Status Code
+StatNetSub: .byte   $00               ; Network device Sub Unit
 
 ; Smartport Control Call Parameter List
 CtrlParam:  .byte   $03               ; #params
             .byte   $00               ; Unit
             .word   Buffer            ; Ctrl list pointer
 CtrlCode:   .byte   $00               ; Control Code
+CtrlNetSub: .byte   $00               ; Network device Sub Unit
 
 ; Smartport ReadBlock/WriteBlock Call Parameter List
 RWParam:    .byte   $03               ; #params
@@ -420,14 +422,17 @@ SPBlk:      .byte   $00,$00,$00       ; Block Number (low byte,mid byte,high byt
 ; Smartport Open/Close Call Parameter List
 OpClParam:  .byte   $01               ; #params
             .byte   $00               ; Unit
-            .byte 0
+OpClNetSub: .byte   $00               ; Network device Sub Unit
+
 
 ; Smartport Read/Write Call Parameter List
 CRWParam:   .byte   $04               ; #params
             .byte   $00               ; Unit
             .word   Buffer            ; Data buffer pointer
 SPReqCnt:   .word   $0000             ; Request count
-            .byte   $00,$00,$00       ; Address pointer (low byte,mid byte,high byte)
+CRWNetSub:  .byte   $00,$00,$00       ; Address pointer (low byte,mid byte,high byte)
+                                      ; used as Network device Sub Unit
+            
 
 StatLen:    .byte   0                 ; Length for status call data
 
