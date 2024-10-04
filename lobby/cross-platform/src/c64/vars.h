@@ -1,9 +1,11 @@
-#ifdef __APPLE2__
+#ifdef __C64__
 
-#ifndef KEYMAP_H
-#define KEYMAP_H
+#ifndef VARS_H
+#define VARS_H
+
+
 /**
- * Cross platform key map for common input
+ * Platform specific key map for common input
  */
 
 #define KEY_LEFT_ARROW      0x08
@@ -22,10 +24,17 @@
 #define KEY_DOWN_ARROW_2    0x11
 #define KEY_DOWN_ARROW_3    0x3D // =
 
-#define KEY_FIRE_RETURN     0x0D
-#define KEY_FIRE_SPACE      0x20
-#define KEY_FIRE_ESCAPE     0x1B
+#define KEY_ESCAPE       CH_ESC // 0x1B
+#define KEY_ESCAPE_ALT   1
 
-#endif /* KEYMAP_H */
+#define KEY_SPACEBAR     0x20 
+#define KEY_BACKSPACE    CH_DEL
 
-#endif /* __APPLE2__ */
+#undef KEY_RETURN
+#define KEY_RETURN       CH_ENTER // 0x0D
+
+#define CHAR_CURSOR      0xA0
+
+#endif /* VARS_H */
+
+#endif /* __C64__ */

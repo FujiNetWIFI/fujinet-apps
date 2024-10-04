@@ -1,63 +1,29 @@
 /**
- * @brief   Defines low level FujiNet IO function that must be implemented by each platform
+ * @brief   High Level IO functions
  * @author  Eric Carr
  * @license gpl v. 3
  */
-
-/* ******************************************************************** 
- * Common defs and vars to be used by each implementation.
- * ********************************************************************/
 
 #ifndef IO_H
 #define IO_H
 
 #include <stdbool.h>
-
-#define FILE_MAXLEN 36
-#define SSID_MAXLEN 33 /* 32 + NULL */
-
-#define FUJI_DEVICE_MODE_READ 1
-#define FUJI_DEVICE_MODE_WRITE 2
-
-#define MAX_HOST_LEN 32
-#define NUM_HOST_SLOTS 8
-
-typedef unsigned char HostSlot[32];
+#include <stdint.h>
 
 typedef struct {
-  unsigned char hostSlot;
-  unsigned char mode;
-  unsigned char file[FILE_MAXLEN];
-} DeviceSlot;
+  unsigned char key;
+  bool trigger;
+  int8_t dirX;
+  int8_t dirY;
+} InputStruct;
 
-static HostSlot hostSlots[8];
-static DeviceSlot deviceSlots[8];
+extern InputStruct input;
 
-/* ********************************************************************
- * Functions that must be implemented by each platform
- * ********************************************************************/
+uint16_t read_appkey(uint16_t creator_id, uint8_t app_id, uint8_t key_id, char* destination);
+void write_appkey(uint16_t creator_id, uint8_t app_id, uint8_t key_id,  uint16_t count, char *data);
 
-bool io_error(void);
-unsigned char io_status(void);
-void io_init(void);
-void io_get_device_slots(DeviceSlot *d);
-void io_get_host_slots(HostSlot *h);
-void io_put_host_slots(HostSlot *h);
-void io_put_device_slots(DeviceSlot *d);
-void io_mount_host_slot(unsigned char hs);
-void io_set_device_filename(unsigned char ds, char* e);
-char *io_get_device_filename(unsigned char ds);
-void io_mount_disk_image(unsigned char ds, unsigned char mode);
-void io_set_boot_config(unsigned char toggle);
-void io_umount_disk_image(unsigned char ds);
-void io_boot(void);
-bool io_get_device_enabled_status(unsigned char d);
-void io_update_devices_enabled(bool *e);
-void io_enable_device(unsigned char d);
-void io_disable_device(unsigned char d);
-unsigned char io_device_slot_to_device(unsigned char ds);
-void io_get_filename_for_device_slot(unsigned char slot, const char* filename);
-unsigned char io_mount_all(void);
-void io_boot(void);
+void clearCommonInput();
+void readCommonInput();
+void inputField(uint8_t x, uint8_t y, uint8_t max, char* buffer);
 
 #endif /* IO_H */
