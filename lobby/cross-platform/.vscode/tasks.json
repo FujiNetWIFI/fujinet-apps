@@ -1,8 +1,7 @@
 {
 	"label": "Build",
 	"type": "shell",
-	"command": "make test size",
-	//"command": "make clean test size",
+	"command": "make clean test",
 	"group": {
 		 "kind": "build",
 		 "isDefault": true
