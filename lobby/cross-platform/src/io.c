@@ -76,7 +76,7 @@ void readCommonInput() {
     return;
   } else if (_joy!=0) {
     if (!_joySameCount--) {
-      _joySameCount=1;
+      _joySameCount=2;
       _lastJoy=99;
     }
   }

@@ -24,6 +24,12 @@ ext_c64 := prg
 ext_atari := xex
 ext_apple2 := apl
 
+APPLE2_DIST := _libs/apple2-dist
+APPLE2_DIST_AC := $(APPLE2_DIST)/ac.jar
+APPLE2_DIST_PO := $(APPLE2_DIST)/bootable.po
+APPLE2_DIST_LOADER := $(APPLE2_DIST)/loader.system
+APPLE2_DIST_SOURCE := https://github.com/EricCarrGH/apple-ii-dist/releases/download/Apple-II
+
 # Running make with multiple targets causes it to run "make target" for each.
 # Here, we check for that use case (targets is a single word), and append the platform
 # name to the output program 
@@ -36,7 +42,6 @@ endif
 # Use only if you don't want to place copies of the libraries in SRCDIR
 # Default: none
 
-# When FujiNet library is ready: LIBS := path/fn_$(TARGETS)
 LIBS    :=
  
 # Custom linker configuration file
@@ -47,7 +52,7 @@ CONFIG  :=
 # Additional C compiler flags and options.
 # Default: none
 #CFLAGS = --debug-info
-CFLAGS = -Os --static-locals
+CFLAGS = -Os --static-locals 
  
 # Additional assembler flags and options.
 # Default: none
@@ -55,8 +60,8 @@ ASFLAGS =
  
 # Additional linker flags and options.
 # Default: none
-# LDFLAGS = 
-LDFLAGS = 
+# LDFLAGS =   -C apple2-hgr.cfg  -D __STACKSIZE__=0x0200 -D __HIMEM__=0xBF00 isn't working
+LDFLAGS = -m $(PROGRAM_STUB).map -Ln $(PROGRAM_STUB).lbl 
 
 # Path to the directory containing C and ASM sources.
 # Default: src
@@ -76,13 +81,13 @@ EMUCMD :=
 ifeq ($(OS),Windows_NT) 
   atari_EMUCMD := cmd /c start C:\atari\Altirra\Altirra64.exe /singleinstance /run
   c64_EMUCMD := taskkill /im x64sc.exe >nul 2>nul & cmd /c start x64sc -model c64ntsc -autostart
-  apple2_EMUCMD := cmd /c start C:\Projects\apple-fujinet\applewin.exe -d1 "support/apple2/dist/$(PROGRAM_STUB).po" & REM
+  apple2_EMUCMD := cmd /c start C:\Projects\apple-fujinet\applewin.exe -d1 "$(PROGRAM_STUB).po" & REM
    
 else
   #atari_EMUCMD := osascript -e 'quit app "Atari800MacX"';open -n -a Atari800macx --args $(CURDIR)/$(PROGRAM);echo
   atari_EMUCMD := wine64 /Users/eric/Documents/Altirra/Altirra64.exe /singleinstance /run
   c64_EMUCMD := killall x64sc; open /Applications/vice-arm64-gtk3-3.7.1/x64sc.app --args -model c64ntsc +confirmonexit -autostart $(CURDIR)/$(PROGRAM);echo
-  apple2_EMUCMD := wine64 /Users/eric/Documents/apple-fujinet/AppleWin.exe -s5 spoverslip -d1 "support/apple2/dist/$(PROGRAM_STUB).po" ; echo 
+  apple2_EMUCMD := wine64 /Users/eric/Documents/apple-fujinet/AppleWin.exe -s5 spoverslip -d1 "$(PROGRAM_STUB).po" ; echo 
   
 endif
 
@@ -239,6 +244,7 @@ ifeq ($(words $(TARGETLIST)),1)
 CURRENT_TARGET=$(TARGETLIST)
 -include "fujinet-lib.mk"
 
+ 
 # Set SOURCES to something like 'src/foo.c src/bar.s'.
 # Use of assembler files with names ending differently than .s is deprecated!
 SOURCES := $(wildcard $(SRCDIR)/*.c)
@@ -311,7 +317,6 @@ $(foreach o,$(subst $(COMMA),$(SPACE),$(OPTIONS)),$(eval $(_$o_)))
 # Strip potential variant suffix from the actual cc65 target.
 CC65TARGET := $(firstword $(subst .,$(SPACE),$(TARGETLIST)))
  
- 
 #ifneq ($($(CC65TARGET)_PROGRAM),)
 #override PROGRAM := $($(CC65TARGET)_PROGRAM)
 #override PROGRAM := $(PROGRAM)_$(CC65TARGET)
@@ -340,48 +345,55 @@ vpath %.a65 $(SRCDIR)/$(TARGETLIST) $(SRCDIR)
  
 $(TARGETOBJDIR)/%.o: %.a65 | $(TARGETOBJDIR)
 	$(CC) -t $(CC65TARGET) -c --create-dep $(@:.o=.d) $(ASFLAGS) -o $@ $<
- 
+
 $(PROGRAM): $(CONFIG) $(OBJECTS) $(LIBS)
 	$(CC) -t $(CC65TARGET) $(LDFLAGS) -o $@ $(patsubst %.cfg,-C %.cfg,$^) $(LIBS)
 
-# Package target if needed
-ifeq ($(CC65TARGET),apple2) 
-# Kill any Apple emulator that may have a lock on the .po file, and the Fujinet process to restart it
-ifeq ($(OS),Windows_NT) 
-	taskkill /im applewin.exe /F >nul 2>nul &echo >nul
-	taskkill /im fujinet.exe /F >nul 2>nul &echo >nul
-	cmd /c "start C:\Projects\apple-fujinet\fnpc-apple2\fujinet.exe"
-	copy support\apple2\dist\bootable.po support\apple2\dist\$(PROGRAM_STUB).po
-else
-	killall -q wine64-preloader;echo
-	cp support/apple2/dist/bootable.po support/apple2/dist/$(PROGRAM_STUB).po
-endif
-	java -jar "support/apple2/dist/ac.jar" -p "support/apple2/dist/$(PROGRAM_STUB).po" $(PROGRAM_STUB).system sys <"support/apple2/dist/loader.system"
-	java -jar "support/apple2/dist/ac.jar" -as "support/apple2/dist/$(PROGRAM_STUB).po" $(PROGRAM_STUB) bin <$(PROGRAM)
-ifneq ($(OS),Windows_NT)
-	# Start the Apple Fujinet, as it needs to be restarted before each Apple2 boot
-	cd ~/Documents/fujinetpc-apple;./run-fujinet&
-endif
-endif
 ifeq ($(OS),Windows_NT) 
 	@echo ........................................................................ & dir $(PROGRAM) | find "$(PROGRAM)" &echo ........................................................................
 else
-	sleep2;@echo ........................................................................ ;ls -l $(PROGRAM);echo ........................................................................;echo ........................................................................; sleep 3 
+	@echo ........................................................................ ;ls -l $(PROGRAM);echo ........................................................................; sleep 2
+endif
+
+# Package target if needed
+ifeq ($(CC65TARGET),apple2) 
+
+# Pull down Apple II dist files if needed
+ifeq ("$(wildcard $(APPLE2_DIST_LOADER))","")
+	$(info Downloading Apple II dist files)
+	$(MKDIR) "$(APPLE2_DIST)"
+	curl -sL $(APPLE2_DIST_SOURCE)/ac.jar -o $(APPLE2_DIST_AC)
+	curl -sL $(APPLE2_DIST_SOURCE)/bootable.po -o $(APPLE2_DIST_PO)
+	curl -sL $(APPLE2_DIST_SOURCE)/loader.system -o $(APPLE2_DIST_LOADER)
+endif
+
+# Kill any Apple emulator that may have a lock on the .po file
+ifeq ($(OS),Windows_NT) 
+	taskkill /im applewin.exe /F >nul 2>nul &echo >nul
+#	taskkill /im fujinet.exe /F >nul 2>nul &echo >nul
+	cmd /c "start C:\Projects\apple-fujinet\fnpc-apple2\fujinet.exe"
+	copy support\apple2\dist\bootable.po support\apple2\dist\$(PROGRAM_STUB).po
+else
+	-killall -q wine64-preloader
+	cp $(APPLE2_DIST_PO) $(PROGRAM_STUB).po
+endif
+	java -jar "$(APPLE2_DIST_AC)" -p "$(PROGRAM_STUB).po" $(PROGRAM_STUB).system sys <"$(APPLE2_DIST_LOADER)"
+	java -jar "$(APPLE2_DIST_AC)" -as "$(PROGRAM_STUB).po" $(PROGRAM_STUB) bin <$(PROGRAM)
 endif
 
 test: $(PROGRAM)
+ifneq ($(OS),Windows_NT)  
+	sed -i ''  "s/\.//" $(PROGRAM_STUB).lbl
+ifeq ($(CC65TARGET),apple2)
+# Start the Apple Fujinet
+#	cd ~/Documents/fujinetpc-apple;./run-fujinet&
+endif
+endif
 	$(PREEMUCMD)
 	$(EMUCMD) $<
 	$(POSTEMUCMD)
 
-size: $(PROGRAM)
-ifeq ($(OS),Windows_NT) 
-	@echo ........................................................................ & dir $(PROGRAM) | find "$(PROGRAM)" &echo ........................................................................
-else
-	@echo ........................................................................ ;ls -l $(PROGRAM);echo ........................................................................
-endif
-
-clean:
+clean: .get_fujinet_lib
 	$(call RMFILES,$(OBJECTS))
 	$(call RMFILES,$(DEPENDS))
 	$(call RMFILES,$(REMOVES))
