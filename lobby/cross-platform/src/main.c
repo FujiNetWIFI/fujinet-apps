@@ -31,6 +31,7 @@
 #define PAGE_SIZE_STR  "12"
 #define SCREEN_WIDTH 40
 #define BOOT_KEY "RETURN"
+#define ACTION_VERB ", press"
 #define BOTTOM_PANEL_ROWS 3
 #define FUJI_HOST_SLOT_COUNT 8
 #define FUJI_DEVICE_SLOT_COUNT 8
@@ -48,6 +49,8 @@ DeviceSlot device_slots[FUJI_DEVICE_SLOT_COUNT];
   #define PLATFORM "atari"
   #undef BOOT_KEY
   #define BOOT_KEY "OPTION"
+  #undef ACTION_VERB
+  #define ACTION_VERB " & hold"
   #define BACKGROUND_COLOR 0x90
   #define FOREGROUND_COLOR 0xff
 #endif
@@ -85,18 +88,17 @@ unsigned char selected_server = 0;    // Currently selected server
 
 uint8_t screen_height;
 
-// Pre struct changes 9724
-typedef struct { // 185 bytes
+typedef struct { // 189 bytes
   uint8_t game_type;   
-  char game[13];       
+  char game[17];       
   char server[33];     
   char url[65];        
   char client_url[65]; 
   char region[3];      
-  uint8_t online;         // 1
-  uint8_t players;      // 3
-  uint8_t max_players;  // 3
-  uint16_t ping_age;    // 5
+  uint8_t online;         
+  uint8_t players;     
+  uint8_t max_players; 
+  uint16_t ping_age;   
 } ServerDetails;
 
 typedef struct {
@@ -195,7 +197,7 @@ void display_servers(int old_server) {
   if (lobby.server_count>0)
   {
     gotoxy(0,BOTTOM_PANEL_Y);
-    cputs("Pick a server & hold ");
+    cputs("Pick a server" ACTION_VERB " ");
     revers(1); cputs(BOOT_KEY); revers(0);
     cputs(" to boot game\r\n");
   }
