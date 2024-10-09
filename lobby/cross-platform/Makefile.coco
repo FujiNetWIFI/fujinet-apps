@@ -1,0 +1,99 @@
+# NOTE: Update the CMOC_SRC to the cmoc source directory to include its own <..> header files
+
+CMOC_SRC := ~/Documents/projects/cmoc-0.1.88/src
+
+TARGET_EXEC ?= lobby
+
+BUILD_DIR ?= ./build
+SRC_DIRS ?= ./src
+
+CC=cmoc
+ASM=lwasm
+
+#SRCS := $(shell find $(SRC_DIRS) -name *.c) $(shell find $(SRC_DIRS)/coco -name *.s) 
+SRCS := $(shell ls $(SRC_DIRS)/*.c) $(shell find $(SRC_DIRS)/coco -name *.c)
+OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
+DEPS := $(OBJS:.o=.d)
+
+# Required libraries.
+
+# BControl is only used by the OS-9 version.
+BCONTROL_LIB = bcontrol
+BCONTROL_LIB_DIR = ../../../bcontrol
+FUJINET_LIB_DIR = _libs/4.6.1-coco
+FUJINET_LIB = fujinet-coco-4.6.1.lib
+
+LIBS = \
+	-L$(FUJINET_LIB_DIR) -l:$(FUJINET_LIB) 
+#	-L $(BCONTROL_LIB_DIR) -l$(BCONTROL_LIB) \
+
+PACKAGE = lobby
+VERSION = 0.1.00
+TARGET = coco
+
+
+CFLAGS= \
+			-I $(CMOC_SRC) \
+			-I src/include \
+			-I $(FUJINET_LIB_DIR) \
+			--$(TARGET) \
+			--intdir ./intermediates \
+			--stack-space=512 \
+			-fomit-frame-pointer \
+			-DNDEBUG \
+			-DVERSION=\"$(VERSION)\" \
+			-O2 -DDISABLE_SOUND
+# -DDISABLE_GRAPHICS
+#			-I $(BCONTROL_LIB_DIR) \
+#			--check-null \
+#			-D_CMOC_CHECK_STACK_OVERFLOW_ --check-stack\
+
+
+LDFLAGS= 			--$(TARGET) \
+	-o$(TARGET_EXEC).bin \
+	-I $(CMOC_SRC) \
+
+
+LDFLAGS_TEST= 			--$(TARGET) \
+	-olobby.bin
+
+INC_DIRS := $(shell find $(SRC_DIRS) -type d)
+INC_FLAGS := $(addprefix -I,$(INC_DIRS))
+
+
+$(BUILD_DIR)/$(TARGET_EXEC): $(OBJS)
+	$(CC) $(LDFLAGS) $(OBJS) $(LIBS)
+	$(RM) $(TARGET_EXEC) $(TARGET_EXEC).dsk
+	
+	decb dskini $(TARGET_EXEC).dsk
+	decb copy -t -0 src/coco/autoexec.bas $(TARGET_EXEC).dsk,AUTOEXEC.BAS
+	writecocofile $(TARGET_EXEC).dsk $(TARGET_EXEC).bin
+ifeq ($(OS),Windows_NT) 
+	@echo ........................................................................ & dir $(TARGET_EXEC).bin | find "$(TARGET_EXEC).bin" &echo ........................................................................
+else
+	@echo ........................................................................ ;ls -l $(TARGET_EXEC).bin;echo ........................................................................
+endif
+#	cd ~/mame_coco;mame coco3 -window -natural -autoboot_delay 1 -autoboot_command "run\"autoexec\n" -flop1 $(CURDIR)/$(TARGET_EXEC).dsk
+	cd ~/mame_coco;mame coco -window -natural -autoboot_delay 2 -autoboot_command "run\"autoexec\n" -flop1 $(CURDIR)/$(TARGET_EXEC).dsk
+
+# c source
+$(BUILD_DIR)/%.c.o: %.c
+	$(MKDIR_P) intermediates
+	$(MKDIR_P) $(dir $@)
+	$(CC) $(CFLAGS) -o $@ -c $<
+
+# assy source
+$(BUILD_DIR)/%.s.o: %.s
+	$(MKDIR_P) $(dir $@)
+	$(ASM) $(ASFLAGS) -fobj --output=$@ $<
+
+
+.PHONY: clean
+
+clean:
+	$(RM) -r $(TARGET_EXEC).*
+	$(RM) -r $(BUILD_DIR)*
+
+-include $(DEPS)
+
+MKDIR_P ?= mkdir -p

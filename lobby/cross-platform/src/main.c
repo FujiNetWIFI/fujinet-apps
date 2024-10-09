@@ -7,7 +7,6 @@
  */
 
 #include <stdlib.h>
-#include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <conio.h>
@@ -30,39 +29,53 @@
 #define PAGE_SIZE  12
 #define PAGE_SIZE_STR  "12"
 #define SCREEN_WIDTH 40
-#define BOOT_KEY "RETURN"
-#define ACTION_VERB ", press"
 #define BOTTOM_PANEL_ROWS 3
+#define PANEL_SPACER "--------"
 #define FUJI_HOST_SLOT_COUNT 8
 #define FUJI_DEVICE_SLOT_COUNT 8
-
-
-HostSlot host_slots[FUJI_HOST_SLOT_COUNT];
-DeviceSlot device_slots[FUJI_DEVICE_SLOT_COUNT];
 #define BOTTOM_PANEL_Y (screen_height-BOTTOM_PANEL_ROWS)
 #define BOTTOM_PANEL_LEN SCREEN_WIDTH*BOTTOM_PANEL_ROWS
 
+HostSlot host_slots[FUJI_HOST_SLOT_COUNT];
+DeviceSlot device_slots[FUJI_DEVICE_SLOT_COUNT];
 
 // Set the platform send to the lobby server based on the platform specified in the makefile
 
 #ifdef __ATARI__
   #define PLATFORM "atari"
-  #undef BOOT_KEY
-  #define BOOT_KEY "OPTION"
-  #undef ACTION_VERB
   #define ACTION_VERB " & hold"
+  #define BOOT_KEY "OPTION"
   #define BACKGROUND_COLOR 0x90
   #define FOREGROUND_COLOR 0xff
+#endif
+
+#ifdef __APPLE2__
+  #define PLATFORM "apple2"
+  #define ACTION_VERB ", press"
+  #define BOOT_KEY "RETURN"
+#endif
+
+#ifdef _CMOC_VERSION_
+#define ACTION_VERB ", press"
+#define BOOT_KEY "ENTER"
+#define PLATFORM "coco"
+#undef SCREEN_WIDTH
+#define SCREEN_WIDTH 32
+//char panel_spacer_string[] = {0x83,0x93,0xA3,0xB3,0xC3,0xD3,0xE3,0xF3,0};
+char panel_spacer_string[] = {0xA4,0xE4,0xE4,0xB4,0xB4,0xE4,0xE4,0xA4,0};
+#define PANEL_SPACER panel_spacer_string
+#undef BOTTOM_PANEL_ROWS
+#define BOTTOM_PANEL_ROWS 2
+
 #endif
 
 #ifdef __C64__
   #define PLATFORM "c64"
   #define BACKGROUND_COLOR 6
   #define FOREGROUND_COLOR 1
-#endif
+  #define ACTION_VERB ", press"
+  #define BOOT_KEY "RETURN"
 
-#ifdef __APPLE2__
-  #define PLATFORM "apple2"
 #endif
 
 #ifdef __VIC20__
@@ -72,11 +85,10 @@ DeviceSlot device_slots[FUJI_DEVICE_SLOT_COUNT];
 #endif
 
 
-
-
-// gotoxy + cput* saves 4 bytes over cput*xy, so why not optimize?
+// gotoxy + c* saves a little space
 #define cputsxy(x,y,s) gotoxy(x,y); cputs(s);
 #define cputcxy(x,y,c) gotoxy(x,y); cputc(c);
+#define cclearxy(x,y,c) gotoxy(x,y); cclear(c);
 
 //char rx_buf[2048];  
 char username[66];
@@ -123,8 +135,13 @@ void pause(void) {
  * @brief The initial banner 
  */
 void banner(void) {
+  uint8_t j;
   clrscr();
-  cputs("#FUJINET GAME LOBBY\r\n");
+  cputs("#FUJINET GAME LOBBY");
+  gotoxy(0,1);
+  for(j=0;j<SCREEN_WIDTH/8;j++)
+    cputs(PANEL_SPACER);
+  
 }
 
 
@@ -149,11 +166,11 @@ void display_servers(int old_server) {
         cputsxy(0,y,prevGame);
         if (j>0) 
         {
-           cclear(39-strlen(prevGame));
+           cclear(SCREEN_WIDTH-1-strlen(prevGame));
         }
         else 
         {
-          cclear(33-strlen(prevGame));
+          cclear(SCREEN_WIDTH-7-strlen(prevGame));
           cputs("PLAYERS");
         }
       }
@@ -162,7 +179,7 @@ void display_servers(int old_server) {
     y++;
     // If just moving the selection, only redraw the old and new server
     // Also temp guard for servers until paging is implemented
-    if (y>PAGE_SIZE || (old_server>=0 && j != old_server && j != selected_server))
+    if (j>PAGE_SIZE || (old_server>=0 && j != old_server && j != selected_server))
       continue;
 
     // Show the selected server in reverse
@@ -176,12 +193,12 @@ void display_servers(int old_server) {
     strcat(buf, "/");
     itoa(server->max_players, buf+strlen(buf), 10);
     
-    cclear(39-strlen(server->server)-strlen((char *)buf));
+    cclear(SCREEN_WIDTH-1-strlen(server->server)-strlen(buf));
     cputs((char *)buf);
     
      // Reset reverse
      if (j == selected_server)
-        revers(0);
+      revers(0);
   }
   
   // Reset cursor and reverse
@@ -191,15 +208,16 @@ void display_servers(int old_server) {
     return;
 
   cclearxy(0,BOTTOM_PANEL_Y,BOTTOM_PANEL_LEN);
-  cputsxy(0,screen_height-4,"----------------------------------------");
-  
+  gotoxy(0,BOTTOM_PANEL_Y-1);
+  for(j=0;j<SCREEN_WIDTH/8;j++)
+    cputs(PANEL_SPACER);
   
   if (lobby.server_count>0)
   {
     gotoxy(0,BOTTOM_PANEL_Y);
-    cputs("Pick a server" ACTION_VERB " ");
+    cputs("Select game" ACTION_VERB " ");
     revers(1); cputs(BOOT_KEY); revers(0);
-    cputs(" to boot game\r\n");
+    cputs(" to boot\r\n");
   }
 
   gotoxy(0,screen_height-1);
@@ -212,6 +230,7 @@ void display_servers(int old_server) {
 
 void refresh_servers(bool clearScreen) { 
   int16_t api_read_result;
+  uint8_t i;
   
   cclearxy(0,BOTTOM_PANEL_Y,BOTTOM_PANEL_LEN);
   cputsxy(SCREEN_WIDTH/2-12,BOTTOM_PANEL_Y+1,"Refreshing Server List..");
@@ -219,21 +238,48 @@ void refresh_servers(bool clearScreen) {
   strcpy(buf, LOBBY_ENDPOINT "?bin=1&platform=" PLATFORM "&pagesize=" PAGE_SIZE_STR "&page=");
   itoa(page, buf+strlen(buf), 10);
 
+  #ifndef _CMOC_VERSION_ // remove ifndef to enable fujinet-lib in coco
   network_open(buf, OPEN_MODE_HTTP_GET, OPEN_TRANS_NONE);
   api_read_result = network_read(buf, (uint8_t*)&lobby, sizeof(lobby));
   network_close(buf);
+  #else
+  // mock result for coco - to test UI
+  api_read_result = 321;
+  lobby.server_count = 6;
+  lobby.current_page=0;
+  for (i=0;i<3;i++) {
+    lobby.servers[i].online=1;
+    lobby.servers[i].game_type=1;
+    strcpy(lobby.servers[i].game, "5 card Stud");
+    sprintf(lobby.servers[i].server,"Bot Table %d", i+1);
+    strcpy(lobby.servers[i].client_url,"ec.tnfs.io/coco/fcs.dsk");
+    lobby.servers[i].players=0;
+    lobby.servers[i].max_players=4;
+  }
+
+  for (i=3;i<6;i++) {
+    lobby.servers[i].online=1;
+    lobby.servers[i].game_type=2;
+    strcpy(lobby.servers[i].game, "Fujitzee");
+    sprintf(lobby.servers[i].server,"AI game %d", i-2);
+    strcpy(lobby.servers[i].client_url,"ec.tnfs.io/coco/fujitzee.dsk");
+    lobby.servers[i].players=0;
+    lobby.servers[i].max_players=6;
+  }
+  #endif
+
 
   if (clearScreen)
     banner();
 
-  cputsxy(40-strlen(username),0, username);
+  cputsxy(SCREEN_WIDTH-strlen(username),0, username);
 
   if (api_read_result<0) {
     cputs("\r\nCould not query Lobby!\r\nError: ");
     itoa(api_read_result, buf, 10);
     cputs(buf);
   } else if (api_read_result < sizeof(ServerDetails) || lobby.server_count == 0 || lobby.server_count >= PAGE_SIZE) {
-    cputs("\r\nNo servers are online at the moment.");
+    cputs("\r\nNo servers are online.");
     lobby.server_count = 0;
   } else {
     if (selected_server >= lobby.server_count) {
@@ -251,11 +297,7 @@ void refresh_servers(bool clearScreen) {
  */
 void get_username() {
 
-  cputsxy(0,3,"Enter your user name and press ");
-  revers(1);
-  cputs("RETURN");
-  revers(0);
-  cputs("\r\n\r\n[         ]");
+  cputsxy(0,3,"Enter your username:\r\n\r\n[         ]");
   
   while (1) {
     inputField(1,5,8,username);
@@ -276,7 +318,7 @@ void register_user(void) {
   if (strlen(username)==0)
     get_username();
 
-  cputs("\r\nWelcome, ");
+  cputs("\r\n\r\nWelcome, ");
   cputs(username);
   cputs(".");
 }
@@ -289,46 +331,52 @@ void mount() {
   static char *client_path, *host, *filename; 
   static uint8_t i, slot;
 
-  // Sanity check - a valid server index was selected, and the game type is > 0
+  // // Sanity check - a valid server index was selected, and the game type is > 0
   if (lobby.server_count==0 || selected_server >= lobby.server_count || lobby.servers[selected_server].game_type == 0) {
     return;
   } 
 
-  // Remove the protocol for now, assume TNFS://
+  // // Remove the protocol for now, assume TNFS://
   if (client_path = strstr(lobby.servers[selected_server].client_url, "://"))
     client_path+=3;
   else
     client_path = lobby.servers[selected_server].client_url;
 
+  if (strlen(client_path)>SCREEN_WIDTH) {
+    strcpy(buf,client_path);
+    buf[SCREEN_WIDTH/2-1]=buf[SCREEN_WIDTH/2]='.';
+    strcpy(buf+SCREEN_WIDTH/2+1,client_path+strlen(client_path)-SCREEN_WIDTH/2+1);
+    client_path = buf;
+  }
   cclearxy(0,BOTTOM_PANEL_Y,BOTTOM_PANEL_LEN);
 
   cputsxy(0,BOTTOM_PANEL_Y, "Mounting\r\n");
   cputs(client_path);
 
-  // Get the host and filename
+  // // Get the host and filename
   if (filename = strstr(client_path,"/")) {
     filename+=1;
   }
 
-  // Get the host
+  // // Get the host
   host = strtok(client_path,"/");
 
-  if (filename == NULL && host == NULL) {
-    cputs("ERROR: Invalid client file");
+  if (filename == NULL || host == NULL) {
+    cclearxy(0,BOTTOM_PANEL_Y,BOTTOM_PANEL_LEN);
+    cputsxy(0,BOTTOM_PANEL_Y,"ERROR: Invalid client file");
     pause();
     refresh_servers(false);
     return;
   }
 
-  // // Read current list of hosts from FujiNet
-  // io_get_host_slots(hostSlots);
-  fuji_get_host_slots(host_slots, FUJI_HOST_SLOT_COUNT);
+  // Read current list of hosts from FujiNet
+  fuji_get_host_slots((unsigned char*) host_slots, FUJI_HOST_SLOT_COUNT);
 
   // Pick the host slot to use. Default to the last, but choose an existing slot
   // if it already has the same host
   slot = FUJI_HOST_SLOT_COUNT;
   for(i=0;i<FUJI_HOST_SLOT_COUNT;i++) {
-    if (strcasecmp(host, (char*)host_slots[i]) == 0) {
+    if (stricmp(host, (char*)host_slots[i]) == 0) {
       slot = i;
       break;
     }
@@ -338,7 +386,7 @@ void mount() {
   if (slot == FUJI_HOST_SLOT_COUNT) {
     slot=FUJI_HOST_SLOT_COUNT-1;
     strcpy((char*)host_slots[slot], host);
-    fuji_put_host_slots(host_slots, FUJI_HOST_SLOT_COUNT);
+    fuji_put_host_slots((unsigned char*) host_slots, FUJI_HOST_SLOT_COUNT);
   }
 
   // Mount the file to the device/host slot
@@ -414,9 +462,10 @@ void event_loop() {
 void main(void)
 {
   uint8_t i;
-  screensize(&i, &screen_height);
 
   initialize();
+  
+  screensize(&i, &screen_height);
 
   #ifdef BACKGROUND_COLOR
   bordercolor(BACKGROUND_COLOR);
@@ -434,6 +483,4 @@ void main(void)
 
   refresh_servers(true);
   event_loop();
-
-  // term(); TODO: Integrate chatting into lobby
 }

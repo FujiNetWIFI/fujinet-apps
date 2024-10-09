@@ -22,7 +22,6 @@ extern InputStruct input;
 uint16_t read_appkey(uint16_t creator_id, uint8_t app_id, uint8_t key_id, char* destination);
 void write_appkey(uint16_t creator_id, uint8_t app_id, uint8_t key_id,  uint16_t count, char *data);
 
-void clearCommonInput();
 void readCommonInput();
 void inputField(uint8_t x, uint8_t y, uint8_t max, char* buffer);
 

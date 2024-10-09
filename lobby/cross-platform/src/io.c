@@ -1,6 +1,6 @@
+#include <conio.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <conio.h>
 #include <string.h>
 #include <joystick.h>
 
@@ -12,6 +12,7 @@
 InputStruct input;
 uint8_t _lastJoy, _joy, _joySameCount=10;
 bool _buttonReleased=true;
+extern char buf[];
 
 // gotoxy + cput* saves 4 bytes over cput*xy, so why not optimize?
 #define cputsxy(x,y,s) gotoxy(x,y); cputs(s);
@@ -21,9 +22,11 @@ bool _buttonReleased=true;
 uint16_t read_appkey(uint16_t creator_id, uint8_t app_id, uint8_t key_id, char* destination) {
   static uint16_t read;
 
+  #ifndef _CMOC_VERSION_ // remove ifndef to enable fujinet-lib in coco
   fuji_set_appkey_details(creator_id, app_id, DEFAULT);
   if (!fuji_read_appkey(key_id, &read, (uint8_t*)destination))
     read=0;
+  #endif
 
   // Add string terminator after the data ends in case it is being interpreted as a string
   destination[read] = 0;
@@ -32,14 +35,10 @@ uint16_t read_appkey(uint16_t creator_id, uint8_t app_id, uint8_t key_id, char* 
  
 void write_appkey(uint16_t creator_id, uint8_t app_id, uint8_t key_id,  uint16_t count, char *data)
 {
-  fuji_set_appkey_details(creator_id, app_id, DEFAULT);
-  fuji_write_appkey(key_id, count, (uint8_t*)data);
-}
-
-void clearCommonInput() {
-  input.trigger=input.key=input.dirY=input.dirX=_lastJoy=_joy=_buttonReleased=0;
-  while (kbhit()) 
-    cgetc();
+  #ifndef _CMOC_VERSION_ // remove ifndef to enable fujinet-lib in coco
+    fuji_set_appkey_details(creator_id, app_id, DEFAULT);
+    fuji_write_appkey(key_id, count, (uint8_t*)data);
+  #endif
 }
 
 void readCommonInput() {
@@ -83,8 +82,10 @@ void readCommonInput() {
 
   input.key=0;
 
+#ifndef _CMOC_VERSION_ // until joystick is added, simple solution for cmoc for keyboard input
   if (!kbhit())
     return;
+#endif
     
   input.key = cgetc();
 
@@ -121,38 +122,32 @@ void readCommonInput() {
 /// @brief Custom input field with max length
 void inputField(uint8_t x, uint8_t y, uint8_t max, char* buffer) {
   static uint8_t curx;
-  curx = strlen(buffer);
+  curx = (uint8_t)strlen(buffer);
   cputsxy(x,y, buffer);
   cputc(CHAR_CURSOR);
 
   while (1) {
-    // Process any waiting keystrokes
-    if (kbhit()) {
-      input.key = cgetc();
+    // Process the next key press
+    input.key = cgetc();
 
-      // Debugging - See what key was pressed
-      //itoa(input.key, tempBuffer, 10);drawText(0,0, tempBuffer);
+    // Debugging - See what key was pressed. Uses the extern buf[].
+    //itoa(input.key, buf, 10);cputsxy(0,0, buf);
 
-      if (input.key == KEY_RETURN && curx>1) {
-        cputcxy(x+curx,y,' ');
-        return;
-      } else if ((input.key == KEY_BACKSPACE || input.key == KEY_LEFT_ARROW) && curx>0) {
-        buffer[--curx]=0;
-        cputcxy(x+1+curx,y,' ');
-      } else if (
-        curx < max && ((curx>0 && input.key == KEY_SPACEBAR) || (input.key>= 48 && input.key <=57) || (input.key>= 65 && input.key <=90) || (input.key>= 97 && input.key <=122))    // 0-9 A-Z a-z
-      ) {
-        //if (input.key>=65 && input.key<=90)
-        //  input.key+=32;
+    if (input.key == KEY_RETURN && curx>1) {
+      cputcxy(x+curx,y,' ');
+      return;
+    } else if ((input.key == KEY_BACKSPACE || input.key == KEY_LEFT_ARROW) && curx>0) {
+      buffer[--curx]=0;
+      cputcxy(x+1+curx,y,' ');
+    } else if (
+      curx < max && ((curx>0 && input.key == KEY_SPACEBAR) || (input.key>= 48 && input.key <=57) || (input.key>= 65 && input.key <=90) || (input.key>= 97 && input.key <=122))    // 0-9 A-Z a-z
+    ) {
 
-        buffer[curx]=input.key;
-        buffer[++curx]=0;
-      }
-
-      cputsxy(x,y, buffer);
-      cputc(CHAR_CURSOR);
-    } else {
-      waitvsync();
+      buffer[curx]=input.key;
+      buffer[++curx]=0;
     }
+
+    cputsxy(x,y, buffer);
+    cputc(CHAR_CURSOR);
   }
 }

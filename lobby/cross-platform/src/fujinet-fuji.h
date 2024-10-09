@@ -5,16 +5,10 @@
 
 // In general, bools return the "success" status, so true is good, false is bad.
 
-#ifdef _CMOC_VERSION_
-    #include <cmoc.h>
-typedef unsigned char bool;
-    #define true  1
-    #define false 0
-#else
-    #include <stddef.h>
-    #include <stdbool.h>
-    #include <stdint.h>
-#endif /* _CMOC_VERSION_ */
+#include <stddef.h>
+#include <stdbool.h>
+#include <stdint.h>
+
 
 #ifdef __CBM__
 
@@ -43,7 +37,7 @@ typedef unsigned char bool;
 #ifdef __CBM__
     #define MAX_PASSWORD_LEN 65
 #else
-    #define MAX_PASSWORD_LEN 64
+#define MAX_PASSWORD_LEN 64
 #endif
 
 #define FUJICMD_RESET                      0xFF
