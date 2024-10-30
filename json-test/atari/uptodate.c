@@ -21,24 +21,11 @@
 #include <stdio.h>
 #include "sio.h"
 #include "nsio.h"
+#include "../../../fujinet-lib/fujinet-fuji.h"
 
 /* https://github.com/FujiNetWIFI/fujinet-platformio/wiki/SIO-Command-%24E8-Get-Adapter-Config */
-
-// Response to SIO_FUJICMD_GET_ADAPTERCONFIG
-typedef struct
-{
-    char ssid[33];
-    char hostname[64];
-    unsigned char localIP[4];
-    unsigned char gateway[4];
-    unsigned char netmask[4];
-    unsigned char dnsIP[4];
-    unsigned char macAddress[6];
-    unsigned char bssid[6];
-    char fn_version[15];
-} adapterConfig_t;
-
-adapterConfig_t adapterConfig;
+/* The struct (defined in `fujinet-lib`) holds the response to SIO_FUJICMD_GET_ADAPTERCONFIG */
+AdapterConfig adapterConfig;
 
 void fuji_sio_read_adapter_config()
 {
