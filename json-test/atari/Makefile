@@ -1,9 +1,9 @@
 # Makefile for jsontest for Atari
 #
 # Bill Kendrick <bill@newbreedsoftware.com>
-# 2022-05-25 - 2022-06-01
+# 2022-05-25 - 2024-10-29
 
-CC65BIN=/usr/local/bin
+CC65BIN=/usr/bin
 CC65=${CC65BIN}/cc65
 CA65=${CC65BIN}/ca65
 LD65=${CC65BIN}/ld65

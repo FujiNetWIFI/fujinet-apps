@@ -269,7 +269,7 @@ void main(void) {
 
   strcpy(output, "#FujiNet Up-To-Date Checker");
   top_show(0, output);
-  strcpy(output, "by Bill Kendrick 2023-05-11");
+  strcpy(output, "by Bill Kendrick 2024-10-29");
   top_show(1, output);
 
   /* Read and display our device's version */
