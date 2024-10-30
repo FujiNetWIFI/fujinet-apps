@@ -9,7 +9,7 @@
  *
  * License: v. 3, see LICENSE.md for details
  *
- * 2022-06-01 - 2023-05-11
+ * 2022-06-01 - 2024-10-29
  */
 
 // #define TEST_MODE
@@ -27,7 +27,7 @@
 // Response to SIO_FUJICMD_GET_ADAPTERCONFIG
 typedef struct
 {
-    char ssid[32];
+    char ssid[33];
     char hostname[64];
     unsigned char localIP[4];
     unsigned char gateway[4];
