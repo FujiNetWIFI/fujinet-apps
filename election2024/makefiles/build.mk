@@ -47,6 +47,7 @@ DISK_TASKS =
 
 
 CC := cl65
+LD := cl65
 
 SRCDIR := src
 BUILD_DIR := build
@@ -58,8 +59,8 @@ rwildcard=$(wildcard $(1)$(2))$(foreach d,$(wildcard $1*), $(call rwildcard,$d/,
 
 PROGRAM_TGT := $(PROGRAM).$(CURRENT_TARGET)
 
-SOURCES := $(wildcard $(SRCDIR)/*.c)
 SOURCES += $(wildcard $(SRCDIR)/*.s)
+SOURCES := $(wildcard $(SRCDIR)/*.c)
 
 # allow for a src/common/ dir and recursive subdirs
 SOURCES += $(call rwildcard,$(SRCDIR)/common/,*.s)
@@ -202,7 +203,7 @@ $(OBJDIR)/$(CURRENT_TARGET)/%.o: %.s $(VERSION_FILE) | $(OBJDIR)
 
 
 $(BUILD_DIR)/$(PROGRAM_TGT): $(OBJECTS) $(LIBS) | $(BUILD_DIR)
-	$(CC) -t $(CURRENT_TARGET) $(LDFLAGS) -o $@ $^
+	$(LD) -t $(CURRENT_TARGET) $(LDFLAGS) -o $@ $^
 
 $(PROGRAM_TGT): $(BUILD_DIR)/$(PROGRAM_TGT) | $(BUILD_DIR)
 

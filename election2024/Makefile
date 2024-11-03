@@ -17,7 +17,8 @@
 
 
 
-TARGETS = atari apple2enh apple2 c64
+#TARGETS = atari apple2 c64 c16 vic20
+TARGETS = atari
 PROGRAM := election2024
 
 # Set DEBUG to true or false to see more or less output about what is going on.
@@ -30,7 +31,7 @@ export DEBUG
 export FUJINET_BUILD_TOOLS_DIR := ../../fujinet-build-tools
 
 # Set this to the version of FN-LIB you wish to use in this project:
-export FUJINET_LIB_VERSION := 4.7.2
+export FUJINET_LIB_VERSION := 4.7.3
 
 SUB_TASKS := clean disk test release
 .PHONY: all help $(SUB_TASKS)

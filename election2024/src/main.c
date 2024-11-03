@@ -2,21 +2,24 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "main.h"
+#include "fetch.h"
+#include "parse.h"
+#include "screen_election.h"
+#include "ruminate.h"
+
+#define FOREVER 1
 
 char *version = "1.0.0";
 
-int main() {
-	uint8_t result;
+int main() 
+{
+    screen_init();
 
-	clrscr();
-
-	// call a 
-	result = sum(1, 2);
-
-	printf("main v%s\n", version);
-	hello("template");
-	printf("1+2 = %u\n", result);
-
-	return 0;
+    while(FOREVER)
+    {
+        fetch();
+        parse(s);
+        screen_election();
+        ruminate();
+    }
 }
