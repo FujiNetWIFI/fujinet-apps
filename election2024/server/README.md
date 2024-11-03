@@ -1,0 +1,3 @@
+# US 2024 Presidential Election Live Results for FujiNet
+
+Election results are scraped from Bloomberg news (https://www.bloomberg.com/graphics/2024-us-election-results). Puppeteer (headless chrome browser) with nodejs is used to grab the latest HTML on a cron schedule. PHP DOM Document functions are used to find the current electoral votes in the source and output them in the following format: `Harris|1|Trump|1|DEMS|2|REPS|2|DEMH|3|REPH|3|Nov 2, 2024|5:23pm UTC`. DEMS/REPS are the number of Democratic and Republican Senate seats. DEMH and REPH are the number of House of Representatives seats. The date and time are when the last results were scraped from Bloomberg.
