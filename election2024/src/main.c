@@ -22,8 +22,8 @@ int main()
     while(FOREVER)
     {
         fetch();
-        /* parse(s); */
-        /* screen_election(); */
+        parse(s);
+        screen_election();
         ruminate();
     }
 
