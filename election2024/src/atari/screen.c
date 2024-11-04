@@ -11,7 +11,7 @@
 #define DISPLAY_LIST 0x0600
 #define DISPLAY_MEMORY 0x7200
 #define FONT_MEMORY 0x7800
-#define SCREEN_SIZE (20*25)
+#define SCREEN_SIZE (20*24)
 
 unsigned char *video_ptr = NULL;
 
@@ -27,18 +27,32 @@ void config_dlist=
   {
    DL_BLK8,
    DL_BLK8,
-   DL_BLK8,
-   DL_LMS(DL_CHR20x16x2),
+
+   DL_LMS(DL_CHR20x8x2),
    DISPLAY_MEMORY,
+   DL_CHR20x8x2,
+   DL_CHR20x8x2,
+   DL_CHR20x8x2,
    DL_CHR20x16x2,
+   DL_CHR20x8x2,
    DL_CHR20x16x2,
-   DL_CHR20x16x2,
-   DL_CHR20x16x2,
-   DL_CHR20x16x2,
-   DL_CHR20x16x2,
-   DL_CHR20x16x2,
-   DL_CHR20x16x2,
-   DL_CHR20x16x2,
+   DL_CHR20x8x2,
+   DL_BLK2,
+   DL_CHR20x8x2,
+   DL_BLK2,
+   DL_CHR20x8x2,
+   DL_CHR20x8x2,
+   DL_CHR20x8x2,
+   DL_CHR20x8x2,
+   DL_CHR20x8x2,
+   DL_BLK2,
+   DL_CHR20x8x2,
+   DL_BLK2,
+   DL_CHR20x8x2,
+   DL_CHR20x8x2,
+   DL_CHR20x8x2,
+   DL_CHR20x8x2,
+   DL_CHR20x8x2,
    DL_CHR20x8x2,
    DL_CHR20x8x2,
    DL_JVB,
@@ -114,17 +128,17 @@ void screen_election(void)
     screen_puts(0,0,"   #FUJINET  2024   ");
     screen_puts(0,1,"  ELECTION RESULTS ");
 
-    screen_puts(0,3,l2);
-    screen_puts(0,6,l1);
+    screen_puts(0,3,"TRUMP");
+    screen_puts(0,5,"HARRIS");
 
     itoa(d2,rs,10);
     itoa(d1,ds,10);
 
-    screen_puts(7,3,rs);
-    screen_puts(7,6,ds);
+    screen_puts(20-strlen(rs),3,rs);
+    screen_puts(20-strlen(ds),5,ds);
 
-    rp=d2/16;
-    dp=d1/16;
+    rp=d2/14;
+    dp=d1/14;
 
     for (i=0;i<rp;i++)
     {
@@ -133,22 +147,55 @@ void screen_election(void)
 
     for (i=0;i<dp;i++)
     {
-        screen_puts(i,7,"\xBA");
+        screen_puts(i,6,"\xBA");
     }
 
-    screen_puts(0,9,"    LAST UPDATED:   ");
-    screen_puts(4,10,d);
-    screen_puts(5,11,t);
+    rp=d4/5;
+    dp=d3/5;
+    
+    screen_puts(0,8,"    SENATE SEATS    ");
+
+    screen_puts(0,9,"REPUBLICAN");
+    itoa(d4,rs,10);
+    screen_puts(20-strlen(rs),9,rs);
+    for (i=0;i<rp;i++)
+        screen_puts(i,10,"\x7A");
+    
+    screen_puts(0,11,"DEMOCRAT");
+    itoa(d3,ds,10);
+    screen_puts(20-strlen(ds),11,ds);
+    for (i=0;i<dp;i++)
+        screen_puts(i,12,"\xBA");
+
+    rp=d6/28;
+    dp=d5/28;
+    
+    screen_puts(0,14,"     REPS SEATS     ");
+
+    screen_puts(0,15,"REPUBLICAN");
+    itoa(d6,rs,10);
+    screen_puts(20-strlen(rs),15,rs);
+    for (i=0;i<rp;i++)
+        screen_puts(i,16,"\x7A");
+
+    screen_puts(0,17,"DEMOCRAT");
+    itoa(d5,ds,10);
+    screen_puts(20-strlen(ds),17,ds);
+    for (i=0;i<rp;i++)
+        screen_puts(i,18,"\xBA");
+        
+    screen_puts(4,20,d);
+    screen_puts(5,21,t);
 
     if (d1>269)
     {
-        screen_puts(12,6,"WINS!");
-        for (;;) { OS.color2++; }
+        screen_puts(12,5,"WINS!");
+        /* for (;;) { OS.color2++; } */
     }
     else if (d2>269)
     {
         screen_puts(12,3,"WINS!");
-        for (;;) { OS.color1++; }
+        /* for (;;) { OS.color1++; } */
     }
 
 }

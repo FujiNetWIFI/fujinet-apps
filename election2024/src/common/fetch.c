@@ -2,6 +2,8 @@
  * @brief Fetch data from Mozzwald's server
  */
 
+#ifndef FETCH_OVERRIDE
+
 #ifdef _COCO_BASIC_ 
 #include <cmoc.h>
 #include <coco.h>
@@ -47,3 +49,5 @@ void fetch(void)
 
     /* strcpy(s,"Harris|38|Trump|42|DEMS|28|REPS|38|DEMH|113|REPH|134|Nov 3, 2024|9:14pm UTC"); */
 }
+
+#endif /* FETCH_OVERRIDE */
