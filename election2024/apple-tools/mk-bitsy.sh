@@ -37,5 +37,5 @@ export ACX_DISK_NAME="$DISKNAME"
 
 ${ACX} create --prodos -f "$SRC_PRODOS"
 ${ACX} rm -f BASIC.SYSTEM
-${ACX} copy --from "$SRC_PRODOS" BITSY.BOOT QUIT.SYSTEM BASIC.SYSTEM
+${ACX} copy --from "$SRC_PRODOS" BITSY.BOOT QUIT.SYSTEM 
 ${ACX} rename-disk "$VOLUMENAME"

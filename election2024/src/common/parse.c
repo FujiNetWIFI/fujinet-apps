@@ -2,7 +2,7 @@
  * @brief Tokenize data retrieved from server
  */
 
-#ifdef _CMOC_VERSION_
+#ifdef _COCO_BASIC_
 #include <cmoc.h>
 #else
 #include <stdio.h>

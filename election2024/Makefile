@@ -18,8 +18,8 @@
 
 
 #TARGETS = atari apple2 c64 c16 vic20
-TARGETS = atari
-PROGRAM := election2024
+TARGETS = apple2 
+PROGRAM := e2024
 
 # Set DEBUG to true or false to see more or less output about what is going on.
 DEBUG := true
