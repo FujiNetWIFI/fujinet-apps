@@ -164,9 +164,6 @@ void idle(unsigned char t)
 
 int main(void)
 {
-    unsigned char *sp = (unsigned char *)0x5FF;
-    unsigned char c=0x8F;
-    
     while(1)
     {
         clrscr();

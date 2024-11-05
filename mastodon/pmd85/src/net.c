@@ -71,9 +71,9 @@ byte net_error(byte devid)
     net_ready(devid);
     
     dwwrite((byte *)&ec, sizeof(ec));
-    z = dwread(&err,1);
+    z = dwread(&err,1); // returns 1 on success, 0 on error
    
-    return z ? z : err;
+    return z ? err : 138; // NETWORK_ERROR_GENERAL_TIMEOUT 138;
 }
 
 /**

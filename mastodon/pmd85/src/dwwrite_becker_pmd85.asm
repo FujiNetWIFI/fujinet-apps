@@ -22,4 +22,5 @@ loop1:
     djnz loop1
     dec d
     jp nz,loop1
+    ld l,1
     ret
