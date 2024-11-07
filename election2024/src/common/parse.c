@@ -10,7 +10,7 @@
 #include <string.h>
 #endif /* CMOC_VERSION */
 
-char l1[16], l2[16], l3[16], l4[16], l5[16], l6[16], d[16], t[16];
+char l1[16], l2[16], l3[16], l4[16], l5[16], l6[16], d[16], t[16], newsite[10];
 char s1[8], s2[8], s3[8], s4[8], s5[8], s6[8];
 
 int d1=1, d2=2, d3=3, d4=4, d5=5, d6=6;
@@ -60,4 +60,6 @@ void parse(char *s)
     strcpy(d,p);
     p = strtok(NULL, delim);
     strcpy(t,p);
+    p = strtok(NULL, delim);
+    strcpy(newsite,p);
 }

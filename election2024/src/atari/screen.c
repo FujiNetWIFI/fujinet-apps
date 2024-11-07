@@ -133,9 +133,17 @@ void screen_election(void)
 
     unsigned char rp,dp,i;
 
+    OS.atract = 0;
+
     screen_clear();
     screen_puts(0,0,"   #FUJINET  2024   ");
     screen_puts(0,1,"  ELECTION RESULTS ");
+
+    if (strcmp(l1, "ERROR") == 0)
+    {
+        screen_puts(0,3,"ERROR FETCHING VOTES");
+        return;
+    }
 
     screen_puts(0,3,"TRUMP");
     screen_puts(0,5,"HARRIS");
@@ -182,7 +190,8 @@ void screen_election(void)
     draw_bar(18, dp, '\xBA');
         
     screen_puts(4,20,d);
-    screen_puts(5,21,t);
+    screen_puts(0,21,t);
+    screen_puts(11,21,newsite);
 
     if (d1>269)
     {
