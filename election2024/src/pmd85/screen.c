@@ -18,10 +18,10 @@
 
 void revers(unsigned char onoff)
 {
-  if (onoff)
-    cputs("\x1Bp");
-  else
-    cputs("\x1Bq");
+    if (onoff)
+        cputs("\x1Bp");
+    else
+        cputs("\x1Bq");
 }
 
 void screen_init(void)
@@ -106,6 +106,17 @@ void screen_election(void)
     cprintf("%3d", d2);
     gotoxy(SCR_X0+SCR_WIDTH-4, SCR_Y0+6);
     cprintf("%3d", d1);
+
+    if (d1>269)
+    {
+        gotoxy(SCR_X0+20, SCR_Y0+6);
+        cputs("WINS!");
+    }
+    else if (d2>269)
+    {
+        gotoxy(SCR_X0+20, SCR_Y0+2);
+        cputs("WINS!");
+    }
 
     rp = (d4 * SCR_WIDTH + 50) / 100;
     draw_bar(SCR_Y0+14, rp, 1, ACE_RED);

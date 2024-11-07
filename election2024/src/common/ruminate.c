@@ -14,9 +14,7 @@ void ruminate(void)
 #if defined(_COCO_BASIC_)
 	unsigned long i=0;
 	for (i=0;i<100000;i++); /* seriously, cmoc, WTF? */
-#elif defined(__PMD85__)
-	sleep(640); /* PMD is slow even if it sleeps ... */
 #else
-    sleep(900);
+    sleep(300);
 #endif /* _COCO_BASIC_ */
 }

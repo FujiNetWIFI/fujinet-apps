@@ -11,12 +11,13 @@
 #define DISPLAY_LIST 0x0600
 #define DISPLAY_MEMORY 0x7200
 #define FONT_MEMORY 0x7800
-#define SCREEN_SIZE (20*24)
+#define SCREEN_WIDTH 20
+#define SCREEN_SIZE (SCREEN_WIDTH*24)
 
 unsigned char *video_ptr = NULL;
 
-#define SetChar(x,y,a) video_ptr[(x)+(y)*20]=(a);
-#define GetChar(x,y) video_ptr[(x)+(y)*20]
+#define SetChar(x,y,a) video_ptr[(x)+(y)*SCREEN_WIDTH]=(a);
+#define GetChar(x,y) video_ptr[(x)+(y)*SCREEN_WIDTH]
 
 unsigned char fontPatch[8]=
   {
@@ -94,6 +95,14 @@ void screen_puts(unsigned char x,unsigned char y,char *s)
     } while(*s!=0);
 }
 
+void draw_bar(unsigned char y, unsigned char w, unsigned char c)
+{
+    unsigned char i;
+    if (w > SCREEN_WIDTH) w = SCREEN_WIDTH;
+    for (i = 0; i < w; i++)
+        SetChar(i, y, c);
+}
+
 void screen_init(void)
 {
     unsigned char *fp = (unsigned char *)FONT_MEMORY;
@@ -134,67 +143,55 @@ void screen_election(void)
     itoa(d2,rs,10);
     itoa(d1,ds,10);
 
-    screen_puts(20-strlen(rs),3,rs);
-    screen_puts(20-strlen(ds),5,ds);
+    screen_puts(SCREEN_WIDTH-strlen(rs),3,rs);
+    screen_puts(SCREEN_WIDTH-strlen(ds),5,ds);
 
-    rp=d2/14;
-    dp=d1/14;
+    rp = (d2 * SCREEN_WIDTH + 135) / 270;
+    dp = (d1 * SCREEN_WIDTH + 135) / 270;
+    draw_bar(4, rp, '\x7A');
+    draw_bar(6, dp, '\xBA');
 
-    for (i=0;i<rp;i++)
-    {
-        screen_puts(i,4,"\x7A");
-    }
-
-    for (i=0;i<dp;i++)
-    {
-        screen_puts(i,6,"\xBA");
-    }
-
-    rp=d4/5;
-    dp=d3/5;
-    
     screen_puts(0,8,"    SENATE SEATS    ");
 
     screen_puts(0,9,"REPUBLICAN");
     itoa(d4,rs,10);
-    screen_puts(20-strlen(rs),9,rs);
-    for (i=0;i<rp;i++)
-        screen_puts(i,10,"\x7A");
+    screen_puts(SCREEN_WIDTH-strlen(rs),9,rs);
     
     screen_puts(0,11,"DEMOCRAT");
     itoa(d3,ds,10);
-    screen_puts(20-strlen(ds),11,ds);
-    for (i=0;i<dp;i++)
-        screen_puts(i,12,"\xBA");
+    screen_puts(SCREEN_WIDTH-strlen(ds),11,ds);
 
-    rp=d6/28;
-    dp=d5/28;
-    
+    rp = (d4 * SCREEN_WIDTH + 50) / 100;
+    dp = (d3 * SCREEN_WIDTH + 50) / 100;
+    draw_bar(12, dp, '\xBA');
+    draw_bar(10, rp, '\x7A');
+
     screen_puts(0,14,"     REPS SEATS     ");
 
     screen_puts(0,15,"REPUBLICAN");
     itoa(d6,rs,10);
-    screen_puts(20-strlen(rs),15,rs);
-    for (i=0;i<rp;i++)
-        screen_puts(i,16,"\x7A");
+    screen_puts(SCREEN_WIDTH-strlen(rs),15,rs);
 
     screen_puts(0,17,"DEMOCRAT");
     itoa(d5,ds,10);
-    screen_puts(20-strlen(ds),17,ds);
-    for (i=0;i<rp;i++)
-        screen_puts(i,18,"\xBA");
+    screen_puts(SCREEN_WIDTH-strlen(ds),17,ds);
+
+    rp = (d6 * SCREEN_WIDTH + 267) / 535;
+    dp = (d5 * SCREEN_WIDTH + 267) / 535;
+    draw_bar(16, rp, '\x7A');
+    draw_bar(18, dp, '\xBA');
         
     screen_puts(4,20,d);
     screen_puts(5,21,t);
 
     if (d1>269)
     {
-        screen_puts(12,5,"WINS!");
+        screen_puts(9,5,"WINS!");
         /* for (;;) { OS.color2++; } */
     }
     else if (d2>269)
     {
-        screen_puts(12,3,"WINS!");
+        screen_puts(9,3,"WINS!");
         /* for (;;) { OS.color1++; } */
     }
 
