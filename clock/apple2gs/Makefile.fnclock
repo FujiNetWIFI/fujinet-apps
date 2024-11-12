@@ -1,0 +1,197 @@
+###############################################################################
+### Generic Makefile for cc65 projects - full version with abstract options ###
+### V1.3.0(w) 2010 - 2013 Oliver Schmidt & Patryk "Silver Dream !" Łogiewa  ###
+###############################################################################
+ 
+###############################################################################
+### In order to override defaults - values can be assigned to the variables ###
+###############################################################################
+ 
+TARGETS := apple2gs
+FUJINET_LIB_VERSION = 4.7.3
+FUJINET_LIB = fujinet-lib
+FUJINET_LIB_VERSION_DIR = $(FUJINET_LIB)/$(FUJINET_LIB_VERSION)-$(TARGETS)
+
+# Name of the final, single-file executable.
+# Default: name of the current dir
+PROGRAM := fnclock
+
+# Path(s) to additional libraries required for linking the program
+# Use only if you don't want to place copies of the libraries in SRCDIR
+# Default: none
+LIBS	:= 
+
+# Custom linker issuration file
+# Use only if you don't want to place it in SRCDIR
+# Default: none
+CONFIG  := 
+ 
+# Additional C compiler flags and options.
+# Default: none
+CFLAGS  = -I -P +F cc=-p\"orcac.h\" cc=-i$(FUJINET_LIB_VERSION_DIR) cc=-dUSING_FUJINET_LIB
+
+# Additional assembler flags and options.
+# Default: none
+ASFLAGS =
+ 
+# Additional linker flags and options.
+# Default: none
+LDFLAGS = 
+ 
+# Path to the directory containing C and ASM sources.
+# Default: src
+SRCDIR := src/fnclock
+CFLAGS  += cc=-i$(SRCDIR)
+
+# Path to the directory where object files are to be stored (inside respective target subdirectories).
+# Default: obj
+OBJDIR :=
+
+###############################################################################
+###  Defaults to be used if nothing defined in the editable sections above  ###
+###############################################################################
+ 
+# Presume we're in a project directory so name the program like the current
+# directory. Set PROGRAM to override.
+ifeq ($(PROGRAM),)
+  PROGRAM := $(notdir $(CURDIR))
+endif
+ 
+# Presume the C and asm source files to be located in the subdirectory 'src'.
+# Set SRCDIR to override.
+ifeq ($(SRCDIR),)
+  SRCDIR := src
+endif
+ 
+# Presume the object and dependency files to be located in the subdirectory
+# 'obj' (which will be created). Set OBJDIR to override.
+ifeq ($(OBJDIR),)
+  OBJDIR := obj
+endif
+
+###############################################################################
+### The magic begins                                                        ###
+###############################################################################
+ 
+# The "Native Win32" GNU Make contains quite some workarounds to get along with
+# cmd.exe as shell. However it does not provide means to determine that it does
+# actually activate those workarounds. Especially does $(SHELL) NOT contain the
+# value 'cmd.exe'. So the usual way to determine if cmd.exe is being used is to
+# execute the command 'echo' without any parameters. Only cmd.exe will return a
+# non-empy string - saying 'ECHO is on/off'.
+#
+# Many "Native Win32" prorams accept '/' as directory delimiter just fine. How-
+# ever the internal commands of cmd.exe generally require '\' to be used.
+#
+# cmd.exe has an internal command 'mkdir' that doesn't understand nor require a
+# '-p' to create parent directories as needed.
+#
+# cmd.exe has an internal command 'del' that reports a syntax error if executed
+# without any file so make sure to call it only if there's an actual argument.
+ifeq ($(shell echo),)
+  MKDIR = mkdir -p $1
+  RMDIR = rmdir $1
+  RMFILES = $(RM) $1
+else
+  MKDIR = mkdir $(subst /,\,$1)
+  RMDIR = rmdir $(subst /,\,$1)
+  RMFILES = $(if $1,del /f $(subst /,\,$1))
+endif
+COMMA := ,
+SPACE := $(N/A) $(N/A)
+define NEWLINE
+ 
+endef
+# Note: Do not remove any of the two empty lines above !
+ 
+FUJINET_LIB_DOWNLOAD_URL = https://github.com/FujiNetWIFI/fujinet-lib/releases/download/v$(FUJINET_LIB_VERSION)/fujinet-lib-$(TARGETS)-$(FUJINET_LIB_VERSION).zip
+FUJINET_LIB_DOWNLOAD_FILE = $(FUJINET_LIB)/fujinet-lib-$(TARGETS)-$(FUJINET_LIB_VERSION).zip
+
+# Set PROGRAM to something like 'myprog.c64'.
+override PROGRAM := $(PROGRAM)
+ 
+# Set SOURCES to something like 'src/foo.c src/bar.asm'.
+SOURCES := $(wildcard $(SRCDIR)/*.cc)
+SOURCES += $(wildcard $(SRCDIR)/*.asm)
+ 
+# Set OBJECTS to something like 'obj/foo.o obj/bar.o'.
+OBJECTS := $(addsuffix .a,$(basename $(addprefix $(OBJDIR)/,$(notdir $(SOURCES)))))
+
+# Add to LIBS something like 'src/foo.lib'.
+LIBS += $(wildcard $(SRCDIR)/*.lib)
+LIBS += $(FUJINET_LIB_VERSION_DIR)/fujinet-$(TARGETS)-$(FUJINET_LIB_VERSION).lib
+
+# Add to CONFIG something like 'src/foo.cfg'.
+CONFIG += $(wildcard $(SRCDIR)/*.cfg)
+ 
+# Select CONFIG file to use. Target specific isss have higher priority.
+ifneq ($(word 2,$(CONFIG)),)
+  CONFIG := $(firstword $(CONFIG))
+  $(info Using iss file $(CONFIG) for linking)
+endif
+ 
+.SUFFIXES:
+.PHONY: all test clean zap love
+ 
+all: clean $(PROGRAM) dist
+
+-include $(STATEFILE)
+ 
+get_fujinet_lib:
+	@if [ ! -f "$(FUJINET_LIB_DOWNLOAD_FILE)" ]; then \
+		if [ -d "$(FUJINET_LIB_VERSION_DIR)" ]; then \
+		  echo "A directory already exists with version $(FUJINET_LIB_VERSION) - please remove it first"; \
+			exit 1; \
+		fi; \
+		HTTPSTATUS=$$(curl -Is $(FUJINET_LIB_DOWNLOAD_URL) | head -n 1 | awk '{print $$2}'); \
+		if [ "$${HTTPSTATUS}" == "404" ]; then \
+			echo "ERROR: Unable to find file $(FUJINET_LIB_DOWNLOAD_URL)"; \
+			exit 1; \
+		fi; \
+		echo "Downloading fujinet-lib for $(TARGETS) version $(FUJINET_LIB_VERSION) from $(FUJINET_LIB_DOWNLOAD_URL)"; \
+		mkdir -p $(FUJINET_LIB); \
+		curl -L $(FUJINET_LIB_DOWNLOAD_URL) -o $(FUJINET_LIB_DOWNLOAD_FILE); \
+		echo "Unzipping to $(FUJINET_LIB)"; \
+		unzip -o $(FUJINET_LIB_DOWNLOAD_FILE) -d $(FUJINET_LIB_VERSION_DIR); \
+		iix chtyp -t lib $(FUJINET_LIB_VERSION_DIR)/fujinet-apple2gs-$(FUJINET_LIB_VERSION).lib; \
+		echo "Unzip complete."; \
+	fi
+
+# The remaining targets.
+$(OBJDIR):
+	$(call MKDIR,$@)
+ 
+vpath %.cc $(SRCDIR)
+ 
+$(OBJDIR)/%.a: %.cc | $(OBJDIR)
+	iix compile $(CFLAGS) $< keep=$(OBJDIR)/$$
+ 
+vpath %.asm $(SRCDIR)
+ 
+$(OBJDIR)/%.a: %.asm | $(OBJDIR)
+	iix assemble $(ASFLAGS) $< keep=$(OBJDIR)/$$
+ 
+$(PROGRAM): $(CONFIG) $(OBJECTS) $(LIBS)
+	iix link $(subst .a,,$^) keep=$@
+ 
+dist: $(PROGRAM)
+	     cp dist.apple2/bootable.po dist.apple2/$(PROGRAM).po
+	     java -jar dist.apple2/ac.jar -p dist.apple2/$(PROGRAM).po $(PROGRAM) exe <$(PROGRAM)
+
+clean:
+	$(call RMFILES,$(OBJECTS))
+	$(call RMFILES,$(OBJECTS:.a=.root))
+	$(call RMFILES,$(DEPENDS))
+	$(call RMFILES,$(REMOVES))
+	$(call RMFILES,$(PROGRAM))
+ 
+OBJDIRLIST := $(wildcard $(OBJDIR)/*)
+ 
+zap:
+	$(foreach o,$(OBJDIRLIST),-$(call RMFILES,$o/*.a $o/*.root)$(NEWLINE))
+	$(foreach o,$(OBJDIRLIST),-$(call RMDIR,$o)$(NEWLINE))
+	-$(call RMDIR,$(OBJDIR))
+	-$(call RMFILES,$(basename $(PROGRAM)).* $(STATEFILE))
+ 
+love:
+	@echo "Not war, eh?"
