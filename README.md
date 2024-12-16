@@ -9,11 +9,14 @@ The examples are useful to read, but a better "source of truth" is in the `fujin
 
 Various applications have been moved out into their own repositories including:
 
+- [news](https://github.com/FujiNetWIFI/fujinet-news)
 - [fujinet-lib-examples](https://github.com/FujiNetWIFI/fujinet-lib-examples)
 - [weather](https://github.com/FujiNetWIFI/fujinet-weather)
 - [cater](https://github.com/FujiNetWIFI/fujinet-cater)
 - [iss-tracker](https://github.com/FujiNetWIFI/fujinet-iss-tracker)
 - [contiki-webbrowser](https://github.com/FujiNetWIFI/fujinet-contiki-webbrowser)
+
+The existing code here was moved into 00_moved-to-new-repo for archival purposes, please made all new commits in the new repos above if you are going to contribute to that project.
 
 
 ## Creating new applications
