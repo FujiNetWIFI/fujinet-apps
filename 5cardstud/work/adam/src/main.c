@@ -24,12 +24,22 @@ void main(void)
         load_udgs();
         vdp_color(VDP_INK_WHITE,VDP_INK_DARK_GREEN,VDP_INK_DARK_GREEN);
         clrscr();
+
+        smartkeys_puts(64,64,"Here is an example of SmartKeys Output.");
         
         cputs("\xa0\xa1 \xa2\xa3\xa4"); // BET
 
 	cputs(" NORMAL TEXT");
 
-        smartkeys_puts(64,64,"Here is an example of SmartKeys Output.");
+	gotoxy(2,2);
+	textcolor(RED);
+	textbackground(WHITE);
+	cputs("\x92");
+	
+	textcolor(BLACK);
+	cputs("\x8F");
+
+
 
 
 	while(1);
