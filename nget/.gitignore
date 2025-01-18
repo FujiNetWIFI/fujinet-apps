@@ -1,0 +1,19 @@
+.vscode/
+
+# build artifacts
+build/
+dist/
+obj/
+
+# emulator configs
+altirra-debug.ini
+atari800-debug.cfg
+AppleWin.log
+
+.DS_Store
+
+*.jar
+*.dsk
+
+assets/*
+!assets/README.md
