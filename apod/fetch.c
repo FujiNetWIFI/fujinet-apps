@@ -52,7 +52,7 @@ void fetch_image(unsigned char choice, char sample, int size, unsigned char pick
     snprintf(url, sizeof(url), "%s?mode=%s&sample=%d&date=%02d%02d%02d", baseurl, modes[choice], sample, pick_yr, pick_mo, pick_day);
   }
 
-  nopen(1 /* unit 1 */, url, 4 /* read */);
+  nopen(1 /* unit 1 */, url, 12 /* HTTP GET sans resolve */);
   /* FIXME: Check for error */
 
   if (size == 7680) {
