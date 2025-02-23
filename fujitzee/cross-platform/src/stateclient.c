@@ -203,7 +203,7 @@ uint8_t apiCall(char *path, bool isAsync) {
   }
 
   // Network error. Reset position and abort.
-  if (network_open(url, OPEN_MODE_HTTP_GET, OPEN_TRANS_NONE)) {
+  if (network_open(url, OPEN_MODE_HTTP_GET_H, OPEN_TRANS_NONE)) {
     rx_pos=0;
     return API_CALL_ERROR;
   }
