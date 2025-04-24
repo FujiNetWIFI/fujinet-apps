@@ -10,12 +10,27 @@ SRCS := $(shell find $(SRC_DIRS) -name *.cpp -or -name *.c -or -name *.asm)
 OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
 DEPS := $(OBJS:.o=.d)
 
-CFLAGS=+coleco -subtype=adam -D__ADAM__
-LDFLAGS=+coleco -subtype=adam -o$(TARGET_EXEC) -create-app -leos
+CFLAGS=+coleco -subtype=adam -D__ADAM__ -DUSE_PLATFORM_SPECIFIC_INPUT
+LDFLAGS=+coleco -subtype=adam  -pragma-redirect:CRT_FONT=_font_8x8_coleco_adam_system -o$(TARGET_EXEC) -create-app -leos -lsmartkeys
 ASFLAGS=+coleco -subtype=adam
 
 INC_DIRS := $(shell find $(SRC_DIRS) -type d)
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
+
+
+#.PHONY: src/adam/graphics.h
+#src/adam/graphics.h: 
+#	( echo "static const u8 tiles_ch[] = {" ;\
+#	gawk -F: -e '$$1=="CH" { if (i>=0 && i<256){ printf("   %s\n", gensub(/(..)/,"0x\\1,","g",$$2)) } i++ }' src/adam/5cs.mag ;\
+#	echo "};\n" ; \
+#	echo "static const u8 tiles_cc[] = {" ;\
+#	gawk -F: -e '$$1=="CC" { if (i>=0 && i<32){ if (i%8 == 0) {printf("\n   ")}; split($$2,array,"|"); printf ("0x%02x,", strtonum((array[1])*16) + strtonum(array[2])); } i++ }' src/adam/5cs.mag ;\
+#	echo "\n};\n" ; ) > $@
+
+	#LC_ALL=C gawk -F: -e '$$1=="SP" { if (i<38){ for(x=1;x<=64;x+=2) printf "%c",strtonum("0x"substr($$2,x,2)) } i++ }' 5cs.mag |../legend/tools/x86_64-Linux/dan2 | xxd -i
+	#gawk -F: -e '$$1=="SP" { if (i<38){ for(x=1;x<=64;x+=2) printf "%c",strtonum("0x" substr($$2,x,2)) } i++ }' 5cs.mag | hd
+	#
+
 
 $(BUILD_DIR)/$(TARGET_EXEC): $(OBJS)
 	$(CC) $(LDFLAGS) $(OBJS)

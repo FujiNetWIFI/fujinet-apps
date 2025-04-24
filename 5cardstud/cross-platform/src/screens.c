@@ -124,15 +124,20 @@ bool inputFieldCycle(uint8_t x, uint8_t y, uint8_t max, uint8_t* buffer) {
  // }
 
 
-
-
   // Process any waiting keystrokes
+  #ifdef USE_PLATFORM_SPECIFIC_INPUT
+  inputKey = getPlatformKey();
+  if (inputKey) {
+    done=0;
+    disableDoubleBuffer();
+  #else
   if (kbhit()) {
     done=0;
     disableDoubleBuffer();
     inputKey = cgetc();
-
-    if (inputKey == KEY_RETURN && curx>1) {
+  #endif
+    
+    if ((inputKey == KEY_RETURN ) && curx>1) {
       done=1;
       // remove cursor
       drawText(x+1+i,y," ");
@@ -140,7 +145,7 @@ bool inputFieldCycle(uint8_t x, uint8_t y, uint8_t max, uint8_t* buffer) {
       buffer[--curx]=0;
       drawText(x+1+curx,y," ");
     } else if (
-      curx < max && ((curx>0 && inputKey == KEY_SPACE) || (inputKey>= 48 && inputKey <=57) || (inputKey>= 65 && inputKey <=90))    // 0-9 A-Z
+      curx < max && ((curx>0 && inputKey == KEY_SPACE) || (inputKey>= 97 && inputKey <=122) ||(inputKey>= 48 && inputKey <=57) || (inputKey>= 65 && inputKey <=90))    // 0-9 A-Z
     ) {
       buffer[curx]=inputKey;
       buffer[++curx]=0;
@@ -306,7 +311,7 @@ void showTableSelectionScreen() {
         } /*else if (inputKey != 0) {
           itoa(inputKey, tempBuffer, 10);
           drawStatusText(tempBuffer);
-        }*/
+        } */
         
         if (!shownChip || (tableCount>0 && inputDirY)) {
 
