@@ -14,6 +14,7 @@
 #include "stateclient.h"
 #include "misc.h"
 #include "platform-specific/network.h"
+#include <conio.h>
 
 char rx_buf[2048];     // buffer for json payload
 char urlBuffer[128];
@@ -65,22 +66,22 @@ void updateState(unsigned char isTables) {
       key = line;
 
       // Special case - "pl" (players) and "vm" (valid moves) keys are arrays of key/value pairs
-      if (strcmp(key,"pl")==0 || strcmp(key,"vm")==0 || strcmp(key,"null")==0) {
+      if (strcmp(key,"pl")==0 || strcmp(key,"vm")==0 || strcmp(key,"null")==0 || strcmp(key,"NULL")==0) {
 
-        // If the key is a NULL object, we effectively break out of the array by setting parent to empty
-        if (strcmp(key,"null")==0)
+        // If the key's value is a NULL object, we effectively break out of the array by setting parent to empty
+        if (strcmp(key,"null")==0 || strcmp(key,"NULL")==0)
           key="";
-        
+
         parent=key;
  
         // Reset isKey since the next line will be a key
         isKey = false;
-      } 
+      }
     } else {
       value = line;
       if (value[0]==0)
         value = "";
-
+        
    
       // Set our state variables based on the key
       if (isTables) {

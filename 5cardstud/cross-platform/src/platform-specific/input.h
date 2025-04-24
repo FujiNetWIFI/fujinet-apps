@@ -13,4 +13,8 @@
 // Platform specific implementations
 unsigned char readJoystick();
 
+#ifdef USE_PLATFORM_SPECIFIC_INPUT
+int getPlatformKey(void);
+#endif
+
 #endif /* INPUT_H */

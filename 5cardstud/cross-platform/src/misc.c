@@ -9,10 +9,10 @@
 #include "adam/joystick.h"
 #else
 #include <joystick.h>
+#endif /* __ADAM__ */
 #include <stdio.h>
 #include <string.h>
 #include <conio.h>
-#endif /* __ADAM__ */
 #endif /* _CMOC_VERSION_ */
 #include "platform-specific/graphics.h"
 #include "platform-specific/input.h"
@@ -38,8 +38,12 @@ void pause(unsigned char frames) {
 
 void clearCommonInput() {
   inputTrigger=inputKey=inputDirY=inputDirX=_lastJoy=_joy=0;
+#ifndef USE_PLATFORM_SPECIFIC_INPUT
   while (kbhit()) 
     cgetc();
+#else
+  while (!getPlatformKey());
+#endif
 }
 
 void readCommonInput() {
@@ -68,10 +72,16 @@ void readCommonInput() {
 
   inputKey=0;
 
+#ifndef USE_PLATFORM_SPECIFIC_INPUT
   if (!kbhit())
     return;
     
   inputKey = cgetc();
+#else
+  inputKey = getPlatformKey();
+#endif
+  if (!inputKey )
+    return;
 
   switch (inputKey) {
     case KEY_LEFT_ARROW:

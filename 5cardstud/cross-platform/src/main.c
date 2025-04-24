@@ -66,6 +66,9 @@ void main(void)
 #ifdef _CMOC_VERSION_
   network_init();
 #endif
+#ifdef USE_PLATFORM_SPECIFIC_INPUT
+  initPlatformKeyboardInput();
+#endif
 
   loadPrefs();
 
