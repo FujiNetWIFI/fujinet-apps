@@ -29,7 +29,7 @@
 #define KEY_DOWN_ARROW_2    0x11
 #define KEY_DOWN_ARROW_3    0x3D // =
 
-#define KEY_RETURN       0x0a
+#define KEY_RETURN       0x0d
 #define KEY_ESCAPE       0x1b
 #define KEY_ESCAPE_ALT   0x03
 #define KEY_SPACE        0x20
