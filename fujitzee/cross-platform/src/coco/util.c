@@ -1,3 +1,4 @@
+#ifdef _CMOC_VERSION_
 /*
   Platform specific utilities that don't fit in any category
 */
@@ -41,3 +42,5 @@ char kbhit() {
   lastchar= c;
   return(c);
 }
+#endif /* _CMOC_VERSION_ */
+
