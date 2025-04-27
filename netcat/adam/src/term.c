@@ -12,7 +12,6 @@
 #include <eos.h>
 #include <stdbool.h>
 #include "globals.h"
-#include <sys/ioctl.h>
 
 /**
  * @brief AdamNet command completed
@@ -36,11 +35,6 @@
  */
 #define RXBUF_SIZE 1024
 unsigned char rxBuf[RXBUF_SIZE];
-
-/**
- * Used to hold inverse character set
- */
-unsigned char udgs[1024];
 
 /**
  * @brief send close command to disconnect
@@ -79,7 +73,7 @@ void connect(void)
     unsigned char mode;
     unsigned char translation;
     char url[256];
-  } openCmd = {'O',READ_WRITE,NONE,"N:TELNET://adambbs.servebbs.org:6400/"};
+  } openCmd = {'O',READ_WRITE,NONE,"N:HTTPS://www.gnu.org/licenses/gpl-3.0.txt"};
 
   eos_write_character_device(NET_DEV,openCmd,sizeof(openCmd));
 
@@ -124,15 +118,8 @@ void in(void)
     {
       unsigned short l = dcb->len;
 
-      putch(0x08);
-      
       for (unsigned short i=0;i<l;i++)
-      {
-	putch(rxBuf[i]);
-      }
-
-      putch('_');
-
+	putchar(rxBuf[i]);
     }
 }
 
@@ -140,10 +127,6 @@ void term(void)
 {
   vdp_set_mode(0);
   vdp_color(VDP_INK_BLACK,VDP_INK_CYAN,VDP_INK_CYAN);
-  
-  clrscr();
-
-  putch('_'); // Plot cursor.
   
   if (!connect())
     {

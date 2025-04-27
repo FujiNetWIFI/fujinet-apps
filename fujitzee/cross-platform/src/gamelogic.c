@@ -11,9 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#ifndef __ADAM__
 #include <peekpoke.h>
-#endif /* __ADAM__ */
 #endif
 #include "platform-specific/graphics.h"
 #include "platform-specific/sound.h"

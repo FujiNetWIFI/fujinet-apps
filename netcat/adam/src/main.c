@@ -14,7 +14,7 @@
 
 void main(void)
 {
-  state=TERM;
+  state=SPLASH;
   while (true)
     {
       switch(state)
