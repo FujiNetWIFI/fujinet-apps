@@ -11,7 +11,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#ifndef __ADAM__
 #include <peekpoke.h>
+#endif /* __ADAM__ */
 #endif
 #include "platform-specific/graphics.h"
 #include "platform-specific/sound.h"
@@ -313,8 +315,9 @@ void waitOnPlayerMove() {
   resetTimer();
 
   // Determine max jiffies for PAL and NTS
+#ifdef __ATARI__
   jifsPerSecond=PEEK(0xD014)==1 ? 50 : 60;
-
+#endif /* __ATARI__ */
   maxJifs = jifsPerSecond*state.moveTime;
   waitCount=0;
   
