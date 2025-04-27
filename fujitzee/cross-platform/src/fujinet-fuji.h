@@ -195,6 +195,16 @@ typedef struct
 } NewDisk;
 #endif
 
+#ifdef __ADAM__
+typedef struct
+{
+    uint8_t hostSlot;
+    uint8_t deviceSlot;
+    uint32_t numBlocks;
+    char filename[256];
+} NewDisk;
+#endif /* __ADAM__ */
+
 // WIP, only 64 fully supported at the moment.
 enum AppKeySize
 {
