@@ -138,12 +138,12 @@ bool isCardPresent(unsigned char x, unsigned char y)
 {
     unsigned char far *video = VIDEO_RAM_ADDR;
     unsigned char o = 0;
-    
+
     x <<= 1; // Convert column to video ram offset
     y <<= 3; // Convert row to line
     o = y * VIDEO_LINE_BYTES + x; // compute offset
 
-    return !(video[o] == 0x55); // Return true if background color isn't plot.    
+    return !(video[o] == 0x55); // Return true if background color isn't plot.
 }
 
 void drawCard(unsigned char x, unsigned char y, unsigned char partial, const char* s, unsigned char isHidden)
@@ -152,7 +152,7 @@ void drawCard(unsigned char x, unsigned char y, unsigned char partial, const cha
     unsigned char *val = NULL;  // pointer to value tile
     bool red = false;
     bool adjacentCard = false;
-    
+
     switch(s[1])
     {
     case 'h':
@@ -209,7 +209,7 @@ void drawCard(unsigned char x, unsigned char y, unsigned char partial, const cha
             val = &red_card_front[5];
         else
             val = &black_card_front[5];
-        
+
         break;
     case '7':
         if (red)
@@ -286,7 +286,7 @@ void drawCard(unsigned char x, unsigned char y, unsigned char partial, const cha
         plot_tile(&card_edges[8],x+2,y);
     }
 
-    // 
+    //
 
     // Draw left border only if not overlaying existing card
 
@@ -375,7 +375,10 @@ void initGraphics()
 
 void waitvsync()
 {
+    // Wait until we are in vsync
     while (inp(0x3DA) & 0x08);
+    // Wait until we aren't.
+    while (!inp(0x3DA) & 0x08));
 }
 
 uint8_t cycleNextColor()
