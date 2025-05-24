@@ -34,6 +34,12 @@
 #define KEY_SPACE        0x20
 #define KEY_BACKSPACE    0x08
 
+#define JOY_UP(v)	(0)
+#define JOY_DOWN(v)	(0)
+#define JOY_LEFT(v)	(0)
+#define JOY_RIGHT(v)	(0)
+#define JOY_BTN_1(v)	(0)
+
 /*
   Mapping for converting incoming ALT letters to a standard case
 */

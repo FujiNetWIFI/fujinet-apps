@@ -1,6 +1,10 @@
-/* 
+/*
  * Include CC65 style Joystick defines for Adam - There is a probably a better way to do this.
  */
+
+#ifdef __WATCOMC__
+#define USE_PLATFORM_SPECIFIC_INPUT 1
+#endif
 
 #ifdef _CMOC_VERSION_
 #include "coco/joystick.h"
@@ -8,7 +12,9 @@
 #ifdef __ADAM__
 #include "adam/joystick.h"
 #else
+#ifdef __CC65__
 #include <joystick.h>
+#endif /* __CC65__ */
 #endif /* __ADAM__ */
 #include <stdio.h>
 #include <string.h>
@@ -39,7 +45,7 @@ void pause(unsigned char frames) {
 void clearCommonInput() {
   inputTrigger=inputKey=inputDirY=inputDirX=_lastJoy=_joy=0;
 #ifndef USE_PLATFORM_SPECIFIC_INPUT
-  while (kbhit()) 
+  while (kbhit())
     cgetc();
 #else
   while (!getPlatformKey());
@@ -56,9 +62,9 @@ void readCommonInput() {
 
     if (JOY_LEFT(_joy))
       inputDirX = -1;
-    else if (JOY_RIGHT(_joy)) 
+    else if (JOY_RIGHT(_joy))
       inputDirX =1;
-    
+
     if (JOY_UP(_joy))
       inputDirY = -1;
     else if (JOY_DOWN(_joy))
@@ -75,7 +81,7 @@ void readCommonInput() {
 #ifndef USE_PLATFORM_SPECIFIC_INPUT
   if (!kbhit())
     return;
-    
+
   inputKey = cgetc();
 #else
   inputKey = getPlatformKey();
@@ -122,7 +128,7 @@ void applyPrefs() {
 
 void loadPrefs() {
   read_appkey(AK_CREATOR_ID, AK_APP_ID, AK_KEY_PREFS, tempBuffer);
-  
+
   if (strlen(tempBuffer)==0) {
     // Default all prefs to 1
     memset(prefs,1,3);
