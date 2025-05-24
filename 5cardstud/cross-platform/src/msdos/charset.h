@@ -4,6 +4,53 @@
  */
 
 /**
+ * @brief Arrow
+ */
+
+unsigned char arrow[][16] =
+    {
+        {
+            0x55, 0x55,
+            0x5a, 0x95,
+            0x66, 0x65,
+            0x9a, 0x99,
+            0xaa, 0xa9,
+            0x9a, 0x99,
+            0x66, 0x65,
+            0x5a, 0x95
+        }
+    };
+
+/**
+ * @brief chip X and O
+ */
+unsigned char chip[][16] =
+    {
+        {
+            // CHIP X
+            0x55, 0x55,
+            0x55, 0x55,
+            0x5a, 0xa5,
+            0x66, 0x99,
+            0x69, 0x69,
+            0x69, 0x69,
+            0x66, 0x99,
+            0x5a, 0xa5
+        },
+        {
+            // CHIP O
+            0x55, 0x55,
+            0x5a, 0x95,
+            0x66, 0x65,
+            0x9a, 0x99,
+            0xaa, 0xa9,
+            0x9a, 0x99,
+            0x66, 0x65,
+            0x5a, 0x95
+        },
+    };
+
+/**
  * @brief Table Border tiles, TL, TR, BL, BR
  */
 unsigned char border[][16] =

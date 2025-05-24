@@ -296,6 +296,7 @@ void drawCard(unsigned char x, unsigned char y, unsigned char partial, const cha
 
 void drawChip(unsigned char x, unsigned char y)
 {
+    plot_tile(&chip[0],x,y);
 }
 
 void drawBlank(unsigned char x, unsigned char y)
