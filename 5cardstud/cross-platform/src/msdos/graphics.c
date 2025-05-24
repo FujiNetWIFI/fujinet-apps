@@ -1,5 +1,6 @@
 #ifdef __WATCOMC__
 
+#include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
 #include <dos.h>
@@ -69,9 +70,12 @@ void drawText(unsigned char x, unsigned char y, char *s)
             continue;
 
         if (x>39)
-            continue;
-        else
-            plot_tile(&ascii[c],x++,y);
+        {
+            x=0;
+            y++;
+        }
+
+        plot_tile(&ascii[c],x++,y);
     }
 }
 
@@ -102,22 +106,166 @@ void resetScreen()
 
 void clearStatusBar()
 {
+    unsigned char far *video = VIDEO_RAM_ADDR;
+    _fmemset(&video[0x1CC0],0x00,640);
+    _fmemset(&video[0x1CC0+0x2000],0x00,640);
 }
 
 void drawStatusTextAt(unsigned char x, char* s)
 {
+    clearStatusBar();
+    drawText(x,23,s);
 }
 
 void drawStatusText(char* s)
 {
+    clearStatusBar();
+    drawText(0,23,s);
 }
 
 void drawStatusTimer()
 {
 }
 
+/**
+ * @brief is a card present? check for 0x55 (color 1)
+ * @param x X coordinate (0-39)
+ * @param y Y coordinate (0-24)
+ * @return false if value is 0x55, otherwise true.
+ */
+void isCardPresent(unsigned char x, unsigned char y)
+{
+    unsigned char far *video = VIDEO_RAM_ADDR;
+    unsigned char o = 0;
+    
+    x <<= 1; // Convert column to video ram offset
+    y <<= 3; // Convert row to line
+    o = y * VIDEO_LINE_BYTES + x; // compute offset
+
+    return !(video[o] == 0x55); // Return true if background color isn't plot.    
+}
+
 void drawCard(unsigned char x, unsigned char y, unsigned char partial, const char* s, unsigned char isHidden)
 {
+    unsigned char *suit = NULL; // pointer to suit tile
+    unsigned char *val = NULL;  // pointer to value tile
+    bool red = false;
+        
+    switch(s[1])
+    {
+    case 'h':
+        suit = &red_card_front[15];
+        red=true;
+        break;
+    case 'd':
+        suit = &red_card_front[14];
+        red=true;
+        break;
+    case 'c':
+        suit = &black_card_front[15];
+        break;
+    case 's':
+        suit = &black_card_front[14];
+        break;
+    }
+
+    switch(s[0])
+    {
+    case '1':
+        if (red)
+            val = &red_card_front[13];
+        else
+            val = &black_card_front[13];
+        break;
+    case '2':
+        if (red)
+            val = &red_card_front[1];
+        else
+            val = &black_card_front[1];
+        break;
+    case '3':
+        if (red)
+            val = &red_card_front[2];
+        else
+            val = &black_card_front[2];
+        break;
+    case '4':
+        if (red)
+            val = &red_card_front[3];
+        else
+            val = &black_card_front[3];
+
+        break;
+    case '5':
+        if (red)
+            val = &red_card_front[4];
+        else
+            val = &black_card_front[4];
+        break;
+    case '6':
+        if (red)
+            val = &red_card_front[5];
+        else
+            val = &black_card_front[5];
+        
+        break;
+    case '7':
+        if (red)
+            val = &red_card_front[6];
+        else
+            val = &black_card_front[6];
+        break;
+    case '8':
+        if (red)
+            val = &red_card_front[7];
+        else
+            val = &black_card_front[7];
+        break;
+    case '9':
+        if (red)
+            val = &red_card_front[8];
+        else
+            val = &black_card_front[8];
+        break;
+    case 't':
+        if (red)
+            val = &red_card_front[9];
+        else
+            val = &black_card_front[9];
+        break;
+    case 'j':
+        if (red)
+            val = &red_card_front[10];
+        else
+            val = &black_card_front[10];
+        break;
+    case 'q':
+        if (red)
+            val = &red_card_front[11];
+        else
+            val = &black_card_front[11];
+        break;
+    case 'k':
+        if (red)
+            val = &red_card_front[12];
+        else
+            val = &black_card_front[12];
+        break;
+    case '?':
+        if (red)
+            val = &red_card_front[0];
+        else
+            val = &black_card_front[0];
+        break;
+    }
+
+    // Draw top of card
+    
+
+    // Draw left border only if not overlaying existing card
+
+    // Draw value, white space, and bottom.
+
 }
 
 void drawChip(unsigned char x, unsigned char y)
