@@ -1,5 +1,6 @@
 #ifdef __WATCOMC__
 
+#include "../platform-specific/graphics.h"
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
@@ -59,7 +60,7 @@ void clear(unsigned char c)
  * @param y Row
  * @param s Text to output
  */
-void drawText(unsigned char x, unsigned char y, char *s)
+void drawText(unsigned char x, unsigned char y, const char *s)
 {
     signed char c=0;
 
@@ -150,7 +151,8 @@ void drawCard(unsigned char x, unsigned char y, unsigned char partial, const cha
     unsigned char *suit = NULL; // pointer to suit tile
     unsigned char *val = NULL;  // pointer to value tile
     bool red = false;
-        
+    bool adjacentCard = false;
+    
     switch(s[1])
     {
     case 'h':
@@ -260,7 +262,31 @@ void drawCard(unsigned char x, unsigned char y, unsigned char partial, const cha
     }
 
     // Draw top of card
-    
+    if (partial == PARTIAL_LEFT)
+    {
+        plot_tile(&card_edges[0],x,y);
+        plot_tile(&card_bits[6],x,y+1);
+        plot_tile(&card_bits[8],x,y+2);
+        plot_tile(&card_bits[10],x,y+3);
+        plot_tile(&card_edges[1],x,y+4);
+    }
+    else if (partial == PARTIAL_RIGHT)
+    {
+        // TODO: Double check this.
+        plot_tile(&card_edges[4],x,y);
+        plot_tile(&card_bits[4],x,y+1);
+        plot_tile(&card_bits[5],x,y+2);
+        plot_tile(&card_bits[6],x,y+3);
+        plot_tile(&card_edges[5],x,y+4);
+    }
+    else // FULL_CARD, top.
+    {
+        plot_tile(&card_edges[0],x,y);
+        plot_tile(&card_edges[2],x+1,y);
+        plot_tile(&card_edges[8],x+2,y);
+    }
+
+    // 
 
     // Draw left border only if not overlaying existing card
 
