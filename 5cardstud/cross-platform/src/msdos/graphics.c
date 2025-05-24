@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 #include <string.h>
+#include <dos.h>
 #include "charset.h"
 
 #define VIDEO_RAM_ADDR ((unsigned char far *)0xB8000000UL)
@@ -149,6 +150,25 @@ void drawLogo()
 
 void initGraphics()
 {
+    union REGS r;
+
+    // Set graphics mode
+    r.h.ah = 0x00;
+    r.h.al = 0x04; // 320x200x4
+    int86(0x10,&r,&r);
+
+    // Remap palette colors, if possible
+    r.h.ah = 0x10;
+    r.h.al = 0x00;
+    r.h.bl = 1;             // Color 1
+    r.h.bh = 10;            // to light green.
+    int86(0x10,&r,&r);
+
+    r.h.ah = 0x10;
+    r.h.al = 0x00;
+    r.h.bl = 2;             // Color 2
+    r.h.bh = 4;             // To dark red
+    int86(0x10,&r,&r);
 }
 
 void waitvsync()
