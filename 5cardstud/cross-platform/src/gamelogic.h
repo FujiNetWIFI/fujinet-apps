@@ -9,7 +9,12 @@ void drawPot();
 void resetStateIfNewGame();
 void drawNamePurse();
 void drawBets();
+#ifdef __WATCOMC__
+#include <stdbool.h>
+void drawCards(bool finalFlip);
+#else
 void drawCards();
+#endif /* __WATCOMC__*/
 void checkIfSpectatorStatusChanged();
 void checkIfPlayerCountChanged();
 void checkFinalFlip();

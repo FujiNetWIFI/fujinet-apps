@@ -31,7 +31,7 @@ void drawStatusTextAt(unsigned char x, char* s);
 void drawStatusText(char* s);
 void drawStatusTimer();
 
-void drawText(unsigned char x, unsigned char y, char* s);
+void drawText(unsigned char x, unsigned char y, const char* s);
 void drawCard(unsigned char x, unsigned char y, unsigned char partial, const char* s, unsigned char isHidden);
 void drawChip(unsigned char x, unsigned char y);
 void drawBlank(unsigned char x, unsigned char y);
