@@ -323,6 +323,19 @@ void drawLine(unsigned char x, unsigned char y, unsigned char w)
 
 void hideLine(unsigned char x, unsigned char y, unsigned char w)
 {
+    unsigned char far *video = VIDEO_RAM_ADDR;
+    unsigned char o = 0;
+
+    y <<= 3; // Convert row to line
+    x <<= 1; // Convert column to video ram offset
+
+    o = y * VIDEO_LINE_BYTES + x;
+
+    while (w--)
+    {
+        video[o+w] = 0x55;         // Color 1
+        video[o+w+0x2000] = 0x55;  // second row
+    }
 }
 
 void drawBox(unsigned char x, unsigned char y, unsigned char w, unsigned char h)
