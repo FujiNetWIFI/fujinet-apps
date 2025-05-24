@@ -1,6 +1,6 @@
 #ifndef MISC_H
 #define MISC_H
-/* 
+/*
  * Include CC65 style Joystick defines for Adam - There is a probably a better way to do this.
  */
 
@@ -10,8 +10,9 @@
 #ifdef __ADAM__
 #include "adam/joystick.h"
 #else
-#include <joystick.h>
+#ifndef __DOS__
 #include <conio.h>
+#endif /* __DOS__ */
 #endif /* __ADAM__ */
 #endif /* _CMOC_VERSION_ */
 #include "platform-specific/graphics.h"
@@ -49,13 +50,13 @@ typedef struct {
   unsigned char status;
   uint16_t bet;
   char * move;
-  uint16_t purse;      
+  uint16_t purse;
   char * hand;
 } Player;
 
 typedef struct {
   char * move;
-  char * name; 
+  char * name;
 } ValidMove;
 
 typedef struct {

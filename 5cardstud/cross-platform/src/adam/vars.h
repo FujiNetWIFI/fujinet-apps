@@ -61,10 +61,11 @@ extern const char playerBetYMaster[];
 // These refer to index positions in the Master arrays above
 // Downside is new players will cause existing player positions to move.
 
-//                               2                3                4  
+//                               2                3                4
 extern const char playerCountIndex[];
 
 
 #endif /* KEYMAP_H */
 
 #endif /* __ADAM__ */
+

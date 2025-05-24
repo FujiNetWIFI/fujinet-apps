@@ -1,0 +1,30 @@
+#ifdef __DOS__
+
+void enableDoubleBuffer();
+void disableDoubleBuffer();
+void drawBuffer();
+
+// Call to clear the screen to an empty table
+void resetScreen();
+
+void clearStatusBar();
+void drawStatusTextAt(unsigned char x, char* s);
+void drawStatusText(char* s);
+void drawStatusTimer();
+
+void drawText(unsigned char x, unsigned char y, char* s);
+void drawCard(unsigned char x, unsigned char y, unsigned char partial, const char* s, unsigned char isHidden);
+void drawChip(unsigned char x, unsigned char y);
+void drawBlank(unsigned char x, unsigned char y);
+void drawLine(unsigned char x, unsigned char y, unsigned char w);
+void hideLine(unsigned char x, unsigned char y, unsigned char w);
+void drawBox(unsigned char x, unsigned char y, unsigned char w, unsigned char h);
+void drawBorder();
+void drawLogo();
+
+void initGraphics();
+void waitvsync();
+
+uint8_t cycleNextColor();
+void setColorMode();
+#endif /* __DOS__ */
