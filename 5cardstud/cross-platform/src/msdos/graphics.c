@@ -133,7 +133,7 @@ void drawStatusTimer()
  * @param y Y coordinate (0-24)
  * @return false if value is 0x55, otherwise true.
  */
-void isCardPresent(unsigned char x, unsigned char y)
+bool isCardPresent(unsigned char x, unsigned char y)
 {
     unsigned char far *video = VIDEO_RAM_ADDR;
     unsigned char o = 0;
