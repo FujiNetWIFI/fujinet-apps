@@ -301,10 +301,24 @@ void drawChip(unsigned char x, unsigned char y)
 
 void drawBlank(unsigned char x, unsigned char y)
 {
+    // Not used anywhere.
 }
 
 void drawLine(unsigned char x, unsigned char y, unsigned char w)
 {
+    unsigned char far *video = VIDEO_RAM_ADDR;
+    unsigned char o = 0;
+
+    y <<= 3; // Convert row to line
+    x <<= 1; // Convert column to video ram offset
+
+    o = y * VIDEO_LINE_BYTES + x;
+
+    while (w--)
+    {
+        video[o+w] = 0xAA;         // Color 2
+        video[o+w+0x2000] = 0xAA;  // second row
+    }
 }
 
 void hideLine(unsigned char x, unsigned char y, unsigned char w)
