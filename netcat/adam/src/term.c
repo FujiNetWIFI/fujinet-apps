@@ -73,7 +73,7 @@ void connect(void)
     unsigned char mode;
     unsigned char translation;
     char url[256];
-  } openCmd = {'O',READ_WRITE,NONE,"N:HTTPS://www.gnu.org/licenses/gpl-3.0.txt"};
+  } openCmd = {'O',READ_WRITE,NONE,"N:TELNET://BBS.RETROCAMPUS.COM:6503/"};
 
   eos_write_character_device(NET_DEV,openCmd,sizeof(openCmd));
 
@@ -118,8 +118,18 @@ void in(void)
     {
       unsigned short l = dcb->len;
 
+      // Erase Cursor
+      putch(0x08);
+
+      // Iterate through received data, taking a break to send any keystrokes.
       for (unsigned short i=0;i<l;i++)
-	putchar(rxBuf[i]);
+      {
+	putch(rxBuf[i]);
+      }
+
+      // Place cursor.
+      putch('_');
+      
     }
 }
 
@@ -127,7 +137,7 @@ void term(void)
 {
   vdp_set_mode(0);
   vdp_color(VDP_INK_BLACK,VDP_INK_CYAN,VDP_INK_CYAN);
-  
+
   if (!connect())
     {
       printf("COULD NOT CONNECT.\nPRESS ANY KEY FOR DIALING DIRECTORY.");
@@ -138,12 +148,14 @@ void term(void)
 
   printf("CONNECTED!\n\n");
 
+  putch('_');
+  
   eos_start_read_keyboard();
   
   while(connected())
     {
-      out();
-      in();
+        out();
+        in();
     }
 
   printf("DISCONNECTED.\nPRESS ANY KEY FOR DIALING DIRECTORY.");

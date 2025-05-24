@@ -23,7 +23,7 @@
 
 Directory entries[31] =
   {
-    {"LEVEL 29","N:TELNET://BBS.FOZZTEXX.COM/",DUMB},
+    {"RETROCAMPUS","N:TELNET://BBS.RETROCAMPUS.COM:6503/",DUMB},
   };
 
 static unsigned char current_pos=0;
@@ -186,9 +186,9 @@ static void left(void)
 void directory(void)
 {
   // Graphics II mode
+  vdp_noblank();
+  vdp_color(VDP_INK_BLACK,VDP_INK_CYAN,VDP_INK_CYAN);
   vdp_set_mode(2);
-  
-  /* // Blank screen */
   vdp_noblank();
 
   // unpack the directory screen
@@ -221,7 +221,9 @@ void directory(void)
       switch(input())
 	{
 	case KEY_RETURN:
-	  break;
+            smartkeys_sound_play(SOUND_CONFIRM);
+            state=TERM;
+      	break;
 	case KEY_HOME:
 	  home();
 	  break;

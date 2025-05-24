@@ -43,7 +43,7 @@ extern State state;
 typedef struct _directory
 {
   char name[12];
-  char url[50];
+  char url[256];
   TerminalType type;
 } Directory; // 63 bytes total.
 
