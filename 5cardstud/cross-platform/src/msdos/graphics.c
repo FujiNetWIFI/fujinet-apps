@@ -375,10 +375,12 @@ void initGraphics()
 
 void waitvsync()
 {
+    while (inp(0x3DA) & 0x08);
 }
 
 uint8_t cycleNextColor()
 {
+    return 0; // not used at the moment.
 }
 
 void setColorMode()
