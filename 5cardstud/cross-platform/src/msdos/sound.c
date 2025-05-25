@@ -70,66 +70,66 @@ void initSound()
  */
 void soundJoinGame()
 {
-    beep(340,40,115);
-    beep(440,40,40);
-    beep(280,40,0);
+//    beep(340,40,115);
+//    beep(440,40,40);
+//    beep(280,40,0);
 }
 
 void soundMyTurn()
 {
-    beep(340,40,50);
-    beep(340,40,0);
+//    beep(340,40,50);
+//    beep(340,40,0);
 }
 
 void soundGameDone()
 {
-    beep(830,20,20);
-    beep(790,50,30);
-    beep(650,20,20);
-    beep(610,40,50);
+//    beep(830,20,20);
+//    beep(790,50,30);
+//    beep(650,20,20);
+//    beep(610,40,50);
 }
 
 void soundDealCard()
 {
-    beep(150,1,5);
+//    beep(150,1,5);
 }
 
 void soundTick()
 {
-    beep(800,2,0);
+//    beep(800,2,0);
 }
 
 void soundPlayerJoin()
 {
-    int i=255;
-    for (i=255;i>=235;i-=10)
-        beep(i*10,5,255);
+//    int i=255;
+//    for (i=255;i>=235;i-=10)
+//        beep(i*10,5,255);
 }
 
 void soundPlayerLeft()
 {
-    int i=255;
-    for (i=215;i<255;i+=10)
-        beep(i*10,5,255);
+//    int i=255;
+//    for (i=215;i<255;i+=10)
+//        beep(i*10,5,255);
 }
 
 void soundSelectMove()
 {
-    beep(350,40,20);
-    beep(300,40,0);
+//    beep(350,40,20);
+//    beep(300,40,0);
 }
 
 void soundCursor()
 {
-    beep(450,10,0);
+//    beep(450,10,0);
 }
 
 void soundCursorInvalid()
 {
-    beep(1180,5,0);
+//    beep(1180,5,0);
 }
 
 void soundTakeChip(uint16_t counter)
 {
-    beep(1180-counter*3,5,60);
+//    beep(1180-counter*3,5,60);
 }

@@ -72,8 +72,8 @@ typedef struct {
 
 } GameState;
 
-
-extern unsigned char playerCount, prevPlayerCount, validMoveCount, prevRound, tableCount, currentCard, cardIndex, xOffset, fullFirst, cursorX, cursorY, waitCount, inputKey, wasViewing;
+extern int inputKey;
+extern unsigned char playerCount, prevPlayerCount, validMoveCount, prevRound, tableCount, currentCard, cardIndex, xOffset, fullFirst, cursorX, cursorY, waitCount, wasViewing;
 extern signed char inputDirX, inputDirY;
 
 extern uint16_t prevPot, rx_len, maxJifs;

@@ -111,9 +111,9 @@ void resetScreen()
 
 void clearStatusBar()
 {
-    unsigned char far *video = VIDEO_RAM_ADDR;
-    _fmemset(&video[0x1CC0],0x00,640);
-    _fmemset(&video[0x1CC0+0x2000],0x00,640);
+    /* unsigned char far *video = VIDEO_RAM_ADDR; */
+    /* _fmemset(&video[0x1CC0],0x00,640); */
+    /* _fmemset(&video[0x1CC0+0x2000],0x00,640); */
 }
 
 void drawStatusTextAt(unsigned char x, char* s)

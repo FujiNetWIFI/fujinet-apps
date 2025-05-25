@@ -29,36 +29,36 @@ void updateState(unsigned char isTables) {
   // Reset state and vars
   isKey=true; inArray=false;
   playerCount=validMoveCount=tableCount=lineNum=0;
-  
+
   // Load state by looping through result and extracting each string at each EOL character
   end = rx_buf + rx_len;
-  
+
   parent = NULL;
 
   // Replace line endings with null terminator
   rx_buf[rx_len]=0;
-  
+
   //POKE(end+1,0xff);
   //cgetc();
   // Normalize state receive buffer in preparation for parsing
   for(line=rx_buf;line<end;++line) {
     c=PEEK(line);
 
-    // Convert line endings to string terminators 
+    // Convert line endings to string terminators
     if (c==LINE_ENDING)
       POKE(line,0);
-    
+
     // Convert all letters to certain case if needed (e.g. C64)
-    else if (c>=ALT_LETTER_START && c<=ALT_LETTER_END) 
+    else if (c>=ALT_LETTER_START && c<=ALT_LETTER_END)
       POKE(line,c + ALT_LETTER_AND);
-    
+
   }
   //write_appkey(0x9999,  1, 2, rx_buf);
 
   line = rx_buf;
 
   while (line < end) {
-    // Capture next line position, in case the current line is shortened 
+    // Capture next line position, in case the current line is shortened
     // in process of reading
     nextLine=line+strlen(line)+1;
     lineNum++;
@@ -73,7 +73,7 @@ void updateState(unsigned char isTables) {
           key="";
 
         parent=key;
- 
+
         // Reset isKey since the next line will be a key
         isKey = false;
       }
@@ -81,29 +81,29 @@ void updateState(unsigned char isTables) {
       value = line;
       if (value[0]==0)
         value = "";
-        
-   
+
+
       // Set our state variables based on the key
       if (isTables) {
         switch (key[0]) {
-          case 't': 
+          case 't':
             state.tables[tableCount].table = value;
             break;
-          case 'n': 
-            state.tables[tableCount].name = value; 
+          case 'n':
+            state.tables[tableCount].name = value;
             break;
-          case 'p': 
-            strcpy(state.tables[tableCount].players, value); 
+          case 'p':
+            strcpy(state.tables[tableCount].players, value);
             break;
-          case 'm': 
+          case 'm':
             strcat(state.tables[tableCount].players, " / ");
-            strcat(state.tables[tableCount].players, value); 
+            strcat(state.tables[tableCount].players, value);
             tableCount++;
             break;
           default:
            break;
         }
-      } else if (parent[0]== 'v') { //strcmp(parent,"validmoves")==0) { 
+      } else if (parent[0]== 'v') { //strcmp(parent,"validmoves")==0) {
         switch (key[0]) {
           case 'm': // (if (strcmp(key,"move")==0) {
             state.validMoves[validMoveCount].move = value;
@@ -119,8 +119,8 @@ void updateState(unsigned char isTables) {
         switch (key[0]) {
           case 'n': //if (strcmp(key,"name")==0) {
             // Cap name at 8 chars max
-            if (strlen(value)>8) 
-              value[8]=0; 
+            if (strlen(value)>8)
+              value[8]=0;
             state.players[playerCount].name=value;
             break;
           case 's': //"status")==0) {
@@ -145,7 +145,7 @@ void updateState(unsigned char isTables) {
         }
       } else {
         switch (key[0]) {
-          case 'l': //"lastresult")==0) { 
+          case 'l': //"lastresult")==0) {
             state.lastResult = value;
             break;
           case 'r' : //"round")==0) {
@@ -164,18 +164,18 @@ void updateState(unsigned char isTables) {
             state.moveTime = atoi(value);
             break;
           //timer // Reset timer when we get an updated movetime
-        } 
+        }
       }
-      
+
     }
-  
+
     isKey = !isKey;
     line=nextLine;
-  }  
+  }
  // sprintf(tempBuffer, "%i", playerCount);
  // write_appkey(0x9999,  0x44, 0x44, tempBuffer);
 
- 
+
 }
 
 unsigned char apiCall(const char *path) {
@@ -187,21 +187,24 @@ unsigned char apiCall(const char *path) {
   strcat(urlBuffer, serverEndpoint);
   strcat(urlBuffer, path);
   strcat(urlBuffer, query);
-  
+
   rx_len = getJsonResponse(urlBuffer, rx_buf, sizeof(rx_buf));
-  return rx_len>=0;
+  if (!rx_len)
+    return false;
+
+  return true;
 }
 
 unsigned char getStateFromServer()
 {
-  if (requestedMove) {    
+  if (requestedMove) {
     strcpy(tempBuffer, "move/");
     strcat(tempBuffer, requestedMove);
     requestedMove=NULL;
   } else {
     strcpy(tempBuffer, "state");
   }
-  
+
   if (apiCall(tempBuffer)) {
     updateState(false);
     return true;

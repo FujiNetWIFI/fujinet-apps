@@ -37,7 +37,8 @@ char playerName[12] = "";
 GameState state;
 
 // State helper vars
-unsigned char playerCount, prevPlayerCount, validMoveCount, prevRound, tableCount, currentCard, cardIndex, xOffset, fullFirst, cursorX, cursorY, waitCount, inputKey, wasViewing;
+int inputKey;
+unsigned char playerCount, prevPlayerCount, validMoveCount, prevRound, tableCount, currentCard, cardIndex, xOffset, fullFirst, cursorX, cursorY, waitCount, wasViewing;
 signed char inputDirX, inputDirY;
 uint16_t prevPot, rx_len, maxJifs;
 bool noAnim, doAnim, finalFlip, inputTrigger;
@@ -59,8 +60,8 @@ int main(void)
 #else
 void main(void)
 #endif /* _CMOC_VERSION_ */
-{ 
-  initGraphics(); 
+{
+  initGraphics();
   initSound();
 
 #ifdef _CMOC_VERSION_
@@ -74,7 +75,7 @@ void main(void)
 
   showWelcomScreen();
   showTableSelectionScreen();
-  
+
   // Main in-game loop
   while (true) {
 
@@ -86,18 +87,18 @@ void main(void)
        // Wait a bit to avoid hammering the server if getting bad responses
        pause(30);
     }
-    
+
     // Handle other key presses
     readCommonInput();
-    
+
     switch(inputKey) {
       case KEY_ESCAPE: // Esc
       case KEY_ESCAPE_ALT: // Esc Alt
-        showInGameMenuScreen();  
+        showInGameMenuScreen();
         break;
     }
-   
-    
+
+
   }
 
 #ifdef _CMOC_VERSION_

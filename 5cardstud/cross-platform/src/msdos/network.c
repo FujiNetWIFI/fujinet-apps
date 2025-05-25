@@ -17,26 +17,22 @@ struct _status
 _WCIRTLINK extern unsigned inp(unsigned __port);
 _WCIRTLINK extern unsigned outp(unsigned __port, unsigned __value);
 
-void network_delay(void)
-{
-    unsigned short delay=60;
-
-    while (delay--)
-    {
-        // Wait until vblank starts
-        while(!(inp(0x3DA) & 0x08));
-        // Wait until vblank stops
-	while(inp(0x3DA) & 0x08);
-    }
-}
-
 uint16_t getJsonResponse(char *url, unsigned char *buffer, uint16_t max_len)
 {
     union REGS r;
     struct SREGS sr;
+    int i=0, j=0;
+    
+    memset(buf,0,sizeof(buf));
 
+    for (i=0;i<strlen(url);i++)
+    {
+        if (url[i]==0x0d || url[i]==0x00)
+            continue;
+        buf[j++]=url[i];
+    }
+    
     // Open
-    strcpy(buf,url);
     r.h.dl = 0x80; // write
     r.h.al = 0x71; // Network device 1
     r.h.ah = 'O';  // open
@@ -48,8 +44,6 @@ uint16_t getJsonResponse(char *url, unsigned char *buffer, uint16_t max_len)
     r.x.di = sizeof(buf);
     int86x(0xF5,&r,&r,&sr);
 
-//    network_delay();
-
     // Set channel mode to JSON
     r.h.dl = 0x00; // none
     r.h.al = 0x71; // Network device 1
@@ -59,8 +53,6 @@ uint16_t getJsonResponse(char *url, unsigned char *buffer, uint16_t max_len)
     r.x.si = 0x0000; // not used
     int86(0xF5,&r,&r);
 
-  //  network_delay();
-
     // Parse
     r.h.dl = 0x00; // none
     r.h.al = 0x71; // Network device 1
@@ -69,8 +61,6 @@ uint16_t getJsonResponse(char *url, unsigned char *buffer, uint16_t max_len)
     r.h.ch = 0x00; // No translation
     r.x.si = 0x0000; // Not used
     int86(0xF5,&r,&r);
-
-    //network_delay();
 
     // query
     memset(buf,0,sizeof(buf));
@@ -86,8 +76,6 @@ uint16_t getJsonResponse(char *url, unsigned char *buffer, uint16_t max_len)
     r.x.di = sizeof(buf);
     int86x(0xF5,&r,&r,&sr);
 
-    network_delay();
-
     // Status (# of bytes read)
     r.h.dl = 0x40; // Read
     r.h.al = 0x71; // Network device 1;
@@ -100,8 +88,6 @@ uint16_t getJsonResponse(char *url, unsigned char *buffer, uint16_t max_len)
     r.x.di = sizeof(s);
     int86x(0xF5,&r,&r,&sr);
 
-    //network_delay();
-
     // Read
     r.h.dl = 0x40; // Read
     r.h.al = 0x71; // Network Device 1
@@ -112,8 +98,6 @@ uint16_t getJsonResponse(char *url, unsigned char *buffer, uint16_t max_len)
     r.x.bx = FP_OFF(buffer);
     r.x.di = s.bw; // # of bytes to read
     int86x(0xF5,&r,&r,&sr);
-
-    //network_delay();
 
     // close
     r.h.dl = 0x00; // None
