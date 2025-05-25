@@ -25,12 +25,13 @@
  * @return error code
  */
 unsigned char open_appkey(unsigned char open_mode, unsigned int creator_id, unsigned char app_id, char key_id)
-{ 
+{
     return 0;
 }
 
 void read_appkey(unsigned int creator_id, unsigned char app_id, unsigned char key_id, char* data)
 {
+    return;
 }
 
 void write_appkey(unsigned int creator_id, unsigned char app_id, unsigned char key_id, const char *data)
