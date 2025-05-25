@@ -2,9 +2,9 @@
  * Include CC65 style Joystick defines for Adam - There is a probably a better way to do this.
  */
 
-#ifdef __WATCOMC__
-#define USE_PLATFORM_SPECIFIC_INPUT 1
-#endif
+//#ifdef __WATCOMC__
+//#define USE_PLATFORM_SPECIFIC_INPUT 1
+//#endif
 
 #ifdef _CMOC_VERSION_
 #include "coco/joystick.h"
@@ -48,7 +48,7 @@ void clearCommonInput() {
   while (kbhit())
     cgetc();
 #else
-  while (!getPlatformKey());
+  //while (!getPlatformKey());
 #endif
 }
 

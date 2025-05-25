@@ -11,6 +11,10 @@
 #define VIDEO_LINE_BYTES 80
 #define VIDEO_ODD_OFFSET 0x2000
 
+bool always_render_full_cards = 1;
+
+unsigned char colorMode=0;
+
 /**
  * @brief plot a 8x8 2bpp tile to screen at column x, row y
  * @param tile ptr to 2bpp tile data * 8
@@ -377,8 +381,6 @@ void waitvsync()
 {
     // Wait until we are in vsync
     while (inp(0x3DA) & 0x08);
-    // Wait until we aren't.
-    while (!inp(0x3DA) & 0x08));
 }
 
 uint8_t cycleNextColor()

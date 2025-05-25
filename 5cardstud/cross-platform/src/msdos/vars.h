@@ -13,26 +13,26 @@
  */
 
 #define KEY_LEFT_ARROW      0x4B00
-#define KEY_LEFT_ARROW_2    0x4B00
-#define KEY_LEFT_ARROW_3    0x4B00
+#define KEY_LEFT_ARROW_2    0x4B01
+#define KEY_LEFT_ARROW_3    0x4B02
 
 #define KEY_RIGHT_ARROW     0x4D00
-#define KEY_RIGHT_ARROW_2   0x4D00
-#define KEY_RIGHT_ARROW_3   0x4D00
+#define KEY_RIGHT_ARROW_2   0x4D01
+#define KEY_RIGHT_ARROW_3   0x4D02
 
 #define KEY_UP_ARROW        0x4800
-#define KEY_UP_ARROW_2      0x4800
-#define KEY_UP_ARROW_3      0x4800
+#define KEY_UP_ARROW_2      0x4801
+#define KEY_UP_ARROW_3      0x4802
 
 #define KEY_DOWN_ARROW      0x5000
-#define KEY_DOWN_ARROW_2    0x5000
-#define KEY_DOWN_ARROW_3    0x5000
+#define KEY_DOWN_ARROW_2    0x5001
+#define KEY_DOWN_ARROW_3    0x5002
 
-#define KEY_RETURN       0x1C0D
-#define KEY_ESCAPE       0x011B
-#define KEY_ESCAPE_ALT   0x011B
-#define KEY_SPACE        0x3920
-#define KEY_BACKSPACE    0x0e08
+#define KEY_RETURN       0x0D
+#define KEY_ESCAPE       0x1B
+#define KEY_ESCAPE_ALT   0x011c
+#define KEY_SPACE        0x20
+#define KEY_BACKSPACE    0x08
 
 #define JOY_UP(v)	(0)
 #define JOY_DOWN(v)	(0)
@@ -51,6 +51,8 @@
 
 
 #endif /* KEYMAP_H */
+
+int cgetc(void);
 
 #endif /* __WATCOMC__ */
 

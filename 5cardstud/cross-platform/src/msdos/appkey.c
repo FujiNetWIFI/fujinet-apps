@@ -1,5 +1,3 @@
-#ifdef __DOS__
-
 /**
  * @brief MS-DOS AppKey funcs
  * @author Thom Cherryhomes
@@ -34,9 +32,8 @@ void read_appkey(unsigned int creator_id, unsigned char app_id, unsigned char ke
     return;
 }
 
-void write_appkey(unsigned int creator_id, unsigned char app_id, unsigned char key_id, const char *data)
+void write_appkey(unsigned int creator_id, unsigned char app_id, unsigned char key_id, char *data)
 {
   return;
 }
 
-#endif /* __DOS__ */

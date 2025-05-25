@@ -4,7 +4,7 @@
 #else
 #include <stdlib.h>
 #ifdef __WATCOMC__
-#define USE_PLATFORM_SPECIFIC_INPUT 1
+//#define USE_PLATFORM_SPECIFIC_INPUT 1
 #else
 #include <conio.h>
 #endif /* __WATCOMC__ */
