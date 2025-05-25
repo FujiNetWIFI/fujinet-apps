@@ -15,6 +15,22 @@ const char playerCountIndex[] = {0,4,0,0,0,0,0,0, 0,2,6,0,0,0,0,0, 0,2,4,6,0,0,0
 // 5                6                 7                8
     0,2,3,5,6,0,0,0, 0,2,3,4,5,6,0,0,  0,2,3,4,5,6,7,0, 0,1,2,3,4,5,6,7};
 
+/**
+ * @brief attempt to make a pause for given # of milliseconds,
+ * @param ms Milliseconds to wait, rounded to nearest 16.67ms frame.
+ */
+void pause(int ms)
+{
+    int frames = ms >> 4; // / 16, almost 16.67
+
+    while (frames--)
+    {
+        // Wait until vblank starts
+        while(!(inp(0x3DA) & 0x08));
+        // Wait until vblank stops
+	while(inp(0x3DA) & 0x08);
+    }
+}
 
 void resetTimer()
 {
