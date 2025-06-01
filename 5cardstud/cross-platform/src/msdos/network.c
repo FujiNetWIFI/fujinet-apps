@@ -5,7 +5,7 @@
 #include "../misc.h"
 
 // Comment out this for real fujinet builds. This is just for eric's simple "get basic https working" emulator bridge
-#define EMU_MODE 1
+// #define EMU_MODE 1
 
 unsigned char buf[256];
 
