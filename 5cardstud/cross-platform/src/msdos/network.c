@@ -1,8 +1,11 @@
+#include <i86.h>
 #include <dos.h>
 #include <stdint.h>
 #include <string.h>
 #include <stdbool.h>
 #include "../misc.h"
+
+void waitvsync(void);
 
 // Comment out this for real fujinet builds. This is just for eric's simple "get basic https working" emulator bridge
 // #define EMU_MODE 1
@@ -20,7 +23,7 @@ struct _status
 _WCIRTLINK extern unsigned inp(unsigned __port);
 _WCIRTLINK extern unsigned outp(unsigned __port, unsigned __value);
 
-uint16_t getJsonResponse(char *url, unsigned char *buffer, uint16_t max_len)
+uint16_t getResponse(char *url, unsigned char *buffer, uint16_t max_len)
 {
     union REGS r;
     struct SREGS sr;
@@ -34,6 +37,9 @@ uint16_t getJsonResponse(char *url, unsigned char *buffer, uint16_t max_len)
             continue;
         buf[j++]=url[i];
     }
+
+    memset(&r,0,sizeof(union REGS));
+    memset(&sr,0,sizeof(struct SREGS));
     
     // Open
     r.h.dl = 0x80; // write
@@ -47,37 +53,10 @@ uint16_t getJsonResponse(char *url, unsigned char *buffer, uint16_t max_len)
     r.x.di = sizeof(buf);
     int86x(0xF5,&r,&r,&sr);
 
-    // Set channel mode to JSON
-    r.h.dl = 0x00; // none
-    r.h.al = 0x71; // Network device 1
-    r.h.ah = 0xFC; // Set channel mode
-    r.h.cl = 0x00; // GET
-    r.h.ch = 0x01; // JSON
-    r.x.si = 0x0000; // not used
-    int86(0xF5,&r,&r);
-
-    // Parse
-    r.h.dl = 0x00; // none
-    r.h.al = 0x71; // Network device 1
-    r.h.ah = 'P';  // Parse
-    r.h.cl = 0x00; // GET
-    r.h.ch = 0x00; // No translation
-    r.x.si = 0x0000; // Not used
-    int86(0xF5,&r,&r);
-
-    // query
-    memset(buf,0,sizeof(buf));
-    strcpy(buf,"N:\x9b");
-    r.h.dl = 0x80; // Write
-    r.h.al = 0x71; // Network Device 1
-    r.h.ah = 'Q';  // Query
-    r.h.cl = 0x00; // Get
-    r.h.ch = 0x00; // No trans
-    r.x.si = 0x0000; // not used
-    sr.es = FP_SEG(buf);
-    r.x.bx = FP_OFF(buf);
-    r.x.di = sizeof(buf);
-    int86x(0xF5,&r,&r,&sr);
+    delay(250);
+    
+    memset(&r,0,sizeof(union REGS));
+    memset(&sr,0,sizeof(struct SREGS));
 
     // Status (# of bytes read)
     r.h.dl = 0x40; // Read
@@ -91,6 +70,11 @@ uint16_t getJsonResponse(char *url, unsigned char *buffer, uint16_t max_len)
     r.x.di = sizeof(s);
     int86x(0xF5,&r,&r,&sr);
 
+    delay(250);
+    
+    memset(&r,0,sizeof(union REGS));
+    memset(&sr,0,sizeof(struct SREGS));
+
     // Read
     r.h.dl = 0x40; // Read
     r.h.al = 0x71; // Network Device 1
@@ -102,13 +86,23 @@ uint16_t getJsonResponse(char *url, unsigned char *buffer, uint16_t max_len)
     r.x.di = s.bw; // # of bytes to read
     int86x(0xF5,&r,&r,&sr);
 
+    delay(250);
+    
+    memset(&r,0,sizeof(union REGS));
+    memset(&sr,0,sizeof(struct SREGS));
+
     // close
-    r.h.dl = 0x00; // None
-    r.h.al = 0x71; // Network Device 1
-    r.h.ah = 'C';  // Close
-    r.x.cx = 0x0000; // Not used
-    r.x.si = 0x0000; // Not used
-    int86(0xF5,&r,&r);
+    /* r.h.dl = 0x00; // None */
+    /* r.h.al = 0x71; // Network Device 1 */
+    /* r.h.ah = 'C';  // Close */
+    /* r.x.cx = 0x0000; // Not used */
+    /* r.x.si = 0x0000; // Not used */
+    /* int86x(0xF5,&r,&r,&sr); */
+
+    /* delay(250); */
+    
+    memset(&r,0,sizeof(union REGS));
+    memset(&sr,0,sizeof(struct SREGS));
 
     return s.bw;
 }
@@ -136,7 +130,7 @@ uint8_t recv_char() {
     while (!(inp(COM1 + LSR) & LSR_DATA_READY));
     b= inp(COM1);
 
-    // Decode byte if needed - 0xFF doesn't get sent, so encode it using 0xFE. 
+    // Decode byte if needed - 0xFF doesn't get sent, so encode it using 0xFE.
     // if 0xFE is read, read one more byte and add to it
     // This results in: 0xFE00 = 0xFE and 0xFE01 = 0xFF
     if (b==0xfe) {
@@ -148,16 +142,16 @@ uint8_t recv_char() {
 
 
 /// @brief Retrieve the response
-/// @param url 
+/// @param url
 /// @return response length
 uint8_t getResponse(char *url, unsigned char *buffer, uint16_t max_len) {
   uint16_t count, i;
-  
+
   send_char('O');
   while(*url)
     send_char(*url++);
   send_char(0);
-  
+
   // read until we get to 0xfd start byte
   while ( (count = recv_char()) != 0xfd);
 
@@ -167,9 +161,9 @@ uint8_t getResponse(char *url, unsigned char *buffer, uint16_t max_len) {
 
   for(i=0;i<count;i++) {
     *buffer=recv_char();
-    buffer++;    
+    buffer++;
   }
-  
+
   return count>0;
 }
 
