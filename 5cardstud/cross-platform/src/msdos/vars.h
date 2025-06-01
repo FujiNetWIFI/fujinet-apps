@@ -7,6 +7,7 @@
 
 #define WIDTH 40
 #define HEIGHT 25
+#define QUERY_SUFFIX "" // No extra params for msdos 
 
 /**
  * Platform specific key map for common input

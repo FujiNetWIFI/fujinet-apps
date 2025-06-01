@@ -8,6 +8,7 @@
 #define WIDTH 32
 #define HEIGHT 16
 
+#define QUERY_SUFFIX "&be=1" // Big Endian response for CoCo (68000)
 
 /**
  * Platform specific key map for common input

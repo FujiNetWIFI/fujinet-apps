@@ -39,44 +39,56 @@
 #define PREF_COLOR 1 // 1/2 - Color mode mono/color
 //#define PREF_SOUND 2 // 1/2 - Sound Enabled yes/no
 
-typedef struct {
-  char * table;
-  char * name;
-  char players[8];
+typedef _Packed struct {
+  char table    [9];
+  char name     [21];
+  char players  [6];
 } Table;
 
-typedef struct {
-  char * name;
-  unsigned char status;
-  uint16_t bet;
-  char * move;
-  uint16_t purse;
-  char * hand;
+typedef _Packed struct {
+  char name   [9];
+  uint8_t     status;
+  uint16_t    bet;
+  char move   [8];
+  uint16_t    purse;
+  char hand   [11];
 } Player;
 
-typedef struct {
-  char * move;
-  char * name;
+typedef _Packed struct {
+  char move     [3];
+  char name     [10];
 } ValidMove;
 
-typedef struct {
-  char * lastResult;
-  unsigned char round;
-  int pot;
-  signed char activePlayer;
-  unsigned char moveTime;
-  unsigned char viewing;
+typedef _Packed struct {
+  char lastResult[81];
+  uint8_t round;
+  uint16_t pot;
+  int8_t activePlayer;
+  uint8_t moveTime;
+  uint8_t viewing;
+  uint8_t validMoveCount;
   ValidMove validMoves[5];
+  uint8_t playerCount;
   Player players[8];
-  Table tables[10];
+} Game;
 
-} GameState;
+typedef _Packed struct {
+  uint8_t count;
+  Table table[10];
+} Tables;
+
+typedef union {
+  uint8_t firstByte;
+  Game game;
+  Tables tables;
+} ClientState;
+
 
 extern int inputKey;
-extern unsigned char playerCount, prevPlayerCount, validMoveCount, prevRound, tableCount, currentCard, cardIndex, xOffset, fullFirst, cursorX, cursorY, waitCount, wasViewing;
+extern unsigned char prevPlayerCount, prevRound, currentCard, cardIndex, xOffset, fullFirst, cursorX, cursorY, waitCount, wasViewing;
 extern signed char inputDirX, inputDirY;
 
-extern uint16_t prevPot, rx_len, maxJifs;
+extern uint16_t prevPot, maxJifs;
 #ifdef _CMOC_VERSION_
 extern unsigned char noAnim, doAnim, finalFlip, inputTrigger;
 #else
@@ -87,7 +99,10 @@ extern char query[50];
 extern char playerName[12];
 extern char serverEndpoint[50];
 
-extern GameState state;
+extern ClientState clientState;
+//extern GameState state;
+#define state clientState.game
+
 
 // Common local scope temp variables
 extern unsigned char h, i, j, k, x, y, xx;

@@ -28,14 +28,15 @@ unsigned char chip[][16] =
     {
         {
             // CHIP X
-            0x55, 0x55,
+           
             0x55, 0x55,
             0x5a, 0xa5,
-            0x66, 0x99,
-            0x69, 0x69,
-            0x69, 0x69,
-            0x66, 0x99,
-            0x5a, 0xa5
+            0x6E, 0xB9,
+            0x6B, 0xE9,
+            0x6B, 0xE9,
+            0x6E, 0xB9,
+            0x5a, 0xa5,
+            0x55, 0x55,
         },
         {
             // CHIP O
@@ -104,7 +105,7 @@ unsigned char border[][16] =
 /**
  * @brief Printable ASCII characters 0x20-0x7F
  */
-unsigned char ascii[][16] =
+unsigned char ascii[192][16] =
     {
         {
             // " " (0x20)
@@ -1271,49 +1272,52 @@ unsigned char pot_border[][16] =
             0x55, 0x55, // ........
             0x55, 0x55, // ........
             0x55, 0x55, // ........
-            0x55, 0x55, // ........
             0x55, 0x5a, // ......XX
             0x55, 0x6a, // .....XXX
             0x55, 0xa9, // ....XXX.
-            0x56, 0xa5  // ...XXX..
+            0x56, 0xa5, // ...XXX..
+            0x56, 0x95, // ...XX...
         },
         {
-            0x55, 0x55, // ........
+           
             0x55, 0x55, // ........
             0x55, 0x55, // ........
             0x55, 0x55, // ........
             0xaa, 0xaa, // XXXXXXXX
             0xaa, 0xaa, // XXXXXXXX
             0x55, 0x55, // ........
-            0x55, 0x55  // ........
+            0x55, 0x55, // ........
+            0x55, 0x55, // ........
         },
         {
-            0x55, 0x55, // ........
             0x55, 0x55, // ........
             0x55, 0x55, // ........
             0x55, 0x55, // ........
             0xa5, 0x55, // XX......
             0xa9, 0x55, // XXX.....
             0x6a, 0x55, // .XXX....
-            0x5a, 0x95  // ..XXX...
+            0x5a, 0x95, // ..XXX...
+            0x56, 0x95, // ...XX...
         },
         {
-            0x56, 0x95, // ...XX...
+            
             0x56, 0x95, // ...XX...
             0x56, 0xa5, // ...XXX..
             0x55, 0xa9, // ....XXX.
             0x55, 0x6a, // .....XXX
             0x55, 0x5a, // ......XX
             0x55, 0x55, // ........
+            0x55, 0x55, // ........
             0x55, 0x55  // ........
         },
         {
-            0x56, 0x95, // ...XX...
+            
             0x56, 0x95, // ...XX...
             0x5a, 0x95, // ..XXX...
             0x6a, 0x55, // .XXX....
             0xa9, 0x55, // XXX.....
             0xa5, 0x55, // XX......
+            0x55, 0x55, // ........
             0x55, 0x55, // ........
             0x55, 0x55  // ........
         },
@@ -1456,6 +1460,79 @@ unsigned char card_bits[][16] =
             0xba, 0xeb, // X.XX.XX.
             0xff, 0xff  // ........
         },
+         { // 12
+            0xaf, 0xff, // XX......
+            0xa0, 0x00, // XX======
+            0xae, 0xba, // XX.XX.XX
+            0xaf, 0xae, // XX..XX.X
+            0xae, 0xeb, // XX.X.XX.
+            0xae, 0xba, // XX.XX.XX
+            0xa0, 0x00, // XX======
+            0xaf, 0xff  // XX......
+        },
+        { 
+            0xff, 0xff, // ........
+            0x00, 0x00, // ========
+            0xae, 0xbb, // XX.XX.X.
+            0xba, 0xeb, // X.XX.XX.
+            0xeb, 0xaf, // .XX.XX..
+            0xae, 0xbb, // XX.XX.X.
+            0x00, 0x00, // ========
+            0xff, 0xff  // ........
+        },
+         {
+            0xaf, 0xf3, // XX....=.
+            0xae, 0xe3, // XX.X.X=.
+            0xae, 0xb3, // XX.XX.=.
+            0xaf, 0xa3, // XX..XX=.
+            0xae, 0xe3, // XX.X.X=.
+            0xae, 0xb3, // XX.XX.=.
+            0xaf, 0xa3, // XX..XX=.
+            0xae, 0xe3  // XX.X.X=.
+        },
+         {
+            0xae, 0xe3, // XX.X.X=.
+            0xaf, 0xa0, // XX..XX==
+            0xae, 0xba, // XX.XX.XX
+            0xae, 0xeb, // XX.X.XX.
+            0xaf, 0xae, // XX..XX.X
+            0xae, 0xba, // XX.XX.XX
+            0xae, 0xe0, // XX.X.X==
+            0xaf, 0xa3  // XX..XX=.
+        },
+           {
+            0xaf, 0xa3, // XX..XX=.
+            0xae, 0xe3, // XX.X.X=.
+            0xae, 0xb3, // XX.XX.=.
+            0xaf, 0xa3, // XX..XX=.
+            0xae, 0xe3, // XX.X.X=.
+            0xae, 0xb3, // XX.XX.=.
+            0xaf, 0xa3, // XX..XX=.
+            0xaf, 0xf3  // XX....=.
+        },
+
+        /*
+        {
+            0xaf, 0xff, // XX......
+            0xae, 0xeb, // XX.X.XX.
+            0xae, 0xba, // XX.XX.XX
+            0xaf, 0xae, // XX..XX.X
+            0xae, 0xeb, // XX.X.XX.
+            0xae, 0xba, // XX.XX.XX
+            0xaf, 0xae, // XX..XX.X
+            0xaf, 0xff  // XX......
+        },
+        {
+            0xff, 0xff, // ........
+            0xeb, 0xaf, // .XX.XX..
+            0xae, 0xbb, // XX.XX.X.
+            0xba, 0xeb, // X.XX.XX.
+            0xeb, 0xaf, // .XX.XX..
+            0xae, 0xbb, // XX.XX.X.
+            0xba, 0xeb, // X.XX.XX.
+            0xff, 0xff  // ........
+        },
+        */
     };
 
 /**
