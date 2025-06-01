@@ -101,16 +101,16 @@ void soundTick()
 
 void soundPlayerJoin()
 {
-   uint8_t i;
-   for (i=0;i<50;i+=10)
-       beep(i,1,45);
+    uint8_t i;
+    for (i=50;i<=80;i+=10)
+        beep(i,2,15);
 }
 
 void soundPlayerLeft()
 {
-   uint8_t i;
-   for (i=50;i<250;i-=10)
-       beep(i,1,45);
+    uint8_t i;
+    for (i=80;i>=50;i-=10)
+        beep(i,2,15);
 }
 
 void soundSelectMove()
