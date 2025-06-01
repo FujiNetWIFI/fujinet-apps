@@ -10,10 +10,17 @@
 #define VIDEO_RAM_ADDR ((unsigned char far *)0xB8000000UL)
 #define VIDEO_LINE_BYTES 80
 #define VIDEO_ODD_OFFSET 0x2000
+#define GREEN_MASK 0b01010101
 
-bool always_render_full_cards = 1;
+bool always_render_full_cards = 0;
 
-unsigned char colorMode=0;
+uint8_t colorMode=0;
+uint8_t mask=0;
+uint8_t textMask=GREEN_MASK;
+uint8_t far *video = VIDEO_RAM_ADDR;
+uint8_t double_buffer[0x4000];
+uint8_t draw_corners=1;
+
 
 /**
  * @brief plot a 8x8 2bpp tile to screen at column x, row y
@@ -23,10 +30,11 @@ unsigned char colorMode=0;
  */
 void plot_tile(const unsigned char *tile, unsigned char x, unsigned char y)
 {
-    unsigned char far *video = VIDEO_RAM_ADDR;
     unsigned char i=0;
 
-    y <<= 3; // Convert row to line
+    if (y<25)
+        y <<= 3; // Convert row to line
+
     x <<= 1; // Convert column to video ram offset
 
     for (i=0;i<8;i++)
@@ -52,10 +60,9 @@ void plot_tile(const unsigned char *tile, unsigned char x, unsigned char y)
 void clear(unsigned char c)
 {
     unsigned char b = ((c & 0x03) | ((c & 0x03) << 2) | ((c & 0x03) << 4) | ((c & 0x03) << 6));
-    unsigned char far *video = VIDEO_RAM_ADDR;
-
-    _fmemset(&video[0x0000], b, 8000);
-    _fmemset(&video[0x2000], b, 8000);
+    
+    _fmemset(&video[0x0000], b, 8000-640);
+    _fmemset(&video[0x2000], b, 8000-640);
 }
 
 /**
@@ -67,7 +74,7 @@ void clear(unsigned char c)
 void drawText(unsigned char x, unsigned char y, const char *s)
 {
     signed char c=0;
-
+    
     while (c = *s++)
     {
         c -= 32;
@@ -80,23 +87,28 @@ void drawText(unsigned char x, unsigned char y, const char *s)
             y++;
         }
 
-        plot_tile(&ascii[c],x++,y);
+        plot_tile(&ascii[c+mask],x++,y);
     }
+
 }
+
 
 void enableDoubleBuffer()
 {
-    // Not implemented
+    video=&double_buffer[0];
+    _fmemcpy(video,VIDEO_RAM_ADDR,0x4000);
 }
 
 void disableDoubleBuffer()
 {
-    // Not implemented
+    drawBuffer();
+    video = VIDEO_RAM_ADDR;
 }
 
 void drawBuffer()
 {
-    // Not implemented
+    if (video != VIDEO_RAM_ADDR)
+        _fmemcpy(VIDEO_RAM_ADDR,video,0x4000);
 }
 
 // Call to clear the screen to an empty table
@@ -105,27 +117,47 @@ void resetScreen()
     clear(1); // Draw table color across whole screen
     plot_tile(&border[0],0,0);
     plot_tile(&border[1],39,0);
-    plot_tile(&border[2],0,24);
-    plot_tile(&border[3],39,24);
+    plot_tile(&border[2],0,22);
+    plot_tile(&border[3],39,22);
 }
 
 void clearStatusBar()
 {
-    /* unsigned char far *video = VIDEO_RAM_ADDR; */
-    /* _fmemset(&video[0x1CC0],0x00,640); */
-    /* _fmemset(&video[0x1CC0+0x2000],0x00,640); */
+    
+    _fmemset(&video[0x1CC0],0x00,640); 
+    _fmemset(&video[0x1CC0+0x2000],0x00,640); 
 }
 
 void drawStatusTextAt(unsigned char x, char* s)
-{
-    clearStatusBar();
-    drawText(x,23,s);
+{   
+    mask=96;
+    drawText(x,188,s);  
+    mask=0;  
 }
 
 void drawStatusText(char* s)
 {
+    char* comma;
     clearStatusBar();
-    drawText(0,23,s);
+
+    // Wrap double line status text at comma
+    if (strlen(s)>40)
+    {
+        comma = s;
+        while (*comma++!=',');
+        comma[0]=0;
+        comma++;
+
+        mask=96;
+        drawText(0, 184, s);
+        drawText(0, 192, comma);
+        mask=0; 
+    } 
+    else
+    {
+        // otherwise draw it centered vertically
+        drawStatusTextAt(0, s);
+    }
 }
 
 void drawStatusTimer()
@@ -138,16 +170,16 @@ void drawStatusTimer()
  * @param y Y coordinate (0-24)
  * @return false if value is 0x55, otherwise true.
  */
-bool isCardPresent(unsigned char x, unsigned char y)
+uint8_t getPix(unsigned char x, unsigned char y)
 {
-    unsigned char far *video = VIDEO_RAM_ADDR;
-    unsigned char o = 0;
+    
+    uint16_t o = 0;
 
     x <<= 1; // Convert column to video ram offset
-    y <<= 3; // Convert row to line
-    o = y * VIDEO_LINE_BYTES + x; // compute offset
+   // y <<= 3; // Convert row to line
+    o = y * 4 * VIDEO_LINE_BYTES + x; // compute offset
 
-    return !(video[o] == 0x55); // Return true if background color isn't plot.
+    return video[o];
 }
 
 void drawCard(unsigned char x, unsigned char y, unsigned char partial, const char* s, unsigned char isHidden)
@@ -156,6 +188,8 @@ void drawCard(unsigned char x, unsigned char y, unsigned char partial, const cha
     unsigned char *val = NULL;  // pointer to value tile
     bool red = false;
     bool adjacentCard = false;
+    bool showCardBack = s[0]=='?';
+    uint8_t prevPix;
 
     switch(s[1])
     {
@@ -177,12 +211,6 @@ void drawCard(unsigned char x, unsigned char y, unsigned char partial, const cha
 
     switch(s[0])
     {
-    case '1':
-        if (red)
-            val = &red_card_front[13];
-        else
-            val = &black_card_front[13];
-        break;
     case '2':
         if (red)
             val = &red_card_front[1];
@@ -257,11 +285,11 @@ void drawCard(unsigned char x, unsigned char y, unsigned char partial, const cha
         else
             val = &black_card_front[12];
         break;
-    case '?':
+     case 'a':
         if (red)
-            val = &red_card_front[0];
+            val = &red_card_front[13];
         else
-            val = &black_card_front[0];
+            val = &black_card_front[13];
         break;
     }
 
@@ -276,26 +304,103 @@ void drawCard(unsigned char x, unsigned char y, unsigned char partial, const cha
     }
     else if (partial == PARTIAL_RIGHT)
     {
-        // TODO: Double check this.
-        plot_tile(&card_edges[4],x,y);
-        plot_tile(&card_bits[4],x,y+1);
-        plot_tile(&card_bits[5],x,y+2);
-        plot_tile(&card_bits[6],x,y+3);
-        plot_tile(&card_edges[5],x,y+4);
+        // // TODO: Double check this.
+        plot_tile(&card_edges[4],x+1,y);
+        plot_tile(&card_bits[1],x+1,y+1);
+        plot_tile(&card_bits[2],x+1,y+2);
+        plot_tile(&card_bits[3],x+1,y+3);
+        plot_tile(&card_edges[5],x+1,y+4);
+
+        plot_tile(&card_edges[8],x+2,y);
+        plot_tile(&card_edges[6],x+2,y+1);
+        plot_tile(&card_edges[6],x+2,y+2);
+        plot_tile(&card_edges[6],x+2,y+3);
+        plot_tile(&card_edges[7],x+2,y+4);
     }
     else // FULL_CARD, top.
     {
         plot_tile(&card_edges[0],x,y);
         plot_tile(&card_edges[2],x+1,y);
-        plot_tile(&card_edges[8],x+2,y);
+        prevPix = getPix(x+2,y+2);
+      
+        // Draw right border only if not overlaying existing card
+        if (prevPix == 0x55) 
+        {   
+            // Background color 0x55) , so no card is there. Draw right border
+            plot_tile(&card_edges[6],x+2,y+1);
+            plot_tile(&card_edges[6],x+2,y+2);
+            plot_tile(&card_edges[6],x+2,y+3);   
+
+            // Draw top and bottom right corners if not supressed 
+            // This is only suppressed for the 4 aces in the borders
+            // since those areas are used for corners
+            if (draw_corners) {
+                plot_tile(&card_edges[8],x+2,y);
+                plot_tile(&card_edges[7],x+2,y+4);
+            }
+        } 
+        else if (prevPix== 0xEB)
+        {
+            // Back of card ia there, update to draw with left border
+            // This happens for the player cards on the right of the screen
+            plot_tile(&card_edges[4],x+2,y);
+            plot_tile(&card_bits[1],x+2,y+1);
+            plot_tile(&card_bits[2],x+2,y+2);
+            plot_tile(&card_bits[3],x+2,y+3);
+            plot_tile(&card_edges[5],x+2,y+4);
+        }
+    
+
+        plot_tile(&card_edges[1],x,y+4);
+        plot_tile(&card_edges[3],x+1,y+4);
+
+        // Draw value, white space, and bottom.
+        if (!showCardBack)
+        {
+            plot_tile(&card_bits[0],x,y+1);
+            plot_tile(val,x+1,y+1);
+
+            // Middle - draw strip to designate this player's hidden card
+            if (isHidden)
+            {
+                // Alternate - keeping just in case
+                // plot_tile(&card_bits[14],x,y+1);
+                // plot_tile(&card_bits[15],x,y+2);
+                // plot_tile(&card_bits[16],x,y+3); 
+                // //plot_tile(&card_bits[12],x,y+2);
+                // plot_tile(&card_bits[13],x+1,y+2);
+
+                plot_tile(&card_bits[0],x,y+2);
+                plot_tile(&red_card_front[0],x+1,y+2);
+                plot_tile(&card_bits[0],x,y+3);
+    
+                plot_tile(&card_bits[12],x,y+2);
+                plot_tile(&card_bits[13],x+1,y+2);
+                         
+            }
+            else
+            {
+                plot_tile(&card_bits[0],x,y+2);
+                plot_tile(&red_card_front[0],x+1,y+2);
+                plot_tile(&card_bits[0],x,y+3);
+               
+            }
+            plot_tile(suit,x+1,y+3);
+          
+        }
+        else
+        {
+            // Show back of card (it is flipped - other player's hidden card)
+            plot_tile(&card_bits[6],x,y+1);
+            plot_tile(&card_bits[7],x+1,y+1);
+
+            plot_tile(&card_bits[8],x,y+2);
+            plot_tile(&card_bits[9],x+1,y+2);
+
+            plot_tile(&card_bits[10],x,y+3);
+            plot_tile(&card_bits[11],x+1,y+3);
+        }
     }
-
-    //
-
-    // Draw left border only if not overlaying existing card
-
-    // Draw value, white space, and bottom.
-
 }
 
 void drawChip(unsigned char x, unsigned char y)
@@ -310,44 +415,70 @@ void drawBlank(unsigned char x, unsigned char y)
 
 void drawLine(unsigned char x, unsigned char y, unsigned char w)
 {
-    unsigned char far *video = VIDEO_RAM_ADDR;
-    unsigned char o = 0;
+    
+    uint16_t o = 0;
+    x <<=1;
+    w <<= 1;
+    o = y * 4 * VIDEO_LINE_BYTES + x;
+    
+    // Adjust for bottom move underlines
+    if (y==24)
+        o+=2*VIDEO_LINE_BYTES;
 
-    y <<= 3; // Convert row to line
-    x <<= 1; // Convert column to video ram offset
-
-    o = y * VIDEO_LINE_BYTES + x;
-
-    while (w--)
-    {
-        video[o+w] = 0xAA;         // Color 2
-        video[o+w+0x2000] = 0xAA;  // second row
-    }
+    _fmemset(&video[o], 0xAA, w);
+    _fmemset(&video[o+0x2000], 0xAA, w);
+ 
 }
 
 void hideLine(unsigned char x, unsigned char y, unsigned char w)
 {
-    unsigned char far *video = VIDEO_RAM_ADDR;
-    unsigned char o = 0;
+    
+    uint8_t val = y<22 ? 0x55 : 0;
 
-    y <<= 3; // Convert row to line
-    x <<= 1; // Convert column to video ram offset
+    uint16_t o = 0;
+    x <<=1;
+    w <<= 1;
+    o = y * 4 * VIDEO_LINE_BYTES + x;
 
-    o = y * VIDEO_LINE_BYTES + x;
+    // Adjust for bottom move underlines
+    if (y==24)
+        o+=2*VIDEO_LINE_BYTES;
 
-    while (w--)
-    {
-        video[o+w] = 0x55;         // Color 1
-        video[o+w+0x2000] = 0x55;  // second row
-    }
+    _fmemset(&video[o],val, w);
+    _fmemset(&video[o+0x2000], val, w);
 }
 
 void drawBox(unsigned char x, unsigned char y, unsigned char w, unsigned char h)
 {
+    uint8_t i; 
+
+    plot_tile(&pot_border[0],x,y);
+    plot_tile(&pot_border[2],x+w+1,y);
+    for (i=1;i<=w;i++) {
+        plot_tile(&pot_border[1],x+i,y);
+        plot_tile(&pot_border[1],x+i,y+h+1);
+    }
+
+    for (i=1;i<=h;i++) {
+        plot_tile(&pot_border[5],x,y+i);
+        plot_tile(&pot_border[5],x+w+1,y+i);
+    }
+
+    plot_tile(&pot_border[3],x,y+h+1);
+    plot_tile(&pot_border[4],x+w+1,y+h+1);
+    
+    
+  
 }
 
 void drawBorder()
 {
+  draw_corners=0;
+  drawCard(1,0,FULL_CARD, "as", 0);
+  drawCard(37,0,FULL_CARD, "ah", 0);
+  drawCard(1,18,FULL_CARD, "ad", 0);
+  drawCard(37,18,FULL_CARD, "ac", 0);
+  draw_corners=1;
 }
 
 void drawLogo()
@@ -357,6 +488,8 @@ void drawLogo()
 void initGraphics()
 {
     union REGS r;
+    uint8_t *c;
+    uint16_t i;
 
     // Set graphics mode
     r.h.ah = 0x00;
@@ -375,11 +508,22 @@ void initGraphics()
     r.h.bl = 2;             // Color 2
     r.h.bh = 4;             // To dark red
     int86(0x10,&r,&r);
+
+    // Create a second set of white on black text for status bar
+    // It could also be achieved via a mask in exchange for more memory
+    c=&ascii[0][0];
+    for(i=0;i<sizeof(ascii)/2;i++) {
+        // Set  ascii characters to white on black
+        *(c+1536)= (*c^0x55)*3;
+        c++;
+    }
+
 }
 
 void waitvsync()
 {
     // Wait until we are in vsync
+    while (! (inp(0x3DA) & 0x08));
     while (inp(0x3DA) & 0x08);
 }
 

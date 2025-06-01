@@ -201,7 +201,8 @@ void welcomeActionVerifyPlayerName() {
   read_appkey(AK_LOBBY_CREATOR_ID,  AK_LOBBY_APP_ID, AK_LOBBY_KEY_USERNAME, tempBuffer);
 
   tempBuffer[12]=0;
-  strcpy(playerName,tempBuffer);
+  if (tempBuffer[0] != 0)
+    strcpy(playerName,tempBuffer);
 
   // Capture username if player didn't come in from the lobby
   if (strlen(playerName) == 0)
@@ -227,6 +228,7 @@ void showWelcomScreen() {
     prefs[PREF_HELP]=2;
     savePrefs();
     showHelpScreen();
+    
   }
   pause(30);
 }
@@ -252,18 +254,20 @@ void showTableSelectionScreen() {
   static uint8_t shownChip;
   static unsigned char tableIndex=0;
   static uint8_t skipApiCall;
+  static Table* table;
   skipApiCall=0;
   // An empty query means a table needs to be selected
   while (strlen(query)==0) {
 
+    // SkipApiCall will be true if toggling color, to redraw
+
     if (!skipApiCall) {
       // Show the status immediately before retrival
       centerStatusText("REFRESHING TABLE LIST..");
-           //drawStatusTimer();
       drawBuffer();
-      resetScreenWithBorder();
     }
 
+    resetScreenWithBorder();
 
     centerText(3, "CHOOSE A TABLE TO JOIN");
     drawText(6,6, "TABLE");
@@ -273,17 +277,16 @@ void showTableSelectionScreen() {
     drawBuffer();
     waitvsync();
 
-    if (/* skipApiCall || */ apiCall("tables")) {
-      if (!skipApiCall) {
-        updateState(true);
-      }
+    if (skipApiCall ||  apiCall("tables")) {
       skipApiCall=0;
-      if (tableCount>0) {
-        for(i=0;i<tableCount;++i) {
-          drawText(6,8+i*2, state.tables[i].name);
-          drawText((unsigned char)(WIDTH-6-strlen(state.tables[i].players)), 8+i*2, state.tables[i].players);
-          if (state.tables[i].players[0]>'0') {
-            drawText((unsigned char)(WIDTH-6-strlen(state.tables[i].players)-2), 8+i*2, "*");
+
+      if (clientState.tables.count>0) {
+        for(i=0;i<clientState.tables.count;++i) {
+          table = &clientState.tables.table[i];  
+          drawText(6,8+i*2, table->name);
+          drawText((unsigned char)(WIDTH-6-strlen(table->players)), 8+i*2, table->players);
+          if (table->players[0]>'0') {
+            drawText((unsigned char)(WIDTH-6-strlen(table->players)-2), 8+i*2, "*");
           }
         }
       } else {
@@ -297,7 +300,7 @@ void showTableSelectionScreen() {
       shownChip=0;
 
       clearCommonInput();
-      while (!inputTrigger || !tableCount) {
+      while (!inputTrigger || !clientState.tables.count) {
         readCommonInput();
 
         if (inputKey == 'h' || inputKey == 'H') {
@@ -321,13 +324,13 @@ void showTableSelectionScreen() {
           drawStatusText(tempBuffer);
         } */
 
-        if (!shownChip || (tableCount>0 && inputDirY)) {
+        if (!shownChip || (clientState.tables.count>0 && inputDirY)) {
 
           drawText(4,8+tableIndex*2," ");
           tableIndex+=inputDirY;
           if (tableIndex==255)
-            tableIndex=tableCount-1;
-          else if (tableIndex>=tableCount)
+            tableIndex=clientState.tables.count-1;
+          else if (tableIndex>=clientState.tables.count)
             tableIndex=0;
 
           drawChip(4,8+tableIndex*2);
@@ -345,10 +348,10 @@ void showTableSelectionScreen() {
         // Clear screen and write server name
         resetScreenWithBorder();
         clearStatusBar();
-        centerText(15, state.tables[tableIndex].name);
+        centerText(15, clientState.tables.table[tableIndex].name);
 
         strcpy(query, "?table=");
-        strcat(query, state.tables[tableIndex].table);
+        strcat(query, clientState.tables.table[tableIndex].table);
         strcpy(tempBuffer, serverEndpoint);
         strcat(tempBuffer, query);
 
@@ -369,6 +372,53 @@ void showTableSelectionScreen() {
 
 /// @brief Shows main game play screen (table and cards)
 void showGameScreen() {
+  /*
+  
+typedef struct {
+  char name   [9];
+  uint8_t     status;
+  uint16_t    bet;
+  char move   [8];
+  uint16_t    purse;
+  char hand   [11];
+} Player;
+
+typedef struct {
+  char move     [3];
+  char name     [10];
+} ValidMove;
+
+typedef struct {
+  char lastResult[81];
+  uint8_t round;
+  uint16_t pot;
+  int8_t activePlayer;
+  uint8_t moveTime;
+  uint8_t viewing;
+  uint8_t validMoveCount;
+  ValidMove validMoves[5];
+  uint8_t playerCount;
+  Player players[8];
+} Game;
+ */
+  uint8_t i;
+
+  // printf("\r\nround=%u, pot=%u, ap=%s, m=%u,v=%u",state.round, state.pot, state.activePlayer, state.moveTime, state.viewing);
+  // printf("\r\nvalidMoves=%u, playerCount=%u\r\n",state.validMoveCount, state.playerCount);
+  
+  // for(i=0;i<state.validMoveCount;++i) {
+  //   printf(" %s=%s,",state.validMoves[i].move, state.validMoves[i].name);
+  // }
+  // printf("\r\n");
+  // for(i=0;i<state.playerCount;++i) {
+  //   printf("\r\n%s=%u, bet=%u |%s| p=%u, H=%s",state.players[i].name, state.players[i].status, state.players[i].bet, state.players[i].move, state.players[i].purse, state.players[i].hand);
+  // }
+
+  // printf("\r\n");
+  // drawBuffer();
+  // cgetc();
+  
+ 
   checkIfSpectatorStatusChanged();
   checkIfPlayerCountChanged();
 
@@ -382,7 +432,7 @@ void showGameScreen() {
 
   drawPot();
 
-  if (playerCount>1) {
+  if (state.playerCount>1) {
     drawNamePurse();
     drawBets();
     drawCards(false);
@@ -414,7 +464,7 @@ void showInGameMenuScreen() {
     //drawText(x,y+=2, "  S: SOUND TOGGLE");
     drawText(x,y+=2, "ESC: KEEP PLAYING");
     drawBuffer();
-
+    
     clearCommonInput();
     i=1;
     while (i==1) {
@@ -436,7 +486,7 @@ void showInGameMenuScreen() {
         case 'q':
         case 'Q':
           resetScreenWithBorder();
-        centerText(10, "PLEASE WAIT");
+          centerText(10, "PLEASE WAIT");
           drawBuffer();
 
           // Inform server player is leaving

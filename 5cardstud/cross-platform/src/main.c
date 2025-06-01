@@ -31,16 +31,18 @@
 char serverEndpoint[50] = "https://5card.carr-designs.com/";
 //char serverEndpoint[50] = "http://127.0.0.1:8080/"; // "N: for apple, but not C64"
 
-char query[50] = ""; //?table=blue&player=ERICAPL2";
-char playerName[12] = "";
+char query[50] = ""; //"?table=dev7";//&player=ERICAPL2";
+char playerName[12] = ""; // "eric";
 
-GameState state;
+//GameState state;
+ClientState clientState;
+
 
 // State helper vars
 int inputKey;
 unsigned char playerCount, prevPlayerCount, validMoveCount, prevRound, tableCount, currentCard, cardIndex, xOffset, fullFirst, cursorX, cursorY, waitCount, wasViewing;
 signed char inputDirX, inputDirY;
-uint16_t prevPot, rx_len, maxJifs;
+uint16_t prevPot, maxJifs;
 bool noAnim, doAnim, finalFlip, inputTrigger;
 
 unsigned char playerX[8], playerY[8], moveLoc[5];

@@ -67,7 +67,7 @@ void resetStateIfNewGame() {
 
 void drawNamePurse() {
   
-  for (i=0;i<playerCount;i++) {
+  for (i=0;i<state.playerCount;i++) {
     // Print name, left or right justified based on direction
     y = playerY[i]-1;
     x = playerX[i];
@@ -117,7 +117,7 @@ void drawBets() {
   if (state.round <1 || state.round>4)
     return;
 
-  for (i=playerCount-1;i<255;i--) {
+  for (i=state.playerCount-1;i<255;i--) {
     y = playerY[i]+playerBetY[i]+1;
 
     // Draw bet amount
@@ -161,7 +161,7 @@ void drawCards(bool finalFlip) {
   // if everyone folded, the winning player does not need to flip/reveal their hand.
   if (state.round == 5) {
     h=0;
-    for (i=0;i<playerCount;i++)
+    for (i=0;i<state.playerCount;i++)
       if (state.players[i].status == 1)
         ++h;
     
@@ -187,8 +187,8 @@ void drawCards(bool finalFlip) {
     cardIndex++;
     j=cardIndex*2-1;
     
-    for (h=1;h<=playerCount;h++) {
-      i = h % playerCount;
+    for (h=1;h<=state.playerCount;h++) {
+      i = h % state.playerCount;
       if (strlen(state.players[i].hand)>j) {
         fullFirst = i==0 && (!state.viewing || finalFlip);
      
@@ -224,8 +224,8 @@ void drawCards(bool finalFlip) {
     drawBuffer();
     disableDoubleBuffer();
 
-    for (h=1;h<=playerCount;h++) {
-      i = h % playerCount;
+    for (h=1;h<=state.playerCount;h++) {
+      i = h % state.playerCount;
 
       // Don't flip a player that doesn't have a visible hand
       if (state.players[i].status != 1 || state.players[i].hand[0]=='?')
@@ -275,12 +275,12 @@ void checkIfSpectatorStatusChanged() {
 }
 
 void checkIfPlayerCountChanged() {
-  if (playerCount == prevPlayerCount)
+  if (state.playerCount == prevPlayerCount)
     return;
   
   // Handle if player joins mid game
-  if (playerCount>1 && prevPlayerCount > 0) {
-    if (playerCount < prevPlayerCount) {
+  if (state.playerCount>1 && prevPlayerCount > 0) {
+    if (state.playerCount < prevPlayerCount) {
       
       drawStatusText("A PLAYER LEFT THE TABLE");    
       drawBuffer();
@@ -291,7 +291,7 @@ void checkIfPlayerCountChanged() {
       //   sound 1,255-j*j,10,j:pause 2:sound:pause 8
       // next
     } else {
-      state.lastResult = "A NEW PLAYER JOINS THE TABLE";
+      strcpy(state.lastResult, "A NEW PLAYER JOINS THE TABLE");
       drawStatusText(state.lastResult);
       drawBuffer();
 #ifndef DISABLE_SOUND    
@@ -304,15 +304,15 @@ void checkIfPlayerCountChanged() {
       noAnim = true;
   }
 
-  prevPlayerCount = playerCount;
+  prevPlayerCount = state.playerCount;
   
   // Don't shuffle player locations until multple players exist
-  if (playerCount<2)
+  if (state.playerCount<2)
     return;
   
   i=0;
-  k=(playerCount-1)*8;
-  for (j=(playerCount-2)*8;j<k;j++) {
+  k=(state.playerCount-1)*8;
+  for (j=(state.playerCount-2)*8;j<k;j++) {
     h=playerCountIndex[j];
     playerX[i] = playerXMaster[h];
     playerY[i] = playerYMaster[h];
@@ -332,7 +332,7 @@ void drawStatusTimeLeft() {
 }
 
 void highlightActivePlayer() {
- if (state.activePlayer>0 && playerCount>1) { 
+ if (state.activePlayer>0 && state.playerCount>1) { 
    i=(unsigned char)strlen(state.players[state.activePlayer].name);
     for (j=2;j<=i;j++) {
       drawLine(cursorX, cursorY+1, j);
@@ -349,7 +349,7 @@ void animateChipsToPotOnRoundEnd() {
   pause(50);
 
   // Hide moves
-  for (i=0;i<playerCount;i++) {
+  for (i=0;i<state.playerCount;i++) {
     y = playerY[i]+playerBetY[i];
     x = playerX[i]+playerBetX[i];
 
@@ -370,7 +370,7 @@ void animateChipsToPotOnRoundEnd() {
   disableDoubleBuffer();
 
   // Clear bets off screen
-  for (i=0;i<playerCount;i++) {
+  for (i=0;i<state.playerCount;i++) {
     y = playerY[i]+playerBetY[i]+1;
     x= playerX[i]+playerBetX[i];
     
@@ -432,12 +432,12 @@ void requestPlayerMove() {
     return;
 
   // Default move cursor to second position (1) if possible 
-  cursorX = validMoveCount>1;
+  cursorX = state.validMoveCount>1;
 
   // Draw the moves on the status bar
   clearStatusBar();
   x=1;
-  for (i=0;i<validMoveCount;i++) {
+  for (i=0;i<state.validMoveCount;i++) {
     moveLoc[i] = x;
     drawStatusTextAt(x, state.validMoves[i].name);
     x += 2 + (unsigned char)strlen(state.validMoves[i].name);
@@ -454,8 +454,10 @@ void requestPlayerMove() {
   h=moveLoc[cursorX];
  
 
-// Hack for now (only do this for apple2)
-if (always_render_full_cards) {
+
+// Animate the line. If needed, can add #if around instead
+// of checking render full cards
+//if (always_render_full_cards) {
   drawLine(0,HEIGHT-1, h+h+i);
   pause(5);
   for (j=h;j>0;--j) {
@@ -463,7 +465,7 @@ if (always_render_full_cards) {
     hideLine(h+i+j-1,HEIGHT-1,1);
     pause(2);
   }
-}
+//}
 
   drawLine(h,HEIGHT-1,i);
 
@@ -499,9 +501,10 @@ if (always_render_full_cards) {
 
     if (inputDirX !=0 ) {
       cursorX+=inputDirX;
-      if (cursorX<validMoveCount) {
+      if (cursorX<state.validMoveCount) {
         //drawStatusTextAt(moveLoc[cursorX-inputDirX]-1, " ");
         //drawStatusTextAt(moveLoc[cursorX]-1, "+");
+       
         hideLine(moveLoc[cursorX-inputDirX],HEIGHT-1,(unsigned char)strlen(state.validMoves[cursorX-inputDirX].name));
         drawLine(moveLoc[cursorX],HEIGHT-1,(unsigned char)strlen(state.validMoves[cursorX].name));
 #ifndef DISABLE_SOUND    
