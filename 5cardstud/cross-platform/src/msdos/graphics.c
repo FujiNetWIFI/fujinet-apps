@@ -10,7 +10,7 @@
 #define VIDEO_RAM_ADDR ((unsigned char far *)0xB8000000UL)
 #define VIDEO_LINE_BYTES 80
 #define VIDEO_ODD_OFFSET 0x2000
-#define GREEN_MASK 0b01010101
+#define GREEN_MASK 0x55
 
 bool always_render_full_cards = 0;
 
