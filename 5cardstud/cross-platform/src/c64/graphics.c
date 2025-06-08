@@ -142,13 +142,17 @@ void drawStatusTimer() {
   POKE(screen+920+39,0x53);
 }
 
-void drawText(unsigned char x, unsigned char y, char* s) {
+void drawText(unsigned char x, unsigned char y, const char* s) {
   unsigned char i;
+  char tmp[128];
+
+  strcpy(tmp,s);
+  
   SET_COL(col_text);
 
   // Convert alpha to lowercase for custom font
-  for(i=strlen(s)-1; i<255; i--) 
-    s[i]&=0x7F; // Remove the 8th bit
+  for(i=strlen(tmp)-1; i<255; i--) 
+    tmp[i]&=0x7F; // Remove the 8th bit
     //if (s[i]>128) s[i]-=127;
   
   cputsxy(x,y,s);

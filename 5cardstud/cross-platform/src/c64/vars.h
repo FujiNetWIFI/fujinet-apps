@@ -44,7 +44,7 @@
 #define ALT_LETTER_END 0x7A
 #define ALT_LETTER_AND -32 //0x5f
 
-
+#define QUERY_SUFFIX ""
 
 #endif /* KEYMAP_H */
 
