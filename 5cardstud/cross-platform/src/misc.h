@@ -39,6 +39,10 @@
 #define PREF_COLOR 1 // 1/2 - Color mode mono/color
 //#define PREF_SOUND 2 // 1/2 - Sound Enabled yes/no
 
+#ifdef __CC65__
+#define _Packed
+#endif
+
 typedef _Packed struct {
   char table    [9];
   char name     [21];
