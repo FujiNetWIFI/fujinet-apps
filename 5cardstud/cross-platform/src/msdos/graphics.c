@@ -20,7 +20,7 @@ uint8_t textMask=GREEN_MASK;
 uint8_t far *video = VIDEO_RAM_ADDR;
 uint8_t double_buffer[0x4000];
 uint8_t draw_corners=1;
-
+unsigned char oldmode=0;
 
 /**
  * @brief plot a 8x8 2bpp tile to screen at column x, row y
@@ -60,7 +60,7 @@ void plot_tile(const unsigned char *tile, unsigned char x, unsigned char y)
 void clear(unsigned char c)
 {
     unsigned char b = ((c & 0x03) | ((c & 0x03) << 2) | ((c & 0x03) << 4) | ((c & 0x03) << 6));
-    
+
     _fmemset(&video[0x0000], b, 8000-640);
     _fmemset(&video[0x2000], b, 8000-640);
 }
@@ -74,7 +74,7 @@ void clear(unsigned char c)
 void drawText(unsigned char x, unsigned char y, const char *s)
 {
     signed char c=0;
-    
+
     while (c = *s++)
     {
         c -= 32;
@@ -123,16 +123,16 @@ void resetScreen()
 
 void clearStatusBar()
 {
-    
-    _fmemset(&video[0x1CC0],0x00,640); 
-    _fmemset(&video[0x1CC0+0x2000],0x00,640); 
+
+    _fmemset(&video[0x1CC0],0x00,640);
+    _fmemset(&video[0x1CC0+0x2000],0x00,640);
 }
 
 void drawStatusTextAt(unsigned char x, char* s)
-{   
+{
     mask=96;
-    drawText(x,188,s);  
-    mask=0;  
+    drawText(x,188,s);
+    mask=0;
 }
 
 void drawStatusText(char* s)
@@ -151,8 +151,8 @@ void drawStatusText(char* s)
         mask=96;
         drawText(0, 184, s);
         drawText(0, 192, comma);
-        mask=0; 
-    } 
+        mask=0;
+    }
     else
     {
         // otherwise draw it centered vertically
@@ -172,7 +172,7 @@ void drawStatusTimer()
  */
 uint8_t getPix(unsigned char x, unsigned char y)
 {
-    
+
     uint16_t o = 0;
 
     x <<= 1; // Convert column to video ram offset
@@ -322,23 +322,23 @@ void drawCard(unsigned char x, unsigned char y, unsigned char partial, const cha
         plot_tile(&card_edges[0],x,y);
         plot_tile(&card_edges[2],x+1,y);
         prevPix = getPix(x+2,y+2);
-      
+
         // Draw right border only if not overlaying existing card
-        if (prevPix == 0x55) 
-        {   
+        if (prevPix == 0x55)
+        {
             // Background color 0x55) , so no card is there. Draw right border
             plot_tile(&card_edges[6],x+2,y+1);
             plot_tile(&card_edges[6],x+2,y+2);
-            plot_tile(&card_edges[6],x+2,y+3);   
+            plot_tile(&card_edges[6],x+2,y+3);
 
-            // Draw top and bottom right corners if not supressed 
+            // Draw top and bottom right corners if not supressed
             // This is only suppressed for the 4 aces in the borders
             // since those areas are used for corners
             if (draw_corners) {
                 plot_tile(&card_edges[8],x+2,y);
                 plot_tile(&card_edges[7],x+2,y+4);
             }
-        } 
+        }
         else if (prevPix== 0xEB)
         {
             // Back of card ia there, update to draw with left border
@@ -349,7 +349,7 @@ void drawCard(unsigned char x, unsigned char y, unsigned char partial, const cha
             plot_tile(&card_bits[3],x+2,y+3);
             plot_tile(&card_edges[5],x+2,y+4);
         }
-    
+
 
         plot_tile(&card_edges[1],x,y+4);
         plot_tile(&card_edges[3],x+1,y+4);
@@ -366,27 +366,27 @@ void drawCard(unsigned char x, unsigned char y, unsigned char partial, const cha
                 // Alternate - keeping just in case
                 // plot_tile(&card_bits[14],x,y+1);
                 // plot_tile(&card_bits[15],x,y+2);
-                // plot_tile(&card_bits[16],x,y+3); 
+                // plot_tile(&card_bits[16],x,y+3);
                 // //plot_tile(&card_bits[12],x,y+2);
                 // plot_tile(&card_bits[13],x+1,y+2);
 
                 plot_tile(&card_bits[0],x,y+2);
                 plot_tile(&red_card_front[0],x+1,y+2);
                 plot_tile(&card_bits[0],x,y+3);
-    
+
                 plot_tile(&card_bits[12],x,y+2);
                 plot_tile(&card_bits[13],x+1,y+2);
-                         
+
             }
             else
             {
                 plot_tile(&card_bits[0],x,y+2);
                 plot_tile(&red_card_front[0],x+1,y+2);
                 plot_tile(&card_bits[0],x,y+3);
-               
+
             }
             plot_tile(suit,x+1,y+3);
-          
+
         }
         else
         {
@@ -415,24 +415,24 @@ void drawBlank(unsigned char x, unsigned char y)
 
 void drawLine(unsigned char x, unsigned char y, unsigned char w)
 {
-    
+
     uint16_t o = 0;
     x <<=1;
     w <<= 1;
     o = y * 4 * VIDEO_LINE_BYTES + x;
-    
+
     // Adjust for bottom move underlines
     if (y==24)
         o+=2*VIDEO_LINE_BYTES;
 
     _fmemset(&video[o], 0xAA, w);
     _fmemset(&video[o+0x2000], 0xAA, w);
- 
+
 }
 
 void hideLine(unsigned char x, unsigned char y, unsigned char w)
 {
-    
+
     uint8_t val = y<22 ? 0x55 : 0;
 
     uint16_t o = 0;
@@ -450,7 +450,7 @@ void hideLine(unsigned char x, unsigned char y, unsigned char w)
 
 void drawBox(unsigned char x, unsigned char y, unsigned char w, unsigned char h)
 {
-    uint8_t i; 
+    uint8_t i;
 
     plot_tile(&pot_border[0],x,y);
     plot_tile(&pot_border[2],x+w+1,y);
@@ -466,9 +466,9 @@ void drawBox(unsigned char x, unsigned char y, unsigned char w, unsigned char h)
 
     plot_tile(&pot_border[3],x,y+h+1);
     plot_tile(&pot_border[4],x+w+1,y+h+1);
-    
-    
-  
+
+
+
 }
 
 void drawBorder()
@@ -490,6 +490,12 @@ void initGraphics()
     union REGS r;
     uint8_t *c;
     uint16_t i;
+
+    // Get old mode
+    r.h.ah = 0x0f;
+    int86(0x10,&r,&r);
+
+    oldmode=r.h.al;
 
     // Set graphics mode
     r.h.ah = 0x00;
