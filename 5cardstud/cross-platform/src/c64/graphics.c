@@ -155,7 +155,7 @@ void drawText(unsigned char x, unsigned char y, const char* s) {
     tmp[i]&=0x7F; // Remove the 8th bit
     //if (s[i]>128) s[i]-=127;
   
-  cputsxy(x,y,s);
+  cputsxy(x,y,tmp);
 }
 
 // Call to clear the screen to an empty table
