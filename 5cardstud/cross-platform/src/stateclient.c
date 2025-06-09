@@ -19,11 +19,16 @@
 char urlBuffer[128];
 
 unsigned char apiCall(const char *path) {
+#ifndef __CBM__
   if (serverEndpoint[0] != 'N') {
     strcpy(urlBuffer,"N:");
   } else {
     strcpy(urlBuffer,"");
   }
+#else
+  memset(urlBuffer,0,sizeof(urlBuffer));
+#endif /* ! __CBM__ */
+  
   strcat(urlBuffer, serverEndpoint);
   strcat(urlBuffer, path);
   strcat(urlBuffer, query);

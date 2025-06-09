@@ -25,9 +25,14 @@ const char json_query[] = "jq,2,";
 int getResponse(char *url, unsigned char *buffer, uint16_t max_len)
 {
     static int16_t count;
-    network_open(url, OPEN_MODE_HTTP_GET_H, OPEN_TRANS_NONE);
-    count = network_read(url, buffer, max_len);
-    network_close(url);
+    /* network_open(url, OPEN_MODE_HTTP_GET_H, OPEN_TRANS_NONE); */
+    /* count = network_read(url, buffer, max_len); */
+    /* network_close(url); */
+
+    cbm_open(LFN,DEV,SAN,url);
+    count = cbm_read(LFN,buffer,max_len);
+    cbm_close(LFN);
+    
     return count>0;
 }
 

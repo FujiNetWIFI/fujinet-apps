@@ -118,7 +118,7 @@ void drawStatusTextAt(unsigned char x, char* s) {
   SET_COL(COL_BLACK);
   split = strlen(s)>40;
 
-  while(j=*s++) {
+  while(j=*s++ & 0x7F) {
     POKE(SCR_STATUS+x,j+ (j<0x40 ? j==0x20 ? 0x60 : 0x80 : j>0xC0 ? -0x40: 0x40) );
     POKE(SCR_STATUS_DIRECT+x,j+ (j<0x40 ? j==0x20 ? 0x60 : 0x80 : j>0xC0 ? -0x40: 0x40) );
     ++x;
@@ -152,8 +152,7 @@ void drawText(unsigned char x, unsigned char y, const char* s) {
 
   // Convert alpha to lowercase for custom font
   for(i=strlen(tmp)-1; i<255; i--) 
-    tmp[i]&=0x7F; // Remove the 8th bit
-    //if (s[i]>128) s[i]-=127;
+    if (tmp[i]>128) tmp[i]-=127;
   
   cputsxy(x,y,tmp);
 }
