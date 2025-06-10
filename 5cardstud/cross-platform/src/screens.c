@@ -289,15 +289,26 @@ void showTableSelectionScreen() {
 
     if (!skipApiCall) {
       // Show the status immediately before retrival
+#ifdef __C64__
+      centerStatusText("refreshing table list..");
+#else
       centerStatusText("REFRESHING TABLE LIST..");
+#endif
       drawBuffer();
+
+
     }
 
     resetScreenWithBorder();
-
+#ifdef __C64__
+    centerText(3, "choose a table to join");
+    drawText(6,6, "table");
+    drawText(WIDTH-13,6, "players");
+#else
     centerText(3, "CHOOSE A TABLE TO JOIN");
     drawText(6,6, "TABLE");
     drawText(WIDTH-13,6, "PLAYERS");
+#endif
     drawLine(6,7,WIDTH-12);
 
     drawBuffer();
@@ -316,7 +327,13 @@ void showTableSelectionScreen() {
           }
         }
       } else {
+
+#ifdef __C64__
+        centerText(12, "sorry, no tables are available");
+#else
         centerText(12, "SORRY, NO TABLES ARE AVAILABLE");
+#endif
+
       }
 
       //drawStatusText(" R+EFRESH  H+ELP  C+OLOR  S+OUND  Q+UIT");
