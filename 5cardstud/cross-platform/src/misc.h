@@ -1,5 +1,9 @@
 #ifndef MISC_H
 #define MISC_H
+
+// Comment out this for real fujinet builds. This is just for eric's simple "get basic https working" emulator bridge
+//#define EMU_MODE
+
 /*
  * Include CC65 style Joystick defines for Adam - There is a probably a better way to do this.
  */

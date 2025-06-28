@@ -9,6 +9,7 @@
 #include <stdbool.h>
 #include <i86.h>
 #include "../platform-specific/appkey.h"
+#include "../misc.h"
 
 #define FUJICMD_OPEN_APPKEY 0xDC
 #define FUJICMD_WRITE_APPKEY 0xDE
@@ -24,6 +25,8 @@ typedef struct _appkey
 } Appkey;
 
 Appkey appkey;
+
+#ifndef EMU_MODE
 
 /**
  * @brief Open a key for reading or writing
@@ -100,3 +103,20 @@ void write_appkey(unsigned int creator_id, unsigned char app_id, unsigned char k
     int86x(0xF5,&r,&r,&sr);
 }
 
+#else
+
+unsigned char open_appkey(unsigned char open_mode, unsigned int creator_id, unsigned char app_id, char key_id)
+{
+   return 0;
+}
+
+void read_appkey(unsigned int creator_id, unsigned char app_id, unsigned char key_id, char* data)
+{
+    data[0]=0;
+}
+
+void write_appkey(unsigned int creator_id, unsigned char app_id, unsigned char key_id, char *data)
+{
+}
+
+#endif

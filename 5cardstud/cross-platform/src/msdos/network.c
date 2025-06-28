@@ -7,9 +7,6 @@
 
 void waitvsync(void);
 
-// Comment out this for real fujinet builds. This is just for eric's simple "get basic https working" emulator bridge
-// #define EMU_MODE 1
-
 unsigned char buf[256];
 
 struct _status
@@ -23,7 +20,10 @@ struct _status
 _WCIRTLINK extern unsigned inp(unsigned __port);
 _WCIRTLINK extern unsigned outp(unsigned __port, unsigned __value);
 
-uint16_t getResponse(char *url, unsigned char *buffer, uint16_t max_len)
+
+#ifndef EMU_MODE
+
+uint8_t getResponse(char *url, unsigned char *buffer, uint16_t max_len)
 {
     union REGS r;
     struct SREGS sr;
@@ -104,12 +104,10 @@ uint16_t getResponse(char *url, unsigned char *buffer, uint16_t max_len)
     memset(&r,0,sizeof(union REGS));
     memset(&sr,0,sizeof(struct SREGS));
 
-    return s.bw;
+    return s.bw > 0;
 }
 
-
-
-#ifdef EMU_MODE
+#else
 
 // Simple "get https working in dosbox" code to retrieve a url until fujinet-pc for msdos is available.
 // I have the following line set in dosbox to map COM1 to a service listening on TCP port 5000 that makes the https call
