@@ -38,7 +38,7 @@ void disableDoubleBuffer() {
  POKE(0xc054,1);
 }
 
-void drawTextAt(unsigned char x, unsigned char y, char*s) {
+void drawTextAt(unsigned char x, unsigned char y, const char *s) {
   static unsigned char c;
   while(*s) {
     c=*s++;
@@ -85,7 +85,7 @@ void drawStatusTimer() {
 }
   
 
-void drawText(unsigned char x, unsigned char y, char* s) {
+void drawText(unsigned char x, unsigned char y, const char* s) {
   drawTextAt(x,y*8-4, s);
 
   // Convert lowercase to upper
