@@ -27,4 +27,4 @@ void write_appkey(uint16_t creator_id, uint8_t app_id, uint8_t key_id, uint8_t *
   fuji_write_appkey(key_id, strlen(inputString), inputString);
 }
 
-#endif /* __C64__ */
+#endif /* __APPLE2__ */

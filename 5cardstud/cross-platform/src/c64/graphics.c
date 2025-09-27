@@ -7,7 +7,7 @@
 
 #include <conio.h>
 #include <c64.h>
-#include <cbm_petscii_charmap.h>
+//#include <cbm_petscii_charmap.h>
 #include <peekpoke.h>
 #include <string.h>
 #include <stdlib.h>
@@ -119,6 +119,15 @@ void drawStatusTextAt(unsigned char x, char* s) {
   split = strlen(s)>40;
 
   while(j=*s++ & 0x7F) {
+    
+   
+    // // Translate lowercase from server
+    if (j >= 97 && j <= 122) // 97-122 -32
+       j-=32;
+    // // Translate uppercase from program
+    // else if (j>=193)
+    //   j-=128;
+    
     POKE(SCR_STATUS+x,j+ (j<0x40 ? j==0x20 ? 0x60 : 0x80 : j>0xC0 ? -0x40: 0x40) );
     POKE(SCR_STATUS_DIRECT+x,j+ (j<0x40 ? j==0x20 ? 0x60 : 0x80 : j>0xC0 ? -0x40: 0x40) );
     ++x;
@@ -143,7 +152,7 @@ void drawStatusTimer() {
 }
 
 void drawText(unsigned char x, unsigned char y, const char* s) {
-  unsigned char i;
+  unsigned char i,c;
   char tmp[128];
 
   strcpy(tmp,s);
@@ -151,8 +160,24 @@ void drawText(unsigned char x, unsigned char y, const char* s) {
   SET_COL(col_text);
 
   // Convert alpha to lowercase for custom font
-  for(i=strlen(tmp)-1; i<255; i--) 
-    if (tmp[i]>128) tmp[i]-=127;
+  for(i=strlen(tmp)-1; i<255; i--)  {
+    c=tmp[i];
+
+    // Translate lowercase from server
+    if (c >= 97 && c <= 122) // 97-122 -32
+      tmp[i]-=32;
+    // Translate uppercase from program
+    else if (c>=193)
+      tmp[i]-=128;
+    
+    //if (c >= 129 && c <= 154) // 97-122 -32
+    //  tmp[i] -= 64;
+   // else if (c >= 65 && c <= 90)  // 65-90 +32
+   //   tmp[i]+=32;
+    
+  
+  }
+      
   
   cputsxy(x,y,tmp);
 }
@@ -185,6 +210,11 @@ void drawCard(unsigned char x, unsigned char y, unsigned char partial, const cha
     // Card value (default with a blank 0x63 right space)
     val = 0x6300;
     i = s[0];
+
+    // // Translate lowercase from server
+    if (i >= 97 && i <= 122) // 97-122 -32
+       i-=32;
+
     switch (i) {
       case 't': val=0xABAA; break; // 10 - unlike others, takes up two chars
       case 'j': val+=0x9c; break; // Jack
@@ -201,8 +231,13 @@ void drawCard(unsigned char x, unsigned char y, unsigned char partial, const cha
         val += i + 0x70;  // 2 - 9
     }
 
+    i = s[1];
+    // // Translate lowercase from server
+    if (i >= 97 && i <= 122) // 97-122 -32
+       i-=32;
+
     // Card suit
-    switch (s[1]) {
+    switch (i) {
       case 'h': suit= 0x6665; col = COL_RED; break;   // Heart
       case 'd': suit= 0x6867; col = COL_RED; break;   //Diamond
       case 'c': suit= 0x6A69; col = COL_BLACK; break; //Club

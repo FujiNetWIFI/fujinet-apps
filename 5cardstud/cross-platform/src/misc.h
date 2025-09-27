@@ -1,8 +1,13 @@
 #ifndef MISC_H
 #define MISC_H
 
-// Comment out this for real fujinet builds. This is just for eric's simple "get basic https working" emulator bridge
-//#define EMU_MODE
+/* To test the game:
+ * VICE - 
+ *  1. In VI E, point DRIVE 11 to a local folder
+ *  2. Edit /support/c64/emulator/fuji_mock_network.py to point to that same folder and run it
+ *  3. Uncomment the USE_EMULATOR define below. */
+
+ // #define USE_EMULATOR
 
 /*
  * Include CC65 style Joystick defines for Adam - There is a probably a better way to do this.

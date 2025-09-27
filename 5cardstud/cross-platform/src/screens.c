@@ -62,25 +62,6 @@ void showHelpScreen() {
   // This COULD be retrieved from the server, especially if
   // this client were game agnostic.
   resetScreenWithBorder();
-#ifdef __C64__
-  centerText(3,"how to play 5 card stud");
-  y=4;
-  //                  // __________________________________
-  y++;drawText(3,y, "players are dealt 5 cards over the");
-  y++;drawText(3,y, "course of 4 rounds. in each round");
-  y++;drawText(3,y, "players bet, call, and re-raise.");
-  y+=2;
-  centerText(y, "moves");
-  y++;
-  y++;drawText(4,y, "fold - quit the hand");y++;
-  y++;drawText(4,y, "check- free pass");y++;
-  y++;drawText(4,y, "bet /- increase bet. others must");
-  y++;drawText(4,y, "raise  call to stay in the hand");y++;
-  y++;drawText(4,y, "call - match the current bet and");
-  y++;drawText(4,y, "       stay in the hand");
-
-  centerStatusText("press any key to continue");
-#else
   centerText(3,"HOW TO PLAY 5 CARD STUD");
   y=4;
   //                  // __________________________________
@@ -98,7 +79,7 @@ void showHelpScreen() {
   y++;drawText(4,y, "       STAY IN THE HAND");
 
   centerStatusText("PRESS ANY KEY TO CONTINUE");
-#endif
+
   drawBuffer();
 
   clearCommonInput();
@@ -195,11 +176,7 @@ void showPlayerNameScreen() {
 
   drawBuffer();
   disableDoubleBuffer();
-#ifdef __C64__
-  drawText(13,13, "enter your name:");
-#else
   drawText(13,13, "ENTER YOUR NAME:");
-#endif
   drawBox(15,16,PLAYER_NAME_MAX+1,1);
   drawText(16,17, playerName);
   i=strlen(playerName);
@@ -239,16 +216,13 @@ void showWelcomScreen() {
   welcomeActionVerifyPlayerName();
   welcomeActionVerifyServerDetails();
 
-#ifdef __C64__
-  strcpy(tempBuffer, "welcome ");
-#else
   strcpy(tempBuffer, "WELCOME ");
-#endif
   strcat(tempBuffer, playerName);
   centerText(13,tempBuffer);
   drawBuffer();
   pause(45);
 
+  
   // If first run, show the help screen
   if (prefs[PREF_HELP]!=2) {
     prefs[PREF_HELP]=2;
@@ -289,26 +263,14 @@ void showTableSelectionScreen() {
 
     if (!skipApiCall) {
       // Show the status immediately before retrival
-#ifdef __C64__
-      centerStatusText("refreshing table list..");
-#else
       centerStatusText("REFRESHING TABLE LIST..");
-#endif
       drawBuffer();
-
-
     }
 
     resetScreenWithBorder();
-#ifdef __C64__
-    centerText(3, "choose a table to join");
-    drawText(6,6, "table");
-    drawText(WIDTH-13,6, "players");
-#else
     centerText(3, "CHOOSE A TABLE TO JOIN");
     drawText(6,6, "TABLE");
     drawText(WIDTH-13,6, "PLAYERS");
-#endif
     drawLine(6,7,WIDTH-12);
 
     drawBuffer();
@@ -328,11 +290,7 @@ void showTableSelectionScreen() {
         }
       } else {
 
-#ifdef __C64__
-        centerText(12, "sorry, no tables are available");
-#else
         centerText(12, "SORRY, NO TABLES ARE AVAILABLE");
-#endif
 
       }
 

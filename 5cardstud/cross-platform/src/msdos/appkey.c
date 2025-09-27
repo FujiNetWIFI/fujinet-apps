@@ -26,7 +26,7 @@ typedef struct _appkey
 
 Appkey appkey;
 
-#ifndef EMU_MODE
+#ifndef USE_EMULATOR
 
 /**
  * @brief Open a key for reading or writing

@@ -12,9 +12,6 @@
 #define APPKEY_READ  0
 #define APPKEY_WRITE 1
 
-// Uncomment this line to simulate read/writing app keys in VICE emulator on drive 11 (Must configure as EIC Host File System)
-//#define USE_VICE_EMULATOR
-
 /**
  * @brief Convenience type for handling an appkey
  */

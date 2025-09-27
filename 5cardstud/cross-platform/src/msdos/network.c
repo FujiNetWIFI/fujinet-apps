@@ -21,7 +21,7 @@ _WCIRTLINK extern unsigned inp(unsigned __port);
 _WCIRTLINK extern unsigned outp(unsigned __port, unsigned __value);
 
 
-#ifndef EMU_MODE
+#ifndef USE_EMULATOR
 
 uint8_t getResponse(char *url, unsigned char *buffer, uint16_t max_len)
 {

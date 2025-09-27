@@ -11,6 +11,7 @@
 #include <string.h>
 #include <cbm.h>
 #include "../platform-specific/appkey.h"
+#include "../misc.h"
 
 #define FUJICMD_OPEN_APPKEY 0xDC
 #define FUJICMD_WRITE_APPKEY 0xDE
@@ -25,7 +26,7 @@ typedef struct {
 
 appkeyC64 appkey;
 
-#ifdef USE_VICE_EMULATOR
+#ifdef USE_EMULATOR
   #define DEV 11
   #define SEC_NUM 0
   #define OPEN_APPKEY_PREFIX "appkey-"
@@ -49,7 +50,7 @@ unsigned char open_appkey(unsigned char open_mode, unsigned int creator_id, unsi
 { 
   static unsigned char appkey_error;
 
-  #ifdef USE_VICE_EMULATOR  
+  #ifdef USE_EMULATOR  
   
   if (open_mode == APPKEY_WRITE)
     strcpy(appkey.payload.write.value, "s:");
@@ -91,7 +92,7 @@ unsigned char open_appkey(unsigned char open_mode, unsigned int creator_id, unsi
     cbm_write(LFN, &appkey, sizeof(appkey));
   #endif
   
-  #ifdef USE_VICE_EMULATOR
+  #ifdef USE_EMULATOR
     return appkey_error;
   #endif
 
@@ -114,7 +115,7 @@ void read_appkey(unsigned int creator_id, unsigned char app_id, unsigned char ke
   if (appkey_error = open_appkey(APPKEY_READ, creator_id, app_id, key_id))
     return;
   
-  #ifndef USE_VICE_EMULATOR
+  #ifndef USE_EMULATOR
     cbm_close(LFN);
     appkey_error = cbm_open(LFN,DEV,SEC_NUM,(const char *)&command);
   #endif
@@ -152,7 +153,7 @@ void write_appkey(unsigned int creator_id, unsigned char app_id, unsigned char k
   appkey.payload.read.length = len;
   memcpy(&appkey.payload.read.value, data, appkey.payload.read.length);
 
-  #ifdef USE_VICE_EMULATOR
+  #ifdef USE_EMULATOR
     cbm_write(LFN, &appkey.payload.read, sizeof(appkey.payload.read));
   #else
     appkey.command = FUJICMD_WRITE_APPKEY;
