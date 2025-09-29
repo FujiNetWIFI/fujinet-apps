@@ -10,6 +10,7 @@
 #include "../adam/vars.h"
 #include "../coco/vars.h"
 #include "../msdos/vars.h"
+#include "../plus4/vars.h"
 
 // Platform specific implementations
 unsigned char readJoystick();
