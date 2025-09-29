@@ -12,14 +12,15 @@
  
 # Space or comma separated list of cc65 supported target platforms to build for.
 
-# Supported targets: c64 apple2 (lowercase!)
-TARGETS := apple2
+# Supported targets: plus4 c64 apple2 (lowercase!)
+TARGETS := plus4
  
 # Name of the final, single-file executable.
 # Default: name of the current dir with target name appended
 PROGRAM := fcs
 
 # Target extensions
+ext_plus4 := prg
 ext_c64 := prg
 ext_atari := xex
 ext_apple2 := apl
@@ -81,14 +82,14 @@ EMUCMD :=
 ifeq ($(OS),Windows_NT) 
   atari_EMUCMD := cmd /c start C:\atari\Altirra\Altirra64.exe /singleinstance /run
   c64_EMUCMD := taskkill /im x64sc.exe >nul 2>nul & cmd /c start x64sc -model c64ntsc -autostart
+  plus4_EMUCMD := taskkill /im xplus4.exe >nul 2>nul & cmd /c start xplus4 -model plus4ntsc -autostart
   apple2_EMUCMD := cmd /c start C:\Projects\apple-fujinet\applewin.exe -d1 "$(PROGRAM_STUB).po" & REM
    
 else
   #atari_EMUCMD := osascript -e 'quit app "Atari800MacX"';open -n -a Atari800macx --args $(CURDIR)/$(PROGRAM);echo
   atari_EMUCMD := wine64 /Users/eric/Documents/Altirra/Altirra64.exe /singleinstance /run
   c64_EMUCMD := killall x64sc; open /Applications/vice-arm64-gtk3-3.7.1/x64sc.app --args -model c64ntsc +confirmonexit -autostart $(CURDIR)/$(PROGRAM);echo
-  apple2_EMUCMD := wine64 /Users/eric/Documents/apple-fujinet/AppleWin.exe -s5 spoverslip -d1 "$(PROGRAM_STUB).po" ; echo 
-  
+  apple2_EMUCMD := wine64 /Users/eric/Documents/apple-fujinet/AppleWin.exe -s5 spoverslip -d1 "$(PROGRAM_STUB).po" ; echo  
 endif
 
 # On Windows machines VICE emulators may not be available in the PATH by default.
