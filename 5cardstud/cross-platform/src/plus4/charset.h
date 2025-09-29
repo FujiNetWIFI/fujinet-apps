@@ -1,11 +1,5 @@
 #ifdef __PLUS4__
 
-
-
-
-
-
-
 const unsigned char charset[] = {
   0,  0,  0,  0,  0,  0,  0,  0,
   0, 48,252,204,204,252,204,204,
@@ -265,5 +259,5 @@ const unsigned char charset[] = {
   0,  0,  0,  0,  0,  0,  0,  0
 
   };
-  
+
 #endif /* __PLUS4__ */

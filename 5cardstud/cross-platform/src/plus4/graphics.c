@@ -26,10 +26,10 @@
    build (Kernal, charset placement, and screen addresses differ). */
 
 /* Screen & charset targets (example choices) */
-#define CHARSET_LOC_P4  0x8000  /* TODO: adjust if you place charset elsewhere */
-#define DBLBUF_LOC_P4   0x8800  /* double buffer character memory */
-#define SCREEN_LOC_P4   0xA000  /* visible screen memory address (example) */
-#define SPRITE_LOC_P4   0xB000  /* not real sprite RAM on TED — used for emu */
+#define CHARSET_LOC_P4  0xC000  /* TODO: adjust if you place charset elsewhere */
+#define DBLBUF_LOC_P4   0xC800  /* double buffer character memory */
+#define SCREEN_LOC_P4   0xD000  /* visible screen memory address (example) */
+#define SPRITE_LOC_P4   0xE000  /* not real sprite RAM on TED — used for emu */
 
 #define CHARSET_LOC CHARSET_LOC_P4
 #define DBLBUF_LOC  DBLBUF_LOC_P4
@@ -354,18 +354,18 @@ void resetGraphics() {
   ted_hw_wait_vsync();
 
   /* Return screen/bank to initial values (HAL handles TED specifics) */
-  ted_hw_set_bank(0);     /* TODO: set appropriate bank */
+  //ted_hw_set_bank(0);     /* TODO: set appropriate bank */
   ted_hw_set_screen(SCREEN_LOC);
   ted_hw_set_charset(CHARSET_LOC);
 
   /* Reset colors: write to color RAM (size & mapping differ on Plus/4) */
   /* We'll fill 1000 color cells like original logic — adjust if needed */
-  ted_hw_write_color_ram((unsigned char*)0x0E /* color value placeholder */, 1000);
+  //ted_hw_write_color_ram((unsigned char*)0x0E /* color value placeholder */, 1000);
 
   /* Border and background defaults via HAL */
-  ted_hw_set_border_bg_colors(COLOR_BLACK, COLOR_GREEN, COLOR_BLUE, COLOR_WHITE);
+  //ted_hw_set_border_bg_colors(COLOR_BLACK, COLOR_GREEN, COLOR_BLUE, COLOR_WHITE);
 
-  ted_hw_enable_shift_charset(); /* placeholder */
+  //ted_hw_enable_shift_charset(); /* placeholder */
 }
 
 /* initGraphics: load charset and prepare double buffer */
@@ -378,17 +378,20 @@ void initGraphics() {
 
   /* Load custom charset into CHARSET_LOC (verify addressing) */
   memcpy((void*)CHARSET_LOC, &charset, 2048);
-  ted_hw_set_charset(CHARSET_LOC);
-  ted_hw_set_bank(CHARSET_LOC);
-  memset((void*)COLOR_RAM, 8, 1000); /* adjust COLOR_RAM mapping if needed */
+  TED.misc &= 0xFB;
+  TED.misc |= 0x04;
+  TED.char_addr = 0xD0;
 
-  enableDoubleBuffer();
+  //ted_hw_set_bank(CHARSET_LOC);
+  //memset((void*)COLOR_RAM, 6, 1000); /* adjust COLOR_RAM mapping if needed */
+
+  //enableDoubleBuffer();
 
   /* Set colors via HAL */
   ted_hw_set_border_bg_colors(COLOR_BLACK, COLOR_GREEN, COLOR_BLUE, COLOR_WHITE);
 
   /* Initialize "sprite" emulation area */
-  emu_clear_sprite_area();
+  //emu_clear_sprite_area();
 }
 
 /* ---------------------------
@@ -413,7 +416,7 @@ static void ted_hw_set_text_color(unsigned char v) {
      On the C64 we used POKE(646,val) — on Plus/4 it may be different.
      If you want to set the foreground color for further cputs, use the
      runtime's conio color functions or write to the TED registers here. */
-  POKE(646, v); /* placeholder; change if incorrect */
+    textcolor(v);
 }
 
 static void ted_hw_set_charset(unsigned int addr) {
@@ -422,7 +425,11 @@ static void ted_hw_set_charset(unsigned int addr) {
      to a system page to change which RAM area holds char graphics. */
   /* Placeholder: no-op, or POKE to an imaginary TED register: */
   /* POKE(TED_CHARSET_REG, addr >> 8); */
-  (void)addr;
+    TED.misc &= 0xFB;
+    TED.misc |= 0x04;
+    TED.char_addr = addr >> 8;
+
+    // TED.char_addr = addr >> 8;
 }
 
 static void ted_hw_set_screen(unsigned int addr) {
@@ -441,10 +448,11 @@ static void ted_hw_set_border_bg_colors(unsigned char border, unsigned char bg0,
   /* On C64 border is 0xD020 etc. On TED this may be different — set the
      border and background bytes here. Use POKE to appropriate registers. */
   /* Placeholder: use same addresses as C64 (may be wrong on Plus/4) */
-  POKE(0xD020, border);
-  POKE(0xD021, bg0);
-  POKE(0xD022, bg1);
-  POKE(0xD023, bg2);
+
+    TED.bordercolor = border;
+    TED.color1 = bg0;
+    TED.color2 = bg1;
+    TED.color3 = bg2;
 }
 
 static void ted_hw_write_color_ram(unsigned char *src, unsigned int len) {
@@ -496,4 +504,3 @@ static void emu_hide_line_chars(void) {
 }
 
 #endif /* __PLUS4__ */
-
