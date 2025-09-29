@@ -26,10 +26,10 @@
    build (Kernal, charset placement, and screen addresses differ). */
 
 /* Screen & charset targets (example choices) */
-#define CHARSET_LOC_P4  0xC000  /* TODO: adjust if you place charset elsewhere */
-#define DBLBUF_LOC_P4   0xC800  /* double buffer character memory */
-#define SCREEN_LOC_P4   0xD000  /* visible screen memory address (example) */
-#define SPRITE_LOC_P4   0xE000  /* not real sprite RAM on TED — used for emu */
+#define CHARSET_LOC_P4  0xD000  /* TODO: adjust if you place charset elsewhere */
+#define DBLBUF_LOC_P4   0xD800  /* double buffer character memory */
+#define SCREEN_LOC_P4   0xE000  /* visible screen memory address (example) */
+#define SPRITE_LOC_P4   0xE400  /* not real sprite RAM on TED — used for emu */
 
 #define CHARSET_LOC CHARSET_LOC_P4
 #define DBLBUF_LOC  DBLBUF_LOC_P4
@@ -372,26 +372,26 @@ void resetGraphics() {
 void initGraphics() {
   ted_hw_disable_shift_charset();
 
+  TED.hscroll = 0x18; // Enable multicolor mode, 40 columns
+
   /* Clear double buffer */
   memset((void*)DBLBUF_LOC, 0, 1000);
   memset((void*)(DBLBUF_LOC + 920), 0x80, 80);
 
   /* Load custom charset into CHARSET_LOC (verify addressing) */
   memcpy((void*)CHARSET_LOC, &charset, 2048);
-  TED.misc &= 0xFB;
-  TED.misc |= 0x04;
-  TED.char_addr = 0xD0;
+  ted_hw_set_charset(CHARSET_LOC);
 
   //ted_hw_set_bank(CHARSET_LOC);
-  //memset((void*)COLOR_RAM, 6, 1000); /* adjust COLOR_RAM mapping if needed */
+  memset((void*)COLOR_RAM, 6, 1000); /* adjust COLOR_RAM mapping if needed */
 
-  //enableDoubleBuffer();
+  enableDoubleBuffer();
 
   /* Set colors via HAL */
   ted_hw_set_border_bg_colors(COLOR_BLACK, COLOR_GREEN, COLOR_BLUE, COLOR_WHITE);
 
   /* Initialize "sprite" emulation area */
-  //emu_clear_sprite_area();
+  emu_clear_sprite_area();
 }
 
 /* ---------------------------
@@ -427,7 +427,7 @@ static void ted_hw_set_charset(unsigned int addr) {
   /* POKE(TED_CHARSET_REG, addr >> 8); */
     TED.misc &= 0xFB;
     TED.misc |= 0x04;
-    TED.char_addr = addr >> 8;
+    TED.char_addr = 0xD0;
 
     // TED.char_addr = addr >> 8;
 }
