@@ -52,36 +52,36 @@ static uint8_t sidToTedNoise(unsigned sidFreq) {
 
 // --- Sound primitives ---
 void playNote(unsigned f) {
-    unsigned tf;
+    /* unsigned tf; */
 
-    tf = sidToTedTone(f);
+    /* tf = sidToTedTone(f); */
 
-    TED_FREQ1L = (uint8_t)(tf & 0xFF);
-    TED_FREQ1H = (uint8_t)(tf >> 8);
+    /* TED_FREQ1L = (uint8_t)(tf & 0xFF); */
+    /* TED_FREQ1H = (uint8_t)(tf >> 8); */
 
-    TED_CTRL = 0x80 | 0x10 | 8;  /* master, chan1 on, volume=8 */
-    pause(delay);
-    TED_CTRL = 0x80;             /* master on, channels off */
+    /* TED_CTRL = 0x80 | 0x10 | 8;  /\* master, chan1 on, volume=8 *\/ */
+    /* pause(delay); */
+    /* TED_CTRL = 0x80;             /\* master on, channels off *\/ */
 }
 
 void playNoise(unsigned f) {
-    uint8_t nf;
+    /* uint8_t nf; */
 
-    nf = sidToTedNoise(f);
-    TED_NOISE = nf;
+    /* nf = sidToTedNoise(f); */
+    /* TED_NOISE = nf; */
 
-    TED_CTRL = 0x80 | 0x20 | 8;  /* master, chan2 noise, vol=8 */
-    pause(delay);
-    TED_CTRL = 0x80;
+    /* TED_CTRL = 0x80 | 0x20 | 8;  /\* master, chan2 noise, vol=8 *\/ */
+    /* pause(delay); */
+    /* TED_CTRL = 0x80; */
 }
 
 void initSound() {
-    TED_FREQ1L = 0;
-    TED_FREQ1H = 0;
-    TED_FREQ2L = 0;
-    TED_FREQ2H = 0;
-    TED_NOISE  = 0;
-    TED_CTRL   = 0x80; /* master on, volume 0 */
+    /* TED_FREQ1L = 0; */
+    /* TED_FREQ1H = 0; */
+    /* TED_FREQ2L = 0; */
+    /* TED_FREQ2H = 0; */
+    /* TED_NOISE  = 0; */
+    /* TED_CTRL   = 0x80; /\* master on, volume 0 *\/ */
 }
 
 // --- Higher-level sound API ---
@@ -159,4 +159,3 @@ void soundTakeChip(uint16_t counter) {
 }
 
 #endif /* __PLUS4__ */
-
