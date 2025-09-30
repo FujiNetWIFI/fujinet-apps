@@ -466,26 +466,26 @@ static void ted_hw_enable_shift_charset(void) {
    --------------------------- */
 
 static void emu_clear_sprite_area(void) {
-  /* Clear the emulated sprite memory area (we use SPRITE_LOC as scratch area) */
-  memset((char*)SPRITE_LOC, 0, 256);
+  /* /\* Clear the emulated sprite memory area (we use SPRITE_LOC as scratch area) *\/ */
+  /* memset((char*)SPRITE_LOC, 0, 256); */
 }
 
 static void emu_draw_line_chars(unsigned char x, unsigned char y, unsigned char w) {
-  unsigned char i;
-  /* Convert a horizontal 'line' into repeated special characters that we
-     write into DBLBUF_LOC at the target location. This is a very simple
-     emulation; you can expand to modify charset patterns for finer control. */
-  unsigned short base = (unsigned short)SCR + y * 40 + x;
-  for (i = 0; i < w && (x + i) < 40; ++i) {
-    POKE(base + i, '-');   /* ASCII dash variant — you may prefer custom char */
-    POKE((unsigned)SCREEN_LOC + y * 40 + x + i, '-');
-  }
+  /* unsigned char i; */
+  /* /\* Convert a horizontal 'line' into repeated special characters that we */
+  /*    write into DBLBUF_LOC at the target location. This is a very simple */
+  /*    emulation; you can expand to modify charset patterns for finer control. *\/ */
+  /* unsigned short base = (unsigned short)SCR + y * 40 + x; */
+  /* for (i = 0; i < w && (x + i) < 40; ++i) { */
+  /*   POKE(base + i, '-');   /\* ASCII dash variant — you may prefer custom char *\/ */
+  /*   POKE((unsigned)SCREEN_LOC + y * 40 + x + i, '-'); */
+  /* } */
 }
 
 static void emu_hide_line_chars(void) {
-  /* Clear line emulation area: simply clear entire DBLBUF_LOC region used */
-  /* For simplicity we zero the small scratch area; adapt as needed. */
-  memset((char*)SCREEN_LOC, 0x20, 40 * 25); /* fill with spaces — adjust as needed */
+  /* /\* Clear line emulation area: simply clear entire DBLBUF_LOC region used *\/ */
+  /* /\* For simplicity we zero the small scratch area; adapt as needed. *\/ */
+  /* memset((char*)SCREEN_LOC, 0x20, 40 * 25); /\* fill with spaces — adjust as needed *\/ */
 }
 
 #endif /* __PLUS4__ */
