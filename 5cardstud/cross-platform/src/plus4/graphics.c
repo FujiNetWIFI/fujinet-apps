@@ -38,10 +38,10 @@
 
 /* Multi Colors - re-use your original color constants; they depend on
    how you map 'color numbers' to TED registers. */
-#define COL_RED    (8 + COLOR_RED)
-#define COL_BLACK  (8 + COLOR_BLACK)
-#define COL_WHITE  (8 + COLOR_WHITE)
-#define COL_YELLOW (8 + COLOR_YELLOW)
+#define COL_RED    (BCOLOR_RED | CATTR_LUMA3 + 8)
+#define COL_BLACK  (BCOLOR_BLACK | CATTR_LUMA0 + 8)
+#define COL_WHITE  (BCOLOR_WHITE | CATTR_LUMA7 + 8)
+#define COL_YELLOW (BCOLOR_YELLOW | CATTR_LUMA7 + 8)
 
 /* Keep original names for compatibility */
 #define SCR (unsigned char*)DBLBUF_LOC
@@ -114,10 +114,7 @@ void enableDoubleBuffer() {
 
   ted_hw_wait_vsync();
 
-  /* The C64 POKE(648, bank) trick sets the kernal screen pointer.
-     On Plus/4 you may need a different POKE — adjust here if needed. */
-  /* TODO: if your environment/cc65 runtime supports a kernel page-set for cputs,
-           implement it below. For now we leave as-is. */
+  POKE(1342,DBLBUF_LOC >> 8);
 }
 
 void disableDoubleBuffer() {
@@ -360,10 +357,10 @@ void resetGraphics() {
 
   /* Reset colors: write to color RAM (size & mapping differ on Plus/4) */
   /* We'll fill 1000 color cells like original logic — adjust if needed */
-  //ted_hw_write_color_ram((unsigned char*)0x0E /* color value placeholder */, 1000);
+  ted_hw_write_color_ram((unsigned char*)0x0f /* color value placeholder */, 1000);
 
   /* Border and background defaults via HAL */
-  //ted_hw_set_border_bg_colors(COLOR_BLACK, COLOR_GREEN, COLOR_BLUE, COLOR_WHITE);
+  ted_hw_set_border_bg_colors(COLOR_BLACK, COLOR_GREEN, BCOLOR_BLUE|CATTR_LUMA3, COLOR_GREEN);
 
   //ted_hw_enable_shift_charset(); /* placeholder */
 }
@@ -371,6 +368,13 @@ void resetGraphics() {
 /* initGraphics: load charset and prepare double buffer */
 void initGraphics() {
   ted_hw_disable_shift_charset();
+
+/* Set colors via HAL */
+  ted_hw_set_border_bg_colors(0x00, 0x45, 0x75, 0x41);
+  textcolor(COLOR_BLACK);
+  bgcolor(BCOLOR_GREEN|CATTR_LUMA3);
+  bordercolor(COLOR_BLACK);
+  clrscr();
 
   TED.hscroll = 0x18; // Enable multicolor mode, 40 columns
 
@@ -382,13 +386,9 @@ void initGraphics() {
   memcpy((void*)CHARSET_LOC, &charset, 2048);
   ted_hw_set_charset(CHARSET_LOC);
 
-  //ted_hw_set_bank(CHARSET_LOC);
-  memset((void*)COLOR_RAM, 6, 1000); /* adjust COLOR_RAM mapping if needed */
+  memset((void*)COLOR_RAM, 0x09, 1000); /* adjust COLOR_RAM mapping if needed */
 
   enableDoubleBuffer();
-
-  /* Set colors via HAL */
-  ted_hw_set_border_bg_colors(COLOR_BLACK, COLOR_GREEN, COLOR_BLUE, COLOR_WHITE);
 
   /* Initialize "sprite" emulation area */
   emu_clear_sprite_area();
@@ -412,30 +412,18 @@ static void ted_hw_wait_vsync(void) {
 }
 
 static void ted_hw_set_text_color(unsigned char v) {
-  /* TODO: map your 'v' to the Plus/4's text color register(s).
-     On the C64 we used POKE(646,val) — on Plus/4 it may be different.
-     If you want to set the foreground color for further cputs, use the
-     runtime's conio color functions or write to the TED registers here. */
-    textcolor(v);
+    POKE(1339,v);
 }
 
 static void ted_hw_set_charset(unsigned int addr) {
-  /* TODO: implement mapping of character generator location.
-     Many Plus/4 implementations require writing to a TED register or
-     to a system page to change which RAM area holds char graphics. */
-  /* Placeholder: no-op, or POKE to an imaginary TED register: */
-  /* POKE(TED_CHARSET_REG, addr >> 8); */
-    TED.misc &= 0xFB;
-    TED.misc |= 0x04;
-    TED.char_addr = 0xD0;
+    TED.misc &= 0xFB;             // Tell TED to fetch charset from RAM
+    TED.char_addr = addr >> 8;    // Set charset base address.
 
     // TED.char_addr = addr >> 8;
 }
 
 static void ted_hw_set_screen(unsigned int addr) {
-  /* TODO: tell the TED / kernal / runtime to use 'addr' as screen memory */
-  /* Example placeholder: */
-  (void)addr;
+    POKE(1342,addr>>8);
 }
 
 static void ted_hw_set_bank(unsigned int addr) {
@@ -445,10 +433,6 @@ static void ted_hw_set_bank(unsigned int addr) {
 }
 
 static void ted_hw_set_border_bg_colors(unsigned char border, unsigned char bg0, unsigned char bg1, unsigned char bg2) {
-  /* On C64 border is 0xD020 etc. On TED this may be different — set the
-     border and background bytes here. Use POKE to appropriate registers. */
-  /* Placeholder: use same addresses as C64 (may be wrong on Plus/4) */
-
     TED.bordercolor = border;
     TED.color1 = bg0;
     TED.color2 = bg1;
@@ -462,7 +446,8 @@ static void ted_hw_write_color_ram(unsigned char *src, unsigned int len) {
   unsigned int i;
   for (i = 0; i < len; ++i) {
     /* adjust index mapping if needed */
-    POKE((unsigned)COLOR_RAM + i, src ? src[i] : 8);
+    POKE((unsigned)0x0800 + i, src ? src[i] : 8);
+    POKE((unsigned)0xD400 + i, src ? src[i] : 8);
   }
 }
 
