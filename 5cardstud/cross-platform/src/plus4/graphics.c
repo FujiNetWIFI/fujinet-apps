@@ -25,16 +25,10 @@
    The values below are reasonable defaults but must be verified on your
    build (Kernal, charset placement, and screen addresses differ). */
 
-/* Screen & charset targets (example choices) */
-#define CHARSET_LOC_P4  0xD000  /* TODO: adjust if you place charset elsewhere */
-#define DBLBUF_LOC_P4   0xD800  /* double buffer character memory */
-#define SCREEN_LOC_P4   0xE000  /* visible screen memory address (example) */
-#define SPRITE_LOC_P4   0xE400  /* not real sprite RAM on TED — used for emu */
-
-#define CHARSET_LOC CHARSET_LOC_P4
-#define DBLBUF_LOC  DBLBUF_LOC_P4
-#define SCREEN_LOC  SCREEN_LOC_P4
-#define SPRITE_LOC  SPRITE_LOC_P4
+#define CHARSET_LOC 0x8000
+#define DBLBUF_LOC  0x8800
+#define SCREEN_LOC  0xA000
+#define SPRITE_LOC  0xB000
 
 /* Multi Colors - re-use your original color constants; they depend on
    how you map 'color numbers' to TED registers. */
@@ -121,6 +115,7 @@ void disableDoubleBuffer() {
   /* Make the double-buffer become the visible screen (if you want that) */
   ted_hw_set_screen(DBLBUF_LOC);
   screen = SCREEN_LOC;
+  POKE(1342,SCREEN_LOC >> 8);
 }
 
 void clearStatusBar() {
@@ -454,11 +449,11 @@ static void ted_hw_write_color_ram(unsigned char *src, unsigned int len) {
 static void ted_hw_disable_shift_charset(void) {
   /* On the C64 POKE(0x291, 0x80) disables shift->charset swapping.
      On Plus/4 this behavior is different; leave as placeholder. */
-  POKE(0x291, 0x80); /* may be harmless; adjust if needed */
+  POKE(0x547, 0x80); /* may be harmless; adjust if needed */
 }
 
 static void ted_hw_enable_shift_charset(void) {
-  POKE(0x291, 0x00); /* placeholder */
+  POKE(0x547, 0x00); /* placeholder */
 }
 
 /* ---------------------------
