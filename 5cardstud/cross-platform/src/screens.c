@@ -399,8 +399,6 @@ typedef struct {
   Player players[8];
 } Game;
  */
-  uint8_t i;
-
   // printf("\r\nround=%u, pot=%u, ap=%s, m=%u,v=%u",state.round, state.pot, state.activePlayer, state.moveTime, state.viewing);
   // printf("\r\nvalidMoves=%u, playerCount=%u\r\n",state.validMoveCount, state.playerCount);
 

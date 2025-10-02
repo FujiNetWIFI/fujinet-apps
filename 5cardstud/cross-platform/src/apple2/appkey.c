@@ -21,10 +21,10 @@ void read_appkey(uint16_t creator_id, uint8_t app_id, uint8_t key_id, uint8_t* d
   destination[read] = 0;
 }
 
-void write_appkey(uint16_t creator_id, uint8_t app_id, uint8_t key_id, uint8_t *inputString)
+void write_appkey(uint16_t creator_id, uint8_t app_id, uint8_t key_id, const char *inputString)
 {
   fuji_set_appkey_details(creator_id, app_id, DEFAULT);
-  fuji_write_appkey(key_id, strlen(inputString), inputString);
+  fuji_write_appkey(key_id, strlen(inputString), (uint8_t *)inputString);
 }
 
 #endif /* __APPLE2__ */

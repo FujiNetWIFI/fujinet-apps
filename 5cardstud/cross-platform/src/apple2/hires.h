@@ -30,7 +30,7 @@ void hires_Done(void);
 void hires_Text(char flag);
 void hires_Draw(char xpos,  char ypos,
                 char xsize,   char ysize,
-                unsigned rop, char *src);
+                unsigned rop, unsigned char *src);
 void hires_Mask(char xpos,    char ypos,
                 char xsize,   char ysize,
                 unsigned rop);
