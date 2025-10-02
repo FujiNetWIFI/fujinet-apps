@@ -128,14 +128,14 @@ void clearStatusBar()
     _fmemset(&video[0x1CC0+0x2000],0x00,640);
 }
 
-void drawStatusTextAt(unsigned char x, char* s)
+void drawStatusTextAt(unsigned char x, const char* s)
 {
     mask=96;
     drawText(x,188,s);
     mask=0;
 }
 
-void drawStatusText(char* s)
+void drawStatusText(const char* s)
 {
     char* comma;
     clearStatusBar();
@@ -143,7 +143,7 @@ void drawStatusText(char* s)
     // Wrap double line status text at comma
     if (strlen(s)>40)
     {
-        comma = s;
+        comma = (char *)s;
         while (*comma++!=',');
         comma[0]=0;
         comma++;

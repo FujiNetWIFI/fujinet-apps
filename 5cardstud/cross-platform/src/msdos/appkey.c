@@ -40,13 +40,13 @@ unsigned char open_appkey(unsigned char open_mode, unsigned int creator_id, unsi
 {
     union REGS r;
     struct SREGS sr;
-    
+
     appkey.creator_id = creator_id;
     appkey.app_id = app_id;
     appkey.key_id = key_id;
     appkey.open_mode = open_mode;
     appkey.reserved = 0;
-    
+
     r.h.dl = 0x80;
     r.h.al = 0x70;
     r.h.ah = 0xDC;
@@ -83,11 +83,11 @@ void read_appkey(unsigned int creator_id, unsigned char app_id, unsigned char ke
     int86x(0xF5,&r,&r,&sr);
 }
 
-void write_appkey(unsigned int creator_id, unsigned char app_id, unsigned char key_id, char *data)
+void write_appkey(unsigned int creator_id, unsigned char app_id, unsigned char key_id, const char *data)
 {
     union REGS r;
     struct SREGS sr;
-    
+
     open_appkey(1,creator_id,app_id,key_id);
 
     delay(250);
