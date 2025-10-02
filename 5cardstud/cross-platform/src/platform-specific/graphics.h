@@ -27,8 +27,8 @@ void drawBuffer();
 void resetScreen();
 
 void clearStatusBar();
-void drawStatusTextAt(unsigned char x, char* s);
-void drawStatusText(char* s);
+void drawStatusTextAt(unsigned char x, const char* s);
+void drawStatusText(const char* s);
 void drawStatusTimer();
 
 void drawText(unsigned char x, unsigned char y, const char* s);

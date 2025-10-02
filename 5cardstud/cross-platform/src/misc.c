@@ -31,6 +31,8 @@
 #include <coco.h>
 #define true 1
 #define false 0
+char cgetc(void);
+unsigned char kbhit(void);
 #else
 #include <stdbool.h>
 #include <stdint.h>
@@ -43,7 +45,13 @@ void pause(unsigned char frames) {
 }
 
 void clearCommonInput() {
-  inputTrigger=inputKey=inputDirY=inputDirX=_lastJoy=_joy=0;
+    inputTrigger=0;
+    inputKey=0;
+    inputDirX=0;
+    inputDirY=0;
+    _lastJoy=0;
+    _joy=0;
+
 #ifndef USE_PLATFORM_SPECIFIC_INPUT
   while (kbhit())
     cgetc();
@@ -53,7 +61,10 @@ void clearCommonInput() {
 }
 
 void readCommonInput() {
-  inputTrigger=inputKey=inputDirX=inputDirY=0;
+  inputTrigger=0;
+  inputKey=0;
+  inputDirX=0;
+  inputDirY=0;
 
   _joy = readJoystick();
 

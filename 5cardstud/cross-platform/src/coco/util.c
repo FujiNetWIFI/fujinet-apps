@@ -5,6 +5,7 @@
 */
 #include <cmoc.h>
 #include <coco.h>
+#include "hires.h"
 
 void resetTimer()
 {

@@ -1,6 +1,9 @@
 #ifdef _CMOC_VERSION_
 #include "coco/coco_bool.h"
+#include <cmoc.h>
 #include <coco.h>
+unsigned char kbhit(void);
+char cgetc(void);
 #else
 #include <stdlib.h>
 #ifdef __WATCOMC__
@@ -24,12 +27,12 @@
 #define PLAYER_NAME_MAX 8
 
 /// @brief Convenience function to draw text centered at row Y
-void centerText(unsigned char y, char * text) {
+void centerText(unsigned char y, const char * text) {
   drawText((unsigned char)(WIDTH/2-strlen(text)/2), y, text);
 }
 
 /// @brief Convenience function to draw status text centered
-void centerStatusText(char * text) {
+void centerStatusText(const char * text) {
   clearStatusBar();
   drawStatusTextAt((unsigned char)((WIDTH-strlen(text))>>1),text);
 }
@@ -103,7 +106,7 @@ void welcomeActionVerifyServerDetails() {
 
 
 
-bool inputFieldCycle(uint8_t x, uint8_t y, uint8_t max, uint8_t* buffer) {
+bool inputFieldCycle(uint8_t x, uint8_t y, uint8_t max, char* buffer) {
   static uint8_t done, curx, lastY;
 
   // Initialize first call to input box
@@ -143,7 +146,7 @@ bool inputFieldCycle(uint8_t x, uint8_t y, uint8_t max, uint8_t* buffer) {
     } else if (
       curx < max && ((curx>0 && inputKey == KEY_SPACE) || (inputKey>= 97 && inputKey <=122) ||(inputKey>= 48 && inputKey <=57) || (inputKey>= 65 && inputKey <=90))    // 0-9 A-Z
     ) {
-      buffer[curx]=inputKey;
+        buffer[curx]=(unsigned char)inputKey;
       buffer[++curx]=0;
     }
 
@@ -173,7 +176,7 @@ void showPlayerNameScreen() {
   drawBox(15,16,PLAYER_NAME_MAX+1,1);
   drawText(16,17, playerName);
 #endif
-  i=strlen(playerName);
+  i=(unsigned char)strlen(playerName);
 
   clearCommonInput();
   //while (inputKey != KEY_RETURN || i<2) {
@@ -236,7 +239,7 @@ void tableActionJoinServer() {
   strcat(query, playerName);
 
   // Replace space with + for pshowWelcomScreenlayer name
-  i=strlen(query);
+  i=(unsigned char)strlen(query);
   while(--i)
     if (query[i]==' ')
       query[i]='+';

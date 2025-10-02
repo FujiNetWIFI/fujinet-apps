@@ -22,7 +22,7 @@ void read_appkey(uint16_t creator_id, uint8_t app_id, uint8_t key_id, uint8_t* d
   destination[read] = 0;
 }
 
-void write_appkey(uint16_t creator_id, uint8_t app_id, uint8_t key_id, uint8_t *inputString)
+void write_appkey(uint16_t creator_id, uint8_t app_id, uint8_t key_id, const char *inputString)
 {
   // TODO FIXME fuji_set_appkey_details(creator_id, app_id, DEFAULT);
   // TODO FIXME fuji_write_appkey(key_id, strlen((const char *)inputString), inputString);

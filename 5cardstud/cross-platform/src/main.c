@@ -65,9 +65,6 @@ void main(void)
   initGraphics();
   initSound();
 
-#ifdef _CMOC_VERSION_
-  network_init();
-#endif
 #ifdef USE_PLATFORM_SPECIFIC_INPUT
   initPlatformKeyboardInput();
 #endif
@@ -101,4 +98,7 @@ void main(void)
 
 
   }
+#ifdef _CMOC_VERSION_
+  return 0;
+#endif
 }

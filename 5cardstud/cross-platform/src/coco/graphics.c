@@ -61,7 +61,7 @@ void disableDoubleBuffer() {
     // not implemented
 }
 
-void drawTextAt(unsigned char x, unsigned char y, char*s) {
+void drawTextAt(unsigned char x, unsigned char y, const char *s) {
     static unsigned char c;
 
     y *= 8;
@@ -85,15 +85,15 @@ void clearStatusBar() {
 void drawBuffer() {
 }
 
-void drawStatusTextAt(unsigned char x, char* s) {
+void drawStatusTextAt(unsigned char x, const char* s) {
   drawTextAt(x, BOTTOM+5, s);
 }
 
-void drawStatusText(char* s) {
+void drawStatusText(const char* s) {
   static char* comma;
   clearStatusBar();
   if (strlen(s)>40) {
-    comma = s;
+      comma = (char *)s;
     while (*comma++!=',');
     comma[0]=0;
     comma++;
@@ -116,7 +116,7 @@ void drawText(unsigned char x, unsigned char y, const char* s) {
 
 
 void drawChip(unsigned char x, unsigned char y) {
-  hires_putc(x,y,ROP_CPY, 0x22);
+  hires_putc(x,y*8,ROP_CPY, 0x22);
 }
 
 

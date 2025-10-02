@@ -19,7 +19,7 @@ uint16_t getJsonResponse(char *url, unsigned char *buffer, uint16_t max_len) {
     static uint16_t count;
     network_open(url, OPEN_MODE_HTTP_GET, OPEN_TRANS_NONE);
     network_json_parse(url);
-    count = network_json_query(url, "", buffer);
+    count = network_json_query(url, (char *)"", (char *)buffer);
     network_close(url);
     return count;
 }
