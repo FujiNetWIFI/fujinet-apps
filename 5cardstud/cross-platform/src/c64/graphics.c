@@ -56,7 +56,7 @@ bool always_render_full_cards = 0;
 unsigned char colorMode=0;
 //static unsigned char doubleBuf=0;
 
-unsigned char cycleNextColor() {  
+unsigned char cycleNextColor() {
   setColorMode((colorMode+1 ) % 3);
   return colorMode;
 }
@@ -83,10 +83,10 @@ void enableDoubleBuffer() {
   // Set visible screen
   SET_VIC_SCREEN(SCREEN_LOC);
 
-  // Set location to write to 
+  // Set location to write to
   screen = DBLBUF_LOC;
-  
-  
+
+
   // Point the Kernal to the double buffered screen for cputs()
   waitvsync();
   POKE (648, DBLBUF_LOC/0x100);
@@ -97,15 +97,15 @@ void disableDoubleBuffer() {
   // Set visible screen to double buffered location
   SET_VIC_SCREEN(DBLBUF_LOC);
   screen = SCREEN_LOC;
-  
-  
+
+
   //waitvsync();
   // Point the Kernal to the screen for direct cputs()
   //POKE (648, 0xCC);
 }
 
 void clearStatusBar() {
-  memset(screen+920,0x80,80);
+    memset((unsigned char *)screen+920,0x80,80);
 }
 
 void drawBuffer() {
@@ -113,21 +113,21 @@ void drawBuffer() {
   memcpy((void*)SCREEN_LOC,(void*)DBLBUF_LOC,1024);
 }
 
-void drawStatusTextAt(unsigned char x, char* s) {
+void drawStatusTextAt(unsigned char x, const char* s) {
   static unsigned char j,split;
   SET_COL(COL_BLACK);
   split = strlen(s)>40;
 
   while(j=*s++ & 0x7F) {
-    
-   
+
+
     // // Translate lowercase from server
     if (j >= 97 && j <= 122) // 97-122 -32
        j-=32;
     // // Translate uppercase from program
     // else if (j>=193)
     //   j-=128;
-    
+
     POKE(SCR_STATUS+x,j+ (j<0x40 ? j==0x20 ? 0x60 : 0x80 : j>0xC0 ? -0x40: 0x40) );
     POKE(SCR_STATUS_DIRECT+x,j+ (j<0x40 ? j==0x20 ? 0x60 : 0x80 : j>0xC0 ? -0x40: 0x40) );
     ++x;
@@ -142,7 +142,7 @@ void drawStatusTextAt(unsigned char x, char* s) {
   }
 }
 
-void drawStatusText(char* s) {
+void drawStatusText(const char* s) {
   clearStatusBar();
   drawStatusTextAt(0, s);
 }
@@ -156,7 +156,7 @@ void drawText(unsigned char x, unsigned char y, const char* s) {
   char tmp[128];
 
   strcpy(tmp,s);
-  
+
   SET_COL(col_text);
 
   // Convert alpha to lowercase for custom font
@@ -169,22 +169,22 @@ void drawText(unsigned char x, unsigned char y, const char* s) {
     // Translate uppercase from program
     else if (c>=193)
       tmp[i]-=128;
-    
+
     //if (c >= 129 && c <= 154) // 97-122 -32
     //  tmp[i] -= 64;
    // else if (c >= 65 && c <= 90)  // 65-90 +32
    //   tmp[i]+=32;
-    
-  
+
+
   }
-      
-  
+
+
   cputsxy(x,y,tmp);
 }
 
 // Call to clear the screen to an empty table
-void resetScreen() { 
-  
+void resetScreen() {
+
   // Clear screen except for corners
   memset(SCR+1,0,38);
   memset(SCR+40,0,40*21);
@@ -202,11 +202,11 @@ void drawCard(unsigned char x, unsigned char y, unsigned char partial, const cha
     int suit, val, space, top, bottom;
     unsigned char col;
     unsigned char * loc;
-    
+
     top=0x7776;
     space= isHidden ? 0x605F : 0x63A1;
     bottom=0x7978;
-     
+
     // Card value (default with a blank 0x63 right space)
     val = 0x6300;
     i = s[0];
@@ -222,11 +222,11 @@ void drawCard(unsigned char x, unsigned char y, unsigned char partial, const cha
       case 'k': val+=0x9e; break; // King
       case 'a': val+=0x9f; break; // Ace
       case 63 : // Card back
-        suit=space=val=0x6261;  
+        suit=space=val=0x6261;
         top+=0x404;
         bottom+=0x404;
       break;
-      
+
       default:
         val += i + 0x70;  // 2 - 9
     }
@@ -257,7 +257,7 @@ void drawCard(unsigned char x, unsigned char y, unsigned char partial, const cha
       POKE(loc+41, COL_BLACK);
       POKE(loc+81, col);
     }
-    
+
     // Draw card
     loc = SCR + y*40+x;
 
@@ -266,15 +266,15 @@ void drawCard(unsigned char x, unsigned char y, unsigned char partial, const cha
 
     // Draw the left border char only if not overlaying an existing card
     if (!PEEK(loc)) {
-      POKE(loc, 0x6e); 
-      POKE(loc+40, 0x6e); 
-      POKE(loc+80, 0x6e); 
+      POKE(loc, 0x6e);
+      POKE(loc+40, 0x6e);
+      POKE(loc+80, 0x6e);
     }
 
     // Draw the value, white space, suite, and bottom
-    POKEW(++loc, val);  
-    POKEW(loc+=40, space);      
-    POKEW(loc+=40, suit);     
+    POKEW(++loc, val);
+    POKEW(loc+=40, space);
+    POKEW(loc+=40, suit);
     POKEW(loc+=40, bottom);
 }
 
@@ -291,7 +291,7 @@ void drawLine(unsigned char x, unsigned char y, unsigned char w) {
   //   cputcxy(x,y, 'A');
   //   while(--w)
   //     cputc('A');
-  // } else { 
+  // } else {
   //   SET_COL(COL_BLACK);
   //   j='-';
   //   w++;
@@ -299,7 +299,7 @@ void drawLine(unsigned char x, unsigned char y, unsigned char w) {
   //     POKE(SCREEN_LOC+x+w+y*40-1,j+ (j<0x40 ? j==0x20 ? 0x60 : 0x80 : j>0xC0 ? -0x40: 0x40) );
   //     POKE(DBLBUF_LOC+x+w+y*40-1,j+ (j<0x40 ? j==0x20 ? 0x60 : 0x80 : j>0xC0 ? -0x40: 0x40) );
   //   }
-    
+
   // }
 
   if (w>8 && y<23) {
@@ -316,9 +316,9 @@ void drawLine(unsigned char x, unsigned char y, unsigned char w) {
     xx+=48;
     VIC.spr_pos[1].x = xx;
     VIC.spr_hi_x = VIC.spr_hi_x|((xx>256)<<1);
-     
+
     memset((char*)SPRITE_LOC, 0, 68);
-    
+
     for (x=0;x<w && x<6;x++) {
       y=x % 2 ? 0xFF : 0xF0;
       POKE(SPRITE_LOC+(x>>1), y);
@@ -328,9 +328,9 @@ void drawLine(unsigned char x, unsigned char y, unsigned char w) {
     POKE(SPRITE_LOC+64, w==7 ? 0xF0 : w==8 ? 0xFE : 0);
     POKE(SPRITE_LOC+67, w==7 ? 0xF0 : w==8 ? 0xFE : 0);
 
-   
+
    // for(x=0;x<8;x++) {
-   
+
    //   xx++;
    //   waitvsync();
    // }
@@ -340,7 +340,7 @@ void drawLine(unsigned char x, unsigned char y, unsigned char w) {
 
 void hideLine(unsigned char x, unsigned char y, unsigned char w) {
   memset((char*)SPRITE_LOC, 0, 68);
- 
+
 
   // if (y<23) {
   //   SET_COL(COL_BLACK);
@@ -356,7 +356,10 @@ void hideLine(unsigned char x, unsigned char y, unsigned char w) {
   //   while(--w)
   //   cputc(' ');
 
-   //hires_Mask(x,y*8-3,w,2, 0xa900); 
+   //hires_Mask(x,y*8-3,w,2, 0xa900);
+  (void)x;
+  (void)y;
+  (void)w;
 }
 
 void drawBox(unsigned char x, unsigned char y, unsigned char w, unsigned char h) {
@@ -385,11 +388,11 @@ void drawBox(unsigned char x, unsigned char y, unsigned char w, unsigned char h)
 
 void drawBorder() {
   static unsigned char i;
-  for(i=0;i<32;i+=4) { 
+  for(i=0;i<32;i+=4) {
     SET_COL(COL_RED);
     cputsxy(4+i,1, "UV");
     cputsxy(4+i,21, "UV");
-    
+
     SET_COL(COL_BLACK);
     cputsxy(6+i,1, "WX");
     cputsxy(6+i,21, "WX");
@@ -407,7 +410,7 @@ void drawLogo() {
   SET_COL(col_text);
   cputsxy(18,i, "FEF");
   cputsxy(13,++i, "fuji");
-  
+
   SET_COL(COL_BLACK);
   cputs("HEJEB");
 
@@ -424,7 +427,7 @@ void resetGraphics() {
   VIC.spr_exp_x=VIC.spr_ena=0;
 
   waitvsync();
-  
+
   // Return screen/bank to initial values
   CIA2.pra = 0xC7;
   VIC.ctrl2 = 200;
@@ -444,13 +447,13 @@ void resetGraphics() {
 
 void initGraphics() {
   POKE(0x291,0x80); //disable SHIFT-Commodore changing of char sets
-  
+
   //set multicolor mode
-  VIC.ctrl2 = 0xD8;  
+  VIC.ctrl2 = (unsigned char)0xD8;
 
   // Clear screen
   memset((void*)DBLBUF_LOC,0,1000);
-  memset(DBLBUF_LOC+920,0x80,80);
+  memset((unsigned char *)DBLBUF_LOC+920,0x80,80);
 
   // Load custom charset (and reset the screen) at the 4th bank (0xC000)
   memcpy((void*)CHARSET_LOC,&charset,2048);
@@ -461,7 +464,7 @@ void initGraphics() {
   memset(COLOR_RAM,8,1000);
 
   enableDoubleBuffer();
-  
+
 
    // Set colors
   VIC.bordercolor=COLOR_BLACK;  // D020 / border
@@ -470,9 +473,9 @@ void initGraphics() {
   VIC.bgcolor2=COLOR_WHITE;     // D023 / Multicolor 2
 
   // Setup cursor sprite
-  
 
-  
+
+
   for(i=0;i<2;i++) {
     POKE(DBLBUF_LOC + 0x3f8+i, (SPRITE_LOC-CHARSET_LOC) / 64+i);
     memset((char*)SPRITE_LOC+i*64, 0, 63);
@@ -485,7 +488,7 @@ void initGraphics() {
   VIC.spr_ena = 0b00000011;
 
 
-  
+
 
 }
 

@@ -47,11 +47,11 @@ appkeyC64 appkey;
  * @return error code
  */
 unsigned char open_appkey(unsigned char open_mode, unsigned int creator_id, unsigned char app_id, char key_id)
-{ 
+{
   static unsigned char appkey_error;
 
-  #ifdef USE_EMULATOR  
-  
+  #ifdef USE_EMULATOR
+
   if (open_mode == APPKEY_WRITE)
     strcpy(appkey.payload.write.value, "s:");
   else
@@ -61,7 +61,7 @@ unsigned char open_appkey(unsigned char open_mode, unsigned int creator_id, unsi
 
   strcat(appkey.payload.write.value, OPEN_APPKEY_DELIM);
   itoa(app_id, &appkey.payload.write.value[strlen(appkey.payload.write.value)], 16);
-  
+
   strcat(appkey.payload.write.value, OPEN_APPKEY_DELIM);
   itoa(key_id, &appkey.payload.write.value[strlen(appkey.payload.write.value)], 16);
 
@@ -91,13 +91,13 @@ unsigned char open_appkey(unsigned char open_mode, unsigned int creator_id, unsi
     cbm_open(LFN,DEV,SEC_NUM,"");
     cbm_write(LFN, &appkey, sizeof(appkey));
   #endif
-  
+
   #ifdef USE_EMULATOR
     return appkey_error;
   #endif
 
   cbm_close(LFN);
-  
+
   return appkey_error;
 }
 
@@ -114,7 +114,7 @@ void read_appkey(unsigned int creator_id, unsigned char app_id, unsigned char ke
 
   if (appkey_error = open_appkey(APPKEY_READ, creator_id, app_id, key_id))
     return;
-  
+
   #ifndef USE_EMULATOR
     cbm_close(LFN);
     appkey_error = cbm_open(LFN,DEV,SEC_NUM,(const char *)&command);
@@ -123,7 +123,7 @@ void read_appkey(unsigned int creator_id, unsigned char app_id, unsigned char ke
   if (!appkey_error) {
     read = cbm_read(LFN, &appkey.payload, sizeof(appkey.payload.read));
 
-    if (read>1 && appkey.payload.read.length <= MAX_APPKEY_LEN) {  
+    if (read>1 && appkey.payload.read.length <= MAX_APPKEY_LEN) {
         memcpy(data, appkey.payload.read.value, appkey.payload.read.length);
         data[appkey.payload.read.length] = 0;
     } else {
@@ -137,7 +137,7 @@ void read_appkey(unsigned int creator_id, unsigned char app_id, unsigned char ke
   return;
 }
 
-void write_appkey(unsigned int creator_id, unsigned char app_id, unsigned char key_id, char *data)
+void write_appkey(unsigned int creator_id, unsigned char app_id, unsigned char key_id, const char *data)
 {
   static unsigned char appkey_error;
   static unsigned char len;
