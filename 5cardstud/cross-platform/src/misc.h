@@ -2,7 +2,7 @@
 #define MISC_H
 
 /* To test the game:
- * VICE - 
+ * VICE -
  *  1. In VI E, point DRIVE 11 to a local folder
  *  2. Edit /support/c64/emulator/fuji_mock_network.py to point to that same folder and run it
  *  3. Uncomment the USE_EMULATOR define below. */
@@ -49,6 +49,10 @@
 //#define PREF_SOUND 2 // 1/2 - Sound Enabled yes/no
 
 #ifdef __CC65__
+#define _Packed
+#endif
+
+#ifdef _CMOC_VERSION_
 #define _Packed
 #endif
 

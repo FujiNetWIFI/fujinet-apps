@@ -14,7 +14,9 @@
 #include "stateclient.h"
 #include "misc.h"
 #include "platform-specific/network.h"
+#ifndef _CMOC_VERSION_
 #include <conio.h>
+#endif
 
 char urlBuffer[128];
 
@@ -28,7 +30,7 @@ unsigned char apiCall(const char *path) {
 #else
   memset(urlBuffer,0,sizeof(urlBuffer));
 #endif /* ! __CBM__ */
-  
+
   strcat(urlBuffer, serverEndpoint);
   strcat(urlBuffer, path);
   strcat(urlBuffer, query);
@@ -38,7 +40,7 @@ unsigned char apiCall(const char *path) {
   //printf(urlBuffer);
   //printf("\r\n");
   return getResponse(urlBuffer, &clientState.firstByte, sizeof(clientState.game));
-  
+
 }
 
 unsigned char getStateFromServer()
