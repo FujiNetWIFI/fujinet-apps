@@ -164,9 +164,15 @@ void showPlayerNameScreen() {
 
   drawBuffer();
   disableDoubleBuffer();
+#ifdef _CMOC_VERSION_
+  drawText(8,13,"ENTER YOUR NAME:");
+  drawBox(11,16,PLAYER_NAME_MAX+1,1);
+  drawText(13,17,playerName);
+#else
   drawText(13,13, "ENTER YOUR NAME:");
   drawBox(15,16,PLAYER_NAME_MAX+1,1);
   drawText(16,17, playerName);
+#endif
   i=strlen(playerName);
 
   clearCommonInput();

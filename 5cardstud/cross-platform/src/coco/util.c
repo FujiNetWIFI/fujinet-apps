@@ -3,6 +3,7 @@
 /*
   Platform specific utilities that don't fit in any category
 */
+#include <cmoc.h>
 #include <coco.h>
 
 void resetTimer()
@@ -18,30 +19,22 @@ void quit()
 {
 }
 
-static char lastchar;
+char lastKey=0;
 
-// lastchar is only set by kbhit, we're basically handling the case
-// where that key picked up by kbhit doesn't get lost.
-char cgetc() {
-  char c;
-  if (lastchar==0)
-  {
-    do{
-      c= inkey();
-    } while(c==0);
-    return c;
-  }
-  c= lastchar;
-  lastchar= 0;
-  return(c);
+unsigned char kbhit (void) {
+    return lastKey=(char)inkey();
 }
 
-char kbhit() {
-  char c;
+char cgetc (void) {
+    char key=lastKey;
 
-  c= inkey();
-  lastchar= c;
-  return(c);
+    lastKey=0;
+
+    while (!key) {
+        key=(char)inkey();
+    }
+
+    return key;
 }
 
 #endif

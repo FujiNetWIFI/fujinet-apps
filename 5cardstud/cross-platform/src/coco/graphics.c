@@ -62,7 +62,15 @@ void disableDoubleBuffer() {
 }
 
 void drawTextAt(unsigned char x, unsigned char y, char*s) {
+    static unsigned char c;
 
+    y *= 8;
+
+    while(*s) {
+        c=*s++;
+        if (c>=97 && c<=122) c=c-32;
+        hires_putc(x++,y,ROP_CPY,c);
+    }
 }
 
 void clearStatusBar() {
@@ -75,7 +83,6 @@ void clearStatusBar() {
 }
 
 void drawBuffer() {
-//   memcpy((void*)0x4000,(void*)0x2000,0x2000);
 }
 
 void drawStatusTextAt(unsigned char x, char* s) {
@@ -214,20 +221,20 @@ void drawBox(unsigned char x, unsigned char y, unsigned char w, unsigned char h)
 }
 
 void drawBorder() {
-  drawCardAt(1,0,FULL_CARD, "as", 0);
-  drawCardAt(37,0,FULL_CARD, "ah", 0);
-  drawCardAt(1,134,FULL_CARD, "ad", 0);
-  drawCardAt(37,134,FULL_CARD, "ac", 0);
+  drawCardAt(0,0,FULL_CARD, "as", 0);
+  drawCardAt(30,0,FULL_CARD, "ah", 0);
+  drawCardAt(0,152,FULL_CARD, "ad", 0);
+  drawCardAt(30,152,FULL_CARD, "ac", 0);
 }
 
 void drawLogo() {
   static unsigned char i;
   i=4;
-  drawText(15,++i, "           ");
-  drawText(15,++i, " FUJI  NET ");
-  drawText(15,++i, "           ");
-  drawText(15,++i, "5 CARD STUD");
-  drawText(15,++i, "           ");
+  drawText(11,++i, "           ");
+  drawText(11,++i, " FUJI  NET ");
+  drawText(11,++i, "           ");
+  drawText(11,++i, "5 CARD STUD");
+  drawText(11,++i, "           ");
 }
 
 
