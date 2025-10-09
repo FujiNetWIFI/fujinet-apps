@@ -138,13 +138,14 @@ void applyPrefs() {
 }
 
 void loadPrefs() {
+  
   read_appkey(AK_CREATOR_ID, AK_APP_ID, AK_KEY_PREFS, tempBuffer);
 
   if (strlen(tempBuffer)==0) {
     // Default all prefs to 1
     memset(prefs,1,3);
   } else {
-    strcpy(prefs, tempBuffer);
+    strncpy(prefs, tempBuffer,3);
   }
 
   //setSound(prefs[PREF_SOUND]==1);
@@ -155,3 +156,4 @@ void savePrefs() {
   prefs[3] = 0; // Terminate prefs end as a string
   write_appkey(AK_CREATOR_ID, AK_APP_ID, AK_KEY_PREFS, prefs);
 }
+

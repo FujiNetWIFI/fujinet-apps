@@ -36,6 +36,10 @@
 #define NEXT_PLAYER_PASSES 2
 #define PLAY_NEW_GAME 3
 
+#define RED 0b10101010
+
+extern unsigned char charset[];
+extern unsigned int charset_len;
 
 char blah = 'c';
 bool always_render_full_cards = 1;
@@ -43,10 +47,7 @@ bool always_render_full_cards = 1;
 unsigned char colorMode=0;
 
 unsigned char cycleNextColor() {
-  ++colorMode;
-  if (colorMode>1)
-    colorMode=0;
-  return colorMode;
+  return 0;
 }
 
 void setColorMode(unsigned char mode) {
@@ -64,12 +65,10 @@ void disableDoubleBuffer() {
 void drawTextAt(unsigned char x, unsigned char y, const char *s) {
     static unsigned char c;
 
-    y *= 8;
-
     while(*s) {
         c=*s++;
         if (c>=97 && c<=122) c=c-32;
-        hires_putc(x++,y,ROP_CPY,c);
+        hires_putc(x++,y,0,c);
     }
 }
 
@@ -77,8 +76,8 @@ void clearStatusBar() {
   //unsigned char i;
   //hires_Mask(0,175,40,17,0xa900);
   //for (i=0;i<40;i++) {
-   // hires_putc(i,175,ROP_CPY,' ');
-   // hires_putc(i,183,ROP_CPY,' ');
+   // hires_putc(i,175,0,' ');
+   // hires_putc(i,183,0,' ');
  // }
 }
 
@@ -92,7 +91,7 @@ void drawStatusTextAt(unsigned char x, const char* s) {
 void drawStatusText(const char* s) {
   static char* comma;
   clearStatusBar();
-  if (strlen(s)>40) {
+  if (strlen(s)>32) {
       comma = (char *)s;
     while (*comma++!=',');
     comma[0]=0;
@@ -106,17 +105,17 @@ void drawStatusText(const char* s) {
 }
 
 void drawStatusTimer() {
-  hires_putcc(38,BOTTOM+5,ROP_CPY, 0x2829);
+  hires_putcc(38,BOTTOM+5,0, 0x2829);
 }
 
 
 void drawText(unsigned char x, unsigned char y, const char* s) {
-  drawTextAt(x,y, s);
+  drawTextAt(x,y*8-4, s);
 }
 
 
 void drawChip(unsigned char x, unsigned char y) {
-  hires_putc(x,y*8,ROP_CPY, 0x22);
+  hires_putc(x,y*8-3,0, 0x22);
 }
 
 
@@ -153,21 +152,21 @@ void drawCardAt(unsigned char x, unsigned char y, unsigned char partial, const c
   }
 
   // Card top
-  hires_putcc(x,y,ROP_CPY,0x0506);
+  hires_putcc(x,y,0,0x0506);
 
   // Card value
-  hires_putc(x,y+=8, colorMode && red ? ROP_CPY :ROP_CPY ,val);
-  hires_putc(x+1,y, colorMode && red ? ROP_CPY : ROP_CPY,++val);
+  hires_putc(x,y+=8,  red ? RED :0 ,val);
+  hires_putc(x+1,y,  red ? RED : 0,++val);
 
   // Card middle
-  hires_putcc(x,y+=8,ROP_CPY,mid);
+  hires_putcc(x,y+=8,0,mid);
 
   // Suit
-  hires_putc(x,y+=8,colorMode && red ? ROP_CPY :ROP_CPY ,suit);
-  hires_putc(x+1,y,colorMode && red ? ROP_CPY : ROP_CPY,++suit);
+  hires_putc(x,y+=8,0 ,suit);
+  hires_putc(x+1,y, 0,++suit);
 
   // Card bottom
-  hires_putcc(x,y+=8,ROP_CPY,0x0708);
+  hires_putcc(x,y+=8,0,0x0708);
 }
 
 void drawCard(unsigned char x, unsigned char y, unsigned char partial, const char* s, bool isHidden) {
@@ -177,54 +176,54 @@ void drawCard(unsigned char x, unsigned char y, unsigned char partial, const cha
 }
 
 void drawLine(unsigned char x, unsigned char y, unsigned char w) {
-//   hires_Mask(x,y*8-3,w,2, 0xa9ff);
+   hires_Mask(x,y*8-3,w,2, 0xa9ff);
 }
 
 void hideLine(unsigned char x, unsigned char y, unsigned char w) {
-//   hires_Mask(x,y*8-3,w,2, 0xa900);
+   hires_Mask(x,y*8-3,w,2, 0xa900);
 }
 
 void drawBox(unsigned char x, unsigned char y, unsigned char w, unsigned char h) {
   y=y*8-4;
 
   // Top Corners
-  hires_putc(x,y,ROP_CPY, 0x3b);hires_putc(x+w+1,y,ROP_CPY, 0x3c);
+  hires_putc(x,y,0, 0x3b);hires_putc(x+w+1,y,0, 0x3c);
 
   // Accents if height > 1
   if (h>1) {
-    hires_putc(x+1,y+8,ROP_CPY, 1);
+    hires_putc(x+1,y+8,0, 1);
   }
 
   // Top/bottom lines
   for(i=x+w;i>x;--i) {
-    hires_putc(i,y,ROP_CPY, 0x40);
-    hires_putc(i,y+(h+1)*8,ROP_CPY, 0x40);
+    hires_putc(i,y,0, 0x40);
+    hires_putc(i,y+(h+1)*8,0, 0x40);
   }
 
   // Sides
   for(i=0;i<h;++i) {
     y+=8;
-    hires_putc(x,y,ROP_CPY, 0x3f);
-    hires_putc(x+w+1,y,ROP_CPY, 0x3f);
+    hires_putc(x,y,0, 0x3f);
+    hires_putc(x+w+1,y,0, 0x3f);
   }
 
     // Accents if height > 1
   if (h>1) {
-    hires_putc(x+w,y,ROP_CPY, 4);
+    hires_putc(x+w,y,0, 4);
   }
 
   y+=8;
   // Bottom Corners
-  hires_putc(x,y,ROP_CPY, 0x3d);hires_putc(x+w+1,y,ROP_CPY, 0x3e);
+  hires_putc(x,y,0, 0x3d);hires_putc(x+w+1,y,0, 0x3e);
 
 
 }
 
 void drawBorder() {
-  drawCardAt(0,0,FULL_CARD, "as", 0);
-  drawCardAt(30,0,FULL_CARD, "ah", 0);
-  drawCardAt(0,152,FULL_CARD, "ad", 0);
-  drawCardAt(30,152,FULL_CARD, "ac", 0);
+  drawCardAt(1,0,FULL_CARD, "as", 0);
+  drawCardAt(29,0,FULL_CARD, "ah", 0);
+  drawCardAt(1,152-8,FULL_CARD, "ad", 0);
+  drawCardAt(29,152-8,FULL_CARD, "ac", 0);
 }
 
 void drawLogo() {
@@ -243,16 +242,36 @@ void resetGraphics() {
 }
 
 void initGraphics() {
+    int i;
+    char c,b,v;
     initCoCoSupport();
-    pmode(4,SCREEN);
+    // for(i=0;i<charset_len;i++) {
+    //   c = charset[i];
+    //   if (c>0) {
+    //     for(b=0;b<4;b++) {
+
+    //       v=(c>>(b*2))&3;
+    //       c=c-(v<<(b*2));
+    //       switch(v) {
+    //         case 0: c=c+(2<<(b*2)); break;
+    //         //case 1: c=c+(3<<(b*2)); break;
+    //         case 2: c=c+(3<<(b*2)); break;
+    //         case 3: c=c+(1<<(b*2)); break;
+    //       }
+    //     }
+    //     charset[i] = c;
+    //   }
+    // }
+
+    pmode(4,SCREEN); // 3 for green
     pcls(0);
-    screen(1,1);
+    screen(1,1); // 1,0 for green
 }
 
 void waitvsync() {
   static uint16_t i;
-  // Aproximate a jiffy for the timer countdown
-//  for ( i=0;i<630;i++);
+  i=getTimer();
+  while (i==getTimer());
 }
 
 #endif

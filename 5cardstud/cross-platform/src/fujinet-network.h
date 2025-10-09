@@ -7,13 +7,9 @@
 #ifndef FUJINET_NETWORK_H
 #define FUJINET_NETWORK_H
 
-#ifdef _CMOC_VERSION_
-#include <cmoc.h>
-#include <coco.h>
-#else
+
 #include <stdint.h>
 #include <stdbool.h>
-#endif /* _CMOC_VERSION_ */
 
 #ifdef __CBM__
 
@@ -206,14 +202,26 @@ uint8_t network_http_add_header(char *devicespec, char *header);
 
 
 /**
- * @brief  Send POST HTTP request
+ * @brief  Send POST HTTP request - assumes data is a string with nul terminator. This will not be able to send the 00 byte
  * @param  devicespec pointer to device specification, e.g. "N1:HTTPS://fujinet.online/"
- * @param  data data to post
+ * @param  data text data to post
  * @return fujinet-network error code (See FN_ERR_* values)
  * 
  * Assumes an open connection.
  */
 uint8_t network_http_post(char *devicespec, char *data);
+
+
+/**
+ * @brief  Send POST HTTP request, sends binary data from data location for length len, which allows sending arbitrary binary data
+ * @param  devicespec pointer to device specification, e.g. "N1:HTTPS://fujinet.online/"
+ * @param  data binary data to post
+ * @param  len length of binary data to send
+ * @return fujinet-network error code (See FN_ERR_* values)
+ * 
+ * Assumes an open connection.
+ */
+uint8_t network_http_post_bin(char *devicespec, uint8_t *data, uint16_t len);
 
 /**
  * @brief  Send PUT HTTP request
@@ -243,6 +251,55 @@ uint8_t network_http_delete(char *devicespec, uint8_t trans);
  */
 uint8_t network_unit(char *devicespec);
 
+/**
+ * @brief Delete file from FS endpoint (e.g. TNFS, FTP, HTTPS, SMB)
+ * @param devicespec Pointer to device specification e.g. "N1:TNFS://TMA-2/foo.txt"
+ * @return fujinet-network error code (see FN_ERR_* values)
+ */
+uint8_t network_fs_delete(char *devicespec);
+
+/**
+ * @brief Rename file on FS endpoint (e.g. TNFS, FTP, HTTPS, SMB)
+ * @param devicespec Pointer to device specification, with new name after comma, e.g. "N1:TNFS://TMA-2/foo.txt,bar.txt"
+ * @return fujinet-network error code (see FN_ERR_* values)
+ */
+uint8_t network_fs_rename(char *devicespec);
+
+/**
+ * @brief Lock file (make read only) on FS (e.g. TNFS, FTP, HTTPS, SMB)
+ * @param devicespec Pointer to device specification "N1:TNFS://TMA-2/foo.txt"
+ * @return fujinet-network error code (see FN_ERR_* values)
+ */
+uint8_t network_fs_lock(char *devicespec);
+
+/**
+ * @brief Unlock file (make read/write) on FS (e.g. TNFS, FTP, HTTPS, SMB)
+ * @param devicespec Pointer to device specification "N1:TNFS://TMA-2/foo.txt"
+ * @return fujinet-network error code (see FN_ERR_* values)
+ */
+uint8_t network_fs_unlock(char *devicespec);
+
+/**
+ * @brief Make directory on FS (e.g. TNFS, FTP, HTTPS, SMB)
+ * @param devicespec pointer to devicespec "N1:TNFS://TMA-2/newdir"
+ * @return fujinet-network error code (see FN_ERR_* values)
+ */
+uint8_t network_fs_mkdir(char *devicespec);
+
+/**
+ * @brief Remove directory on FS (e.g. TNFS, FTP, HTTPS, SMB)
+ * @param devicespec pointer to devicespec "N1:TNFS://TMA-2/newdir"
+ * @return fujinet-network error code (see FN_ERR_* values)
+ * @verbose Directory must be empty!
+ */
+uint8_t network_fs_rmdir(char *devicespec);
+
+/**
+ * @brief Change directory on FS (e.g. TNFS, FTP, HTTPS, SMB)
+ * @param devicespec Pointer to devicespec "N1:TNFS://TMA-2/dir"
+ * @return fujinet-network error code (see FN_ERR_* values)
+ */
+uint8_t network_fs_cd(char *devicespec);
 
 #define FN_ERR_OK               (0x00)      /* No error */
 #define FN_ERR_IO_ERROR         (0x01)      /* There was IO error/issue with the device */

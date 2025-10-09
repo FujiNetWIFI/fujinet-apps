@@ -26,9 +26,24 @@ char cgetc(void);
 
 #define PLAYER_NAME_MAX 8
 
+#ifdef HIRES_Y
+unsigned char y_bump = 0;
+#define BUMP_LINE y_bump+=4;
+#define CLEAR_BUMP y_bump=0;
+#else
+#define BUMP_LINE y++;
+#define CLEAR_BUMP
+#endif
+
+#define TABLE_LEFT (WIDTH/2-12)
+
 /// @brief Convenience function to draw text centered at row Y
 void centerText(unsigned char y, const char * text) {
+#ifdef HIRES_Y
+  drawTextAt((unsigned char)(WIDTH/2-strlen(text)/2), y*8+y_bump, text);
+#else
   drawText((unsigned char)(WIDTH/2-strlen(text)/2), y, text);
+#endif
 }
 
 /// @brief Convenience function to draw status text centered
@@ -55,19 +70,24 @@ void showHelpScreen() {
   resetScreenWithBorder();
   centerText(3,"HOW TO PLAY 5 CARD STUD");
   y=4;
-  //                  // __________________________________
-  y++;drawText(3,y, "PLAYERS ARE DEALT 5 CARDS OVER THE");
-  y++;drawText(3,y, "COURSE OF 4 ROUNDS. IN EACH ROUND");
-  y++;drawText(3,y, "PLAYERS BET, CALL, AND RE-RAISE.");
+  
+  BUMP_LINE
+                  //12345678901234567890123456789012
+  y++;centerText(y, "PLAYERS ARE DEALT 5 CARDS OVER");
+  y++;centerText(y, "FOUR ROUNDS.  IN EVERY ROUND, ");
+  y++;centerText(y, "PLAYERS BET, CALL, AND RAISE. ");
   y+=2;
+  
   centerText(y, "MOVES");
-  y++;
-  y++;drawText(4,y, "FOLD - QUIT THE HAND");y++;
-  y++;drawText(4,y, "CHECK- FREE PASS");y++;
-  y++;drawText(4,y, "BET /- INCREASE BET. OTHERS MUST");
-  y++;drawText(4,y, "RAISE  CALL TO STAY IN THE HAND");y++;
-  y++;drawText(4,y, "CALL - MATCH THE CURRENT BET AND");
-  y++;drawText(4,y, "       STAY IN THE HAND");
+  
+  BUMP_LINE        //12345678901234567890123456789012
+  y++;centerText(y, "FOLD  - QUIT THE HAND        ");BUMP_LINE
+  y++;centerText(y, "CHECK - FREE PASS            ");BUMP_LINE
+  y++;centerText(y, "BET / - INCREASE BET. OTHERS ");
+  y++;centerText(y, "RAISE   MUST CALL TO STAY IN ");BUMP_LINE
+  y++;centerText(y, "CALL  - MATCH THE CURRENT BET");
+
+  CLEAR_BUMP
 
   centerStatusText("PRESS ANY KEY TO CONTINUE");
 
@@ -265,10 +285,11 @@ void showTableSelectionScreen() {
     }
 
     resetScreenWithBorder();
+    
     centerText(3, "CHOOSE A TABLE TO JOIN");
-    drawText(6,6, "TABLE");
-    drawText(WIDTH-13,6, "PLAYERS");
-    drawLine(6,7,WIDTH-12);
+    drawText(TABLE_LEFT,6, "TABLE");
+    drawText(TABLE_LEFT+17,6, "PLAYERS");
+    drawLine(TABLE_LEFT,7,24);
 
     drawBuffer();
     waitvsync();
@@ -279,11 +300,13 @@ void showTableSelectionScreen() {
       if (clientState.tables.count>0) {
         for(i=0;i<clientState.tables.count;++i) {
           table = &clientState.tables.table[i];
-          drawText(6,8+i*2, table->name);
-          drawText((unsigned char)(WIDTH-6-strlen(table->players)), 8+i*2, table->players);
+          drawText(TABLE_LEFT,8+i*2, table->name);
+          drawText((unsigned char)(TABLE_LEFT+24-strlen(table->players)), 8+i*2, table->players);
+          #if WIDTH>=40
           if (table->players[0]>'0') {
-            drawText((unsigned char)(WIDTH-6-strlen(table->players)-2), 8+i*2, "*");
+            drawText((unsigned char)(TABLE_LEFT+20-strlen(table->players)), 8+i*2, "*");
           }
+          #endif
         }
       } else {
 
@@ -292,7 +315,11 @@ void showTableSelectionScreen() {
       }
 
       //drawStatusText(" R+EFRESH  H+ELP  C+OLOR  S+OUND  Q+UIT");
+#if WIDTH>=40 
       drawStatusText("R-EFRESH   H-ELP  C-OLOR   N-AME   Q-UIT");
+#else               //12345678901234567890123456789012
+      drawStatusText("R-EFRESH   H-ELP   N-AME   Q-UIT");
+#endif
       drawBuffer();
       disableDoubleBuffer();
       shownChip=0;
@@ -324,14 +351,14 @@ void showTableSelectionScreen() {
 
         if (!shownChip || (clientState.tables.count>0 && inputDirY)) {
 
-          drawText(4,8+tableIndex*2," ");
+          drawText(TABLE_LEFT-1,8+tableIndex*2," ");
           tableIndex+=inputDirY;
           if (tableIndex==255)
             tableIndex=clientState.tables.count-1;
           else if (tableIndex>=clientState.tables.count)
             tableIndex=0;
 
-          drawChip(4,8+tableIndex*2);
+          drawChip(TABLE_LEFT-1,8+tableIndex*2);
 
           soundCursor();
           shownChip=1;
@@ -443,6 +470,7 @@ typedef struct {
 
 /// @brief shows in-game menu
 void showInGameMenuScreen() {
+
   hideLine(0,0,0);
   i=1;
   while (i) {
@@ -461,7 +489,11 @@ void showInGameMenuScreen() {
     drawText(x,y+=2, "ESC: KEEP PLAYING");
     drawBuffer();
 
+    // Temporary message to avoid accidental quit
+    pause(120);
+
     clearCommonInput();
+
     i=1;
     while (i==1) {
       readCommonInput();

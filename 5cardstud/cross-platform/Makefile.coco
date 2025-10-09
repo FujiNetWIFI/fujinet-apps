@@ -11,11 +11,11 @@ SRCS := $(shell ls $(SRC_DIRS)/*.c) $(shell find $(SRC_DIRS)/coco -name *.c)
 OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
 DEPS := $(OBJS:.o=.d)
 
-FUJINET_LIB_DIR = ../../../fujinet-lib
-FUJINET_LIB = fujinet
 
-LIBS = \
-	-L ../../../fujinet-lib -l$(FUJINET_LIB) 
+FUJINET_LIB_DIR = ./_libs/fujinet-lib-coco-4.7.9
+FUJINET_LIB = fujinet-coco-4.7.9.lib
+
+LIBS = -L $(FUJINET_LIB_DIR) -l:$(FUJINET_LIB) 
 
 #	-L ./src/coco -lfujinet \
 
@@ -56,8 +56,12 @@ $(BUILD_DIR)/$(TARGET_EXEC): $(OBJS)
 	$(RM) $(TARGET_EXEC) $(TARGET_EXEC).dsk
 	decb dskini $(TARGET_EXEC).dsk
 	writecocofile $(TARGET_EXEC).dsk $(TARGET_EXEC).bin 
-	cp $(TARGET_EXEC).dsk ~/tnfs/
-
+	#cp $(TARGET_EXEC).dsk ~/tnfs/
+	cp $(TARGET_EXEC).dsk ~/Documents/fujinetpc-coco/SD
+	@echo ........................................................................ ;ls -l $(TARGET_EXEC).bin;echo ........................................................................
+	cd ~/mame_coco;mame coco -window -nomaximize -resolution 1024x768 -natural -autoboot_delay 2 -autoboot_command "runm\"5cs\n"
+	
+	
 # c source
 $(BUILD_DIR)/%.c.o: %.c
 	$(MKDIR_P) intermediates
@@ -74,6 +78,7 @@ $(BUILD_DIR)/%.s.o: %.s
 clean:
 	$(RM) -r $(TARGET_EXEC)*
 	$(RM) -r $(BUILD_DIR)*
+	cd support/coco/gen;make
 
 -include $(DEPS)
 

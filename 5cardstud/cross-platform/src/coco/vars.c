@@ -1,6 +1,6 @@
 #ifdef _CMOC_VERSION_
 
-#define USE_PLATFORM_SPECIFIC_INPUT 1
+//#define USE_PLATFORM_SPECIFIC_INPUT 1
 
 // Screen specific player/bet coordinates
 const unsigned char playerXMaster[] = { 17,1, 1, 1, 15, 37,37, 37 };

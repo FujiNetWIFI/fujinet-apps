@@ -4,9 +4,7 @@
 #include <coco.h>
 #include "../platform-specific/sound.h"
 #include "hires.h"
-#include "charset.h"
 
-static char sprite[8];
 extern uint8_t charset[];
 
 /*-----------------------------------------------------------------------*/
@@ -25,7 +23,7 @@ void hires_putcc(uint8_t x, uint8_t y,uint8_t rop, uint16_t cc)
 
 void hires_Mask(uint8_t x, uint8_t y, uint8_t xlen, uint8_t ylen, uint8_t c)
 {
-    uint8_t *pos = (uint8_t *)SCREEN+(uint16_t)y*32+x;
+  uint8_t *pos = (uint8_t *)SCREEN+(uint16_t)y*32+x;
   ylen++;
   while (--ylen) {
     memset(pos,c,xlen);
@@ -35,10 +33,10 @@ void hires_Mask(uint8_t x, uint8_t y, uint8_t xlen, uint8_t ylen, uint8_t c)
 
 void hires_Draw(uint8_t x, uint8_t y, uint8_t xlen, uint8_t ylen, uint8_t rop, uint8_t *src)
 {
-    uint8_t *pos = (uint8_t *)SCREEN+(uint16_t)y*32+x;
+  uint8_t *pos = (uint8_t *)SCREEN+(uint16_t)y*32+x;
   ylen++;
   while (--ylen) {
-    *pos=*(src++)&rop;
+    *pos=*(src++)|rop;
     pos+=32;
   }
 }
