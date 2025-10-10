@@ -19,6 +19,7 @@
 #include "screens.h"
 #include "platform-specific/appkey.h"
 
+extern unsigned char redrawGameScreen;
 
 void progressAnim(unsigned char y) {
   for(i=0;i<3;++i) {
@@ -29,9 +30,10 @@ void progressAnim(unsigned char y) {
 }
 
 void drawPot() {
-  drawBox(WIDTH/2-3,11,4,1);
-  drawChip(WIDTH/2-2,12);
-
+  if (redrawGameScreen) {
+    drawBox(WIDTH/2-3,11,4,1);
+    drawChip(WIDTH/2-2,12);
+  }
   itoa(state.pot, tempBuffer, 10);
   drawText(WIDTH/2-(state.pot>99),12, tempBuffer);
 }
@@ -265,7 +267,7 @@ void checkIfSpectatorStatusChanged() {
      * Otherwise, they are re-joining due to connection error, so we do not delay
      */
 
-    drawStatusText("YOU SIT DOWN AT THE TABLE");
+    centerStatusText("YOU SIT DOWN AT THE TABLE");
     drawBuffer();
 #ifndef DISABLE_SOUND
     soundJoinGame();
@@ -417,9 +419,8 @@ void drawGameStatus() {
 
   // Waiting for a player to join - show animation
   if (state.round == 0) {
-    drawStatusTextAt(30+waitCount," ");
     waitCount = (waitCount + 1) % 3;
-    drawStatusTextAt(30+waitCount,".");
+    drawStatusTextAt(26+waitCount," .  ");
     pause(40);
   }
 

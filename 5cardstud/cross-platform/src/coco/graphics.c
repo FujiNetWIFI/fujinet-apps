@@ -73,6 +73,7 @@ void drawTextAt(unsigned char x, unsigned char y, const char *s) {
 }
 
 void clearStatusBar() {
+  hires_Mask(0,178,32,14,0);
   //unsigned char i;
   //hires_Mask(0,175,40,17,0xa900);
   //for (i=0;i<40;i++) {
@@ -82,6 +83,7 @@ void clearStatusBar() {
 }
 
 void drawBuffer() {
+  waitvsync();
 }
 
 void drawStatusTextAt(unsigned char x, const char* s) {
@@ -90,8 +92,9 @@ void drawStatusTextAt(unsigned char x, const char* s) {
 
 void drawStatusText(const char* s) {
   static char* comma;
-  clearStatusBar();
-  if (strlen(s)>32) {
+  unsigned char len = strlen(s);
+  //clearStatusBar();
+  if (len>32) {
       comma = (char *)s;
     while (*comma++!=',');
     comma[0]=0;
@@ -100,12 +103,14 @@ void drawStatusText(const char* s) {
     drawTextAt(0, BOTTOM+8, comma);
   } else {
     drawStatusTextAt(0, s);
+    if (len<32)
+      hires_Mask(len,178,32-len,14,0);
   }
 
 }
 
 void drawStatusTimer() {
-  hires_putcc(38,BOTTOM+5,0, 0x2829);
+  hires_putcc(WIDTH-2,BOTTOM+5,0, 0x2829);
 }
 
 
@@ -121,7 +126,8 @@ void drawChip(unsigned char x, unsigned char y) {
 
 // Call to clear the screen to an empty table
 void resetScreen() {
-     pcls(0);
+     //pcls(0);
+     hires_Mask(0,1,32,177,0);
 }
 
 void drawCardAt(unsigned char x, unsigned char y, unsigned char partial, const char* s, bool isHidden) {
@@ -151,8 +157,10 @@ void drawCardAt(unsigned char x, unsigned char y, unsigned char partial, const c
       cardgameVal=(s[0]-0x32);
   }
 
-  // Card top
-  hires_putcc(x,y,0,0x0506);
+  // Card top (draw bottom 2 rows)
+  //hires_putcc(x,y,0,0x0506);
+  hires_Draw(x,y+6,3,0,&charset[(uint16_t)(0x05<<3)+6]);
+  hires_Draw(x+1,y+6,3,0,&charset[(uint16_t)(0x06<<3)+6]);
 
   // Card value
   hires_putc(x,y+=8,  red ? RED :0 ,val);
@@ -165,8 +173,12 @@ void drawCardAt(unsigned char x, unsigned char y, unsigned char partial, const c
   hires_putc(x,y+=8,0 ,suit);
   hires_putc(x+1,y, 0,++suit);
 
-  // Card bottom
-  hires_putcc(x,y+=8,0,0x0708);
+  // Card bottom (draw top two rows)
+  //override_height=2;
+  //hires_putcc(x,y+=8,0,0x0708);
+  hires_Draw(x,y+=8,3,0,&charset[(uint16_t)0x07<<3]);
+  hires_Draw(x+1,y,3,0,&charset[(uint16_t)0x08<<3]);
+  //override_height=8;
 }
 
 void drawCard(unsigned char x, unsigned char y, unsigned char partial, const char* s, bool isHidden) {
@@ -176,11 +188,17 @@ void drawCard(unsigned char x, unsigned char y, unsigned char partial, const cha
 }
 
 void drawLine(unsigned char x, unsigned char y, unsigned char w) {
-   hires_Mask(x,y*8-3,w,2, 0xa9ff);
+  y=y*8-3;
+  if (y == 181)
+    y=189;
+  hires_Mask(x,y,w,2, 0b01010101);
 }
 
 void hideLine(unsigned char x, unsigned char y, unsigned char w) {
-   hires_Mask(x,y*8-3,w,2, 0xa900);
+  y=y*8-3;
+  if (y == 181)
+    y=189;
+   hires_Mask(x,y,w,2, 0);
 }
 
 void drawBox(unsigned char x, unsigned char y, unsigned char w, unsigned char h) {
@@ -266,12 +284,6 @@ void initGraphics() {
     pmode(4,SCREEN); // 3 for green
     pcls(0);
     screen(1,1); // 1,0 for green
-}
-
-void waitvsync() {
-  static uint16_t i;
-  i=getTimer();
-  while (i==getTimer());
 }
 
 #endif

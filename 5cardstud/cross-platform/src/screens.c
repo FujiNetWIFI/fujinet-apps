@@ -35,7 +35,9 @@ unsigned char y_bump = 0;
 #define CLEAR_BUMP
 #endif
 
-#define TABLE_LEFT (WIDTH/2-12)
+#define TABLE_LEFT (WIDTH/2-13)
+
+unsigned char redrawGameScreen = 0;
 
 /// @brief Convenience function to draw text centered at row Y
 void centerText(unsigned char y, const char * text) {
@@ -101,6 +103,7 @@ void showHelpScreen() {
 #endif
   resetScreen();
   drawBuffer();
+  redrawGameScreen=1;
 }
 
 /// @brief Action called in Welcome Screen to check if a server name is stored in an app key
@@ -183,28 +186,24 @@ bool inputFieldCycle(uint8_t x, uint8_t y, uint8_t max, char* buffer) {
 void showPlayerNameScreen() {
   enableDoubleBuffer();
   resetScreenWithBorder();
+  clearStatusBar();
   drawLogo();
 
   drawBuffer();
   disableDoubleBuffer();
-#ifdef _CMOC_VERSION_
-  drawText(8,13,"ENTER YOUR NAME:");
-  drawBox(11,16,PLAYER_NAME_MAX+1,1);
-  drawText(13,17,playerName);
-#else
-  drawText(13,13, "ENTER YOUR NAME:");
-  drawBox(15,16,PLAYER_NAME_MAX+1,1);
-  drawText(16,17, playerName);
-#endif
+
+  centerText(13, "ENTER YOUR NAME");
+  drawBox(WIDTH/2-PLAYER_NAME_MAX/2-1,16,PLAYER_NAME_MAX+1,1);
+  drawText(WIDTH/2-PLAYER_NAME_MAX/2,17, playerName);
+
   i=(unsigned char)strlen(playerName);
 
   clearCommonInput();
-  //while (inputKey != KEY_RETURN || i<2) {
-  while (!inputFieldCycle(16, 17, PLAYER_NAME_MAX, playerName)) ;
+  while (!inputFieldCycle(WIDTH/2-PLAYER_NAME_MAX/2, 17, PLAYER_NAME_MAX, playerName)) ;
 
   enableDoubleBuffer();
   for (y=13;y<19;++y)
-    drawText(13,y, "                 ");
+    centerText(y, "                 ");
 
   drawBuffer();
 
@@ -264,6 +263,7 @@ void tableActionJoinServer() {
     if (query[i]==' ')
       query[i]='+';
 
+  redrawGameScreen=1;
 }
 
 /// @brief Shows a screen to select a table to join
@@ -288,8 +288,8 @@ void showTableSelectionScreen() {
     
     centerText(3, "CHOOSE A TABLE TO JOIN");
     drawText(TABLE_LEFT,6, "TABLE");
-    drawText(TABLE_LEFT+17,6, "PLAYERS");
-    drawLine(TABLE_LEFT,7,24);
+    drawText(TABLE_LEFT+19,6, "PLAYERS");
+    drawLine(TABLE_LEFT,7,26);
 
     drawBuffer();
     waitvsync();
@@ -301,17 +301,14 @@ void showTableSelectionScreen() {
         for(i=0;i<clientState.tables.count;++i) {
           table = &clientState.tables.table[i];
           drawText(TABLE_LEFT,8+i*2, table->name);
-          drawText((unsigned char)(TABLE_LEFT+24-strlen(table->players)), 8+i*2, table->players);
-          #if WIDTH>=40
+          drawText((unsigned char)(TABLE_LEFT+26-strlen(table->players)), 8+i*2, table->players);
+          
           if (table->players[0]>'0') {
-            drawText((unsigned char)(TABLE_LEFT+20-strlen(table->players)), 8+i*2, "*");
+            drawText((unsigned char)(TABLE_LEFT+24-strlen(table->players)), 8+i*2, "*");  
           }
-          #endif
         }
       } else {
-
         centerText(12, "SORRY, NO TABLES ARE AVAILABLE");
-
       }
 
       //drawStatusText(" R+EFRESH  H+ELP  C+OLOR  S+OUND  Q+UIT");
@@ -327,7 +324,8 @@ void showTableSelectionScreen() {
       clearCommonInput();
       while (!inputTrigger || !clientState.tables.count) {
         readCommonInput();
-
+        //if (kbhit())
+          //inputKey = cgetc();
         if (inputKey == 'h' || inputKey == 'H') {
           showHelpScreen();
           break;
@@ -397,50 +395,6 @@ void showTableSelectionScreen() {
 
 /// @brief Shows main game play screen (table and cards)
 void showGameScreen() {
-  /*
-
-typedef struct {
-  char name   [9];
-  uint8_t     status;
-  uint16_t    bet;
-  char move   [8];
-  uint16_t    purse;
-  char hand   [11];
-} Player;
-
-typedef struct {
-  char move     [3];
-  char name     [10];
-} ValidMove;
-
-typedef struct {
-  char lastResult[81];
-  uint8_t round;
-  uint16_t pot;
-  int8_t activePlayer;
-  uint8_t moveTime;
-  uint8_t viewing;
-  uint8_t validMoveCount;
-  ValidMove validMoves[5];
-  uint8_t playerCount;
-  Player players[8];
-} Game;
- */
-  // printf("\r\nround=%u, pot=%u, ap=%s, m=%u,v=%u",state.round, state.pot, state.activePlayer, state.moveTime, state.viewing);
-  // printf("\r\nvalidMoves=%u, playerCount=%u\r\n",state.validMoveCount, state.playerCount);
-
-  // for(i=0;i<state.validMoveCount;++i) {
-  //   printf(" %s=%s,",state.validMoves[i].move, state.validMoves[i].name);
-  // }
-  // printf("\r\n");
-  // for(i=0;i<state.playerCount;++i) {
-  //   printf("\r\n%s=%u, bet=%u |%s| p=%u, H=%s",state.players[i].name, state.players[i].status, state.players[i].bet, state.players[i].move, state.players[i].purse, state.players[i].hand);
-  // }
-
-  // printf("\r\n");
-  // drawBuffer();
-  // cgetc();
-
 
   checkIfSpectatorStatusChanged();
   checkIfPlayerCountChanged();
@@ -450,7 +404,10 @@ typedef struct {
 
   checkFinalFlip();
 
-  resetScreen();
+  if (redrawGameScreen) {
+    resetScreen();
+  }
+
   resetStateIfNewGame();
 
   drawPot();
@@ -465,6 +422,7 @@ typedef struct {
   drawBuffer();
   highlightActivePlayer();
 
+  redrawGameScreen=0;
   prevRound = state.round;
 }
 
@@ -475,13 +433,14 @@ void showInGameMenuScreen() {
   i=1;
   while (i) {
     enableDoubleBuffer();
+    clearStatusBar();
     resetScreenWithBorder();
     drawBuffer();
 
-    x = WIDTH/2-8;
+    x = WIDTH/2-9;
     y = HEIGHT/2-4;
 
-    drawBox(x-3,y-3,21,11);
+    drawBox(x-3,y-3,22,11);
     drawText(x,y,    "  Q: QUIT TABLE");
     drawText(x,y+=2, "  H: HOW TO PLAY");
     drawText(x,y+=2, "  C: COLOR TOGGLE");
@@ -490,7 +449,7 @@ void showInGameMenuScreen() {
     drawBuffer();
 
     // Temporary message to avoid accidental quit
-    pause(120);
+    pause(60);
 
     clearCommonInput();
 
@@ -525,6 +484,7 @@ void showInGameMenuScreen() {
           write_appkey(AK_LOBBY_CREATOR_ID,  AK_LOBBY_APP_ID, AK_LOBBY_KEY_SERVER, "");
 
           // Clear query so a new table will be selected
+          clearCommonInput();
           strcpy(query,"");
           showTableSelectionScreen();
           return;
@@ -533,7 +493,9 @@ void showInGameMenuScreen() {
   }
 
   // Show game screen again before returning
+  redrawGameScreen=1;
   resetScreen();
   drawBuffer();
   showGameScreen();
+  clearCommonInput();
 }

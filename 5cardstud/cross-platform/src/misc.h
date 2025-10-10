@@ -101,7 +101,7 @@ typedef union {
 } ClientState;
 
 
-extern int inputKey;
+extern char inputKey;
 extern unsigned char prevPlayerCount, prevRound, currentCard, cardIndex, xOffset, fullFirst, cursorX, cursorY, waitCount, wasViewing;
 extern signed char inputDirX, inputDirY;
 

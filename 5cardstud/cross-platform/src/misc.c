@@ -87,7 +87,6 @@ void readCommonInput() {
     return;
   }
 
-  inputKey=0;
 
 #ifndef USE_PLATFORM_SPECIFIC_INPUT
   if (!kbhit())

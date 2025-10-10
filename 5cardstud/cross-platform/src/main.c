@@ -38,7 +38,7 @@ ClientState clientState;
 
 
 // State helper vars
-int inputKey;
+char inputKey;
 unsigned char playerCount, prevPlayerCount, validMoveCount, prevRound, tableCount, currentCard, cardIndex, xOffset, fullFirst, cursorX, cursorY, waitCount, wasViewing;
 signed char inputDirX, inputDirY;
 uint16_t prevPot, maxJifs;
@@ -61,7 +61,8 @@ int main(void)
 #else
 void main(void)
 #endif /* _CMOC_VERSION_ */
-{
+{ 
+  //while (1) {if (kbhit()) {inputKey = cgetc(); printf("\nKEY: %u", inputKey);}pause(10);}
   initGraphics();
   initSound();
 

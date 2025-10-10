@@ -20,22 +20,30 @@ void quit()
 {
 }
 
-char lastKey=0;
+int lastCoCoKey=0;
 
 unsigned char kbhit (void) {
-    return lastKey=(char)inkey();
+    return (char)(lastCoCoKey || (lastCoCoKey=inkey()));
 }
 
 char cgetc (void) {
-    char key=lastKey;
+  int key=lastCoCoKey;
 
-    lastKey=0;
+  lastCoCoKey=0;
 
-    while (!key) {
-        key=(char)inkey();
-    }
+  while (!key) {
+    key=inkey();
+  }
 
-    return key;
+  return (char)key;
 }
 
+
+void waitvsync() {
+  uint16_t i=getTimer();
+  while (i==getTimer()) {
+    if (!lastCoCoKey)
+      lastCoCoKey=inkey();
+  }
+}
 #endif
