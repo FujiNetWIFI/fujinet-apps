@@ -42,6 +42,7 @@ void drawBorder();
 void drawLogo();
 
 void initGraphics();
+void resetGraphics();
 void waitvsync();
 
 uint8_t cycleNextColor();
