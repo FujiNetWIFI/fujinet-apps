@@ -415,7 +415,9 @@ void showGameScreen() {
   if (state.playerCount>1) {
     drawNamePurse();
     drawBets();
-    drawCards(false);
+    if (state.round < 5) {
+      drawCards(false);
+    }
   }
 
   drawGameStatus();

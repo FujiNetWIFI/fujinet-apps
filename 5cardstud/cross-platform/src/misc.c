@@ -53,8 +53,10 @@ void clearCommonInput() {
     _joy=0;
 
 #ifndef USE_PLATFORM_SPECIFIC_INPUT
-  while (kbhit())
+  while (kbhit()) {
+    waitvsync();
     cgetc();
+  }
 #else
   //while (!getPlatformKey());
 #endif

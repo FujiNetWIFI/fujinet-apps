@@ -23,7 +23,7 @@ void quit()
 int lastCoCoKey=0;
 
 unsigned char kbhit (void) {
-    return (char)(lastCoCoKey || (lastCoCoKey=inkey()));
+    return (char)(lastCoCoKey || (lastCoCoKey=inkey()) || (lastCoCoKey=inkey()));
 }
 
 char cgetc (void) {

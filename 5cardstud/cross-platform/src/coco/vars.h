@@ -8,6 +8,7 @@
 #define WIDTH 32
 #define HEIGHT 24
 #define HIRES_Y 1
+#define POT_Y_MODIFIER -1
 
 #define QUERY_SUFFIX "&be=1" // Big Endian response for CoCo (68000)
 

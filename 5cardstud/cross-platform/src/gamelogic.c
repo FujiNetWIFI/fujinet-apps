@@ -20,6 +20,9 @@
 #include "platform-specific/appkey.h"
 
 extern unsigned char redrawGameScreen;
+#ifndef POT_Y_MODIFIER
+#define POT_Y_MODIFIER 0
+#endif
 
 void progressAnim(unsigned char y) {
   for(i=0;i<3;++i) {
@@ -30,12 +33,13 @@ void progressAnim(unsigned char y) {
 }
 
 void drawPot() {
+
   if (redrawGameScreen) {
-    drawBox(WIDTH/2-3,11,4,1);
-    drawChip(WIDTH/2-2,12);
+    drawBox(WIDTH/2-3,11+POT_Y_MODIFIER,4,1);
+    drawChip(WIDTH/2-2,12+POT_Y_MODIFIER);
   }
   itoa(state.pot, tempBuffer, 10);
-  drawText(WIDTH/2-(state.pot>99),12, tempBuffer);
+  drawText(WIDTH/2-(state.pot>99),12+POT_Y_MODIFIER, tempBuffer);
 }
 
 void resetStateIfNewGame() {
@@ -44,6 +48,7 @@ void resetStateIfNewGame() {
 
   // Reset status bar and vars for a new game
   if (prevRound != 99) {
+
    // @SetStatusBarHeight 1
    clearStatusBar();
   } else {
@@ -60,6 +65,10 @@ void resetStateIfNewGame() {
   cursorY=246;
   cursorX=128;
   prevPot=0;
+  if (!redrawGameScreen) {
+    redrawGameScreen=1;
+    resetScreen();
+  }
 
   // If the round is already past 1, we are joining a game in progress. Skip animation this update
   if (state.round>1)
@@ -92,16 +101,28 @@ void drawNamePurse() {
         cursorY=y;
       }
     } else {
-      drawText(x-5, playerY[i]+2, (const char *)" YOU");
+      // Draw YOU player name
+      #if WIDTH>=40
+        drawText(x-5, playerY[i]+2, (const char *)" YOU");
+      #else
+        // Squeezed for horizontal space, so shift above cards
+        // drawText(x+3, playerY[i]-1, (const char *)" YOU");
+      #endif
     }
 
     // Print purse (chip count)
     x++;
     y--;
 
+    // Override Purse position for YOU player
     if (i==0) {
-      x-=2;
-      y+=3;
+      #if WIDTH>=40
+        x-=2;
+        y+=3;
+      #else
+        x+=6;
+        y+=1;
+      #endif
     }
 
     itoa(state.players[i].purse, tempBuffer, 10);
@@ -132,15 +153,25 @@ void drawBets() {
 
       drawText(x, y, tempBuffer);
       drawChip(x-1,y );
+    } else {
+      
     }
 
+    #if WIDTH>=40
     // Draw Move
     x= playerX[i]+playerBetX[i];
     y--;
+    #if WIDTH<40
+    if (state.players[i].move[4]) {
+      state.players[i].move[4]=0;
+    }
+    #endif
+      
     if (playerDir[i]<0)
       x-=(unsigned char)strlen(state.players[i].move);
 
     drawText(x, y, state.players[i].move);
+    #endif
 
   }
 }
@@ -178,6 +209,7 @@ void drawCards(bool finalFlip) {
 
 
   while (cardIndex <= state.round) {
+    
     doAnim = state.round<5 && !noAnim && cardIndex >= currentCard;
     if (doAnim)
       disableDoubleBuffer();
@@ -206,9 +238,9 @@ void drawCards(bool finalFlip) {
           j==1 && i==0 && (state.round < 5 || shouldMaskPlayerCard));
 
         if (doAnim) {
-#ifndef DISABLE_SOUND
+
           soundDealCard();
-#endif
+
           pause(cardIndex == 1 ? 1 : 10);
         }
       }
@@ -219,6 +251,7 @@ void drawCards(bool finalFlip) {
     // Apple 2 doesn't render half cards correctly - rather, the offset cards switch colors, so always_render_full_cards is true for now
     if (always_render_full_cards || xOffset>1 || (state.round==5 && !finalFlip && !doNotFlipCards))
       xOffset++;
+    
   }
 
   if (finalFlip) {
@@ -236,9 +269,9 @@ void drawCards(bool finalFlip) {
       for (j=1;j<=9; j+=2) {
         drawCard(playerX[i]+(j-1)*playerDir[i], playerY[i], FULL_CARD,state.players[i].hand+j-1, false);
       }
-#ifndef DISABLE_SOUND
+
       soundDealCard();
-#endif
+
       pause(35);
     }
   }
@@ -269,9 +302,9 @@ void checkIfSpectatorStatusChanged() {
 
     centerStatusText("YOU SIT DOWN AT THE TABLE");
     drawBuffer();
-#ifndef DISABLE_SOUND
+
     soundJoinGame();
-#endif
+
     pause(50);
   }
 }
@@ -286,9 +319,9 @@ void checkIfPlayerCountChanged() {
 
       drawStatusText("A PLAYER LEFT THE TABLE");
       drawBuffer();
-#ifndef DISABLE_SOUND
+
       soundPlayerLeft();
-#endif
+
       // for j=8 to 2 step -2
       //   sound 1,255-j*j,10,j:pause 2:sound:pause 8
       // next
@@ -296,9 +329,9 @@ void checkIfPlayerCountChanged() {
       strcpy(state.lastResult, "A NEW PLAYER JOINS THE TABLE");
       drawStatusText(state.lastResult);
       drawBuffer();
-#ifndef DISABLE_SOUND
+
       soundPlayerJoin();
-#endif
+
     }
 
     pause(40);
@@ -351,15 +384,25 @@ void animateChipsToPotOnRoundEnd() {
   pause(50);
 
   // Hide moves
+  #if WIDTH>=40
   for (i=0;i<state.playerCount;i++) {
     y = playerY[i]+playerBetY[i];
     x = playerX[i]+playerBetX[i];
 
     if (playerDir[i]<0)
+    #if WIDTH>=40
       x-=5;
+    #else
+      x-=4;
+    #endif
 
+    #if WIDTH>=40
     drawText(x, y, "     ");
+    #else
+    drawText(x, y, "    ");
+    #endif
   }
+  #endif
 
   drawBuffer();
   pause(30);
@@ -380,9 +423,9 @@ void animateChipsToPotOnRoundEnd() {
       x-=3;
 
     drawText(x, y, "   ");
-#ifndef DISABLE_SOUND
+
     soundTakeChip(i);
-#endif
+
   }
 
   drawPot();
@@ -409,9 +452,9 @@ void drawGameStatus() {
 
     if (state.round==5 && prevRound != state.round) {
       drawBuffer();
-#ifndef DISABLE_SOUND
+
       soundGameDone();
-#endif
+
       pause(30);
     }
   }
@@ -470,9 +513,9 @@ void requestPlayerMove() {
 
   drawLine(h,HEIGHT-1,i);
 
-#ifndef DISABLE_SOUND
+  clearCommonInput();
   soundMyTurn();
-#endif
+
 
   resetTimer();
 
@@ -491,9 +534,9 @@ void requestPlayerMove() {
       if (i!= state.moveTime) {
         state.moveTime =i;
         drawStatusTimeLeft();
-#ifndef DISABLE_SOUND
+
         soundTick();
-#endif
+
       }
     }
 
@@ -508,14 +551,14 @@ void requestPlayerMove() {
 
         hideLine(moveLoc[cursorX-inputDirX],HEIGHT-1,(unsigned char)strlen(state.validMoves[cursorX-inputDirX].name));
         drawLine(moveLoc[cursorX],HEIGHT-1,(unsigned char)strlen(state.validMoves[cursorX].name));
-#ifndef DISABLE_SOUND
+
         soundCursor();
-#endif
+
       } else {
         cursorX-=inputDirX;
-#ifndef DISABLE_SOUND
+
         soundCursorInvalid();
-#endif
+
       }
       getTime();
     }
@@ -537,9 +580,9 @@ void requestPlayerMove() {
     clearStatusBar();
     drawStatusTextAt(moveLoc[cursorX], state.validMoves[cursorX].name);
     drawBuffer();
-#ifndef DISABLE_SOUND
+
     soundSelectMove();
-#endif
+
 
     // For some unknown reason, if I don't delay for a bit here,
     // the selectMove sound plays twice in the AppleWin emulator.

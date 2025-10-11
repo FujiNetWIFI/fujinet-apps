@@ -33,7 +33,7 @@ CFLAGS= \
 			-DNDEBUG \
 			-I $(FUJINET_LIB_DIR) \
 			-DVERSION=\"$(VERSION)\" \
-			-O2 -DDISABLE_SOUND
+			-O2
 # -DDISABLE_GRAPHICS
 #			-I $(BCONTROL_LIB_DIR) \
 
@@ -59,7 +59,7 @@ $(BUILD_DIR)/$(TARGET_EXEC): $(OBJS)
 	#cp $(TARGET_EXEC).dsk ~/tnfs/
 	cp $(TARGET_EXEC).dsk ~/Documents/fujinetpc-coco/SD
 	@echo ........................................................................ ;ls -l $(TARGET_EXEC).bin;echo ........................................................................
-	cd ~/mame_coco;mame coco -window -nomaximize -resolution 1024x768 -natural -autoboot_delay 2 -autoboot_command "runm\"5cs\n"
+	cd ~/mame_coco;mame coco -window -nomaximize -resolution 1200x1024 -autoboot_delay 2 -nounevenstretch  -autoboot_command "runm\"5cs\n"
 	
 	
 # c source
