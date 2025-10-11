@@ -13,8 +13,10 @@
 #define COLS_40 0x08
 #define SCREEN_LOC 0x0C00
 #define DBLBUF_LOC 0x7400
+#define SCREEN_COLORRAM_LOC 0x0800
+#define DBLBUF_COLORRAM_LOC 0x7000
 #define CHARSET_LOC 0xC000
-#define SCR (unsigned char*)DBLBUF_LOC
+#define SCR (unsigned char*)SCREEN_LOC
 #define SCR_STATUS (SCR+40*23)
 #define SCR_STATUS_DIRECT (unsigned char*)(SCREEN_LOC+40*23)
 #define SET_COL(val)  (*(unsigned char*) (0x53B) = (val));
@@ -24,7 +26,7 @@
 #define COL_YELLOW 8 + COLOR_YELLOW
 #define HIBASE 0x53E
 
-bool always_render_full_cards=true;
+bool always_render_full_cards=false;
 unsigned char colorMode = 0;
 static unsigned short screen = 0x0C00;
 static unsigned char col_text = COL_BLACK;
@@ -35,25 +37,22 @@ static unsigned char col_text = COL_BLACK;
 
 void enableDoubleBuffer()
 {
-    unsigned char page = DBLBUF_LOC >> 8;
-    TED.video_addr = page;
-    POKE(HIBASE,page); // Let kernal know.
-    screen = DBLBUF_LOC;
+    /* unsigned char page = DBLBUF_LOC >> 8; */
+    /* TED.video_addr = page; */
+    /* POKE(HIBASE,page); // Let kernal know. */
+    /* screen = DBLBUF_LOC; */
 }
 
 void disableDoubleBuffer()
 {
-    TED.video_addr = 0x08; // color ram at 0x800, screen at 0xc00
-    // POKE (HIBASE,0x0C);
-    screen = SCREEN_LOC;
+    /* TED.video_addr = 0x08; // color ram at 0x800, screen at 0xc00 */
+    /* screen = SCREEN_LOC; */
 }
 
 void drawBuffer()
 {
-    unsigned char *sp = (unsigned char *)SCREEN_LOC - 0x400;
-    unsigned char *dp = (unsigned char *)DBLBUF_LOC - 0x400;
-    waitvsync();
-    memcpy(dp,sp,2048);
+    /* waitvsync(); */
+    /* memcpy((unsigned char *)SCREEN_LOC,(unsigned char *)DBLBUF_LOC,1024); */
 }
 
 void resetScreen()
