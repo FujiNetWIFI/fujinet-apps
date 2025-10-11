@@ -9,6 +9,7 @@
 #include "charset.h"
 #include "../platform-specific/graphics.h"
 
+#define RVS_OFF 0x80
 #define MULTICOLOR_MODE 0x10
 #define COLS_40 0x08
 #define SCREEN_LOC 0x0C00
@@ -20,7 +21,7 @@
 #define SCR_STATUS (SCR+40*23)
 #define SCR_STATUS_DIRECT (unsigned char*)(SCREEN_LOC+40*23)
 #define SET_COL(val)  (*(unsigned char*) (0x53B) = (val));
-#define COL_RED 8 + COLOR_RED
+#define COL_RED 8 + BCOLOR_RED | CATTR_LUMA3
 #define COL_BLACK 8 + COLOR_BLACK
 #define COL_WHITE 8 + COLOR_WHITE
 #define COL_YELLOW 8 + COLOR_YELLOW
@@ -77,7 +78,7 @@ void clearStatusBar()
 void drawStatusTextAt(unsigned char x, char* s)
 {
     static unsigned char j,split;
-    SET_COL(0x08);
+    SET_COL(COL_BLACK);
     split = strlen(s)>40;
 
     while(j=*s++ & 0x7F) {
@@ -141,7 +142,7 @@ void drawCard(unsigned char x, unsigned char y, unsigned char partial, const cha
     static unsigned char i;
     int suit, val, space, top, bottom;
     unsigned char col;
-    unsigned char *loc, *loc2;
+    unsigned char *loc;
 
     top=0x7776;
     space= isHidden ? 0x605F : 0x63A1;
@@ -187,22 +188,15 @@ void drawCard(unsigned char x, unsigned char y, unsigned char partial, const cha
 
     // Color the card
     loc = (unsigned char *)COLOR_RAM + y*40+x+40;
-    loc2 = (unsigned char *)DBLBUF_LOC - 0x400 + y*40+x+40;
     if (partial & 1) {
       POKE(loc, col);
       POKE(loc+40, COL_BLACK);
       POKE(loc+80, col);
-      POKE(loc2, col);
-      POKE(loc2+40, COL_BLACK);
-      POKE(loc2+80, col);
     }
     if (partial & 2) {
       POKE(loc+1, col);
       POKE(loc+41, COL_BLACK);
       POKE(loc+81, col);
-      POKE(loc2+1, col);
-      POKE(loc2+41, COL_BLACK);
-      POKE(loc2+81, col);
     }
 
     // Draw card
@@ -311,7 +305,7 @@ void drawLogo()
 void initGraphics()
 {
     // Enable multicolor mode
-    TED.hscroll |= MULTICOLOR_MODE | COLS_40;
+    TED.hscroll |= RVS_OFF | MULTICOLOR_MODE | COLS_40;
     TED.misc &= 0xFB; // pull from RAM by turning off bit 2.
 
     // Clear screen
@@ -325,15 +319,14 @@ void initGraphics()
     TED.char_addr = CHARSET_LOC >> 8;
 
     // Set color RAM to black with multicolor
-    memset((unsigned char *)COLOR_RAM,0x0E,1000);
-    memset((unsigned char *)DBLBUF_LOC,0x0E,1000);
+    memset((unsigned char *)COLOR_RAM,0x08,1000);
+    memset((unsigned char *)DBLBUF_LOC,0x08,1000);
 
     // Set colors
     TED.bordercolor = BCOLOR_BLACK | CATTR_LUMA0;
     TED.bgcolor = BCOLOR_GREEN | CATTR_LUMA3;
     TED.color1 = BCOLOR_BLUE | CATTR_LUMA2;
     TED.color2 = BCOLOR_WHITE | CATTR_LUMA7;
-
 }
 
 void resetGraphics()
