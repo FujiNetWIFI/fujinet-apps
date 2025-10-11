@@ -3,7 +3,8 @@
 #include <peekpoke.h>
 
 unsigned char readJoystick() {
-  return 127-PEEK(0xFF00); // joystick 1 
+    return 0;
+    // return 127-PEEK(0xFF00); // joystick 1
 }
 
 #endif /* __PLUS4__ */
