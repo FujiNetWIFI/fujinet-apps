@@ -335,10 +335,58 @@ void resetGraphics()
 
 uint8_t cycleNextColor()
 {
+    setColorMode((colorMode+1) % 8);
+    return colorMode;
 }
 
-void setColorMode()
+void setColorMode(unsigned char mode)
 {
+    colorMode = mode;
+    waitvsync();
+
+    switch(colorMode)
+    {
+    case 0:
+        col_text = COL_BLACK;
+        TED.bgcolor=BCOLOR_GREEN|CATTR_LUMA4;
+        TED.color1=BCOLOR_BLUE|CATTR_LUMA3;
+        break;
+    case 1:
+        col_text = COL_WHITE;
+        TED.bgcolor=BCOLOR_BLUE|CATTR_LUMA2;
+        TED.color1=BCOLOR_WHITE|CATTR_LUMA2;
+        break;
+    case 2:
+        col_text = COL_WHITE;
+        TED.bgcolor=BCOLOR_WHITE|CATTR_LUMA2;
+        TED.color1=BCOLOR_WHITE|CATTR_LUMA5;
+        break;
+    case 3:
+        col_text = COL_BLACK;
+        TED.bgcolor=BCOLOR_ORANGE|CATTR_LUMA4;
+        TED.color1=BCOLOR_BLUE|CATTR_LUMA3;
+        break;
+    case 4:
+        col_text = COL_WHITE;
+        TED.bgcolor=BCOLOR_PURPLE|CATTR_LUMA2;
+        TED.color1=BCOLOR_LEMON|CATTR_LUMA5;
+        break;
+    case 5:
+        col_text = COL_BLACK;
+        TED.bgcolor=BCOLOR_BLUEGREEN|CATTR_LUMA4;
+        TED.color1=BCOLOR_DARKBLUE|CATTR_LUMA3;
+        break;
+    case 6:
+        col_text = COL_WHITE;
+        TED.bgcolor=BCOLOR_BROWN|CATTR_LUMA1;
+        TED.color1=BCOLOR_PURPLE|CATTR_LUMA4;
+        break;
+    case 7:
+        col_text = COL_WHITE;
+        TED.bgcolor=BCOLOR_CYAN|CATTR_LUMA2;
+        TED.color1=BCOLOR_BROWN|CATTR_LUMA5;
+        break;
+    }
 }
 
 #endif /* __PLUS4__ */
