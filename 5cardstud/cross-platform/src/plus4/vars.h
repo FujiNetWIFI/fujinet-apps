@@ -30,7 +30,7 @@
 #define KEY_DOWN_ARROW_3    0x3D // =
 
 #define KEY_RETURN       0x0D
-#define KEY_ESCAPE       0x5F
+#define KEY_ESCAPE       0x1B
 #define KEY_ESCAPE_ALT   0x03
 #define KEY_SPACE        0x20
 #define KEY_BACKSPACE    0x14
