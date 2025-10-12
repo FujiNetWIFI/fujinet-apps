@@ -28,7 +28,7 @@ unsigned char apiCall(const char *path) {
 #else
   memset(urlBuffer,0,sizeof(urlBuffer));
 #endif /* ! __CBM__ */
-  
+
   strcat(urlBuffer, serverEndpoint);
   strcat(urlBuffer, path);
   strcat(urlBuffer, query);
@@ -37,8 +37,7 @@ unsigned char apiCall(const char *path) {
   strcat(urlBuffer, query[0] ? "&bin=1" QUERY_SUFFIX : "?bin=1" QUERY_SUFFIX);
   //printf(urlBuffer);
   //printf("\r\n");
-  return getResponse(urlBuffer, &clientState.firstByte, sizeof(clientState.game));
-  
+  return getResponse(urlBuffer, (char *)&clientState.firstByte, sizeof(clientState.game));
 }
 
 unsigned char getStateFromServer()
