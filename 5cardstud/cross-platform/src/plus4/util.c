@@ -23,8 +23,8 @@ const char playerBetYMaster[] = { -2, -2, 1,5,5,5,1,-2 };
 // These refer to index positions in the Master arrays above
 // Downside is new players will cause existing player positions to move.
 
-//                               2                3                4  
-const char playerCountIndex[] = {0,4,0,0,0,0,0,0, 0,2,6,0,0,0,0,0, 0,2,4,6,0,0,0,0, 
+//                               2                3                4
+const char playerCountIndex[] = {0,4,0,0,0,0,0,0, 0,2,6,0,0,0,0,0, 0,2,4,6,0,0,0,0,
 // 5                6                 7                8
    0,2,3,5,6,0,0,0, 0,2,3,4,5,6,0,0,  0,2,3,4,5,6,7,0, 0,1,2,3,4,5,6,7};
 
@@ -32,14 +32,14 @@ const char playerCountIndex[] = {0,4,0,0,0,0,0,0, 0,2,6,0,0,0,0,0, 0,2,4,6,0,0,0
 
 void resetTimer() {
   POKE(164,0);
-  POKE(163,0);
+  POKE(165,0);
 }
 
 int getTime() {
-  return (PEEK(163)*256)+PEEK(164);
+  return (PEEK(164)*256)+PEEK(165);
 }
 
-void quit() { 
+void quit() {
   resetGraphics();
   exit(0);
 }
