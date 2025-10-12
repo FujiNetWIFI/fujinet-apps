@@ -227,20 +227,22 @@ void drawChip(unsigned char x, unsigned char y)
 
 void drawLine(unsigned char x, unsigned char y, unsigned char w)
 {
-    char s[40];
-
-    memset(s,0,sizeof(s));
-    memset(s,0x81,w);
-    cputsxy(x,y,s);
+    unsigned char o = y > 22 ? 0x80 : 0x00;
+    unsigned char *loc = SCR + y*40+x;
+    while(w--)
+    {
+        *loc++ = 0x41 + o;
+    }
 }
 
 void hideLine(unsigned char x, unsigned char y, unsigned char w)
 {
-    char s[40];
-
-    memset(s,0,sizeof(s));
-    memset(s,0x20,w);
-    cputsxy(x,y,s);
+    unsigned char o = y > 22 ? 0x80 : 0x00;
+    unsigned char *loc = SCR + y*40+x;
+    while(w--)
+    {
+        *loc++ = 0x00 + o;
+    }
 }
 
 void drawBox(unsigned char x, unsigned char y, unsigned char w, unsigned char h)
