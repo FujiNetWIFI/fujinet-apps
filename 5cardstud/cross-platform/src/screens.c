@@ -112,9 +112,6 @@ void welcomeActionVerifyServerDetails() {
   }
 }
 
-
-
-
 bool inputFieldCycle(uint8_t x, uint8_t y, uint8_t max, uint8_t* buffer) {
   static uint8_t done, curx, lastY;
 
@@ -124,7 +121,7 @@ bool inputFieldCycle(uint8_t x, uint8_t y, uint8_t max, uint8_t* buffer) {
     done=0;
     lastY=y;
     curx = (unsigned char)strlen((char *)buffer);
-    drawText(x,y, buffer);
+    drawText(x,y, (const char *)buffer);
     drawChip(x+curx,y);
   }
    // curx=i;
@@ -159,7 +156,7 @@ bool inputFieldCycle(uint8_t x, uint8_t y, uint8_t max, uint8_t* buffer) {
       buffer[++curx]=0;
     }
 
-    drawText(x,y, buffer);
+    drawText(x,y, (const char *)buffer);
     drawChip(x+curx,y);
 
     return done==1;
@@ -183,7 +180,7 @@ void showPlayerNameScreen() {
 
   clearCommonInput();
   //while (inputKey != KEY_RETURN || i<2) {
-  while (!inputFieldCycle(16, 17, PLAYER_NAME_MAX, playerName)) ;
+  while (!inputFieldCycle(16, 17, PLAYER_NAME_MAX, (uint8_t *)playerName)) ;
 
   enableDoubleBuffer();
   for (y=13;y<19;++y)
@@ -222,13 +219,13 @@ void showWelcomScreen() {
   drawBuffer();
   pause(45);
 
-  
+
   // If first run, show the help screen
   if (prefs[PREF_HELP]!=2) {
     prefs[PREF_HELP]=2;
     savePrefs();
     showHelpScreen();
-    
+
   }
   pause(30);
 }
@@ -281,7 +278,7 @@ void showTableSelectionScreen() {
 
       if (clientState.tables.count>0) {
         for(i=0;i<clientState.tables.count;++i) {
-          table = &clientState.tables.table[i];  
+          table = &clientState.tables.table[i];
           drawText(6,8+i*2, table->name);
           drawText((unsigned char)(WIDTH-6-strlen(table->players)), 8+i*2, table->players);
           if (table->players[0]>'0') {
@@ -374,7 +371,7 @@ void showTableSelectionScreen() {
 /// @brief Shows main game play screen (table and cards)
 void showGameScreen() {
   /*
-  
+
 typedef struct {
   char name   [9];
   uint8_t     status;
@@ -402,11 +399,9 @@ typedef struct {
   Player players[8];
 } Game;
  */
-  uint8_t i;
-
   // printf("\r\nround=%u, pot=%u, ap=%s, m=%u,v=%u",state.round, state.pot, state.activePlayer, state.moveTime, state.viewing);
   // printf("\r\nvalidMoves=%u, playerCount=%u\r\n",state.validMoveCount, state.playerCount);
-  
+
   // for(i=0;i<state.validMoveCount;++i) {
   //   printf(" %s=%s,",state.validMoves[i].move, state.validMoves[i].name);
   // }
@@ -418,8 +413,8 @@ typedef struct {
   // printf("\r\n");
   // drawBuffer();
   // cgetc();
-  
- 
+
+
   checkIfSpectatorStatusChanged();
   checkIfPlayerCountChanged();
 
@@ -465,7 +460,7 @@ void showInGameMenuScreen() {
     //drawText(x,y+=2, "  S: SOUND TOGGLE");
     drawText(x,y+=2, "ESC: KEEP PLAYING");
     drawBuffer();
-    
+
     clearCommonInput();
     i=1;
     while (i==1) {
@@ -510,5 +505,3 @@ void showInGameMenuScreen() {
   drawBuffer();
   showGameScreen();
 }
-
-
