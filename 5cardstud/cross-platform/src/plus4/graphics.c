@@ -230,7 +230,7 @@ void drawLine(unsigned char x, unsigned char y, unsigned char w)
     char s[40];
 
     memset(s,0,sizeof(s));
-    memset(s,0x81,w-1);
+    memset(s,0x81,w);
     cputsxy(x,y,s);
 }
 
@@ -239,7 +239,7 @@ void hideLine(unsigned char x, unsigned char y, unsigned char w)
     char s[40];
 
     memset(s,0,sizeof(s));
-    memset(s,0x20,w-1);
+    memset(s,0x20,w);
     cputsxy(x,y,s);
 }
 
