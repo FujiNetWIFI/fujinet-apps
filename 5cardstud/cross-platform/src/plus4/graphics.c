@@ -72,7 +72,7 @@ void resetScreen()
 
 void clearStatusBar()
 {
-    memset(screen+920,0x80,80);
+    memset((unsigned char *)screen+920,0x80,80);
 }
 
 void drawStatusTextAt(unsigned char x, char* s)
@@ -225,18 +225,22 @@ void drawChip(unsigned char x, unsigned char y)
     cputcxy(x,y,'J');
 }
 
-void drawBlank(unsigned char x, unsigned char y)
-{
-}
-
 void drawLine(unsigned char x, unsigned char y, unsigned char w)
 {
-    // This needs a non-sprite impl.
+    char s[40];
+
+    memset(s,0,sizeof(s));
+    memset(s,0x81,w-1);
+    cputsxy(x,y,s);
 }
 
 void hideLine(unsigned char x, unsigned char y, unsigned char w)
 {
-    // This needs a non-sprite impl.
+    char s[40];
+
+    memset(s,0,sizeof(s));
+    memset(s,0x20,w-1);
+    cputsxy(x,y,s);
 }
 
 void drawBox(unsigned char x, unsigned char y, unsigned char w, unsigned char h)
@@ -310,7 +314,7 @@ void initGraphics()
 
     // Clear screen
     clrscr();
-    memset(DBLBUF_LOC,0x00,0x1000);
+    memset((unsigned char *)DBLBUF_LOC,0x00,0x1000);
 
     enableDoubleBuffer();
 
