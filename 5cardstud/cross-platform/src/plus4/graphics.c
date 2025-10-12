@@ -327,6 +327,8 @@ void initGraphics()
     TED.bgcolor = BCOLOR_GREEN | CATTR_LUMA3;
     TED.color1 = BCOLOR_BLUE | CATTR_LUMA2;
     TED.color2 = BCOLOR_WHITE | CATTR_LUMA7;
+
+    clearStatusBar();
 }
 
 void resetGraphics()
