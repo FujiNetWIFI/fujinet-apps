@@ -13,7 +13,7 @@
 # Space or comma separated list of cc65 supported target platforms to build for.
 
 # Supported targets: plus4 c64 apple2 (lowercase!)
-TARGETS := plus4
+TARGETS := c64 apple2 plus4
  
 # Name of the final, single-file executable.
 # Default: name of the current dir with target name appended
