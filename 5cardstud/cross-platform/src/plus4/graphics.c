@@ -26,10 +26,12 @@
 #define COL_WHITE 8 + COLOR_WHITE
 #define COL_YELLOW 8 + COLOR_YELLOW
 #define HIBASE 0x53E
+#define KERNAL_CHAR_PTR 0xC8
+#define KERNAL_CRAM_PTR 0xEA
 
 bool always_render_full_cards=false;
 unsigned char colorMode = 0;
-static unsigned short screen = 0x0C00;
+static unsigned short screen = SCREEN_LOC;
 static unsigned char col_text = COL_BLACK;
 
 // gotoxy + cput_ saves 4 bytes over cput_xy, so why not optimize?
@@ -41,8 +43,8 @@ void enableDoubleBuffer()
     unsigned char page = SCREEN_LOC >> 8;
     TED.video_addr = page;
     POKE(HIBASE,page); // Let kernal know. */
-    POKEW(0xC8,SCREEN_LOC); // no really, let the kernal know.
-    POKEW(0xEA,SCREEN_COLORRAM_LOC); // Let the kernal really know.
+    POKEW(KERNAL_CHAR_PTR,SCREEN_LOC); // no really, let the kernal know.
+    POKEW(KERNAL_CRAM_PTR,SCREEN_COLORRAM_LOC); // Let the kernal really know.
     screen = DBLBUF_LOC;
 }
 
@@ -51,8 +53,8 @@ void disableDoubleBuffer()
     unsigned char page = DBLBUF_LOC >> 8;
     TED.video_addr = page;
     POKE(HIBASE,page); // Let kernal know. */
-    POKEW(0xC8,DBLBUF_LOC); // no really, let the kernal know.
-    POKEW(0xEA,DBLBUF_COLORRAM_LOC); // Let the kernal really know.
+    POKEW(KERNAL_CHAR_PTR,DBLBUF_LOC); // no really, let the kernal know.
+    POKEW(KERNAL_CRAM_PTR,DBLBUF_COLORRAM_LOC); // Let the kernal really know.
     screen = SCREEN_LOC;
 }
 
