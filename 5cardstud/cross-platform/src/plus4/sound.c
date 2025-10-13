@@ -91,6 +91,7 @@ void soundGameDone()
 void soundDealCard()
 {
     playNoise(110,3,9);
+    pause(4);
 }
 
 void soundTick()
