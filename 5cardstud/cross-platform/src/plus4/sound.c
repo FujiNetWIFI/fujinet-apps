@@ -90,12 +90,12 @@ void soundGameDone()
 
 void soundDealCard()
 {
-    playNoise(1000,5,9);
+    playNoise(110,3,9);
 }
 
 void soundTick()
 {
-    playNoise(200,4,9);
+    playNoise(150,4,9);
 }
 
 void soundPlayerJoin()
