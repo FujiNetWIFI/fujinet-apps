@@ -17,9 +17,9 @@
 #define SCREEN_COLORRAM_LOC 0x0800
 #define DBLBUF_COLORRAM_LOC 0x7000
 #define CHARSET_LOC 0xC000
-#define SCR (unsigned char*)DBLBUF_LOC
+#define SCR (unsigned char*)SCREEN_LOC
 #define SCR_STATUS (SCR+40*23)
-#define SCR_STATUS_DIRECT (unsigned char*)(SCREEN_LOC+40*23)
+#define SCR_STATUS_DIRECT (unsigned char*)(DBLBUF_LOC+40*23)
 #define SET_COL(val)  (*(unsigned char*) (0x53B) = (val));
 #define COL_RED 8 + BCOLOR_RED | CATTR_LUMA3
 #define COL_BLACK 8 + COLOR_BLACK
@@ -31,7 +31,7 @@
 
 bool always_render_full_cards=false;
 unsigned char colorMode = 0;
-static unsigned short screen = SCREEN_LOC;
+static unsigned short screen = DBLBUF_LOC;
 static unsigned char col_text = COL_BLACK;
 
 // gotoxy + cput_ saves 4 bytes over cput_xy, so why not optimize?
@@ -40,28 +40,22 @@ static unsigned char col_text = COL_BLACK;
 
 void enableDoubleBuffer()
 {
-    unsigned char page = SCREEN_LOC >> 8;
+    unsigned char page = DBLBUF_LOC >> 8;
     TED.video_addr = page;
-    POKE(HIBASE,page); // Let kernal know. */
-    POKEW(KERNAL_CHAR_PTR,SCREEN_LOC); // no really, let the kernal know.
-    POKEW(KERNAL_CRAM_PTR,SCREEN_COLORRAM_LOC); // Let the kernal really know.
     screen = DBLBUF_LOC;
 }
 
 void disableDoubleBuffer()
 {
-    unsigned char page = DBLBUF_LOC >> 8;
+    unsigned char page = SCREEN_LOC >> 8;
     TED.video_addr = page;
-    POKE(HIBASE,page); // Let kernal know. */
-    POKEW(KERNAL_CHAR_PTR,DBLBUF_LOC); // no really, let the kernal know.
-    POKEW(KERNAL_CRAM_PTR,DBLBUF_COLORRAM_LOC); // Let the kernal really know.
     screen = SCREEN_LOC;
 }
 
 void drawBuffer()
 {
     waitvsync();
-    memcpy((unsigned char *)SCREEN_COLORRAM_LOC,(unsigned char *)DBLBUF_COLORRAM_LOC,2048);
+    memcpy((unsigned char *)DBLBUF_COLORRAM_LOC,(unsigned char *)SCREEN_COLORRAM_LOC,2048);
 }
 
 void resetScreen()
@@ -80,7 +74,8 @@ void resetScreen()
 
 void clearStatusBar()
 {
-    memset((unsigned char *)screen+920,0x80,80);
+    memset((unsigned char *)DBLBUF_LOC+920,0x80,80);
+    memset((unsigned char *)SCREEN_LOC+920,0x80,80);
 }
 
 void drawStatusTextAt(unsigned char x, char* s)
@@ -337,12 +332,14 @@ void initGraphics()
     memset((unsigned char *)DBLBUF_COLORRAM_LOC,0x08,1000);
 
     // Set colors
+    col_text = COL_WHITE;
     TED.bordercolor = BCOLOR_BLACK | CATTR_LUMA0;
-    TED.bgcolor = BCOLOR_GREEN | CATTR_LUMA3;
-    TED.color1 = BCOLOR_BLUE | CATTR_LUMA2;
+    TED.bgcolor=BCOLOR_CYAN|CATTR_LUMA2;
+    TED.color1=BCOLOR_BROWN|CATTR_LUMA5;
     TED.color2 = BCOLOR_WHITE | CATTR_LUMA7;
 
     clearStatusBar();
+    drawStatusText("              PLUS/4 VERSION");
 }
 
 void resetGraphics()
@@ -363,9 +360,9 @@ void setColorMode(unsigned char mode)
     switch(colorMode)
     {
     case 0:
-        col_text = COL_BLACK;
-        TED.bgcolor=BCOLOR_GREEN|CATTR_LUMA4;
-        TED.color1=BCOLOR_BLUE|CATTR_LUMA3;
+        col_text = COL_WHITE;
+        TED.bgcolor=BCOLOR_CYAN|CATTR_LUMA2;
+        TED.color1=BCOLOR_BROWN|CATTR_LUMA5;
         break;
     case 1:
         col_text = COL_WHITE;
@@ -398,9 +395,9 @@ void setColorMode(unsigned char mode)
         TED.color1=BCOLOR_PURPLE|CATTR_LUMA4;
         break;
     case 7:
-        col_text = COL_WHITE;
-        TED.bgcolor=BCOLOR_CYAN|CATTR_LUMA2;
-        TED.color1=BCOLOR_BROWN|CATTR_LUMA5;
+        col_text = COL_BLACK;
+        TED.bgcolor=BCOLOR_GREEN|CATTR_LUMA4;
+        TED.color1=BCOLOR_BLUE|CATTR_LUMA3;
         break;
     }
 }
