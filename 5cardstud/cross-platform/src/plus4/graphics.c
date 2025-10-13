@@ -17,7 +17,7 @@
 #define SCREEN_COLORRAM_LOC 0x0800
 #define DBLBUF_COLORRAM_LOC 0x7000
 #define CHARSET_LOC 0xC000
-#define SCR (unsigned char*)SCREEN_LOC
+#define SCR (unsigned char*)DBLBUF_LOC
 #define SCR_STATUS (SCR+40*23)
 #define SCR_STATUS_DIRECT (unsigned char*)(SCREEN_LOC+40*23)
 #define SET_COL(val)  (*(unsigned char*) (0x53B) = (val));
@@ -38,22 +38,28 @@ static unsigned char col_text = COL_BLACK;
 
 void enableDoubleBuffer()
 {
-    /* unsigned char page = DBLBUF_LOC >> 8; */
-    /* TED.video_addr = page; */
-    /* POKE(HIBASE,page); // Let kernal know. */
-    /* screen = DBLBUF_LOC; */
+    unsigned char page = SCREEN_LOC >> 8;
+    TED.video_addr = page;
+    POKE(HIBASE,page); // Let kernal know. */
+    POKEW(0xC8,SCREEN_LOC); // no really, let the kernal know.
+    POKEW(0xEA,SCREEN_COLORRAM_LOC); // Let the kernal really know.
+    screen = DBLBUF_LOC;
 }
 
 void disableDoubleBuffer()
 {
-    /* TED.video_addr = 0x08; // color ram at 0x800, screen at 0xc00 */
-    /* screen = SCREEN_LOC; */
+    unsigned char page = DBLBUF_LOC >> 8;
+    TED.video_addr = page;
+    POKE(HIBASE,page); // Let kernal know. */
+    POKEW(0xC8,DBLBUF_LOC); // no really, let the kernal know.
+    POKEW(0xEA,DBLBUF_COLORRAM_LOC); // Let the kernal really know.
+    screen = SCREEN_LOC;
 }
 
 void drawBuffer()
 {
-    /* waitvsync(); */
-    /* memcpy((unsigned char *)SCREEN_LOC,(unsigned char *)DBLBUF_LOC,1024); */
+    waitvsync();
+    memcpy((unsigned char *)SCREEN_COLORRAM_LOC,(unsigned char *)DBLBUF_COLORRAM_LOC,2048);
 }
 
 void resetScreen()
@@ -187,7 +193,7 @@ void drawCard(unsigned char x, unsigned char y, unsigned char partial, const cha
     }
 
     // Color the card
-    loc = (unsigned char *)COLOR_RAM + y*40+x+40;
+    loc = (unsigned char *)SCREEN_COLORRAM_LOC + y*40+x+40;
     if (partial & 1) {
       POKE(loc, col);
       POKE(loc+40, COL_BLACK);
@@ -325,8 +331,8 @@ void initGraphics()
     TED.char_addr = CHARSET_LOC >> 8;
 
     // Set color RAM to black with multicolor
-    memset((unsigned char *)COLOR_RAM,0x08,1000);
-    memset((unsigned char *)DBLBUF_LOC,0x08,1000);
+    memset((unsigned char *)SCREEN_COLORRAM_LOC,0x08,1000);
+    memset((unsigned char *)DBLBUF_COLORRAM_LOC,0x08,1000);
 
     // Set colors
     TED.bordercolor = BCOLOR_BLACK | CATTR_LUMA0;
