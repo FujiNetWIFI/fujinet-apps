@@ -9,11 +9,12 @@
 
 void resetTimer()
 {
+  setTimer(0);
 }
 
 int getTime()
 {
-  return 0;
+  return getTimer();
 }
 
 void quit()

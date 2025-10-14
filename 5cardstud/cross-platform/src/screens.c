@@ -290,99 +290,102 @@ void showTableSelectionScreen() {
     drawText(TABLE_LEFT,6, "TABLE");
     drawText(TABLE_LEFT+19,6, "PLAYERS");
     drawLine(TABLE_LEFT,7,26);
-
+    
     drawBuffer();
     waitvsync();
 
-    if (skipApiCall ||  apiCall("tables")) {
-      skipApiCall=0;
+    if (!skipApiCall){
+      apiCall("tables");
+    }
 
-      if (clientState.tables.count>0) {
-        for(i=0;i<clientState.tables.count;++i) {
-          table = &clientState.tables.table[i];
-          drawText(TABLE_LEFT,8+i*2, table->name);
-          drawText((unsigned char)(TABLE_LEFT+26-strlen(table->players)), 8+i*2, table->players);
-          
-          if (table->players[0]>'0') {
-            drawText((unsigned char)(TABLE_LEFT+24-strlen(table->players)), 8+i*2, "*");  
-          }
+    skipApiCall=0;
+
+    if (clientState.tables.count>0) {
+      for(i=0;i<clientState.tables.count;++i) {
+        table = &clientState.tables.table[i];
+        drawText(TABLE_LEFT,8+i*2, table->name);
+        drawText((unsigned char)(TABLE_LEFT+26-strlen(table->players)), 8+i*2, table->players);
+        
+        if (table->players[0]>'0') {
+          drawText((unsigned char)(TABLE_LEFT+24-strlen(table->players)), 8+i*2, "*");  
         }
-      } else {
-        centerText(12, "SORRY, NO TABLES ARE AVAILABLE");
       }
-
-      //drawStatusText(" R+EFRESH  H+ELP  C+OLOR  S+OUND  Q+UIT");
+    } else {
+      centerText(12, "NO TABLES ARE AVAILABLE");
+    }
+    
+    //drawStatusText(" R+EFRESH  H+ELP  C+OLOR  S+OUND  Q+UIT");
 #if WIDTH>=40 
-      drawStatusText("R-EFRESH   H-ELP  C-OLOR   N-AME   Q-UIT");
+    drawStatusText("R-EFRESH   H-ELP  C-OLOR   N-AME   Q-UIT");
 #else               //12345678901234567890123456789012
-      drawStatusText("R-EFRESH   H-ELP   N-AME   Q-UIT");
+    drawStatusText("R-EFRESH   H-ELP   N-AME   Q-UIT");
 #endif
-      drawBuffer();
-      disableDoubleBuffer();
-      shownChip=0;
+    drawBuffer();
+    disableDoubleBuffer();
+    shownChip=0;
 
-      clearCommonInput();
-      while (!inputTrigger || !clientState.tables.count) {
-        readCommonInput();
-        //if (kbhit())
-          //inputKey = cgetc();
-        if (inputKey == 'h' || inputKey == 'H') {
-          showHelpScreen();
-          break;
-        } else if (inputKey == 'r' || inputKey =='R') {
-          break;
-        } else if (inputKey == 'c' || inputKey =='C') {
-          prefs[PREF_COLOR] = cycleNextColor()+1;
-          savePrefs();
-          enableDoubleBuffer();
-          skipApiCall=1;
-          break;
-         } else if (inputKey == 'n' || inputKey =='N') {
-          showPlayerNameScreen();
-          break;
-        } else if (inputKey == 'q' || inputKey =='Q') {
-          quit();
-        } /*else if (inputKey != 0) {
-          itoa(inputKey, tempBuffer, 10);
-          drawStatusText(tempBuffer);
-        } */
+    clearCommonInput();
+    while (!inputTrigger || !clientState.tables.count) {
+      readCommonInput();
+      //if (kbhit())
+        //inputKey = cgetc();
+      if (inputKey == 'h' || inputKey == 'H') {
+        showHelpScreen();
+        break;
+      } else if (inputKey == 'r' || inputKey =='R') {
+        break;
+      } else if (inputKey == 'c' || inputKey =='C') {
+        prefs[PREF_COLOR] = cycleNextColor()+1;
+        savePrefs();
+        enableDoubleBuffer();
+        skipApiCall=1;
+        break;
+        } else if (inputKey == 'n' || inputKey =='N') {
+        showPlayerNameScreen();
+        break;
+      } else if (inputKey == 'q' || inputKey =='Q') {
+        quit();
+      } /*else if (inputKey != 0) {
+        itoa(inputKey, tempBuffer, 10);
+        drawStatusText(tempBuffer);
+      } */
 
-        if (!shownChip || (clientState.tables.count>0 && inputDirY)) {
+      if (clientState.tables.count>0 && (!shownChip || inputDirY)) {
 
-          drawText(TABLE_LEFT-1,8+tableIndex*2," ");
-          tableIndex+=inputDirY;
-          if (tableIndex==255)
-            tableIndex=clientState.tables.count-1;
-          else if (tableIndex>=clientState.tables.count)
-            tableIndex=0;
+        drawText(TABLE_LEFT-1,8+tableIndex*2," ");
+        tableIndex+=inputDirY;
+        if (tableIndex==255)
+          tableIndex=clientState.tables.count-1;
+        else if (tableIndex>=clientState.tables.count)
+          tableIndex=0;
 
-          drawChip(TABLE_LEFT-1,8+tableIndex*2);
+        drawChip(TABLE_LEFT-1,8+tableIndex*2);
 
-          soundCursor();
-          shownChip=1;
-        }
-      }
-
-      enableDoubleBuffer();
-
-      if (inputTrigger) {
-        soundSelectMove();
-
-        // Clear screen and write server name
-        resetScreenWithBorder();
-        clearStatusBar();
-        centerText(15, clientState.tables.table[tableIndex].name);
-
-        strcpy(query, "?table=");
-        strcat(query, clientState.tables.table[tableIndex].table);
-        strcpy(tempBuffer, serverEndpoint);
-        strcat(tempBuffer, query);
-
-        //  Update server app key in case of reboot
-        write_appkey(AK_LOBBY_CREATOR_ID,  AK_LOBBY_APP_ID, AK_LOBBY_KEY_SERVER, tempBuffer);
-
+        soundCursor();
+        shownChip=1;
       }
     }
+
+    enableDoubleBuffer();
+
+    if (inputTrigger) {
+      soundSelectMove();
+
+      // Clear screen and write server name
+      resetScreenWithBorder();
+      clearStatusBar();
+      centerText(15, clientState.tables.table[tableIndex].name);
+
+      strcpy(query, "?table=");
+      strcat(query, clientState.tables.table[tableIndex].table);
+      strcpy(tempBuffer, serverEndpoint);
+      strcat(tempBuffer, query);
+
+      //  Update server app key in case of reboot
+      write_appkey(AK_LOBBY_CREATOR_ID,  AK_LOBBY_APP_ID, AK_LOBBY_KEY_SERVER, tempBuffer);
+
+    }
+  
   }
 
   centerText(17, "CONNECTING TO SERVER");
@@ -450,9 +453,8 @@ void showInGameMenuScreen() {
     drawText(x,y+=2, "ESC: KEEP PLAYING");
     drawBuffer();
 
-    // Temporary message to avoid accidental quit
-    pause(60);
-
+    // Pause temporarilly to avoid immediate exit if hitting Esc repeatedly from game screen
+    pause(15);
     clearCommonInput();
 
     i=1;

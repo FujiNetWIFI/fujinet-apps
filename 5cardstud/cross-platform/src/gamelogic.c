@@ -512,16 +512,14 @@ void requestPlayerMove() {
 //}
 
   drawLine(h,HEIGHT-1,i);
-
-  clearCommonInput();
   soundMyTurn();
 
 
-  resetTimer();
-
-  maxJifs = 60*state.moveTime;
+  maxJifs = 60;
+  maxJifs *=state.moveTime;
   waitCount=0;
   clearCommonInput();
+  resetTimer();
 
   // Move selection loop
   while (state.moveTime>0 && !inputTrigger) {
@@ -534,7 +532,6 @@ void requestPlayerMove() {
       if (i!= state.moveTime) {
         state.moveTime =i;
         drawStatusTimeLeft();
-
         soundTick();
 
       }

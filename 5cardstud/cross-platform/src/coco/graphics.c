@@ -38,10 +38,12 @@
 
 #define RED 0b10101010
 
+
 extern unsigned char charset[];
 extern unsigned int charset_len;
 
 bool always_render_full_cards = 0;
+uint8_t text_mask = 0b01010101;
 
 unsigned char colorMode=0;
 
@@ -196,7 +198,7 @@ void drawCardAt(unsigned char x, unsigned char y, unsigned char partial, const c
     // If a full overturned card is being drawn, blank out the rest of the hand by it (since no double buffer is used to clear screen)
     if (val==0x7C) {
       if (x<20)
-        hires_Mask(x+2,y-26,7,28,0);
+        hires_Mask(x+2,y-26,8,28,0);
       else
         hires_Mask(x-7,y-26,7,28,0);
     }
@@ -303,9 +305,10 @@ void initGraphics() {
     //   }
     // }
 
-    pmode(4,SCREEN); // 3 for green
-    pcls(0);
-    screen(1,1); // 1,0 for green
+   pmode(4,SCREEN); pcls(0); screen(1,1); 
+
+  //pmode(3,SCREEN); pcls(0); screen(1,0); 
+    
 }
 
 #endif

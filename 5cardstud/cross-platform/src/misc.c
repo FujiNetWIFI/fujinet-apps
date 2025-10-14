@@ -54,7 +54,6 @@ void clearCommonInput() {
 
 #ifndef USE_PLATFORM_SPECIFIC_INPUT
   while (kbhit()) {
-    waitvsync();
     cgetc();
   }
 #else

@@ -59,7 +59,12 @@ $(BUILD_DIR)/$(TARGET_EXEC): $(OBJS)
 	#cp $(TARGET_EXEC).dsk ~/tnfs/
 	cp $(TARGET_EXEC).dsk ~/Documents/fujinetpc-coco/SD
 	@echo ........................................................................ ;ls -l $(TARGET_EXEC).bin;echo ........................................................................
-	cd ~/mame_coco;mame coco -window -nomaximize -resolution 1200x1024 -autoboot_delay 2 -nounevenstretch  -autoboot_command "runm\"5cs\n"
+	
+	# Fast speed: -ui_active and -nothrottle starts the emulator in fast mode to quickly load the app. I then throttle it to 100% speed with a hotkey.
+	cd ~/mame_coco;mame coco -ui_active -nothrottle -window -nomaximize -resolution 1200x1024 -autoboot_delay 2 -nounevenstretch  -autoboot_command "runm\"5cs\n"
+
+	# Start normal speed
+	# cd ~/mame_coco;mame coco -window -nomaximize -resolution 1200x1024 -autoboot_delay 2 -nounevenstretch  -autoboot_command "runm\"5cs\n"
 	
 	
 # c source

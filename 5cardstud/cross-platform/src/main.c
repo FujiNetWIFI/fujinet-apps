@@ -27,10 +27,10 @@
 #include "screens.h"
 
 // Store default server endpoint in case lobby did not set app key
-//char serverEndpoint[50] = "https://5card.carr-designs.com/";
-char serverEndpoint[50] = "http://127.0.0.1:8080/"; // "N: for apple, but not C64"
+char serverEndpoint[50] = "https://5card.carr-designs.com/";
+//char serverEndpoint[50] = "http://127.0.0.1:8080/"; // "N: for apple, but not C64"
 
-char query[50] = "?table=dev7";//&player=ERICAPL2";
+char query[50] = "";//"?table=dev7";//&player=ERICAPL2";
 char playerName[12] = ""; // "eric";
 
 //GameState state;
@@ -62,7 +62,7 @@ int main(void)
 void main(void)
 #endif /* _CMOC_VERSION_ */
 { 
-  //while (1) {if (kbhit()) {inputKey = cgetc(); printf("\nKEY: %u", inputKey);}pause(10);}
+  //unsigned char i;while (1) {if (kbhit()) {inputKey = cgetc(); printf("\nKEY: %u", inputKey);}for(i=0;i<10;i++){pause(2);printf(".");}}
   initGraphics();
   initSound();
 

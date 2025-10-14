@@ -76,7 +76,6 @@ void soundSelectMove() {
 }
 
 void soundCursor() {
-  static int i;
   tone(80,1,0);
 }
 
