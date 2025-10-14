@@ -231,20 +231,28 @@ void drawChip(unsigned char x, unsigned char y)
 void drawLine(unsigned char x, unsigned char y, unsigned char w)
 {
     unsigned char o = y > 22 ? 0x80 : 0x00;
+    unsigned char c = y > 22 ? 0x80 : 0xFF; // Yellow multicolor
     unsigned char *loc = SCR + y*40+x;
+    unsigned char *cloc = SCREEN_COLORRAM_LOC + y*40+x;
+
     while(w--)
     {
         *loc++ = 0x41 + o;
+        *cloc++ = c;
     }
 }
 
 void hideLine(unsigned char x, unsigned char y, unsigned char w)
 {
     unsigned char o = y > 22 ? 0x80 : 0x00;
+    unsigned char c = y > 22 ? 0x80 : 0x08; // black multicolor
     unsigned char *loc = SCR + y*40+x;
+    unsigned char *cloc = SCREEN_COLORRAM_LOC + y*40+x;
+
     while(w--)
     {
         *loc++ = 0x00 + o;
+        *cloc++ = c;
     }
 }
 
