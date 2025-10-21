@@ -27,9 +27,9 @@ char cgetc(void);
 #define PLAYER_NAME_MAX 8
 
 #ifdef HIRES_Y
-unsigned char y_bump = 0;
+unsigned char y_bump = 1;
 #define BUMP_LINE y_bump+=4;
-#define CLEAR_BUMP y_bump=0;
+#define CLEAR_BUMP y_bump=1;
 #else
 #define BUMP_LINE y++;
 #define CLEAR_BUMP

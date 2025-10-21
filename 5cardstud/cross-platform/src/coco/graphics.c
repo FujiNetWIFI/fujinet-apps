@@ -36,14 +36,14 @@
 #define NEXT_PLAYER_PASSES 2
 #define PLAY_NEW_GAME 3
 
-#define RED 0b10101010
+#define RED 0b01010101
+#define RED_RIGHT 0b01010100
 
 
 extern unsigned char charset[];
 extern unsigned int charset_len;
 
 bool always_render_full_cards = 0;
-uint8_t text_mask = 0b01010101;
 
 unsigned char colorMode=0;
 
@@ -88,7 +88,7 @@ void drawBuffer() {
 }
 
 void drawStatusTextAt(unsigned char x, const char* s) {
-  drawTextAt(x, BOTTOM+5, s);
+  drawTextAt(x, BOTTOM+6, s);
 }
 
 void drawStatusText(const char* s) {
@@ -121,86 +121,117 @@ void drawText(unsigned char x, unsigned char y, const char* s) {
 
 
 void drawChip(unsigned char x, unsigned char y) {
-  hires_putc(x,y*8+1,0, 0x22);
+  hires_putc(x,y*8,0, 0x22);
 }
 
 
 // Call to clear the screen to an empty table
 void resetScreen() {
      //pcls(0);
-     hires_Mask(0,1,32,177,0);
+     hires_Mask(0,0,32,178,0);
 }
 
 void drawCardAt(unsigned char x, unsigned char y, unsigned char partial, const char* s, bool isHidden) {
-  static unsigned char val, red, i, suit;
+  static unsigned char val, red, redR, i, suit,rightDigit;
   static unsigned mid;
-  mid = isHidden ? 0x7D7E : 0x0900;
+  uint8_t* pos;
+
+  mid = isHidden ? 0x1e1f : 0x1213;
 
   if (partial == PARTIAL_LEFT) {
-    hires_Draw(x,y+6,3,0,&charset[(uint16_t)(0x05<<3)+6]);
-    hires_putc(x,y+=8,0 ,0x7B);
-    hires_putc(x,y+=8,0 ,0x7B);
-    hires_putc(x,y+=8,0 ,0x7B);
-    hires_Draw(x,y+=8,3,0,&charset[(uint16_t)0x07<<3]);
+    hires_Draw(x,y+5,4,0,&charset[(uint16_t)(0x01<<3)+5]);
+    hires_putc(x,y+=8,0 ,0x1e);
+    hires_putc(x,y+=8,0 ,0x1e);
+    hires_putc(x,y+=8,0 ,0x1e);
+    hires_Draw(x,y+=8,3,0,&charset[(uint16_t)0x03<<3]);
     
     
   } else if (partial == PARTIAL_RIGHT) {
     ++x;
-    hires_Draw(x,y+6,3,0,&charset[(uint16_t)(0x06<<3)+6]);
-    hires_putc(x,y+=8,0 ,0x7C);
-    hires_putc(x,y+=8,0 ,0x7C);
-    hires_putc(x,y+=8,0 ,0x7C);
-    hires_Draw(x,y+=8,3,0,&charset[(uint16_t)0x08<<3]);
+    hires_Draw(x,y+5,4,0,&charset[(uint16_t)(0x02<<3)+5]);
+    hires_putc(x,y+=8,0 ,0x1f);
+    hires_putc(x,y+=8,0 ,0x1f);
+    hires_putc(x,y+=8,0 ,0x1f);
+    hires_Draw(x,y+=8,3,0,&charset[(uint16_t)0x04<<3]);
   } else { // Full card
   
     switch (s[1]) {
-      case 'h' : suit=0x0A; red=1; break;
-      case 'd' : suit=0x0C; red=1; break;
-      case 'c' : suit=0x0E; red=0; break;
-      case 's' : suit=0x10; red=0; break;
-      default: suit=0x7B; red=0; break;
+      case 'h' : suit=0x0A; red=RED; redR=RED_RIGHT; break;
+      case 'd' : suit=0x0C; red=RED; redR=RED_RIGHT; break;
+      case 'c' : suit=0x0E; red=redR=0; break;
+      case 's' : suit=0x10; red=redR=0; break;
+      default: suit=0x7B; red=redR=0; break;
     }
+    if (x>0 && s[0]!='?') {
+    pos = (uint8_t *)SCREEN+(uint16_t)(y+5)*32+x-1;
+    if (!*pos)
+      for(i=24;i<255;--i)
+        *(pos+=32) = 02;
+  }
 
-    // Card value
-    switch (s[0]) {
-      case 't': val=0x71; break;
-      case 'j': val=0x73;  break;
-      case 'q': val=0x75; break;
-      case 'k': val=0x77;  break;
-      case 'a': val=0x79; break;
-      case '?': val=0x7B; mid=0x7B7C; break;
-      default:
-        val=0x61 + 2*(s[0]-0x32);
-    }
-
-    // Card top (draw bottom 2 rows)
+      // Card top (draw bottom 2 rows)
     //hires_putcc(x,y,0,0x0506);
-    hires_Draw(x,y+6,3,0,&charset[(uint16_t)(0x05<<3)+6]);
-    hires_Draw(x+1,y+6,3,0,&charset[(uint16_t)(0x06<<3)+6]);
+    hires_Draw(x,y+5,4,0,&charset[(uint16_t)(0x05<<3)+5]);
+    hires_Draw(x+1,y+5,4,0,&charset[(uint16_t)(0x06<<3)+5]);
 
     // Card value
-    hires_putc(x,y+=8,  red ? RED :0 ,val);
-    hires_putc(x+1,y,  red ? RED : 0,++val);
+    if (0) {
+      switch (s[0]) {
+        case 't': val=0x71; break;
+        case 'j': val=0x73;  break;
+        case 'q': val=0x75; break;
+        case 'k': val=0x77;  break;
+        case 'a': val=0x79; break;
+        case '?': val=0x7B; mid=0x7B7C; break;
+        default:
+          val=0x61 + 2*(s[0]-0x32);
+      }
+      
+      // Card value
+      hires_putc(x,y+=8,  red  ,val);
+      hires_putc(x+1,y,  redR ,++val);
+
+    }else {
+      rightDigit=0x13;
+      switch (s[0]) {
+        case 't': val=0x1c;rightDigit=0x1d; break;
+        case 'j': val=0x23;  break;
+        case 'q': val=0x24; break;
+        case 'k': val=0x25;  break;
+        case 'a': val=0x26; break;
+        case '?': val=0x1E; rightDigit=0x1f; mid=0x1E1F; break;
+        default:
+          val=0x14+(s[0]-0x32);
+      }
+            // Card value
+      hires_putc(x,y+=8, red ,val);
+      hires_putc(x+1,y,  redR,rightDigit);
+    }
 
     // Card middle
-    hires_putcc(x,y+=8,0,mid);
+    //hires_putcc(x,y+=8,0,mid);
+    hires_Draw(x,y+=8,7,0,&charset[(uint16_t)((mid >> 8 & 0xFF)<<3)]);
+    hires_Draw(x+1,y,7,0,&charset[(uint16_t)((mid & 0xFF)<<3)]);
+
 
     // Suit
-    hires_putc(x,y+=8,0 ,suit);
+    hires_putc(x,y+=6,0 ,suit);
     hires_putc(x+1,y, 0,++suit);
 
     // Card bottom (draw top two rows)
     //override_height=2;
     //hires_putcc(x,y+=8,0,0x0708);
-    hires_Draw(x,y+=8,3,0,&charset[(uint16_t)0x07<<3]);
-    hires_Draw(x+1,y,3,0,&charset[(uint16_t)0x08<<3]);
+    hires_Draw(x,y+=8,4,0,&charset[(uint16_t)0x07<<3]);
+    hires_Draw(x+1,y,4,0,&charset[(uint16_t)0x08<<3]);
 
     // If a full overturned card is being drawn, blank out the rest of the hand by it (since no double buffer is used to clear screen)
-    if (val==0x7C) {
+    if (val==0x1e) {
       if (x<20)
         hires_Mask(x+2,y-26,8,28,0);
       else
         hires_Mask(x-7,y-26,7,28,0);
+    } else {
+      
     }
   }
   //override_height=8;
@@ -212,21 +243,21 @@ void drawCard(unsigned char x, unsigned char y, unsigned char partial, const cha
 }
 
 void drawLine(unsigned char x, unsigned char y, unsigned char w) {
-  y=y*8+1;
+  y=y*8;
   if (y > 181)
     y=189;
-  hires_Mask(x,y,w,2, 0b01010101);
+  hires_Mask(x,y,w,2, 0b11111111);
 }
 
 void hideLine(unsigned char x, unsigned char y, unsigned char w) {
-  y=y*8+1;
+  y=y*8;
   if (y > 181)
     y=189;
    hires_Mask(x,y,w,2, 0);
 }
 
 void drawBox(unsigned char x, unsigned char y, unsigned char w, unsigned char h) {
-  y=y*8+1;
+  y=y*8-1;
 
   // Top Corners
   hires_putc(x,y,0, 0x3b);hires_putc(x+w+1,y,0, 0x3c);
@@ -305,9 +336,9 @@ void initGraphics() {
     //   }
     // }
 
-   pmode(4,SCREEN); pcls(0); screen(1,1); 
+  //pmode(4,SCREEN); pcls(0); screen(1,1); 
 
-  //pmode(3,SCREEN); pcls(0); screen(1,0); 
+  pmode(3,SCREEN); pcls(0); screen(1,0); 
     
 }
 

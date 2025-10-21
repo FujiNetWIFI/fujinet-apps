@@ -3,7 +3,7 @@
 
 /* To test the game:
  * VICE -
- *  1. In VI E, point DRIVE 11 to a local folder
+ *  1. In VICE, point DRIVE 11 to a local folder
  *  2. Edit /support/c64/emulator/fuji_mock_network.py to point to that same folder and run it
  *  3. Uncomment the USE_EMULATOR define below. */
 
