@@ -24,6 +24,18 @@ extern unsigned char redrawGameScreen;
 #define POT_Y_MODIFIER 0
 #endif
 
+#ifndef STATUS_TIMER_WIDTH
+#define STATUS_TIMER_WIDTH 2
+#endif
+
+#ifndef PLAYER_MOVE_START_X
+#define PLAYER_MOVE_START_X 1
+#endif
+
+#ifndef LEFT_JUSTIFY_PLAYER_PURSE
+#define LEFT_JUSTIFY_PLAYER_PURSE 0
+#endif
+
 void progressAnim(unsigned char y) {
   for(i=0;i<3;++i) {
     pause(10);
@@ -120,18 +132,23 @@ void drawNamePurse() {
         x-=2;
         y+=3;
       #else
-        x+=6;
+        x+=6*(LEFT_JUSTIFY_PLAYER_PURSE==0);
         y+=1;
       #endif
     }
 
     itoa(state.players[i].purse, tempBuffer, 10);
 
-    if (playerDir[i]<0 || i==0)
+    if (playerDir[i]<0 || i==LEFT_JUSTIFY_PLAYER_PURSE) {
       x-=(unsigned char)strlen(tempBuffer);
+      drawText(x-2,y," "); // Cover case when chip count drops from 100 to 99
+    } else {
+      drawText(x+strlen(tempBuffer),y," "); // Cover case when chip count drops from 100 to 99
+    }
 
     drawText(x,y, tempBuffer);
     drawChip(x-1,y);
+    
   }
 }
 
@@ -362,7 +379,7 @@ void drawStatusTimeLeft() {
   drawStatusTimer();
   tempBuffer[0]=' ';
   itoa(state.moveTime, tempBuffer+1, 10);
-  drawStatusTextAt( (unsigned char)(WIDTH-strlen(tempBuffer)-2), tempBuffer);
+  drawStatusTextAt( (unsigned char)(WIDTH-strlen(tempBuffer)-STATUS_TIMER_WIDTH), tempBuffer);
   drawBuffer();
 }
 
@@ -480,7 +497,7 @@ void requestPlayerMove() {
 
   // Draw the moves on the status bar
   clearStatusBar();
-  x=1;
+  x=PLAYER_MOVE_START_X;
   for (i=0;i<state.validMoveCount;i++) {
     moveLoc[i] = x;
     drawStatusTextAt(x, state.validMoves[i].name);

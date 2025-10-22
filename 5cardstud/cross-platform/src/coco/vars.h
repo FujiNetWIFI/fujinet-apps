@@ -9,6 +9,9 @@
 #define HEIGHT 24
 #define HIRES_Y 1
 #define POT_Y_MODIFIER -1
+#define STATUS_TIMER_WIDTH 1
+#define PLAYER_MOVE_START_X 0
+#define LEFT_JUSTIFY_PLAYER_PURSE 99
 
 #define QUERY_SUFFIX "&be=1" // Big Endian response for CoCo (68000)
 
