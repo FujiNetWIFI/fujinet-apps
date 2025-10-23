@@ -3,7 +3,6 @@
 /*
   Graphics functionality
 */
-
 #include "coco_bool.h"
 
 #include "hires.h"
@@ -38,7 +37,6 @@
 
 #define RED 0b01010101
 #define RED_RIGHT 0b01010100
-
 
 extern unsigned char charset[];
 extern unsigned int charset_len;
@@ -382,13 +380,18 @@ void resetGraphics() {
 }
 
 void initGraphics() {
-    int i;
-    char c,b,v;
-    initCoCoSupport();
+    // int i;
+    // char c,b,v;
+    // initCoCoSupport();
 
   //pmode(4,SCREEN); pcls(0); screen(1,1); 
 
   pmode(3,SCREEN); pcls(0); screen(1,0); 
+
+  //*((uint8_t*)0xFFB0)=30; // Green
+  *((uint8_t*)0xFFB1)=63;// White
+  *((uint8_t*)0xFFB2)=0;// White
+  *((uint8_t*)0xFFB3)=22;// Red
     
 }
 

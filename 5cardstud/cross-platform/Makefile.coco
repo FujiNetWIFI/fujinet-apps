@@ -61,7 +61,8 @@ $(BUILD_DIR)/$(TARGET_EXEC): $(OBJS)
 	@echo ........................................................................ ;ls -l $(TARGET_EXEC).bin;echo ........................................................................
 	
 	# Fast speed: -ui_active and -nothrottle starts the emulator in fast mode to quickly load the app. I then throttle it to 100% speed with a hotkey.
-	cd ~/mame_coco;mame coco -ui_active -nothrottle -window -nomaximize -resolution 1200x1024 -autoboot_delay 2 -nounevenstretch  -autoboot_command "runm\"5cs\n"
+	#cd ~/mame_coco;mame coco -ui_active -nothrottle -window -nomaximize -resolution 1200x1024 -autoboot_delay 2 -nounevenstretch  -autoboot_command "runm\"5cs\n"
+	cd ~/mame_coco;mame coco3 -ui_active -nothrottle -window -nomaximize -resolution 1200x1024 -autoboot_delay 2 -nounevenstretch  -autoboot_command "runm\"5cs\n"
 
 	# Start normal speed
 	# cd ~/mame_coco;mame coco -window -nomaximize -resolution 1200x1024 -autoboot_delay 2 -nounevenstretch  -autoboot_command "runm\"5cs\n"
