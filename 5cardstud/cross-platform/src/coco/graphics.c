@@ -151,7 +151,7 @@ void drawCardAt(unsigned char x, unsigned char y, unsigned char partial, const c
     hires_Draw(x,y+=8,6,0,&charset[(uint16_t)((0x1F)<<3)]);
     hires_Draw(x,y+=5,5,0,&charset[(uint16_t)0x04<<3]);
   } else { // Full card
-  
+
     switch (s[1]) {
       case 'h' : suit=0x0A; red=RED; redR=RED_RIGHT; break;
       case 'd' : suit=0x0C; red=RED; redR=RED_RIGHT; break;
@@ -160,7 +160,7 @@ void drawCardAt(unsigned char x, unsigned char y, unsigned char partial, const c
       default: suit=0x7B; red=redR=0; break;
     }
 
-    
+
     if (s[0]=='?') {
       // Overturned card
 
@@ -168,7 +168,7 @@ void drawCardAt(unsigned char x, unsigned char y, unsigned char partial, const c
       hires_Draw(x,y+5,4,0,&charset[(uint16_t)(0x01<<3)+5]);
       hires_Draw(x+1,y+5,4,0,&charset[(uint16_t)(0x02<<3)+5]);
 
-      // Middle 
+      // Middle
       hires_putcc(x,y+=8,0 ,0x1e1f);
       hires_putcc(x,y+=8,0 ,0x1e1f);
       hires_Draw(x,y+=8,7,0,&charset[(uint16_t)((0x1E)<<3)]);
@@ -184,7 +184,7 @@ void drawCardAt(unsigned char x, unsigned char y, unsigned char partial, const c
         hires_Mask(x+2,y-26,8,29,0);
       else
         hires_Mask(x-8,y-26,8,29,0);
-    
+
     } else {
 
       rightDigit=0x13;
@@ -197,8 +197,8 @@ void drawCardAt(unsigned char x, unsigned char y, unsigned char partial, const c
         default:
           val=0x14+(s[0]-0x32);
       }
-      
-      // Card left edge    
+
+      // Card left edge
       if (x>0) {
         pos = (uint8_t *)SCREEN+(uint16_t)(y+6)*32+x-1;
 
@@ -206,7 +206,7 @@ void drawCardAt(unsigned char x, unsigned char y, unsigned char partial, const c
         if (x==29 && *(pos+2)) {
           drawCardAt(30,y, PARTIAL_RIGHT, "??", 0);
         }
-        
+
         if (!*pos || *pos==0x80) {
           for(i=24;i<255;--i) {
             *(pos) += 02;
@@ -218,15 +218,15 @@ void drawCardAt(unsigned char x, unsigned char y, unsigned char partial, const c
          // cgetc();
           // Make first downturned card slightly smaller
           drawCardAt(x-1,y, PARTIAL_LEFT, "??", 0);
-          
+
         }
       }
-      
+
       xor_mask = isHidden;
       // Top edge
       hires_Draw(x,y+5,4,0,&charset[(uint16_t)(0x05<<3)+5]);
       hires_Draw(x+1,y+5,4,0,&charset[(uint16_t)(0x06<<3)+5]);
-      
+
       // Card value
       hires_putc(x,y+=8, red ,val);
       hires_putc(x+1,y,  redR,rightDigit);
@@ -234,11 +234,11 @@ void drawCardAt(unsigned char x, unsigned char y, unsigned char partial, const c
       // Middle
       hires_Draw(x,y+=8,7,0,&charset[(uint16_t)((mid >> 8 & 0xFF)<<3)]);
       hires_Draw(x+1,y,7,0,&charset[(uint16_t)((mid & 0xFF)<<3)]);
-      
+
       // Suit
       hires_putc(x,y+=6,0 ,suit);
       hires_putc(x+1,y, 0,++suit);
-      
+
       // Bottom edge
       hires_Draw(x,y+=8,4,0,&charset[(uint16_t)0x07<<3]);
       hires_Draw(x+1,y,4,0,&charset[(uint16_t)0x08<<3]);
@@ -247,14 +247,14 @@ void drawCardAt(unsigned char x, unsigned char y, unsigned char partial, const c
       // If drawing the full hand on the left side, shift the rendered cards to the right one pixel
       // to make room to draw the left edge border on the first card.
       // This only occurs on final hand flips
-      if (x==8) { 
+      if (x==8) {
         y+=2;
         for(i=0;i<28;i++) {
           pos = (uint8_t *)SCREEN+(uint16_t)y*32+10;
           for (x=0;x<11;x++) {
             if (x>0)
               *pos=*pos>>2;
-            else 
+            else
               *pos=*pos&0x03 + (*pos>>2);
             if (x<10)
               *pos+=(*(pos-1)&0x03)<<6;
@@ -267,7 +267,7 @@ void drawCardAt(unsigned char x, unsigned char y, unsigned char partial, const c
       }
     }
 
-     
+
   }
 }
 
@@ -338,7 +338,7 @@ void drawBorder() {
   //   drawCardAt(i+2,20,FULL_CARD, "as", 0);
   //   drawCardAt(i+4,20,FULL_CARD, "as", 0);
   //   drawCardAt(i+6,20,FULL_CARD, "as", 0);
-  //   drawCardAt(i+8,20,FULL_CARD, "as", 0);    
+  //   drawCardAt(i+8,20,FULL_CARD, "as", 0);
   // }
   // cgetc();
 
@@ -352,16 +352,16 @@ void drawBorder() {
     hires_putcc(i+2,2,0, 0x7677);
     hires_putcc(i,168,0, 0x7475);
     hires_putcc(i+2,168,0, 0x7677);
-  } 
+  }
 
   // drawCardAt(5,60,FULL_CARD, "??", 0);
-  
+
   // drawCardAt(10,60,PARTIAL_LEFT, "??", 0);
   // drawCardAt(11,60,FULL_CARD, "as", 0);
 
   // drawCardAt(15,60,PARTIAL_RIGHT, "??", 0);
   // drawCardAt(14,60,FULL_CARD, "as", 0);
-  
+
 }
 
 void drawLogo() {
@@ -379,20 +379,56 @@ void resetGraphics() {
 
 }
 
+()
+{
+    rgb();
+    paletteRGB(0,2,3,0);   // Background
+    paletteRGB(1,3,3,3);   // card bkg
+    paletteRGB(2,0,0,0);   // border/text
+    paletteRGB(3,2,0,0);
+}
+
+void setComposite()
+{
+    cmp();
+    paletteRGB(0,2,3,0);   // Background
+    paletteRGB(1,3,3,3);   // card bkg
+    paletteRGB(2,0,0,0);   // border/text
+}
+
+void rgbOrComposite() {
+
+    if (!isCoCo3)
+        return; // not a coco3, we can't change palettes anyway.
+
+    drawTextAt(8,96,"R-GB or C-OMPOSITE");
+
+    while (1)
+    {
+        switch(cgetc())
+        {
+        case 'R':
+        case 'r':
+            setRGB();
+            return;
+        case 'C':
+        case 'c':
+            setComposite();
+            return;
+        }
+    }
+}
+
 void initGraphics() {
     // int i;
     // char c,b,v;
-    // initCoCoSupport();
+    initCoCoSupport();
 
-  //pmode(4,SCREEN); pcls(0); screen(1,1); 
+  //pmode(4,SCREEN); pcls(0); screen(1,1);
 
-  pmode(3,SCREEN); pcls(0); screen(1,0); 
+  pmode(3,SCREEN); pcls(0); screen(1,0);
 
-  //*((uint8_t*)0xFFB0)=30; // Green
-  *((uint8_t*)0xFFB1)=63;// White
-  *((uint8_t*)0xFFB2)=0;// White
-  *((uint8_t*)0xFFB3)=22;// Red
-    
+  rgbOrComposite();
 }
 
 #endif
