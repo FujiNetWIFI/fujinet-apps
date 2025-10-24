@@ -7,9 +7,23 @@
 #ifndef FUJINET_NETWORK_H
 #define FUJINET_NETWORK_H
 
+#ifdef _CMOC_VERSION_
+#include <cmoc.h>
 
-#include <stdint.h>
-#include <stdbool.h>
+// Handle <stdbool.h> for CMOC builds, which does not define bool. 
+// Follow the standard "ifndef _STDBOOL_H" check in case the project already does this.
+#ifndef _STDBOOL_H
+#define _STDBOOL_H
+typedef unsigned char bool;
+#define true  1
+#define false 0
+#endif
+
+#else
+    #include <stddef.h>
+    #include <stdbool.h>
+    #include <stdint.h>
+#endif /* _CMOC_VERSION_ */
 
 #ifdef __CBM__
 
