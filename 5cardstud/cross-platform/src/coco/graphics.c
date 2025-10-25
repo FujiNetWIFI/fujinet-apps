@@ -38,20 +38,31 @@
 #define RED 0b01010101
 #define RED_RIGHT 0b01010100
 
-extern unsigned char charset[];
-extern unsigned int charset_len;
+extern uint8_t charset[];
 
 bool always_render_full_cards = 0;
 uint8_t xor_mask=0;
 
+// Currently this is only for CoCo3
 unsigned char colorMode=0;
 
+void updateColors() {
+    if (colorMode==1)
+        setRGB();
+    else
+        setComposite();
+}
+
 unsigned char cycleNextColor() {
-  return 0;
+    ++colorMode;
+    if (colorMode>2)
+        colorMode=1;
+    updateColors();
+    return colorMode;
 }
 
 void setColorMode(unsigned char mode) {
-  colorMode = mode;
+    colorMode = mode;
 }
 
 void enableDoubleBuffer() {
@@ -377,9 +388,11 @@ void drawLogo() {
 
 void resetGraphics() {
 
+  
 }
 
-()
+
+void setRGB()
 {
     rgb();
     paletteRGB(0,2,3,0);   // Background
@@ -401,34 +414,39 @@ void rgbOrComposite() {
     if (!isCoCo3)
         return; // not a coco3, we can't change palettes anyway.
 
-    drawTextAt(8,96,"R-GB or C-OMPOSITE");
+    if (colorMode==0) {
+        drawTextAt(8,96,"R-GB or C-OMPOSITE");
 
-    while (1)
-    {
-        switch(cgetc())
+        while (!colorMode)
         {
-        case 'R':
-        case 'r':
-            setRGB();
-            return;
-        case 'C':
-        case 'c':
-            setComposite();
-            return;
+            switch(cgetc())
+            {
+            case 'R':
+            case 'r':
+                colorMode = 1;
+                break;
+            case 'C':
+            case 'c':
+                colorMode = 2;
+                break;
+            }
         }
     }
+
+     updateColors();
 }
 
 void initGraphics() {
-    // int i;
-    // char c,b,v;
+
     initCoCoSupport();
+    
+    //pmode(4,SCREEN); pcls(0); screen(1,1); // Alternate hi-res mode
 
-  //pmode(4,SCREEN); pcls(0); screen(1,1);
+    pmode(3,SCREEN);
+    pcls(0);
+    screen(1,0);
 
-  pmode(3,SCREEN); pcls(0); screen(1,0);
-
-  rgbOrComposite();
+    rgbOrComposite();
 }
 
 #endif

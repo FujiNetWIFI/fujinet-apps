@@ -7,7 +7,7 @@ CC=cmoc
 ASM=lwasm
 
 #SRCS := $(shell find $(SRC_DIRS) -name *.c) $(shell find $(SRC_DIRS)/coco -name *.s) 
-SRCS := $(shell ls $(SRC_DIRS)/*.c) $(shell find $(SRC_DIRS)/coco -name *.c)
+SRCS := $(shell ls $(SRC_DIRS)/*.c) $(shell find $(SRC_DIRS)/coco -name *.c) $(shell find $(SRC_DIRS)/coco -name *.s)
 OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
 DEPS := $(OBJS:.o=.d)
 
@@ -27,8 +27,9 @@ TARGET = coco
 
 CFLAGS= \
 			--$(TARGET) \
+			--intermediate \
 			--intdir ./intermediates \
-			--stack-space=512 \
+			--stack-space=256 \
 			-fomit-frame-pointer \
 			-DNDEBUG \
 			-I $(FUJINET_LIB_DIR) \
@@ -45,8 +46,7 @@ LDFLAGS= 			--$(TARGET) \
 	-o$(TARGET_EXEC).bin
 
 
-LDFLAGS_TEST= 			--$(TARGET) \
-	-otestgame.bin
+LDFLAGS_TEST=	--$(TARGET) 
 
 INC_DIRS := $(shell find $(SRC_DIRS) -type d)
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
@@ -62,11 +62,10 @@ $(BUILD_DIR)/$(TARGET_EXEC): $(OBJS)
 	
 	# Fast speed: -ui_active and -nothrottle starts the emulator in fast mode to quickly load the app. I then throttle it to 100% speed with a hotkey.
 	#cd ~/mame_coco;mame coco -ui_active -nothrottle -window -nomaximize -resolution 1200x1024 -autoboot_delay 2 -nounevenstretch  -autoboot_command "runm\"5cs\n"
-	cd ~/mame_coco;mame coco3 -ui_active -nothrottle -window -nomaximize -resolution 1200x1024 -autoboot_delay 2 -nounevenstretch  -autoboot_command "runm\"5cs\n"
+	cd ~/mame_coco;mame coco3 -ui_active -nothrottle -window -nomaximize -resolution 1300x1024 -autoboot_delay 2 -nounevenstretch  -autoboot_command "runm\"5cs\n"
 
 	# Start normal speed
 	# cd ~/mame_coco;mame coco -window -nomaximize -resolution 1200x1024 -autoboot_delay 2 -nounevenstretch  -autoboot_command "runm\"5cs\n"
-	
 	
 # c source
 $(BUILD_DIR)/%.c.o: %.c

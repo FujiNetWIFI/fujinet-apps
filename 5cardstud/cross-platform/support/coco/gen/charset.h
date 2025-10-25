@@ -1,6 +1,8 @@
 #ifndef CHARSET_H
 #define CHARSET_H
 
+/* Charset for CoCo PMODE 4 - Currently not being used */
+
 /* Bit Color Pattern (a CHANGE in bits causes color)
 PMODE 4
 	00 = Black

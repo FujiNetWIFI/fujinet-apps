@@ -45,7 +45,7 @@
 #define AK_KEY_PREFS 0            // Preferences
 
 #define PREF_HELP 0  // 1/2 seen help screen no/yes
-#define PREF_COLOR 1 // 1/2 - Color mode mono/color
+#define PREF_COLOR 1 // 1/2 - Color mode (platform specific)
 //#define PREF_SOUND 2 // 1/2 - Sound Enabled yes/no
 
 #ifdef __CC65__

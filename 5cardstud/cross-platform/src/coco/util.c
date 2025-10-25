@@ -19,6 +19,12 @@ int getTime()
 
 void quit()
 {
+  pmode(0, 0x400);
+  pcls(0x60);
+  screen(0,0);
+  memset(0x200,0,0x200);
+  memset(0x600,0,0x1200);
+  exit(0);
 }
 
 int lastCoCoKey=0;

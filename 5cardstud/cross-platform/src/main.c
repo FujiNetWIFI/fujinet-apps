@@ -63,14 +63,13 @@ void main(void)
 #endif /* _CMOC_VERSION_ */
 { 
   //unsigned char i;while (1) {if (kbhit()) {inputKey = cgetc(); printf("\nKEY: %u", inputKey);}for(i=0;i<10;i++){pause(2);printf(".");}}
+  loadPrefs();
   initGraphics();
   initSound();
-
+  
 #ifdef USE_PLATFORM_SPECIFIC_INPUT
   initPlatformKeyboardInput();
 #endif
-
-  loadPrefs();
 
   showWelcomScreen();
   showTableSelectionScreen();
