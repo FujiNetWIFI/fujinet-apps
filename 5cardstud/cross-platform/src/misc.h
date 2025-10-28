@@ -7,7 +7,7 @@
  *  2. Edit /support/c64/emulator/fuji_mock_network.py to point to that same folder and run it
  *  3. Uncomment the USE_EMULATOR define below. */
 
-#define USE_EMULATOR
+// #define USE_EMULATOR
 
 /*
  * Include CC65 style Joystick defines for Adam - There is a probably a better way to do this.

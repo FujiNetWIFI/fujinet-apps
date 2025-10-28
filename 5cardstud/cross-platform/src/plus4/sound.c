@@ -8,7 +8,7 @@
 #include <stdint.h>
 #include "../misc.h"
 #include "../platform-specific/sound.h"
-
+#include <stdio.h>
 /**
  * @brief play note through voice 1 (square)
  * @param f Frequency in Hz
@@ -20,17 +20,23 @@ void playNote(unsigned f, unsigned d, unsigned char v)
     unsigned short fd = 1024 - (111861 / f);
     unsigned char fl = fd & 0xFF; // Frequency LO
     unsigned char fh = (fd & 0x0300) >> 8; // Frequency HI
-
+    unsigned dd;
     // Turn on the square
     TED.snd_ctrl = v | 0x10; // Enable channel 1, with volume v
     TED.snd1_freq_lo = fl;   // Set lo bits
     TED.misc &= 0xFC;        // zap high bits, preserving misc register
     TED.misc |= fh;          // set high bits.
+    while (v>0) 
+    {
+        dd=d;
+        // Wait # of vblanks.
+        while (dd--)
+            waitvsync();
 
-    // Wait # of vblanks.
-    while (d--)
-        waitvsync();
-
+        // Reduce volume
+        --v;
+        TED.snd_ctrl = v | 0x10; 
+    }
     // Turn off the square
     TED.snd_ctrl = 0x00;     // Kill the sound
 }
@@ -46,15 +52,24 @@ void playNoise(unsigned f, unsigned d, unsigned char v)
     unsigned short fd = 1024 - (111861 / f);
     unsigned char fl = fd & 0xFF; // Frequency LO
     unsigned char fh = (fd & 0x0300) >> 8; // Frequency HI
+    unsigned dd;
 
     // Turn on the square
     TED.snd_ctrl = v | 0x40; // Enable channel 2, with noise; with volume v
     TED.snd2_freq_lo = fl;   // Set lo bits
     TED.snd2_freq_hi = fh;   // Set hi bits
 
-    // Wait # of vblanks.
-    while (d--)
-        waitvsync();
+    while (v>1) 
+    {
+        dd=d;
+        // Wait # of vblanks.
+        while (dd--)
+            waitvsync();
+
+        // Reduce volume
+        --v;
+        TED.snd_ctrl = v | 0x40; 
+    }
 
     // Turn off the square
     TED.snd_ctrl = 0x00;     // Kill the sound
@@ -67,71 +82,83 @@ void initSound()
 
 void soundJoinGame()
 {
-    playNote(392,10,9);
-    playNote(330,10,9);
-    playNote(440,20,9);
+    playNote(392,2,6);
+    playNote(330,2,6);
+    playNote(440,4,6);
 }
 
 void soundMyTurn()
 {
-    playNote(440,10,9);
-    pause(8);
-    playNote(440,20,9);
+   
+    playNote(440,3,5);
+    playNote(440,3,5);
 }
 
 void soundGameDone()
 {
     unsigned short slide;
 
-    playNote(220,8,9);
-    playNote(440,16,9);
-    playNote(880,16,9);
+    playNote(220,3,6);
+    playNote(440,2,6);
+    playNote(880,4,6);
 }
 
 void soundDealCard()
 {
-    playNoise(110,3,9);
+    playNoise(96,1,4);
     pause(4);
 }
 
 void soundTick()
 {
-    playNoise(150,4,9);
+    playNoise(24,1,5);
 }
 
 void soundPlayerJoin()
 {
-    playNoise(400,25,9);
-    playNoise(420,25,9);
-    playNoise(440,25,9);
+    playNoise(120,1,4);
+    playNoise(100,1,4);
+    pause(20);
+    playNoise(120,1,5);
+    playNoise(100,1,5);
+    pause(20);
+    playNoise(120,1,7);
+    playNoise(100,1,7);
+    
 }
 
 void soundPlayerLeft()
 {
-    playNoise(600,20,9);
-    playNoise(575,20,9);
+    playNoise(120,1,7);
+    playNoise(100,1,7);
+    pause(20);
+    playNoise(120,2,5);
+    playNoise(100,1,5);
+    pause(20);
+    playNoise(120,2,3);
+    playNoise(100,2,3);
 }
 
 void soundSelectMove()
 {
-    playNote(350,5,9);
-    playNote(420,5,9);
+    playNote(350,1,6);
+    playNote(420,2,6);
 }
 
 void soundCursor()
 {
-    playNote(600,3,9);
+    playNote(600,1,6);
 }
 
 void soundCursorInvalid()
 {
-    playNote(300,3,9);
+    playNote(300,1,6);
 }
 
 void soundTakeChip(uint16_t counter)
 {
-    playNote(150+counter*40,2,9);
-    pause(3);
+    playNote(150+counter*5,1,4);
+    pause(1);
 }
 
 #endif /* __PLUS4__ */

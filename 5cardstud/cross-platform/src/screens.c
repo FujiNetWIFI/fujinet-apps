@@ -409,10 +409,6 @@ typedef struct {
   char hand   [11];
 } Player;
 
-#ifndef SINGLE_BUFFER
-  redrawGameScreen=1;
-#endif
-
 typedef struct {
   char lastResult[81];
   uint8_t round;
@@ -441,6 +437,9 @@ typedef struct {
   // drawBuffer();
   // cgetc();
 
+#ifndef SINGLE_BUFFER
+  redrawGameScreen=1;
+#endif
 
   checkIfSpectatorStatusChanged();
   checkIfPlayerCountChanged();
