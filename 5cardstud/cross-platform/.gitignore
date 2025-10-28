@@ -2,6 +2,8 @@ obj
 fcs
 fcs_*
 fcs.*
+5cs.bin
+5cs.dsk
 
 gen/gencharset
 gen/charset
