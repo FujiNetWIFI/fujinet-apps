@@ -27,9 +27,13 @@ void drawBuffer();
 void resetScreen();
 
 void clearStatusBar();
-void drawStatusTextAt(unsigned char x, char* s);
-void drawStatusText(char* s);
+void drawStatusTextAt(unsigned char x, const char* s);
+void drawStatusText(const char* s);
 void drawStatusTimer();
+
+
+// For optional HI-RES Y enabled platforms
+void drawTextAt(unsigned char x, unsigned char y, const char* s);
 
 void drawText(unsigned char x, unsigned char y, const char* s);
 void drawCard(unsigned char x, unsigned char y, unsigned char partial, const char* s, unsigned char isHidden);

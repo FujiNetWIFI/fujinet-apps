@@ -44,7 +44,7 @@ void drawTextAt(unsigned char x, unsigned char y, const char *s) {
     c=*s++;
     if (c>=97 && c<=122) c=c-32;
     hires_putc(x++,y,ROP_CPY,c);
-  }  
+  }
 }
 
 void clearStatusBar() {
@@ -60,15 +60,15 @@ void drawBuffer() {
    memcpy((void*)0x4000,(void*)0x2000,0x2000);
 }
 
-void drawStatusTextAt(unsigned char x, char* s) {
+void drawStatusTextAt(unsigned char x, const char* s) {
   drawTextAt(x, BOTTOM+5, s);
 }
 
-void drawStatusText(char* s) {
+void drawStatusText(const char* s) {
   static char* comma;
   clearStatusBar();
   if (strlen(s)>40) {
-    comma = s;
+      comma = (char *)s;
     while (*comma++!=',');
     comma[0]=0;
     comma++;
@@ -77,13 +77,13 @@ void drawStatusText(char* s) {
   } else {
     drawStatusTextAt(0, s);
   }
-  
+
 }
 
 void drawStatusTimer() {
   hires_putcc(38,BOTTOM+5,ROP_CPY, 0x2829);
 }
-  
+
 
 void drawText(unsigned char x, unsigned char y, const char* s) {
   drawTextAt(x,y*8-4, s);
@@ -101,11 +101,11 @@ void drawText(unsigned char x, unsigned char y, const char* s) {
     s2++;
   }
   */
-  
+
   /*if (isSpace && strlen(s) < 6) {
     y=y*8-4;
     while (*s) {
-      hires_Mask(x++,y,1,8,0xa955 - (0x2B*(x%2))); 
+      hires_Mask(x++,y,1,8,0xa955 - (0x2B*(x%2)));
       s++;
     }
   }
@@ -121,35 +121,35 @@ void drawChip(unsigned char x, unsigned char y) {
   // Solve gfx later once layout is finalized
   //hires_putc(x,y*8-4,ROP_OR(0x55), 'O');
   hires_putc(x,y*8-3,ROP_CPY, 0x22);
-  
+
 }
 
 
 // Call to clear the screen to an empty table
-void resetScreen() { 
+void resetScreen() {
   hires_Mask(0,1,39,174,0xa900);
-  /*hires_Mask(0,2,1,1, 0xa9ff); 
-  hires_Mask(1,1,38,1, 0xa9ff); 
-  hires_Mask(39,2,1,1, 0xa9ff); 
+  /*hires_Mask(0,2,1,1, 0xa9ff);
+  hires_Mask(1,1,38,1, 0xa9ff);
+  hires_Mask(39,2,1,1, 0xa9ff);
 
-  hires_Mask(0,2,1,1, 0xa9ff); 
-  hires_Mask(1,1,38,1, 0xa9ff); 
+  hires_Mask(0,2,1,1, 0xa9ff);
+  hires_Mask(1,1,38,1, 0xa9ff);
   hires_Mask(39,2,1,1, 0xa9ff); */
-  
+
   // Top corners
   hires_putc(0,0,ROP_CPY,0x01);
   hires_putc(39,0,ROP_CPY,0x02);
-  
+
   // Top horizontal
-  hires_Mask(1,1,38,1, 0xa9ff); 
-  
+  hires_Mask(1,1,38,1, 0xa9ff);
+
   // Bottom corners
   hires_putc(0,BOTTOM-8,ROP_CPY,0x03);
   hires_putc(39,BOTTOM-8,ROP_CPY,0x04);
 
   // Bottom hor
-  hires_Mask(1,BOTTOM-2,38,1, 0xa9ff); 
-  
+  hires_Mask(1,BOTTOM-2,38,1, 0xa9ff);
+
   // Sides
   hires_Mask(0,8,1,BOTTOM-16,ROP_CONST(0b00000110));
   hires_Mask(39,8,1,BOTTOM-16,ROP_CONST(0b00110000));
@@ -159,20 +159,20 @@ void resetScreen() {
   // Starting with black background first to "get it working", and many have monochrome monitors
   /*static int i;
   // Clear screen except for corners
-  
+
   for (i=0;i<39;++i) {
     hires_Mask(i,0,1,BOTTOM,0xa92A);
     hires_Mask(++i,0,1,BOTTOM,0xa955);
-  }  
+  }
 */
   // Draw rounded table corners
   // hires_putc(0,0,ROP_AND(0x2A),0x01);
   // hires_putc(39,0,ROP_AND(0x55),0x02);
   // hires_putc(0,BOTTOM-8,ROP_AND(0x2A),0x03);
   // hires_putc(39,BOTTOM-8,ROP_AND(0x55),0x04);
-  
+
   // Reset screen to green background, black status bar, black char color
-  //clearStatusBar(); 
+  //clearStatusBar();
 }
 
 void drawCardAt(unsigned char x, unsigned char y, unsigned char partial, const char* s, bool isHidden) {
@@ -192,7 +192,7 @@ void drawCardAt(unsigned char x, unsigned char y, unsigned char partial, const c
     default:
       val=0x61 + 2*(s[0]-0x32);
   }
- 
+
   // Card suit
   switch (s[1]) {
     case 'h' : suit=0x0A; red=1; break;
@@ -201,29 +201,30 @@ void drawCardAt(unsigned char x, unsigned char y, unsigned char partial, const c
     case 's' : suit=0x10; red=0; break;
     default: suit=0x7B; red=0; break;
   }
-  
+
   // Card top
-  //hires_putcc(x,y,ROP_O,0x0506); 
-  hires_Mask(x,y+7,1,1, ROP_CONST(0b01111100)); 
-  hires_Mask(x+1,y+7,1,1, ROP_CONST(0b00111111)); 
+  //hires_putcc(x,y,ROP_O,0x0506);
+  hires_Mask(x,y+7,1,1, ROP_CONST(0b01111100));
+  hires_Mask(x+1,y+7,1,1, ROP_CONST(0b00111111));
 
   // Card value
   hires_putc(x,y+=8, colorMode && red ? RED_VAL_1 :ROP_CPY ,val);
   hires_putc(x+1,y, colorMode && red ? RED_VAL_2 : ROP_CPY,++val);
-  
+
   // Card middle
   hires_putcc(x,y+=8,ROP_CPY,mid);
- 
+
   // Suit
   hires_putc(x,y+=8,colorMode && red ? RED_VAL_1 :ROP_CPY ,suit);
   hires_putc(x+1,y,colorMode && red ? RED_VAL_2 : ROP_CPY,++suit);
 
   // Card bottom
-  //hires_putcc(x,y+=8,ROP_CPY,0x0708); 
-  hires_Mask(x,y+=8,1,1, ROP_CONST(0b01111100)); 
-  hires_Mask(x+1,y,1,1, ROP_CONST(0b00111111)); 
+  //hires_putcc(x,y+=8,ROP_CPY,0x0708);
+  hires_Mask(x,y+=8,1,1, ROP_CONST(0b01111100));
+  hires_Mask(x+1,y,1,1, ROP_CONST(0b00111111));
 
- 
+  (void)partial;
+  (void)i;
 }
 
 void drawCard(unsigned char x, unsigned char y, unsigned char partial, const char* s, bool isHidden) {
@@ -233,11 +234,11 @@ void drawCard(unsigned char x, unsigned char y, unsigned char partial, const cha
 }
 
 void drawLine(unsigned char x, unsigned char y, unsigned char w) {
-   hires_Mask(x,y*8-3,w,2, 0xa9ff); 
+   hires_Mask(x,y*8-3,w,2, 0xa9ff);
 }
 
 void hideLine(unsigned char x, unsigned char y, unsigned char w) {
-   hires_Mask(x,y*8-3,w,2, 0xa900); 
+   hires_Mask(x,y*8-3,w,2, 0xa900);
 }
 
 void drawBox(unsigned char x, unsigned char y, unsigned char w, unsigned char h) {
@@ -245,7 +246,7 @@ void drawBox(unsigned char x, unsigned char y, unsigned char w, unsigned char h)
 
   // Top Corners
   hires_putc(x,y,ROP_CPY, 0x3b);hires_putc(x+w+1,y,ROP_CPY, 0x3c);
-  
+
   // Accents if height > 1
   if (h>1) {
     hires_putc(x+1,y+8,ROP_CPY, 1);
@@ -258,14 +259,14 @@ void drawBox(unsigned char x, unsigned char y, unsigned char w, unsigned char h)
   }
 
 
-  
+
   // Sides
   for(i=0;i<h;++i) {
     y+=8;
     hires_putc(x,y,ROP_CPY, 0x3f);
     hires_putc(x+w+1,y,ROP_CPY, 0x3f);
   }
-  
+
     // Accents if height > 1
   if (h>1) {
     hires_putc(x+w,y,ROP_CPY, 4);
@@ -274,7 +275,7 @@ void drawBox(unsigned char x, unsigned char y, unsigned char w, unsigned char h)
   y+=8;
   // Bottom Corners
   hires_putc(x,y,ROP_CPY, 0x3d);hires_putc(x+w+1,y,ROP_CPY, 0x3e);
-  
+
 
 }
 
@@ -297,7 +298,7 @@ void drawLogo() {
 
 
 void resetGraphics() {
- 
+
 }
 
 void initGraphics() {

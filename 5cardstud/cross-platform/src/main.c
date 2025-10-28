@@ -7,7 +7,6 @@
 
 #ifdef _CMOC_VERSION_
 #include "coco/coco_bool.h"
-#include "cardgame.h"
 #else
 #include <stdlib.h>
 #include <stdint.h>
@@ -39,7 +38,7 @@ ClientState clientState;
 
 
 // State helper vars
-int inputKey;
+char inputKey;
 unsigned char playerCount, prevPlayerCount, validMoveCount, prevRound, tableCount, currentCard, cardIndex, xOffset, fullFirst, cursorX, cursorY, waitCount, wasViewing;
 signed char inputDirX, inputDirY;
 uint16_t prevPot, maxJifs;
@@ -62,18 +61,15 @@ int main(void)
 #else
 void main(void)
 #endif /* _CMOC_VERSION_ */
-{
+{ 
+  //unsigned char i;while (1) {if (kbhit()) {inputKey = cgetc(); printf("\nKEY: %u", inputKey);}for(i=0;i<10;i++){pause(2);printf(".");}}
+  loadPrefs();
   initGraphics();
   initSound();
-
-#ifdef _CMOC_VERSION_
-  network_init();
-#endif
+  
 #ifdef USE_PLATFORM_SPECIFIC_INPUT
   initPlatformKeyboardInput();
 #endif
-
-  loadPrefs();
 
   showWelcomScreen();
   showTableSelectionScreen();
@@ -102,9 +98,7 @@ void main(void)
 
 
   }
-
 #ifdef _CMOC_VERSION_
-    closeCardGame();
   return 0;
-#endif /* CMOC_VERSION_  */
+#endif
 }

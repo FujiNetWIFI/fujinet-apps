@@ -31,6 +31,8 @@
 #include <coco.h>
 #define true 1
 #define false 0
+char cgetc(void);
+unsigned char kbhit(void);
 #else
 #include <stdbool.h>
 #include <stdint.h>
@@ -43,17 +45,27 @@ void pause(unsigned char frames) {
 }
 
 void clearCommonInput() {
-  inputTrigger=inputKey=inputDirY=inputDirX=_lastJoy=_joy=0;
+    inputTrigger=0;
+    inputKey=0;
+    inputDirX=0;
+    inputDirY=0;
+    _lastJoy=0;
+    _joy=0;
+
 #ifndef USE_PLATFORM_SPECIFIC_INPUT
-  while (kbhit())
+  while (kbhit()) {
     cgetc();
+  }
 #else
   //while (!getPlatformKey());
 #endif
 }
 
 void readCommonInput() {
-  inputTrigger=inputKey=inputDirX=inputDirY=0;
+  inputTrigger=0;
+  inputKey=0;
+  inputDirX=0;
+  inputDirY=0;
 
   _joy = readJoystick();
 
@@ -76,7 +88,6 @@ void readCommonInput() {
     return;
   }
 
-  inputKey=0;
 
 #ifndef USE_PLATFORM_SPECIFIC_INPUT
   if (!kbhit())
@@ -127,13 +138,14 @@ void applyPrefs() {
 }
 
 void loadPrefs() {
+  
   read_appkey(AK_CREATOR_ID, AK_APP_ID, AK_KEY_PREFS, tempBuffer);
 
   if (strlen(tempBuffer)==0) {
     // Default all prefs to 1
     memset(prefs,1,3);
   } else {
-    strcpy(prefs, tempBuffer);
+    strncpy(prefs, tempBuffer,3);
   }
 
   //setSound(prefs[PREF_SOUND]==1);
@@ -144,3 +156,4 @@ void savePrefs() {
   prefs[3] = 0; // Terminate prefs end as a string
   write_appkey(AK_CREATOR_ID, AK_APP_ID, AK_KEY_PREFS, prefs);
 }
+

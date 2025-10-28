@@ -29,7 +29,7 @@ typedef union {
         unsigned char length;
         unsigned char reserved;
         unsigned char value[MAX_APPKEY_LEN];
-        
+
     } read;
     struct
     {
@@ -53,6 +53,6 @@ void read_appkey(unsigned int creator_id, unsigned char app_id, unsigned char ke
  * @param key_id The Key ID ($00-$FF)
  * @param Data string to write (64 chars max)
  */
-void write_appkey(unsigned int creator_id, unsigned char app_id, unsigned char key_id, char *data);
+void write_appkey(unsigned int creator_id, unsigned char app_id, unsigned char key_id, const char *data);
 
 #endif /* APPKEY_H */

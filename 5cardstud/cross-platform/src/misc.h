@@ -2,8 +2,8 @@
 #define MISC_H
 
 /* To test the game:
- * VICE - 
- *  1. In VI E, point DRIVE 11 to a local folder
+ * VICE -
+ *  1. In VICE, point DRIVE 11 to a local folder
  *  2. Edit /support/c64/emulator/fuji_mock_network.py to point to that same folder and run it
  *  3. Uncomment the USE_EMULATOR define below. */
 
@@ -45,10 +45,14 @@
 #define AK_KEY_PREFS 0            // Preferences
 
 #define PREF_HELP 0  // 1/2 seen help screen no/yes
-#define PREF_COLOR 1 // 1/2 - Color mode mono/color
+#define PREF_COLOR 1 // 1/2 - Color mode (platform specific)
 //#define PREF_SOUND 2 // 1/2 - Sound Enabled yes/no
 
 #ifdef __CC65__
+#define _Packed
+#endif
+
+#ifdef _CMOC_VERSION_
 #define _Packed
 #endif
 
@@ -97,7 +101,7 @@ typedef union {
 } ClientState;
 
 
-extern int inputKey;
+extern char inputKey;
 extern unsigned char prevPlayerCount, prevRound, currentCard, cardIndex, xOffset, fullFirst, cursorX, cursorY, waitCount, wasViewing;
 extern signed char inputDirX, inputDirY;
 

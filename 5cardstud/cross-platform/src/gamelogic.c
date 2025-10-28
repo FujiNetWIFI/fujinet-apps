@@ -19,6 +19,22 @@
 #include "screens.h"
 #include "platform-specific/appkey.h"
 
+extern unsigned char redrawGameScreen;
+#ifndef POT_Y_MODIFIER
+#define POT_Y_MODIFIER 0
+#endif
+
+#ifndef STATUS_TIMER_WIDTH
+#define STATUS_TIMER_WIDTH 2
+#endif
+
+#ifndef PLAYER_MOVE_START_X
+#define PLAYER_MOVE_START_X 1
+#endif
+
+#ifndef LEFT_JUSTIFY_PLAYER_PURSE
+#define LEFT_JUSTIFY_PLAYER_PURSE 0
+#endif
 
 void progressAnim(unsigned char y) {
   for(i=0;i<3;++i) {
@@ -29,11 +45,13 @@ void progressAnim(unsigned char y) {
 }
 
 void drawPot() {
-  drawBox(WIDTH/2-3,11,4,1);
-  drawChip(WIDTH/2-2,12);
 
+  if (redrawGameScreen) {
+    drawBox(WIDTH/2-3,11+POT_Y_MODIFIER,4,1);
+    drawChip(WIDTH/2-2,12+POT_Y_MODIFIER);
+  }
   itoa(state.pot, tempBuffer, 10);
-  drawText(WIDTH/2-(state.pot>99),12, tempBuffer);
+  drawText(WIDTH/2-(state.pot>99),12+POT_Y_MODIFIER, tempBuffer);
 }
 
 void resetStateIfNewGame() {
@@ -42,8 +60,9 @@ void resetStateIfNewGame() {
 
   // Reset status bar and vars for a new game
   if (prevRound != 99) {
-   // @SetStatusBarHeight 1  
-   clearStatusBar(); 
+
+   // @SetStatusBarHeight 1
+   clearStatusBar();
   } else {
 
     // Force empty screen if coming from another screen.
@@ -58,7 +77,11 @@ void resetStateIfNewGame() {
   cursorY=246;
   cursorX=128;
   prevPot=0;
-  
+  if (!redrawGameScreen) {
+    redrawGameScreen=1;
+    resetScreen();
+  }
+
   // If the round is already past 1, we are joining a game in progress. Skip animation this update
   if (state.round>1)
     noAnim=1;
@@ -66,7 +89,7 @@ void resetStateIfNewGame() {
 
 
 void drawNamePurse() {
-  
+
   for (i=0;i<state.playerCount;i++) {
     // Print name, left or right justified based on direction
     y = playerY[i]-1;
@@ -76,9 +99,9 @@ void drawNamePurse() {
 
     if (i>0 || state.viewing) {
       xx=x;
-     
+
       // Reverse print right side players
-      if (playerDir[i]<0) 
+      if (playerDir[i]<0)
         xx-=(unsigned char)strlen(state.players[i].name)-1;
 
       drawText(xx, y, state.players[i].name);
@@ -90,25 +113,42 @@ void drawNamePurse() {
         cursorY=y;
       }
     } else {
-      drawText(x-5, playerY[i]+2, (const char *)" YOU");
+      // Draw YOU player name
+      #if WIDTH>=40
+        drawText(x-5, playerY[i]+2, (const char *)" YOU");
+      #else
+        // Squeezed for horizontal space, so shift above cards
+        // drawText(x+3, playerY[i]-1, (const char *)" YOU");
+      #endif
     }
 
     // Print purse (chip count)
     x++;
     y--;
-   
+
+    // Override Purse position for YOU player
     if (i==0) {
-      x-=2;
-      y+=3;
+      #if WIDTH>=40
+        x-=2;
+        y+=3;
+      #else
+        x+=6*(LEFT_JUSTIFY_PLAYER_PURSE==0);
+        y+=1;
+      #endif
     }
-    
+
     itoa(state.players[i].purse, tempBuffer, 10);
 
-    if (playerDir[i]<0 || i==0)
+    if (playerDir[i]<0 || i==LEFT_JUSTIFY_PLAYER_PURSE) {
       x-=(unsigned char)strlen(tempBuffer);
+      drawText(x-2,y," "); // Cover case when chip count drops from 100 to 99
+    } else {
+      drawText(x+strlen(tempBuffer),y," "); // Cover case when chip count drops from 100 to 99
+    }
 
     drawText(x,y, tempBuffer);
     drawChip(x-1,y);
+    
   }
 }
 
@@ -123,22 +163,32 @@ void drawBets() {
     // Draw bet amount
     if (state.players[i].bet>0) {
       x= playerX[i]+playerBetX[i]+1;
-      
+
       itoa(state.players[i].bet, tempBuffer, 10);
-      if (playerDir[i]<0) 
+      if (playerDir[i]<0)
         x-=(unsigned char)strlen(tempBuffer)+1;
 
       drawText(x, y, tempBuffer);
       drawChip(x-1,y );
+    } else {
+      
     }
 
+    #if WIDTH>=40
     // Draw Move
     x= playerX[i]+playerBetX[i];
     y--;
+    #if WIDTH<40
+    if (state.players[i].move[4]) {
+      state.players[i].move[4]=0;
+    }
+    #endif
+      
     if (playerDir[i]<0)
-      x-=(unsigned char)strlen(state.players[i].move);  
- 
+      x-=(unsigned char)strlen(state.players[i].move);
+
     drawText(x, y, state.players[i].move);
+    #endif
 
   }
 }
@@ -155,16 +205,16 @@ void drawCards(bool finalFlip) {
 
   if (state.round<1)
     return;
-  
-  
-  // Check that at least players are still in the final round, otherwise 
+
+
+  // Check that at least players are still in the final round, otherwise
   // if everyone folded, the winning player does not need to flip/reveal their hand.
   if (state.round == 5) {
     h=0;
     for (i=0;i<state.playerCount;i++)
       if (state.players[i].status == 1)
         ++h;
-    
+
     if (h<2) {
       finalFlip = false;
       shouldMaskPlayerCard = true;
@@ -176,37 +226,38 @@ void drawCards(bool finalFlip) {
 
 
   while (cardIndex <= state.round) {
-    doAnim = state.round<5 && !noAnim && cardIndex >= currentCard;
-    if (doAnim) 
-      disableDoubleBuffer();
     
+    doAnim = state.round<5 && !noAnim && cardIndex >= currentCard;
+    if (doAnim)
+      disableDoubleBuffer();
+
     //doAnim = !noAnim && cardIndex >= currentCard;
     if (doAnim)
       pause(20);
-    
+
     cardIndex++;
     j=cardIndex*2-1;
-    
+
     for (h=1;h<=state.playerCount;h++) {
       i = h % state.playerCount;
       if (strlen(state.players[i].hand)>j) {
         fullFirst = i==0 && (!state.viewing || finalFlip);
-     
+
         hand = state.players[i].hand+j-1;
         if (finalFlip && j==1 && i>0)
-          hand="??";
+            hand=(char *)"??";
 
         drawCard(
-          playerX[i]+((!fullFirst)*xOffset+(fullFirst)*(j-1))*playerDir[i], 
+          playerX[i]+((!fullFirst)*xOffset+(fullFirst)*(j-1))*playerDir[i],
           playerY[i],
-          hand[0]!='?' || state.players[i].status != 1 || doAnim ? FULL_CARD : playerDir[i]>0 ? PARTIAL_LEFT : PARTIAL_RIGHT, 
+          hand[0]!='?' || state.players[i].status != 1 || doAnim ? FULL_CARD : playerDir[i]>0 ? PARTIAL_LEFT : PARTIAL_RIGHT,
           hand,
-          j==1 && i==0 && (state.round < 5 || shouldMaskPlayerCard)); 
-        
+          j==1 && i==0 && (state.round < 5 || shouldMaskPlayerCard));
+
         if (doAnim) {
-#ifndef DISABLE_SOUND    
+
           soundDealCard();
-#endif          
+
           pause(cardIndex == 1 ? 1 : 10);
         }
       }
@@ -217,6 +268,7 @@ void drawCards(bool finalFlip) {
     // Apple 2 doesn't render half cards correctly - rather, the offset cards switch colors, so always_render_full_cards is true for now
     if (always_render_full_cards || xOffset>1 || (state.round==5 && !finalFlip && !doNotFlipCards))
       xOffset++;
+    
   }
 
   if (finalFlip) {
@@ -230,17 +282,17 @@ void drawCards(bool finalFlip) {
       // Don't flip a player that doesn't have a visible hand
       if (state.players[i].status != 1 || state.players[i].hand[0]=='?')
         continue;
-      
+
       for (j=1;j<=9; j+=2) {
         drawCard(playerX[i]+(j-1)*playerDir[i], playerY[i], FULL_CARD,state.players[i].hand+j-1, false);
       }
-#ifndef DISABLE_SOUND    
+
       soundDealCard();
-#endif      
+
       pause(35);
     }
   }
-  
+
   drawBuffer();
   enableDoubleBuffer();
   currentCard = cardIndex;
@@ -257,19 +309,19 @@ void checkIfSpectatorStatusChanged() {
     drawBuffer();
     pause(80);
   } else if (
-    state.players[0].status == 0 || 
+    state.players[0].status == 0 ||
     (state.round == 1 && state.players[0].status == 1 && state.activePlayer != 0 )
     ) {
-    /* Display intro text if player is joining the table on 
+    /* Display intro text if player is joining the table on
      * the opening round or sitting down to wait for the next round.
      * Otherwise, they are re-joining due to connection error, so we do not delay
      */
 
-    drawStatusText("YOU SIT DOWN AT THE TABLE");
+    centerStatusText("YOU SIT DOWN AT THE TABLE");
     drawBuffer();
-#ifndef DISABLE_SOUND    
+
     soundJoinGame();
-#endif    
+
     pause(50);
   }
 }
@@ -277,16 +329,16 @@ void checkIfSpectatorStatusChanged() {
 void checkIfPlayerCountChanged() {
   if (state.playerCount == prevPlayerCount)
     return;
-  
+
   // Handle if player joins mid game
   if (state.playerCount>1 && prevPlayerCount > 0) {
     if (state.playerCount < prevPlayerCount) {
-      
-      drawStatusText("A PLAYER LEFT THE TABLE");    
+
+      drawStatusText("A PLAYER LEFT THE TABLE");
       drawBuffer();
-#ifndef DISABLE_SOUND    
+
       soundPlayerLeft();
-#endif
+
       // for j=8 to 2 step -2
       //   sound 1,255-j*j,10,j:pause 2:sound:pause 8
       // next
@@ -294,22 +346,22 @@ void checkIfPlayerCountChanged() {
       strcpy(state.lastResult, "A NEW PLAYER JOINS THE TABLE");
       drawStatusText(state.lastResult);
       drawBuffer();
-#ifndef DISABLE_SOUND    
+
       soundPlayerJoin();
-#endif      
+
     }
-    
+
     pause(40);
     if (state.round > 1)
       noAnim = true;
   }
 
   prevPlayerCount = state.playerCount;
-  
+
   // Don't shuffle player locations until multple players exist
   if (state.playerCount<2)
     return;
-  
+
   i=0;
   k=(state.playerCount-1)*8;
   for (j=(state.playerCount-2)*8;j<k;j++) {
@@ -327,12 +379,12 @@ void drawStatusTimeLeft() {
   drawStatusTimer();
   tempBuffer[0]=' ';
   itoa(state.moveTime, tempBuffer+1, 10);
-  drawStatusTextAt( (unsigned char)(WIDTH-strlen(tempBuffer)-2), tempBuffer);
+  drawStatusTextAt( (unsigned char)(WIDTH-strlen(tempBuffer)-STATUS_TIMER_WIDTH), tempBuffer);
   drawBuffer();
 }
 
 void highlightActivePlayer() {
- if (state.activePlayer>0 && state.playerCount>1) { 
+ if (state.activePlayer>0 && state.playerCount>1) {
    i=(unsigned char)strlen(state.players[state.activePlayer].name);
     for (j=2;j<=i;j++) {
       drawLine(cursorX, cursorY+1, j);
@@ -349,15 +401,25 @@ void animateChipsToPotOnRoundEnd() {
   pause(50);
 
   // Hide moves
+  #if WIDTH>=40
   for (i=0;i<state.playerCount;i++) {
     y = playerY[i]+playerBetY[i];
     x = playerX[i]+playerBetX[i];
 
     if (playerDir[i]<0)
-      x-=5;  
-    
+    #if WIDTH>=40
+      x-=5;
+    #else
+      x-=4;
+    #endif
+
+    #if WIDTH>=40
     drawText(x, y, "     ");
+    #else
+    drawText(x, y, "    ");
+    #endif
   }
+  #endif
 
   drawBuffer();
   pause(30);
@@ -373,14 +435,14 @@ void animateChipsToPotOnRoundEnd() {
   for (i=0;i<state.playerCount;i++) {
     y = playerY[i]+playerBetY[i]+1;
     x= playerX[i]+playerBetX[i];
-    
-    if (playerDir[i]<0) 
+
+    if (playerDir[i]<0)
       x-=3;
 
     drawText(x, y, "   ");
-#ifndef DISABLE_SOUND    
+
     soundTakeChip(i);
-#endif    
+
   }
 
   drawPot();
@@ -394,7 +456,7 @@ void animateChipsToPotOnRoundEnd() {
 void drawGameStatus() {
   if (state.activePlayer == 0)
     return;
-  
+
   if (state.activePlayer>0) {
     strcpy(tempBuffer,"WAITING ON ");
     strcat(tempBuffer, state.players[state.activePlayer].name);
@@ -403,25 +465,24 @@ void drawGameStatus() {
   } else if (state.activePlayer< 0 && (state.round == 5 || state.round == 0)) {
     // End of (or in between) games
     drawStatusText(state.lastResult);
-    
-    
+
+
     if (state.round==5 && prevRound != state.round) {
       drawBuffer();
-#ifndef DISABLE_SOUND    
+
       soundGameDone();
-#endif      
+
       pause(30);
     }
   }
 
 
   // Waiting for a player to join - show animation
-  if (state.round == 0) {  
-    drawStatusTextAt(30+waitCount," ");
+  if (state.round == 0) {
     waitCount = (waitCount + 1) % 3;
-    drawStatusTextAt(30+waitCount,".");
+    drawStatusTextAt(26+waitCount," .  ");
     pause(40);
-  } 
+  }
 
 }
 
@@ -431,12 +492,12 @@ void requestPlayerMove() {
   if (state.viewing || state.activePlayer != 0)
     return;
 
-  // Default move cursor to second position (1) if possible 
+  // Default move cursor to second position (1) if possible
   cursorX = state.validMoveCount>1;
 
   // Draw the moves on the status bar
   clearStatusBar();
-  x=1;
+  x=PLAYER_MOVE_START_X;
   for (i=0;i<state.validMoveCount;i++) {
     moveLoc[i] = x;
     drawStatusTextAt(x, state.validMoves[i].name);
@@ -452,7 +513,7 @@ void requestPlayerMove() {
   // Zoom in the cursor
   i=(unsigned char)strlen(state.validMoves[cursorX].name);
   h=moveLoc[cursorX];
- 
+
 
 
 // Animate the line. If needed, can add #if around instead
@@ -468,33 +529,30 @@ void requestPlayerMove() {
 //}
 
   drawLine(h,HEIGHT-1,i);
-
-#ifndef DISABLE_SOUND    
   soundMyTurn();
-#endif
 
-  resetTimer();
 
-  maxJifs = 60*state.moveTime;
+  maxJifs = 60;
+  maxJifs *=state.moveTime;
   waitCount=0;
   clearCommonInput();
+  resetTimer();
 
   // Move selection loop
   while (state.moveTime>0 && !inputTrigger) {
     waitvsync();
-    
-    // Tick counter once per second   
+
+    // Tick counter once per second
     if (++waitCount>2) {
       waitCount=0;
       i = (unsigned char)((maxJifs-getTime())/60);
       if (i!= state.moveTime) {
         state.moveTime =i;
         drawStatusTimeLeft();
-#ifndef DISABLE_SOUND    
         soundTick();
-#endif        
+
       }
-    } 
+    }
 
     // Move cursor, retricting to bounds
     readCommonInput();
@@ -504,17 +562,17 @@ void requestPlayerMove() {
       if (cursorX<state.validMoveCount) {
         //drawStatusTextAt(moveLoc[cursorX-inputDirX]-1, " ");
         //drawStatusTextAt(moveLoc[cursorX]-1, "+");
-       
+
         hideLine(moveLoc[cursorX-inputDirX],HEIGHT-1,(unsigned char)strlen(state.validMoves[cursorX-inputDirX].name));
         drawLine(moveLoc[cursorX],HEIGHT-1,(unsigned char)strlen(state.validMoves[cursorX].name));
-#ifndef DISABLE_SOUND    
+
         soundCursor();
-#endif        
+
       } else {
         cursorX-=inputDirX;
-#ifndef DISABLE_SOUND    
+
         soundCursorInvalid();
-#endif        
+
       }
       getTime();
     }
@@ -536,14 +594,14 @@ void requestPlayerMove() {
     clearStatusBar();
     drawStatusTextAt(moveLoc[cursorX], state.validMoves[cursorX].name);
     drawBuffer();
-#ifndef DISABLE_SOUND    
-    soundSelectMove();
-#endif    
 
-    // For some unknown reason, if I don't delay for a bit here, 
+    soundSelectMove();
+
+
+    // For some unknown reason, if I don't delay for a bit here,
     // the selectMove sound plays twice in the AppleWin emulator.
-    pause(30); 
-    
+    pause(30);
+
   }
 
 }
@@ -555,4 +613,3 @@ void clearGameState() {
   wasViewing = 255;
   waitCount = -1;
 }
-

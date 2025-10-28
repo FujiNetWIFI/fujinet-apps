@@ -14,19 +14,20 @@
 #include "../misc.h"
 
 /// @brief Retrieve a json parsed url response
-/// @param url 
+/// @param url
 /// @return response length
 uint16_t getJsonResponse(char *url, unsigned char *buffer, uint16_t max_len) {
   static uint16_t count;
   network_open(url, OPEN_MODE_HTTP_GET, OPEN_TRANS_NONE);
   network_json_parse(url);
-  count = network_json_query(url, "", buffer);
+  count = network_json_query(url, "", (char *)buffer);
   network_close(url);
+  (void)max_len;
   return count;
 }
 
 /// @brief Retrieve the response
-/// @param url 
+/// @param url
 /// @return response length
 uint8_t getResponse(char *url, unsigned char *buffer, uint16_t max_len) {
   static int16_t count;

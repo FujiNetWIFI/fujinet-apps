@@ -3,45 +3,54 @@
 /*
   Platform specific utilities that don't fit in any category
 */
+#include <cmoc.h>
 #include <coco.h>
+#include "hires.h"
 
 void resetTimer()
 {
+  setTimer(0);
 }
 
 int getTime()
 {
-  return 0;
+  return getTimer();
 }
 
 void quit()
 {
+  pmode(0, 0x400);
+  pcls(0x60);
+  screen(0,0);
+  memset(0x200,0,0x200);
+  memset(0x600,0,0x1200);
+  exit(0);
 }
 
-static char lastchar;
+int lastCoCoKey=0;
 
-// lastchar is only set by kbhit, we're basically handling the case
-// where that key picked up by kbhit doesn't get lost.
-char cgetc() {
-  char c;
-  if (lastchar==0)
-  {
-    do{
-      c= inkey();
-    } while(c==0);
-    return c;
+unsigned char kbhit (void) {
+    return (char)(lastCoCoKey || (lastCoCoKey=inkey()) || (lastCoCoKey=inkey()));
+}
+
+char cgetc (void) {
+  int key=lastCoCoKey;
+
+  lastCoCoKey=0;
+
+  while (!key) {
+    key=inkey();
   }
-  c= lastchar;
-  lastchar= 0;
-  return(c);
+
+  return (char)key;
 }
 
-char kbhit() {
-  char c;
 
-  c= inkey();
-  lastchar= c;
-  return(c);
+void waitvsync() {
+  uint16_t i=getTimer();
+  while (i==getTimer()) {
+    if (!lastCoCoKey)
+      lastCoCoKey=inkey();
+  }
 }
-
 #endif

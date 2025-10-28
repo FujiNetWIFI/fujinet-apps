@@ -19,6 +19,7 @@ void playNote(unsigned f) {
    SID.v1.ctrl = 0x11;
    pause(delay);
    SID.v1.ctrl = 0x10;
+   (void)i;
 }
 
 void playNoise(unsigned f) {
@@ -27,6 +28,7 @@ void playNoise(unsigned f) {
    SID.v2.ctrl = 0x81;
    pause(delay);
    SID.v2.ctrl = 0x80;
+   (void)i;
 }
 
 void initSound() {
