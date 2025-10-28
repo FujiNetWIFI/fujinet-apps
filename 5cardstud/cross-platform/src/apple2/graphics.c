@@ -176,7 +176,7 @@ void resetScreen() {
 }
 
 void drawCardAt(unsigned char x, unsigned char y, unsigned char partial, const char* s, bool isHidden) {
-  static unsigned char val, red, i, suit;
+  static unsigned char val, red, suit;
   static unsigned mid;
   mid = isHidden ? 0x7D7E : 0x0900;
   //mid = 0x0900;
@@ -224,7 +224,6 @@ void drawCardAt(unsigned char x, unsigned char y, unsigned char partial, const c
   hires_Mask(x+1,y,1,1, ROP_CONST(0b00111111));
 
   (void)partial;
-  (void)i;
 }
 
 void drawCard(unsigned char x, unsigned char y, unsigned char partial, const char* s, bool isHidden) {

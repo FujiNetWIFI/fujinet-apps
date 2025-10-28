@@ -302,6 +302,11 @@ void drawCards(bool finalFlip) {
 void checkIfSpectatorStatusChanged() {
   if (state.viewing == wasViewing)
     return;
+
+  // Temp hack due to server not always sending correct viewing flag when not full
+  if (state.playerCount<8)
+    state.viewing=0;
+
   wasViewing = state.viewing;
 
   if (state.viewing) {

@@ -199,7 +199,7 @@ void showPlayerNameScreen() {
   i=(unsigned char)strlen(playerName);
 
   clearCommonInput();
-  while (!inputFieldCycle(WIDTH/2-PLAYER_NAME_MAX/2, 17, PLAYER_NAME_MAX, (uint8_t *)playerName)) ;
+  while (!inputFieldCycle(WIDTH/2-PLAYER_NAME_MAX/2, 17, PLAYER_NAME_MAX, playerName)) ;
 
   enableDoubleBuffer();
   for (y=13;y<19;++y)

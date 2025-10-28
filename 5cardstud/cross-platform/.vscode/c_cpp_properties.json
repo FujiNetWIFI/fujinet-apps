@@ -2,7 +2,9 @@
     "configurations": [
         {
             "defines": [
-                "__APPLE2__"
+                //"__APPLE2__"
+                //"_CMOC_VERSION_"
+                "__PLUS4__"
             ]
         }
     ],

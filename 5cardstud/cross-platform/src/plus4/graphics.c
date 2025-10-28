@@ -78,7 +78,7 @@ void clearStatusBar()
     memset((unsigned char *)SCREEN_LOC+920,0x80,80);
 }
 
-void drawStatusTextAt(unsigned char x, char* s)
+void drawStatusTextAt(unsigned char x, const char* s)
 {
     static unsigned char j,split;
     SET_COL(COL_BLACK);
@@ -105,7 +105,7 @@ void drawStatusTextAt(unsigned char x, char* s)
     }
 }
 
-void drawStatusText(char* s)
+void drawStatusText(const char* s)
 {
     clearStatusBar();
     drawStatusTextAt(0, s);

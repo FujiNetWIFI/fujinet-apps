@@ -1,9 +1,12 @@
 {
 	"label": "Build",
 	"type": "shell",
-	//"command": "make clean test size",
-	//"command": "make -f Makefile.adam",
-	"command": "make clean test size",
+	//"command": "make clean test", // C64 (CC65 general)
+    //"command": "cd support/apple2/gen;make;cd ../../../;make clean test", // Apple 2
+	"command": "make -f Makefile.coco",
+    //"command": "make -f Makefile.adam",
+	
+	
 	"group": {
 		 "kind": "build",
 		 "isDefault": true
