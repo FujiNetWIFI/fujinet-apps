@@ -36,7 +36,9 @@ void showInGameMenuScreen();
 void showPlayerNameScreen();
 
 /// @brief Handles available key strokes for the defined input box (player name and chat). Returns true if user hits enter
-
 bool inputFieldCycle(uint8_t x, uint8_t y, uint8_t max, char* buffer);
+
+/// @brief Centers status text in the status bar
+void centerStatusText(const char * text);
 
 #endif /*SCREENS_H*/

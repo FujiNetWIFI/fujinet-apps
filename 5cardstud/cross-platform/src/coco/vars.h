@@ -7,6 +7,8 @@
 
 #define WIDTH 32
 #define HEIGHT 24
+
+#define SINGLE_BUFFER
 #define HIRES_Y 1
 #define POT_Y_MODIFIER -1
 #define STATUS_TIMER_WIDTH 1

@@ -399,6 +399,10 @@ void showTableSelectionScreen() {
 /// @brief Shows main game play screen (table and cards)
 void showGameScreen() {
 
+#ifndef SINGLE_BUFFER
+  redrawGameScreen=1;
+#endif
+
   checkIfSpectatorStatusChanged();
   checkIfPlayerCountChanged();
 
@@ -483,7 +487,7 @@ void showInGameMenuScreen() {
           // Inform server player is leaving
           apiCall("leave");
           progressAnim(12);
-
+          
           //  Clear server app key in case of reboot
           write_appkey(AK_LOBBY_CREATOR_ID,  AK_LOBBY_APP_ID, AK_LOBBY_KEY_SERVER, "");
 
