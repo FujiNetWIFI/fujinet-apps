@@ -460,16 +460,22 @@ typedef struct {
   if (state.playerCount>1) {
     drawNamePurse();
     drawBets();
+#ifdef SINGLE_BUFFER
     if (state.round < 5) {
       drawCards(false);
     }
+#else
+    drawCards(false);
+#endif
   }
 
   drawGameStatus();
   drawBuffer();
   highlightActivePlayer();
 
+#ifdef SINGLE_BUFFER
   redrawGameScreen=0;
+#endif
   prevRound = state.round;
 }
 

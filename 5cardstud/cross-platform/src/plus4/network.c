@@ -40,10 +40,10 @@ int getResponse(char *url, unsigned char *buffer, uint16_t max_len)
 {
   int16_t count;
   int8_t  i, wait;
-
+  
   // Delete existing file
   cbm_open(15,11,15, "s:vice-in"); 
-
+    
   // Write command file (currently just the url )
   cbm_open(LFN,11,1,"vice-out"); 
   cbm_write(LFN, url, strlen(url)); 
@@ -62,15 +62,16 @@ int getResponse(char *url, unsigned char *buffer, uint16_t max_len)
     }
 
     // Short delay
-    for (i=0;i<10;i++) { 
-      waitvsync(); 
-    } 
+    pause(10);
 
     // Check if file exists by renaming it
     count = cbm_open(15,11,15, "r0:vice-out=vice-out"); 
     cbm_close(15); 
   } 
 
+  // Short delay
+  pause(20);
+    
   // Read the response into the buffer 
   cbm_open(LFN,11,0,"vice-in"); 
   count = cbm_read(LFN,buffer, max_len); 

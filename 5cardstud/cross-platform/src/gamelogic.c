@@ -413,9 +413,9 @@ void animateChipsToPotOnRoundEnd() {
 
     if (playerDir[i]<0)
     #if WIDTH>=40
-      x-=5;
+    x-=5;
     #else
-      x-=4;
+    x-=4;
     #endif
 
     #if WIDTH>=40
@@ -424,6 +424,7 @@ void animateChipsToPotOnRoundEnd() {
     drawText(x, y, "    ");
     #endif
   }
+
   #endif
 
   drawBuffer();
