@@ -395,7 +395,7 @@ void resetGraphics() {
 void setRGB()
 {
     rgb();
-    paletteRGB(0,2,3,0);   // Background
+    //paletteRGB(0,2,3,0);   // Background
     paletteRGB(1,3,3,3);   // card bkg
     paletteRGB(2,0,0,0);   // border/text
     paletteRGB(3,2,0,0);
@@ -404,7 +404,7 @@ void setRGB()
 void setComposite()
 {
     cmp();
-    paletteRGB(0,2,3,0);   // Background
+    //paletteRGB(0,2,3,0);   // Background
     paletteRGB(1,3,3,3);   // card bkg
     paletteRGB(2,0,0,0);   // border/text
 }

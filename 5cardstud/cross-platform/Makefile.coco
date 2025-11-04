@@ -1,4 +1,4 @@
-TARGET_EXEC ?= 5cs
+TARGET_EXEC ?= fcs
 
 BUILD_DIR ?= ./build
 SRC_DIRS ?= ./src
@@ -58,14 +58,14 @@ $(BUILD_DIR)/$(TARGET_EXEC): $(OBJS)
 	writecocofile $(TARGET_EXEC).dsk $(TARGET_EXEC).bin 
 	#cp $(TARGET_EXEC).dsk ~/tnfs/
 	cp $(TARGET_EXEC).dsk ~/Documents/fujinetpc-coco/SD
-	@echo ........................................................................ ;ls -l $(TARGET_EXEC).bin;echo ........................................................................
+	@echo ......... ............................................................... ;ls -l $(TARGET_EXEC).bin;echo ........................................................................
 	
 	# Fast speed: -ui_active and -nothrottle starts the emulator in fast mode to quickly load the app. I then throttle it to 100% speed with a hotkey.
-	cd ~/mame_coco;mame coco -ui_active -nothrottle -window -nomaximize -resolution 1200x1024 -autoboot_delay 2 -nounevenstretch  -autoboot_command "runm\"5cs\n"
-	#cd ~/mame_coco;mame coco3 -ui_active -nothrottle -window -nomaximize -resolution 1300x1024 -autoboot_delay 2 -nounevenstretch  -autoboot_command "runm\"5cs\n"
+	#cd ~/mame_coco;mame coco -ui_active -nothrottle -window -nomaximize -resolution 1200x1024 -autoboot_delay 2 -nounevenstretch  -autoboot_command "runm\"fcs\n"
+	cd ~/mame_coco;mame coco3 -ui_active -nothrottle -window -nomaximize -resolution 1300x1024 -autoboot_delay 2 -nounevenstretch  -autoboot_command "runm\"fcs\n"
 
 	# Start normal speed
-	# cd ~/mame_coco;mame coco -window -nomaximize -resolution 1200x1024 -autoboot_delay 2 -nounevenstretch  -autoboot_command "runm\"5cs\n"
+	# cd ~/mame_coco;mame coco -window -nomaximize -resolution 1200x1024 -autoboot_delay 2 -nounevenstretch  -autoboot_command "runm\"fcs\n"
 	
 # c source
 $(BUILD_DIR)/%.c.o: %.c
@@ -83,8 +83,7 @@ $(BUILD_DIR)/%.s.o: %.s
 clean:
 	$(RM) -r $(TARGET_EXEC)*
 	$(RM) -r $(BUILD_DIR)*
-	cd support/coco/gen;make
-
+	
 -include $(DEPS)
 
 MKDIR_P ?= mkdir -p
