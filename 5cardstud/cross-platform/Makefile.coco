@@ -58,11 +58,15 @@ $(BUILD_DIR)/$(TARGET_EXEC): $(OBJS)
 	writecocofile $(TARGET_EXEC).dsk $(TARGET_EXEC).bin 
 	#cp $(TARGET_EXEC).dsk ~/tnfs/
 	cp $(TARGET_EXEC).dsk ~/Documents/fujinetpc-coco/SD
-	@echo ......... ............................................................... ;ls -l $(TARGET_EXEC).bin;echo ........................................................................
-	
+	@echo ........................................................................ ;ls -l $(TARGET_EXEC).bin;echo ........................................................................
+
+	# Uncomment to auto mount the disk in FujiNet-PC (assume's host 1 is SD)
+	# curl "http://localhost:8000/browse/host/1/fcs.dsk?action=newmount&slot=1&mode=r" >/dev/null
+	# curl "http://localhost:8000/mount?mountall=1&redirect=1" >/dev/null
+
 	# Fast speed: -ui_active and -nothrottle starts the emulator in fast mode to quickly load the app. I then throttle it to 100% speed with a hotkey.
-	#cd ~/mame_coco;mame coco -ui_active -nothrottle -window -nomaximize -resolution 1200x1024 -autoboot_delay 2 -nounevenstretch  -autoboot_command "runm\"fcs\n"
-	cd ~/mame_coco;mame coco3 -ui_active -nothrottle -window -nomaximize -resolution 1300x1024 -autoboot_delay 2 -nounevenstretch  -autoboot_command "runm\"fcs\n"
+	cd ~/mame_coco;mame coco -ui_active -nothrottle -window -nomaximize -resolution 1200x1024 -autoboot_delay 2 -nounevenstretch  -autoboot_command "runm\"fcs\n"
+	#cd ~/mame_coco;mame coco3 -ui_active -nothrottle -window -nomaximize -resolution 1300x1024 -autoboot_delay 2 -nounevenstretch  -autoboot_command "runm\"fcs\n"
 
 	# Start normal speed
 	# cd ~/mame_coco;mame coco -window -nomaximize -resolution 1200x1024 -autoboot_delay 2 -nounevenstretch  -autoboot_command "runm\"fcs\n"
