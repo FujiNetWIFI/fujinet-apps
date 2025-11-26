@@ -29,11 +29,7 @@ int getTime()
 }
 
 void waitvsync() {
-  uint16_t i=getTimer();
-  while (i==getTimer()) {
-    if (!lastCoCoKey)
-      lastCoCoKey=inkey();
-  }
+    asm { sync } // wait for v-sync to change the palette and graphics mode
 }
 
 /// @brief Invokes the CoCo BASIC RUNM command
@@ -108,14 +104,10 @@ void mount() {
 
 void quit()
 {
-  memset(0x400,0x60,32*24);
+  resetGraphics();   
+  memset(0x400,0x60,32*24); // Clear screen
   memcpy((void*)0x0509,(void*)"LOADING", 7);
   memcpy((void*)0x0512,(void*)"LOBBY", 5);
-  
-  waitvsync();
-  pmode(0, 0x400);
-  screen(0,0);
-  
   mount();
 }
 

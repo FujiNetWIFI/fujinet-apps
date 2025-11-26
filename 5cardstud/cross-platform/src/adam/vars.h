@@ -50,19 +50,19 @@
 
 
 // Screen specific player/bet coordinates
-extern const unsigned char playerXMaster[];
-extern const unsigned char playerYMaster[];
+extern unsigned char playerXMaster[];
+extern unsigned char playerYMaster[];
 
-extern const char playerDirMaster[];
-extern const char playerBetXMaster[];
-extern const char playerBetYMaster[];
+extern char playerDirMaster[];
+extern char playerBetXMaster[];
+extern char playerBetYMaster[];
 
 // Simple hard coded arrangment of players around the table based on player count.
 // These refer to index positions in the Master arrays above
 // Downside is new players will cause existing player positions to move.
 
 //                               2                3                4
-extern const char playerCountIndex[];
+extern char playerCountIndex[];
 
 
 #endif /* KEYMAP_H */

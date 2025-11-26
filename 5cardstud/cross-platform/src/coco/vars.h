@@ -5,15 +5,20 @@
 
 // Screen dimensions for platform
 
+#ifndef COCO3 
 #define WIDTH 32
 #define HEIGHT 24
+#define PLAYER_MOVE_START_X 0
+#define LEFT_JUSTIFY_PLAYER_PURSE 99
+#else 
+#define WIDTH 40
+#define HEIGHT 24
+#endif
 
 #define SINGLE_BUFFER
 #define HIRES_Y 1
 #define POT_Y_MODIFIER -1
 #define STATUS_TIMER_WIDTH 1
-#define PLAYER_MOVE_START_X 0
-#define LEFT_JUSTIFY_PLAYER_PURSE 99
 
 #define QUERY_SUFFIX "&be=1" // Big Endian response for CoCo (68000)
 
@@ -56,24 +61,6 @@
 #define ALT_LETTER_START 0x61
 #define ALT_LETTER_END 0x7A
 #define ALT_LETTER_AND 0x5f
-
-/*
- Screen related variables
-*/
-
-// Screen specific player/bet coordinates
-extern const unsigned char playerXMaster[];
-extern const unsigned char playerYMaster[];
-
-extern const char playerDirMaster[];
-extern const char playerBetXMaster[];
-extern const char playerBetYMaster[];
-
-// Simple hard coded arrangment of players around the table based on player count.
-// These refer to index positions in the Master arrays above
-// Downside is new players will cause existing player positions to move.
-
-extern const char playerCountIndex[];
 
 
 

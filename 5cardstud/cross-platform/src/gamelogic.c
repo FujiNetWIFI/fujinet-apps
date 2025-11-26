@@ -170,22 +170,19 @@ void drawBets() {
 
       drawText(x, y, tempBuffer);
       drawChip(x-1,y );
-    } else {
-      
-    }
+    } 
 
     #if WIDTH>=40
     // Draw Move
     x= playerX[i]+playerBetX[i];
     y--;
-    #if WIDTH<40
-    if (state.players[i].move[4]) {
-      state.players[i].move[4]=0;
-    }
-    #endif
       
     if (playerDir[i]<0)
       x-=(unsigned char)strlen(state.players[i].move);
+
+    if (strlen(state.players[i].move)<5) {
+      drawText(playerDir[i]<0 ? x-1 : x + 4,y, " ");   
+    }
 
     drawText(x, y, state.players[i].move);
     #endif
@@ -207,7 +204,7 @@ void drawCards(bool finalFlip) {
     return;
 
 
-  // Check that at least players are still in the final round, otherwise
+  // Check that at least 2 players are still in the final round, otherwise
   // if everyone folded, the winning player does not need to flip/reveal their hand.
   if (state.round == 5) {
     h=0;
@@ -258,7 +255,7 @@ void drawCards(bool finalFlip) {
 
           soundDealCard();
 
-          pause(cardIndex == 1 ? 1 : 10);
+          pause(cardIndex == 1 ? 5 : 10);
         }
       }
     }
@@ -412,17 +409,9 @@ void animateChipsToPotOnRoundEnd() {
     x = playerX[i]+playerBetX[i];
 
     if (playerDir[i]<0)
-    #if WIDTH>=40
-    x-=5;
-    #else
-    x-=4;
-    #endif
-
-    #if WIDTH>=40
-    drawText(x, y, "     ");
-    #else
-    drawText(x, y, "    ");
-    #endif
+        x-=5;
+    
+    drawText(x, y, "     ");    
   }
 
   #endif

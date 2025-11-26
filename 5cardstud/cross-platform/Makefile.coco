@@ -11,11 +11,11 @@ SRCS := $(shell ls $(SRC_DIRS)/*.c) $(shell find $(SRC_DIRS)/coco -name *.c) $(s
 OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
 DEPS := $(OBJS:.o=.d)
 
+# this downloads fujinet-lib and populates FUJINET_LIB_VERSION_DIR and FUJINET_LIB_NAME
+include fujinet-lib.mk
 
-FUJINET_LIB_DIR = ./_libs/fujinet-lib-coco-4.7.9
-FUJINET_LIB = fujinet-coco-4.7.9.lib
-
-LIBS = -L $(FUJINET_LIB_DIR) -l:$(FUJINET_LIB) 
+LIBS = \
+	-L $(FUJINET_LIB_VERSION_DIR) -l:$(FUJINET_LIB_NAME)
 
 #	-L ./src/coco -lfujinet \
 
@@ -24,52 +24,46 @@ PACKAGE = 5CARD
 VERSION = 0.1.00
 TARGET = coco
 
-
 CFLAGS= \
 			--$(TARGET) \
 			--intermediate \
 			--intdir ./intermediates \
-			--stack-space=256 \
-			-fomit-frame-pointer \
-			-DNDEBUG \
-			-I $(FUJINET_LIB_DIR) \
-			-DVERSION=\"$(VERSION)\" \
-			-O2
-# -DDISABLE_GRAPHICS
-#			-I $(BCONTROL_LIB_DIR) \
-
-#			--check-null \
-#			-D_CMOC_CHECK_STACK_OVERFLOW_ --check-stack\
-
+            --no-relocate
+#            -DCOCO3
 
 LDFLAGS= 			--$(TARGET) \
-	-o$(TARGET_EXEC).bin
+	-o$(TARGET_EXEC).bin \
+    --limit=5d00 --org=1000
 
 
 LDFLAGS_TEST=	--$(TARGET) 
 
 INC_DIRS := $(shell find $(SRC_DIRS) -type d)
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
+TARGET_DISK := $(TARGET_EXEC).dsk
+# $(BUILD_DIR)/$(TARGET_EXEC): clean .get_fujinet_lib $(OBJS)
 
-$(BUILD_DIR)/$(TARGET_EXEC): $(OBJS)
+$(BUILD_DIR)/$(TARGET_EXEC): clean $(OBJS)
 	$(CC) $(LDFLAGS) $(OBJS) $(LIBS)
-	$(RM) $(TARGET_EXEC) $(TARGET_EXEC).dsk
-	decb dskini $(TARGET_EXEC).dsk
-	writecocofile $(TARGET_EXEC).dsk $(TARGET_EXEC).bin 
-	#cp $(TARGET_EXEC).dsk ~/tnfs/
-	cp $(TARGET_EXEC).dsk ~/Documents/fujinetpc-coco/SD
+	$(RM) $(TARGET_EXEC) $(TARGET_DISK)
+	decb dskini $(TARGET_DISK)
+	decb copy -t -0 support/coco/autoexec.bas $(TARGET_DISK),AUTOEXEC.BAS
+	writecocofile $(TARGET_DISK) $(TARGET_EXEC).bin 
+#   cp $(TARGET_DISK) ~/tnfs/
+	cp $(TARGET_DISK) ~/Documents/fujinetpc-coco/SD
 	@echo ........................................................................ ;ls -l $(TARGET_EXEC).bin;echo ........................................................................
 
-	# Uncomment to auto mount the disk in FujiNet-PC (assume's host 1 is SD)
-	# curl "http://localhost:8000/browse/host/1/fcs.dsk?action=newmount&slot=1&mode=r" >/dev/null
-	# curl "http://localhost:8000/mount?mountall=1&redirect=1" >/dev/null
+test: $(BUILD_DIR)/$(TARGET_EXEC)
+#   Uncomment to automount the disk in FujiNet-PC (assume's host 1 is SD)
+	curl -s "http://localhost:8000/browse/host/1/fcs.dsk?action=newmount&slot=1&mode=r" >/dev/null
+	curl -s "http://localhost:8000/mount?mountall=1&redirect=1" >/dev/null
 
-	# Fast speed: -ui_active and -nothrottle starts the emulator in fast mode to quickly load the app. I then throttle it to 100% speed with a hotkey.
-	cd ~/mame_coco;mame coco -ui_active -nothrottle -window -nomaximize -resolution 1200x1024 -autoboot_delay 2 -nounevenstretch  -autoboot_command "runm\"fcs\n"
-	#cd ~/mame_coco;mame coco3 -ui_active -nothrottle -window -nomaximize -resolution 1300x1024 -autoboot_delay 2 -nounevenstretch  -autoboot_command "runm\"fcs\n"
+#   Fast speed: -ui_active and -nothrottle starts the emulator in fast mode to quickly load the app. I then throttle it to 100% speed with a hotkey.
+#   cd ~/mame_coco;mame coco -ui_active -nothrottle -window -nomaximize -resolution 1200x1024 -autoboot_delay 2 -nounevenstretch
+	cd ~/mame_coco;mame coco3 -ui_active -nothrottle -window -nomaximize -resolution 1800x1024 -autoboot_delay 2 -nounevenstretch
 
-	# Start normal speed
-	# cd ~/mame_coco;mame coco -window -nomaximize -resolution 1200x1024 -autoboot_delay 2 -nounevenstretch  -autoboot_command "runm\"fcs\n"
+#   Start normal speed
+#   cd ~/mame_coco;mame coco -window -nomaximize -resolution 1200x1024 -autoboot_delay 2 -nounevenstretch  -autoboot_command "runm\"fcs\n"
 	
 # c source
 $(BUILD_DIR)/%.c.o: %.c
@@ -80,13 +74,44 @@ $(BUILD_DIR)/%.c.o: %.c
 # assy source
 $(BUILD_DIR)/%.s.o: %.s
 	$(MKDIR_P) $(dir $@)
-	$(ASM) $(ASFLAGS) -fobj --output=$@ $<
+	$(ASM) -fobj --output=$@ $<
 
 .PHONY: clean
 
 clean:
 	$(RM) -r $(TARGET_EXEC)*
 	$(RM) -r $(BUILD_DIR)*
+	$(RM) -r ./obj
+	$(RM) -r ./intermediates
+    
+LOADER_SRC = support/coco/loader.c
+LOADER_BIN = ./loader.bin
+
+$(LOADER_BIN): $(LOADER_SRC)
+	
+
+# Creates a disk with both COCO 1-2 and COCO 3 versions and a loader that executes the correct one
+# There is probably a more elegant way to do this in make.
+dist: clean
+# Build both versions of the program
+	make -f Makefile.coco TARGET_EXEC="fcs12" TARGET_DISK="fcs.dsk"
+	make -f Makefile.coco CFLAGS="-DCOCO3" BUILD_DIR="./build-coco3" TARGET_EXEC="fcs3" TARGET_DISK="fcs.dsk"
+# Build the loader
+	cmoc -o $(TARGET_EXEC).bin support/coco/loader.c
+# Create the disk with the loader and both versions of the program
+	$(RM) fcs3.dsk
+	decb dskini $(TARGET_DISK)
+	decb copy -t -0 support/coco/autoexec.bas $(TARGET_DISK),AUTOEXEC.BAS
+	writecocofile $(TARGET_DISK) $(TARGET_EXEC).bin
+	writecocofile $(TARGET_DISK) $(TARGET_EXEC)12.bin
+	writecocofile $(TARGET_DISK) $(TARGET_EXEC)3.bin
+# OPTIONAL: Copy/Mount the disk in FujiNet-PC (assume's host 1 is SD)
+	cp $(TARGET_DISK) ~/Documents/fujinetpc-coco/SD
+	curl -s "http://localhost:8000/browse/host/1/fcs.dsk?action=newmount&slot=1&mode=r" >/dev/null
+	curl -s "http://localhost:8000/mount?mountall=1&redirect=1" >/dev/null
+# OPTIONAL - start emulator to test
+	cd ~/mame_coco;mame coco -ui_active -throttle -window -nomaximize -resolution 1200x1024 -autoboot_delay 2 -nounevenstretch
+#	cd ~/mame_coco;mame coco3 -ui_active -throttle -window -nomaximize -resolution 1800x1024 -autoboot_delay 2 -nounevenstretch
 	
 -include $(DEPS)
 

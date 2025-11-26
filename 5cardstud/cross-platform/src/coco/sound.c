@@ -84,6 +84,6 @@ void soundCursorInvalid() {
 }
 
 void soundTakeChip(uint16_t counter) {
-  tone(counter*3,1,4);
+  tone((uint8_t)counter*3,1,4);
 }
 #endif

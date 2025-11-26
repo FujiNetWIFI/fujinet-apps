@@ -130,16 +130,16 @@ extern char prefs[4];
 
 
 // Screen specific player/bet coordinates
-extern const unsigned char playerXMaster[] ;
-extern const unsigned char playerYMaster[] ;
-extern const char playerDirMaster[] ;
-extern const char playerBetXMaster[];
-extern const char playerBetYMaster[] ;
+extern unsigned char playerXMaster[] ;
+extern unsigned char playerYMaster[] ;
+extern char playerDirMaster[] ;
+extern char playerBetXMaster[];
+extern char playerBetYMaster[] ;
 
 // Simple hard coded arrangment of players around the table based on player count.
 // These refer to index positions in the Master arrays above
 // Downside is new players will cause existing player positions to move.
-extern const char playerCountIndex[] ;
+extern char playerCountIndex[] ;
 
 void pause(unsigned char frames);
 void clearCommonInput();
