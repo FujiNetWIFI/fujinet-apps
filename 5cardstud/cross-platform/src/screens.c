@@ -37,6 +37,22 @@ unsigned char y_bump = 1;
 
 #define TABLE_LEFT (WIDTH/2-13)
 
+// For limited height scenarios, set this (e.g. to 3) in platform specific vars.h
+#ifndef TABLE_TOP
+#define TABLE_TOP 5
+#endif
+
+// For limited height scenarios, set this to 1 to remove space between table names in platform specific vars.h
+#ifndef TABLE_ROW_HEIGHT
+#define TABLE_ROW_HEIGHT 2
+#endif
+
+// For limited height scenarios, set this to 0 or 1 in platform specific vars.h
+// Also, "#define SKIP_FIRST_BUMP" in vars.h to avoid extra space at top
+#ifndef HOW_TO_PLAY_ROW_START
+#define HOW_TO_PLAY_ROW_START 3
+#endif
+
 unsigned char redrawGameScreen = 0;
 
 /// @brief Convenience function to draw text centered at row Y
@@ -70,10 +86,13 @@ void showHelpScreen() {
   // This COULD be retrieved from the server, especially if
   // this client were game agnostic.
   resetScreenWithBorder();
-  centerText(3,"HOW TO PLAY 5 CARD STUD");
-  y=4;
   
+  centerText(HOW_TO_PLAY_ROW_START,"HOW TO PLAY 5 CARD STUD");
+  y=HOW_TO_PLAY_ROW_START+1;
+  
+  #ifndef SKIP_FIRST_BUMP
   BUMP_LINE
+  #endif
                   //12345678901234567890123456789012
   y++;centerText(y, "PLAYERS ARE DEALT 5 CARDS OVER");
   y++;centerText(y, "FOUR ROUNDS.  IN EVERY ROUND, ");
@@ -191,18 +210,18 @@ void showPlayerNameScreen() {
 
   drawBuffer();
   disableDoubleBuffer();
-
-  centerText(13, "ENTER YOUR NAME");
-  drawBox(WIDTH/2-PLAYER_NAME_MAX/2-1,16,PLAYER_NAME_MAX+1,1);
-  drawText(WIDTH/2-PLAYER_NAME_MAX/2,17, playerName);
+  
+  centerText(HEIGHT/2, "ENTER YOUR NAME");
+  drawBox(WIDTH/2-PLAYER_NAME_MAX/2-1,HEIGHT/2+2,PLAYER_NAME_MAX+1,1);
+  drawText(WIDTH/2-PLAYER_NAME_MAX/2,HEIGHT/2+3, playerName);
 
   i=(unsigned char)strlen(playerName);
 
   clearCommonInput();
-  while (!inputFieldCycle(WIDTH/2-PLAYER_NAME_MAX/2, 17, PLAYER_NAME_MAX, playerName)) ;
+  while (!inputFieldCycle(WIDTH/2-PLAYER_NAME_MAX/2, HEIGHT/2+3, PLAYER_NAME_MAX, playerName)) ;
 
   enableDoubleBuffer();
-  for (y=13;y<19;++y)
+  for (y=HEIGHT/2;y<HEIGHT/2+5;++y)
     centerText(y, "                 ");
 
   drawBuffer();
@@ -234,7 +253,7 @@ void showWelcomScreen() {
 
   strcpy(tempBuffer, "WELCOME ");
   strcat(tempBuffer, playerName);
-  centerText(13,tempBuffer);
+  centerText(HEIGHT/2,tempBuffer);
   drawBuffer();
   pause(45);
 
@@ -287,9 +306,9 @@ void showTableSelectionScreen() {
     resetScreenWithBorder();
     
     centerText(3, "CHOOSE A TABLE TO JOIN");
-    drawText(TABLE_LEFT,6, "TABLE");
-    drawText(TABLE_LEFT+19,6, "PLAYERS");
-    drawLine(TABLE_LEFT,7,26);
+    drawText(TABLE_LEFT,TABLE_TOP, "TABLE");
+    drawText(TABLE_LEFT+19,TABLE_TOP, "PLAYERS");
+    drawLine(TABLE_LEFT,TABLE_TOP+1,26);
     
     drawBuffer();
     waitvsync();
@@ -303,11 +322,11 @@ void showTableSelectionScreen() {
     if (clientState.tables.count>0) {
       for(i=0;i<clientState.tables.count;++i) {
         table = &clientState.tables.table[i];
-        drawText(TABLE_LEFT,8+i*2, table->name);
-        drawText((unsigned char)(TABLE_LEFT+26-strlen(table->players)), 8+i*2, table->players);
+        drawText(TABLE_LEFT,TABLE_TOP+2+i*TABLE_ROW_HEIGHT, table->name);
+        drawText((unsigned char)(TABLE_LEFT+26-strlen(table->players)), TABLE_TOP+2+i*TABLE_ROW_HEIGHT, table->players);
         
         if (table->players[0]>'0') {
-          drawText((unsigned char)(TABLE_LEFT+24-strlen(table->players)), 8+i*2, "*");  
+          drawText((unsigned char)(TABLE_LEFT+24-strlen(table->players)), TABLE_TOP+2+i*TABLE_ROW_HEIGHT, "*");  
         }
       }
     } else {
@@ -352,14 +371,14 @@ void showTableSelectionScreen() {
 
       if (clientState.tables.count>0 && (!shownChip || inputDirY)) {
 
-        drawText(TABLE_LEFT-1,8+tableIndex*2," ");
+        drawText(TABLE_LEFT-1,TABLE_TOP+2+tableIndex*TABLE_ROW_HEIGHT," ");
         tableIndex+=inputDirY;
         if (tableIndex==255)
           tableIndex=clientState.tables.count-1;
         else if (tableIndex>=clientState.tables.count)
           tableIndex=0;
 
-        drawChip(TABLE_LEFT-1,8+tableIndex*2);
+        drawChip(TABLE_LEFT-1,TABLE_TOP+2+tableIndex*TABLE_ROW_HEIGHT);
 
         soundCursor();
         shownChip=1;
@@ -374,7 +393,7 @@ void showTableSelectionScreen() {
       // Clear screen and write server name
       resetScreenWithBorder();
       clearStatusBar();
-      centerText(15, clientState.tables.table[tableIndex].name);
+      centerText(HEIGHT/2, clientState.tables.table[tableIndex].name);
 
       strcpy(query, "?table=");
       strcat(query, clientState.tables.table[tableIndex].table);
@@ -388,10 +407,10 @@ void showTableSelectionScreen() {
   
   }
 
-  centerText(17, "CONNECTING TO SERVER");
+  centerText(HEIGHT-7, "CONNECTING TO SERVER");
   drawBuffer();
 
-  progressAnim(19);
+  progressAnim(HEIGHT-5);
 
   tableActionJoinServer();
 }
@@ -491,9 +510,9 @@ void showInGameMenuScreen() {
     drawBuffer();
 
     x = WIDTH/2-9;
-    y = HEIGHT/2-4;
+    y = HEIGHT/2-3;
 
-    drawBox(x-3,y-3,22,11);
+    drawBox(x-3,y-2,22,9);
     drawText(x,y,    "  Q: QUIT TABLE");
     drawText(x,y+=2, "  H: HOW TO PLAY");
     drawText(x,y+=2, "  C: COLOR TOGGLE");
