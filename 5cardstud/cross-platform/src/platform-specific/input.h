@@ -11,6 +11,7 @@
 #include "../coco/vars.h"
 #include "../msdos/vars.h"
 #include "../plus4/vars.h"
+#include "../lynx/vars.h"
 
 // Platform specific implementations
 unsigned char readJoystick();

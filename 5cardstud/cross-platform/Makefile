@@ -13,7 +13,7 @@
 # Space or comma separated list of cc65 supported target platforms to build for.
 
 # Supported targets: plus4 c64 apple2 (lowercase!)
-TARGETS := apple2
+TARGETS := lynx
 
 # Name of the final, single-file executable.
 # Default: name of the current dir with target name appended
@@ -24,6 +24,7 @@ ext_plus4 := prg
 ext_c64 := prg
 ext_atari := xex
 ext_apple2 := apl
+ext_lynx := lnx
 
 APPLE2_DIST := _libs/apple2-dist
 APPLE2_DIST_AC := $(APPLE2_DIST)/ac.jar
@@ -245,7 +246,7 @@ ifeq ($(words $(TARGETLIST)),1)
 
 # this downloads and adds fujinet-lib to the path in _libs ignored dir, and adds a dependency to "ALL_TASKS" value to kick it off
 CURRENT_TARGET=$(TARGETLIST)
--include "fujinet-lib.mk"
+#-include "fujinet-lib.mk"
 
 
 # Set SOURCES to something like 'src/foo.c src/bar.s'.
@@ -283,9 +284,9 @@ ifneq ($(word 2,$(CONFIG)),)
 endif
 
 .SUFFIXES:
-.PHONY: all test clean zap love .get_fujinet_lib
+.PHONY: all test clean zap love #.get_fujinet_lib
 
-all: .get_fujinet_lib $(PROGRAM)
+all: $(PROGRAM)
 
 -include $(DEPENDS)
 -include $(STATEFILE)
@@ -396,7 +397,7 @@ endif
 	$(EMUCMD) $<
 	$(POSTEMUCMD)
 
-clean: .get_fujinet_lib
+clean: #.get_fujinet_lib
 	$(call RMFILES,$(OBJECTS))
 	$(call RMFILES,$(DEPENDS))
 	$(call RMFILES,$(REMOVES))

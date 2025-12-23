@@ -102,10 +102,10 @@ void showHelpScreen() {
   centerText(y, "MOVES");
   
   BUMP_LINE        //12345678901234567890123456789012
-  y++;centerText(y, "FOLD  - QUIT THE HAND        ");BUMP_LINE
-  y++;centerText(y, "CHECK - FREE PASS            ");BUMP_LINE
+  y++;centerText(y, "FOLD  - QUIT THE HAND        ");
+  y++;centerText(y, "CHECK - FREE PASS            ");
   y++;centerText(y, "BET / - INCREASE BET. OTHERS ");
-  y++;centerText(y, "RAISE   MUST CALL TO STAY IN ");BUMP_LINE
+  y++;centerText(y, "RAISE   MUST CALL TO STAY IN ");
   y++;centerText(y, "CALL  - MATCH THE CURRENT BET");
 
   CLEAR_BUMP
