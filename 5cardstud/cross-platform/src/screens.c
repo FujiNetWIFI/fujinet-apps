@@ -86,10 +86,10 @@ void showHelpScreen() {
   // This COULD be retrieved from the server, especially if
   // this client were game agnostic.
   resetScreenWithBorder();
-  
+
   centerText(HOW_TO_PLAY_ROW_START,"HOW TO PLAY 5 CARD STUD");
   y=HOW_TO_PLAY_ROW_START+1;
-  
+
   #ifndef SKIP_FIRST_BUMP
   BUMP_LINE
   #endif
@@ -98,9 +98,9 @@ void showHelpScreen() {
   y++;centerText(y, "FOUR ROUNDS.  IN EVERY ROUND, ");
   y++;centerText(y, "PLAYERS BET, CALL, AND RAISE. ");
   y+=2;
-  
+
   centerText(y, "MOVES");
-  
+
   BUMP_LINE        //12345678901234567890123456789012
   y++;centerText(y, "FOLD  - QUIT THE HAND        ");
   y++;centerText(y, "CHECK - FREE PASS            ");
@@ -116,7 +116,7 @@ void showHelpScreen() {
 
   clearCommonInput();
 #ifdef USE_PLATFORM_SPECIFIC_INPUT
-  getPlatformKey();
+  getPlatformKey_helpscreen();
 #else
   cgetc();
 #endif
@@ -167,7 +167,7 @@ bool inputFieldCycle(uint8_t x, uint8_t y, uint8_t max, char* buffer) {
 
   // Process any waiting keystrokes
   #ifdef USE_PLATFORM_SPECIFIC_INPUT
-  inputKey = getPlatformKey();
+  inputKey = getPlatformKey_inputfield(x+curx, y);
   if (inputKey) {
     done=0;
     disableDoubleBuffer();
@@ -210,7 +210,7 @@ void showPlayerNameScreen() {
 
   drawBuffer();
   disableDoubleBuffer();
-  
+
   centerText(HEIGHT/2, "ENTER YOUR NAME");
   drawBox(WIDTH/2-PLAYER_NAME_MAX/2-1,HEIGHT/2+2,PLAYER_NAME_MAX+1,1);
   drawText(WIDTH/2-PLAYER_NAME_MAX/2,HEIGHT/2+3, playerName);
@@ -304,12 +304,12 @@ void showTableSelectionScreen() {
     }
 
     resetScreenWithBorder();
-    
-    centerText(3, "CHOOSE A TABLE TO JOIN");
+
+    centerText(TABLE_TOP-2, "CHOOSE A TABLE TO JOIN");
     drawText(TABLE_LEFT,TABLE_TOP, "TABLE");
     drawText(TABLE_LEFT+19,TABLE_TOP, "PLAYERS");
     drawLine(TABLE_LEFT,TABLE_TOP+1,26);
-    
+
     drawBuffer();
     waitvsync();
 
@@ -324,18 +324,22 @@ void showTableSelectionScreen() {
         table = &clientState.tables.table[i];
         drawText(TABLE_LEFT,TABLE_TOP+2+i*TABLE_ROW_HEIGHT, table->name);
         drawText((unsigned char)(TABLE_LEFT+26-strlen(table->players)), TABLE_TOP+2+i*TABLE_ROW_HEIGHT, table->players);
-        
+
         if (table->players[0]>'0') {
-          drawText((unsigned char)(TABLE_LEFT+24-strlen(table->players)), TABLE_TOP+2+i*TABLE_ROW_HEIGHT, "*");  
+          drawText((unsigned char)(TABLE_LEFT+24-strlen(table->players)), TABLE_TOP+2+i*TABLE_ROW_HEIGHT, "*");
         }
       }
     } else {
       centerText(12, "NO TABLES ARE AVAILABLE");
     }
-    
+
     //drawStatusText(" R+EFRESH  H+ELP  C+OLOR  S+OUND  Q+UIT");
-#if WIDTH>=40 
+#if WIDTH>=40
+#ifdef USE_PLATFORM_SPECIFIC_KEYS
+	platformStatusKeyLegend();
+#else
     drawStatusText("R-EFRESH   H-ELP  C-OLOR   N-AME   Q-UIT");
+#endif
 #else               //12345678901234567890123456789012
     drawStatusText("R-EFRESH   H-ELP   N-AME   Q-UIT");
 #endif
@@ -404,7 +408,7 @@ void showTableSelectionScreen() {
       write_appkey(AK_LOBBY_CREATOR_ID,  AK_LOBBY_APP_ID, AK_LOBBY_KEY_SERVER, tempBuffer);
 
     }
-  
+
   }
 
   centerText(HEIGHT-7, "CONNECTING TO SERVER");
@@ -512,12 +516,17 @@ void showInGameMenuScreen() {
     x = WIDTH/2-9;
     y = HEIGHT/2-3;
 
-    drawBox(x-3,y-2,22,9);
-    drawText(x,y,    "  Q: QUIT TABLE");
-    drawText(x,y+=2, "  H: HOW TO PLAY");
-    drawText(x,y+=2, "  C: COLOR TOGGLE");
-    //drawText(x,y+=2, "  S: SOUND TOGGLE");
-    drawText(x,y+=2, "ESC: KEEP PLAYING");
+	#ifdef USE_PLATFORM_SPECIFIC_KEYS
+		platformStatusMenuKeys();
+	#else
+    	drawBox(x-3,y-2,22,9);
+    	drawText(x,y,    "  Q: QUIT TABLE");
+    	drawText(x,y+=2, "  H: HOW TO PLAY");
+    	drawText(x,y+=2, "  C: COLOR TOGGLE");
+    	//drawText(x,y+=2, "  S: SOUND TOGGLE");
+    	drawText(x,y+=2, "ESC: KEEP PLAYING");
+	#endif
+
     drawBuffer();
 
     clearCommonInput();
@@ -548,7 +557,7 @@ void showInGameMenuScreen() {
           // Inform server player is leaving
           apiCall("leave");
           progressAnim(12);
-          
+
           //  Clear server app key in case of reboot
           write_appkey(AK_LOBBY_CREATOR_ID,  AK_LOBBY_APP_ID, AK_LOBBY_KEY_SERVER, "");
 

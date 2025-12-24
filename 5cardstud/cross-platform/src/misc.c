@@ -95,7 +95,7 @@ void readCommonInput() {
 
   inputKey = cgetc();
 #else
-  inputKey = getPlatformKey();
+  inputKey = getPlatformKey_common();
 #endif
   if (!inputKey )
     return;
@@ -138,7 +138,7 @@ void applyPrefs() {
 }
 
 void loadPrefs() {
-  
+
   read_appkey(AK_CREATOR_ID, AK_APP_ID, AK_KEY_PREFS, tempBuffer);
 
   if (strlen(tempBuffer)==0) {

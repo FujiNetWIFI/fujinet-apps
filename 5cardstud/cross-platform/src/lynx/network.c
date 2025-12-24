@@ -62,10 +62,10 @@ uint8_t getResponse(char *url, unsigned char *buffer, uint16_t max_length)
     //if ((r & 0xF0) != NM_ACK)
     //    return(0);
 
-    r = network_status(&ns);
-    if (!r) return(0);
+    //r = network_status(&ns);
+    //if (!r) return(0);
   
-    for(i=0; i<ns.rxBytesWaiting; i+=256) {
+    for(i=0; i<max_length; i+=256) {
         // Receive response
         r = fnio_recv(NET_DEV, (char *) &buffer[i], &len);
         //if (((r & 0xF0) != NM_ACK) || (len == 0))

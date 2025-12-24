@@ -9,15 +9,17 @@
 #define TABLE_ROW_HEIGHT 1
 #define HOW_TO_PLAY_ROW_START 0
 #define SKIP_FIRST_BUMP   1
+#define BUMP
 
 /**
  * Platform specific key map for common input
  * Lynx has hardly any keys, only ESCAPE is really valid
  */
 #define USE_PLATFORM_SPECIFIC_INPUT
+#define USE_PLATFORM_SPECIFIC_KEYS
 
 #define KEY_ESCAPE       'R'
-#define KEY_ESCAPE_ALT   '3'
+#define KEY_ESCAPE_ALT   0xA4
 
 // all these values are bogus
 #define KEY_LEFT_ARROW      0xA1
@@ -43,7 +45,11 @@
 #define QUERY_SUFFIX  ""
 
 
-void initPlatformKeyboardInput();
+extern unsigned char lynx_fg_color;
+extern unsigned char lynx_bg_color;
+
+extern unsigned char _char_x_scr(unsigned char x);
+extern unsigned char _char_y_scr(unsigned char y);
 
 
 #endif

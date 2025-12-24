@@ -3,12 +3,12 @@
 #include "vars.h"
 
 // Screen specific player/bet coordinates
-unsigned char playerXMaster[] = { 11,0, 0, 0, 11, 30,30, 30 };
-unsigned char playerYMaster[] = { 18, 18,10,2, 2, 2,10,18 };
+unsigned char playerXMaster[] = { 15,  0,  0, 0, 15, 29, 29, 29 };
+unsigned char playerYMaster[] = { 13, 13,  7, 1,  0,  1,  7, 13 };
 
 char playerDirMaster[] = { 1,1,1,1,1,-1,-1,-1 };
-char playerBetXMaster[] = { 3,10,10,10,3,-8,-8,-8 };
-char playerBetYMaster[] = { -4, -4, 0,4,4,4,0,-4 };
+char playerBetXMaster[] = {  3, 10, 10, 10, 3, -8, -8, -8 };
+char playerBetYMaster[] = { -2, -2,  0,  4, 4,  4,  0, -2 };
 
 
 // Simple hard coded arrangment of players around the table based on player count.

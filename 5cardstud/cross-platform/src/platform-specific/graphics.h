@@ -9,6 +9,16 @@
 #define PARTIAL_RIGHT 2
 #define FULL_CARD 3
 
+// Include platform specific defines before the input include
+#include "../c64/vars.h"
+#include "../apple2/vars.h"
+#include "../adam/vars.h"
+#include "../coco/vars.h"
+#include "../msdos/vars.h"
+#include "../plus4/vars.h"
+#include "../lynx/vars.h"
+
+
 #ifdef _CMOC_VERSION_
 #include "../coco/coco_bool.h"
 #else
@@ -52,5 +62,10 @@ void waitvsync();
 uint8_t cycleNextColor();
 void setColorMode();
 extern unsigned char colorMode;
+
+#ifdef USE_PLATFORM_SPECIFIC_KEYS
+void platformStatusKeyLegend();
+void platformStatusMenuKeys();
+#endif
 
 #endif /* GRAPHICS_H */

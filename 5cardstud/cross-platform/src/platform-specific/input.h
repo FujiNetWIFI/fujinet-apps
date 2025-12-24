@@ -17,7 +17,12 @@
 unsigned char readJoystick();
 
 #ifdef USE_PLATFORM_SPECIFIC_INPUT
-int getPlatformKey(void);
+void initPlatformKeyboardInput();
+void getPlatformKey_helpscreen(void);
+int getPlatformKey_common(void);
+int getPlatformKey_inputfield(int8_t x, int8_t y);
+
+//int getPlatformKey(void);
 #endif
 
 #endif /* INPUT_H */
