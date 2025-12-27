@@ -47,8 +47,8 @@ void progressAnim(unsigned char y) {
 void drawPot() {
 
   if (redrawGameScreen) {
-    drawBox(WIDTH/2-3,11+POT_Y_MODIFIER,4,1);
-    drawChip(WIDTH/2-2,12+POT_Y_MODIFIER);
+      drawBox(WIDTH/2-3,11+POT_Y_MODIFIER,4,1);
+      drawChip(WIDTH/2-2,12+POT_Y_MODIFIER);
   }
   itoa(state.pot, tempBuffer, 10);
   drawText(WIDTH/2-(state.pot>99),12+POT_Y_MODIFIER, tempBuffer);

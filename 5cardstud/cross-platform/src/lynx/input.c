@@ -9,7 +9,7 @@
 #include "../platform-specific/graphics.h"
 
 
-#define INPUT_CHARS_NUM     37
+#define INPUT_CHARS_NUM     36		// last array index
 const char input_chars[] = {" ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"};
 
 unsigned char readJoystick()
@@ -70,7 +70,7 @@ int getPlatformKey_common(void)
 		case 'R':					// escape
 			return(KEY_ESCAPE);
 		case 'F':					// flip
-			break;
+			return('Q');
 	}
 
 	return(0);
@@ -85,7 +85,11 @@ int getPlatformKey_inputfield(int8_t x, int8_t y)
     char s[2];
 
 
-    i = last = 0;
+    i = 0;
+
+	// hack so that backspace works properly
+	drawText(x, y, " ");
+	drawChip(x, y);
 
     // keys input
     while(1) {
@@ -101,7 +105,7 @@ int getPlatformKey_inputfield(int8_t x, int8_t y)
             if (i != 0)
                 i--;
             else
-                i = INPUT_CHARS_NUM-1;
+                i = INPUT_CHARS_NUM;
         }
 
         if (JOY_UP(joy) || JOY_LEFT(joy)) {
@@ -127,15 +131,21 @@ int getPlatformKey_inputfield(int8_t x, int8_t y)
 
 		// Did we change character?
 		if (last != i) {
-			// Select the character from input_chars array
-        	s[0] = input_chars[i];
-        	s[1] = '\0';
+			if (i == 0) {
+				drawText(x, y, " ");
+				drawChip(x, y);
+			}
+			else {
+				// Select the character from input_chars array
+        		s[0] = input_chars[i];
+        		s[1] = '\0';
 
-			// draw the character on the screen
-        	tgi_setcolor(lynx_bg_color);
-        	tgi_bar(_char_x_scr(x), _char_y_scr(y), _char_x_scr(x)+4, _char_y_scr(y)+6);
-        	tgi_setcolor(lynx_fg_color);
-        	drawText(x, y, s);
+				// draw the character on the screen
+        		tgi_setcolor(lynx_bg_color);
+        		tgi_bar(_char_x_scr(x), _char_y_scr(y), _char_x_scr(x)+4, _char_y_scr(y)+6);
+        		tgi_setcolor(lynx_fg_color);
+        		drawText(x, y, s);
+			}
 		}
 	}
   }

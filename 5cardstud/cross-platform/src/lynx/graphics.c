@@ -12,8 +12,12 @@
 #include "lynxfnio.h"
 
 
-#define LYNX_STATUS_Y    95              // status bar line, in lynx screen coords
+#define LYNX_STATUS_Y    96              // status bar line, in lynx screen coords
 
+#define LYNX_LINE_COLOR   TGI_COLOR_YELLOW
+#define LYNX_BOX_COLOR    TGI_COLOR_BROWN
+
+unsigned char dblbuffer;
 unsigned char drawpage;
 unsigned char lynx_fg_color;
 unsigned char lynx_bg_color;
@@ -99,7 +103,7 @@ unsigned char _char_y_scr(unsigned char y)
 
 
 // Draw a card sprite at x, y screen location (Lynx screen coords)
-void lynx_drawcard(uint8_t x, uint8_t y, char *rank, char suit)
+void lynx_drawcard(uint8_t x, uint8_t y, char *rank, char suit, uint8_t bg)
 {
   card_sprite.hpos = x;
   card_sprite.vpos = y;
@@ -130,9 +134,9 @@ void lynx_drawcard(uint8_t x, uint8_t y, char *rank, char suit)
   tgi_sprite(&card_sprite);
   tgi_sprite(&suit_sprite);
   if (suit < SUIT_SPADE)
-    outtext_4x6(x+2, y+2, 0x02, 0x0F, rank);        // red
+    outtext_4x6(x+2, y+2, 0x02, bg, rank);        // red
   else
-    outtext_4x6(x+2, y+2, 0x01, 0x0F, rank);        // black
+    outtext_4x6(x+2, y+2, 0x01, bg, rank);        // black
 }
 
 
@@ -155,7 +159,6 @@ void lynx_draw_facedown_card(uint8_t x, uint8_t y)
 {
     facedown_card_sprite.hpos = x;
     facedown_card_sprite.vpos = y;
-
     tgi_sprite(&facedown_card_sprite);
 }
 
@@ -174,10 +177,11 @@ void initGraphics()
     // Init Fujinet - since we don't have Lynx in network-lib yet
     fnio_init();
 
-    // enable double buffering
+    // setup for double buffering
+    dblbuffer = 0;
     drawpage = 0;
-    tgi_setviewpage(drawpage);
-    tgi_setdrawpage(drawpage);
+    tgi_setviewpage(0);
+    tgi_setdrawpage(0);
 
     // Initial background color
     //lynx_bg_color = TGI_COLOR_GREEN;
@@ -202,17 +206,26 @@ void resetScreen()
 
 void enableDoubleBuffer()
 {
-
+  /*tgi_updatedisplay();
+  drawpage = !drawpage;
+  while (tgi_busy());
+   
+  dblbuffer = 1; */
 }
 
 void disableDoubleBuffer()
-{
-
+{  
+   /*tgi_setviewpage(drawpage);
+   dblbuffer = 0;*/
 }
 
 void drawBuffer()
 {
-
+  /*if (dblbuffer) {
+    tgi_updatedisplay();
+    drawpage = !drawpage;
+    while (tgi_busy());
+  }*/
 }
 
 
@@ -224,22 +237,11 @@ void waitvsync()
 
 // Draw cards at corners of screen
 void drawBorder() {
-
-    // draw box around screen
-    /*tgi_setcolor(TGI_COLOR_RED);
-    tgi_line(1, 1, 158, 1);     // top line
-    tgi_lineto(158, 100);       // right line
-    tgi_lineto(1, 100);         // bottom line
-    tgi_lineto(1, 1);           // left line
-    */
-
-    /*tgi_setcolor(TGI_COLOR_WHITE);*/
-
     // draw aces in each corner
-    lynx_drawcard(2, 2, "A", SUIT_SPADE);
-    lynx_drawcard(148, 2, "A", SUIT_HEART);
-    lynx_drawcard(2, 78, "A", SUIT_DIAMOND);
-    lynx_drawcard(148, 78, "A", SUIT_CLUB);
+    lynx_drawcard(2, 2, "A", SUIT_SPADE, TGI_COLOR_WHITE);
+    lynx_drawcard(148, 2, "A", SUIT_HEART, TGI_COLOR_WHITE);
+    lynx_drawcard(2, 78, "A", SUIT_DIAMOND, TGI_COLOR_WHITE);
+    lynx_drawcard(148, 78, "A", SUIT_CLUB, TGI_COLOR_WHITE);
 }
 
 
@@ -262,12 +264,12 @@ void clearStatusBar()
 
 void drawStatusTextAt(unsigned char x, const char* s)
 {
-  outtext_4x6(_char_x_scr(x), LYNX_STATUS_Y, lynx_fg_color, lynx_bg_color, (char *) s);
+  outtext_4x6(_char_x_scr(x), LYNX_STATUS_Y, LYNX_LINE_COLOR, lynx_bg_color, (char *) s);
 }
 
 
 void drawStatusText(const char* s) {
-  outtext_4x6(0, LYNX_STATUS_Y, lynx_fg_color, lynx_bg_color, (char *) s);
+  outtext_4x6(0, LYNX_STATUS_Y, LYNX_LINE_COLOR, lynx_bg_color, (char *) s);
 }
 
 
@@ -352,14 +354,14 @@ void drawCard(unsigned char x, unsigned char y, unsigned char partial, const cha
     }
 
     // Draw face up card
-    lynx_drawcard(sx, sy, rank, suit);
+    lynx_drawcard(sx, sy, rank, suit, (isHidden ? TGI_COLOR_GREY : TGI_COLOR_WHITE));
 }
 
 
 void drawChip(unsigned char x, unsigned char y)
 {
   chip_sprite.hpos = _char_x_scr(x);
-  chip_sprite.vpos = _char_y_scr(y);
+  chip_sprite.vpos = _char_y_scr(y)+2;
   tgi_sprite(&chip_sprite);
 }
 
@@ -372,24 +374,28 @@ void drawBlank(unsigned char x, unsigned char y)
 
 void drawLine(unsigned char x, unsigned char y, unsigned char w)
 {
-    tgi_line(_char_x_scr(x), _char_y_scr(y)+3, _char_x_scr(x+w), _char_y_scr(y)+3);
+    tgi_setcolor(LYNX_LINE_COLOR);
+    tgi_line(_char_x_scr(x), _char_y_scr(y), _char_x_scr(x+w), _char_y_scr(y));
+    tgi_setcolor(lynx_fg_color);
 }
 
 
 void hideLine(unsigned char x, unsigned char y, unsigned char w)
 {
     tgi_setcolor(lynx_bg_color);
-    tgi_line(_char_x_scr(x), _char_y_scr(y)+3, _char_x_scr(x+w), _char_y_scr(y)+3);
+    tgi_line(_char_x_scr(x), _char_y_scr(y), _char_x_scr(x+w), _char_y_scr(y));
     tgi_setcolor(lynx_fg_color);
 }
 
 
 void drawBox(unsigned char x, unsigned char y, unsigned char w, unsigned char h)
 {
-    tgi_line(_char_x_scr(x), _char_y_scr(y), _char_x_scr(x+w), _char_y_scr(y));     // top line
-    tgi_lineto(_char_x_scr(x+w), _char_y_scr(y+h));       							// right line
-    tgi_lineto(_char_x_scr(x), _char_y_scr(y+h));         							// bottom line
-    tgi_lineto(_char_x_scr(x), _char_y_scr(y));           							// left line
+    tgi_setcolor(LYNX_BOX_COLOR);   
+    tgi_line(_char_x_scr(x)+2, _char_y_scr(y)+4, _char_x_scr(x+w)+4, _char_y_scr(y)+4);     // top line
+    tgi_lineto(_char_x_scr(x+w)+4, _char_y_scr(y+h)+8);       							// right line
+    tgi_lineto(_char_x_scr(x)+2, _char_y_scr(y+h)+8);         							// bottom line
+    tgi_lineto(_char_x_scr(x)+2, _char_y_scr(y)+4);           							// left line
+    tgi_setcolor(lynx_fg_color);
 }
 
 
@@ -416,7 +422,7 @@ void setColorMode(unsigned char mode) {
     lynx_card_fringe_color = 0x0E;			// Light blue card fringe
   } else {
     lynx_fg_color = TGI_COLOR_WHITE;		// White on Dark Grey BG
-    lynx_bg_color = TGI_COLOR_DARKGREY;
+    lynx_bg_color = TGI_COLOR_BLACK;
     lynx_card_fringe_color = 0x0E;			// Light blue card fringe
   }
 }
@@ -424,38 +430,17 @@ void setColorMode(unsigned char mode) {
 
 void platformStatusKeyLegend()
 {
-					//0123456789012345678901234567890123456789
-	drawStatusText("2:REFRESH P:HELP 1:COLOR 3:NAME 1+P:QUIT");
-
-/*	case '1':					// color
-			return('C');
-		case 'P':					// help
-			return('H');
-		case '2':					// refresh
-			return('R');
-		case '3':					// name
-			return('N');
-		case 'R':					// escape
-			return(KEY_ESCAPE);
-		case 'F':					// flip
-			break;
-*/
+					      //0123456789012345678901234567890123456789
+	drawStatusText("2: REFRESH  P: HELP  1: COLOR  1+2: NAME");
 }
 
 
 void platformStatusMenuKeys()
 {
-	drawBox(8, 4, 33, 12);
-					//0123456789012345678901
-	drawText(10, 6,  "RESTART: QUIT TABLE");
+	drawBox(8, 4, 24, 7);
+					        //0123456789012345678901
+	drawText(10, 6,  "FLIP:    QUIT TABLE");
 	drawText(10, 7,  "PAUSE:   HOW TO PLAY");
 	drawText(10, 8,  "OPTION1: CHANGE COLORS");
 	drawText(10, 10, "OPTION2: KEEP PLAYING");
-
-    	//drawBox(x-3,y-2,22,9);
-    	//drawText(x,y,    "  Q: QUIT TABLE");
-    	//drawText(x,y+=2, "  H: HOW TO PLAY");
-    	//drawText(x,y+=2, "  C: COLOR TOGGLE");
-    	//drawText(x,y+=2, "  S: SOUND TOGGLE");
-    	//drawText(x,y+=2, "ESC: KEEP PLAYING");
-}
+ }

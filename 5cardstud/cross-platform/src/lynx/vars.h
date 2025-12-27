@@ -10,6 +10,8 @@
 #define HOW_TO_PLAY_ROW_START 0
 #define SKIP_FIRST_BUMP   1
 #define BUMP
+#define POT_Y_MODIFIER -4
+
 
 /**
  * Platform specific key map for common input
