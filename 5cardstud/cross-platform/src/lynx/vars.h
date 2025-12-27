@@ -11,6 +11,7 @@
 #define SKIP_FIRST_BUMP   1
 #define BUMP
 #define POT_Y_MODIFIER -4
+#define SINGLE_BUFFER
 
 
 /**

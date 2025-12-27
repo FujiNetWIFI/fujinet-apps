@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <time.h>
 #include "../platform-specific/graphics.h"
 #include "drawfont.h"
 #include "cardsprites.h"
@@ -24,7 +25,8 @@ unsigned char lynx_bg_color;
 unsigned char lynx_card_fringe_color;
 
 unsigned char colorMode;
-unsigned char always_render_full_cards;
+unsigned char always_render_full_cards = 0;
+
 
 // card suits - may not need
 #define SUIT_HEART    0
@@ -52,7 +54,7 @@ SCB_REHV_PAL card_partial_sprite = {
     (unsigned char *) &halfcard_down_spr,
     0, 0,
     0x0100, 0x0100,
-    { 0x0E, 0xF0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
+    { 0x0E, 0xFD, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
 };
 
 SCB_REHV_PAL facedown_card_sprite = {
@@ -146,10 +148,14 @@ void lynx_draw_partial_card(uint8_t x, uint8_t y, uint8_t flip)
     card_partial_sprite.vpos = y;
 
     // Flip card for right side
-    if (flip)
+    if (flip) {
+        card_partial_sprite.hpos = (x+4);
         card_partial_sprite.sprctl0 |= HFLIP;
-    else
+    }
+    else {
         card_partial_sprite.sprctl0 &= ~HFLIP;
+        card_partial_sprite.hpos = x;
+    }
 
     tgi_sprite(&card_partial_sprite);
 }
@@ -231,7 +237,10 @@ void drawBuffer()
 
 void waitvsync()
 {
+  unsigned long t;
 
+  t = clock();
+  while (t == clock());
 }
 
 
@@ -242,6 +251,12 @@ void drawBorder() {
     lynx_drawcard(148, 2, "A", SUIT_HEART, TGI_COLOR_WHITE);
     lynx_drawcard(2, 78, "A", SUIT_DIAMOND, TGI_COLOR_WHITE);
     lynx_drawcard(148, 78, "A", SUIT_CLUB, TGI_COLOR_WHITE);
+
+    lynx_draw_partial_card(2, 20, 0);
+    lynx_draw_partial_card(2, 40, 1);
+
+
+
 }
 
 
@@ -305,7 +320,7 @@ void drawCard(unsigned char x, unsigned char y, unsigned char partial, const cha
 
     // Hidden card should be drawn off-white/gray
     if (isHidden)
-        card_sprite.penpal[1] = 0x50;      // gray
+        card_sprite.penpal[1] = 0x40;      // gray
     else
         card_sprite.penpal[1] = 0xF0;      // white
 
@@ -354,7 +369,7 @@ void drawCard(unsigned char x, unsigned char y, unsigned char partial, const cha
     }
 
     // Draw face up card
-    lynx_drawcard(sx, sy, rank, suit, (isHidden ? TGI_COLOR_GREY : TGI_COLOR_WHITE));
+    lynx_drawcard(sx, sy, rank, suit, (isHidden ? 0x04 : TGI_COLOR_WHITE));
 }
 
 
@@ -368,7 +383,9 @@ void drawChip(unsigned char x, unsigned char y)
 
 void drawBlank(unsigned char x, unsigned char y)
 {
-    // not used?
+  tgi_setcolor(lynx_bg_color);
+  tgi_bar(_char_x_scr(x), _char_y_scr(y),_char_x_scr(x)+8, _char_y_scr(y)+12);
+  tgi_setcolor(lynx_fg_color);
 }
 
 
@@ -408,22 +425,22 @@ unsigned char cycleNextColor() {
 void setColorMode(unsigned char mode) {
   colorMode = mode;
 
-  if (colorMode == 0) {						// White text on green BG
+  if (colorMode == 0) {						    // White text on green BG
     lynx_fg_color = TGI_COLOR_WHITE;
     lynx_bg_color = TGI_COLOR_GREEN;
-    lynx_card_fringe_color = 0x01;			// Black card fringe
+    lynx_card_fringe_color = 0x01;
   } else if (colorMode == 1) {				// Black text on green BG
     lynx_fg_color = TGI_COLOR_BLACK;
     lynx_bg_color = TGI_COLOR_GREEN;
-    lynx_card_fringe_color = 0x0E;			// Light blue card fringe
+    lynx_card_fringe_color = 0x01;
   } else if (colorMode == 2) {				// White on BLUE BG
     lynx_fg_color = TGI_COLOR_WHITE;
     lynx_bg_color = TGI_COLOR_BLUE;
-    lynx_card_fringe_color = 0x0E;			// Light blue card fringe
+    lynx_card_fringe_color = 0x01;
   } else {
-    lynx_fg_color = TGI_COLOR_WHITE;		// White on Dark Grey BG
+    lynx_fg_color = TGI_COLOR_WHITE;		// White on Black BG
     lynx_bg_color = TGI_COLOR_BLACK;
-    lynx_card_fringe_color = 0x0E;			// Light blue card fringe
+    lynx_card_fringe_color = TGI_COLOR_LIGHTBLUE;
   }
 }
 
