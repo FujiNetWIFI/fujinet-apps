@@ -78,7 +78,7 @@ int getPlatformKey_common(void)
 
 
 
-int getPlatformKey_inputfield(int8_t x, int8_t y)
+int getPlatformKey_inputfield(int8_t x, int8_t y, int8_t at_max)
 {
     unsigned char i, last;
     unsigned char joy;
@@ -101,6 +101,8 @@ int getPlatformKey_inputfield(int8_t x, int8_t y)
             while (joy_read(0) == joy);     // debounce joystick
         }
 
+		if (!at_max) {
+
         if (JOY_DOWN(joy) || JOY_RIGHT(joy)) {
             if (i != 0)
                 i--;
@@ -114,6 +116,8 @@ int getPlatformKey_inputfield(int8_t x, int8_t y)
             else
                 i = 0;
         }
+
+		}
 
 		// A button selects this character, or RETURN if no character selected
         if (JOY_BTN_1(joy)) {

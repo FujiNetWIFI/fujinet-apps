@@ -9,14 +9,13 @@
 #define TABLE_ROW_HEIGHT 1
 #define HOW_TO_PLAY_ROW_START 0
 #define SKIP_FIRST_BUMP   1
-#define BUMP
 #define POT_Y_MODIFIER -4
 #define SINGLE_BUFFER
 
 
 /**
  * Platform specific key map for common input
- * Lynx has hardly any keys, only ESCAPE is really valid
+ * Lynx has hardly any keys, most of these values are bogus
  */
 #define USE_PLATFORM_SPECIFIC_INPUT
 #define USE_PLATFORM_SPECIFIC_KEYS
@@ -48,6 +47,7 @@
 #define QUERY_SUFFIX  ""
 
 
+// graphics helper functions, for input.c
 extern unsigned char lynx_fg_color;
 extern unsigned char lynx_bg_color;
 

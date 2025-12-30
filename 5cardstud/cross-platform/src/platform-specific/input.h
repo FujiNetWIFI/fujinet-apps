@@ -20,7 +20,7 @@ unsigned char readJoystick();
 void initPlatformKeyboardInput();
 void getPlatformKey_helpscreen(void);
 int getPlatformKey_common(void);
-int getPlatformKey_inputfield(int8_t x, int8_t y);
+int getPlatformKey_inputfield(int8_t x, int8_t y, int8_t at_max);
 
 //int getPlatformKey(void);
 #endif

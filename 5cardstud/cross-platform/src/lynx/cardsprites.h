@@ -3,6 +3,7 @@
 
 
 extern unsigned char card_up_spr[];
+extern unsigned char card_down_spr[];
 extern unsigned char halfcard_down_spr[];
 
 extern unsigned char small_chip_spr[];

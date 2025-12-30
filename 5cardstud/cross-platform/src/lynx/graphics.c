@@ -18,8 +18,8 @@
 #define LYNX_LINE_COLOR   TGI_COLOR_YELLOW
 #define LYNX_BOX_COLOR    TGI_COLOR_BROWN
 
-unsigned char dblbuffer;
-unsigned char drawpage;
+//unsigned char dblbuffer;
+//unsigned char drawpage;
 unsigned char lynx_fg_color;
 unsigned char lynx_bg_color;
 unsigned char lynx_card_fringe_color;
@@ -62,10 +62,10 @@ SCB_REHV_PAL facedown_card_sprite = {
     REHV,
     0x01,
     0,
-    (unsigned char *) &halfcard_down_spr,
+    (unsigned char *) &card_down_spr,
     0, 0,
     0x0100, 0x0100,
-    { 0x0E, 0xF0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
+    { 0x05, 0x1D, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
 };
 
 SCB_REHV_PAL chip_sprite = {
@@ -105,8 +105,11 @@ unsigned char _char_y_scr(unsigned char y)
 
 
 // Draw a card sprite at x, y screen location (Lynx screen coords)
-void lynx_drawcard(uint8_t x, uint8_t y, char *rank, char suit, uint8_t bg)
+void lynx_drawcard(uint8_t x, uint8_t y, char *rank, char suit)
 {
+  unsigned char tcol;
+
+
   card_sprite.hpos = x;
   card_sprite.vpos = y;
   card_sprite.penpal[0] = lynx_card_fringe_color;
@@ -117,28 +120,35 @@ void lynx_drawcard(uint8_t x, uint8_t y, char *rank, char suit, uint8_t bg)
   switch(suit) {
     case SUIT_HEART:
       suit_sprite.data = (unsigned char *) &heart_spr;
-      suit_sprite.penpal[0] = 0x20;
+      suit_sprite.penpal[0] = 0x20;							// Red
+      tcol = 0x02;											// Red
       break;
     case SUIT_DIAMOND:
       suit_sprite.data = (unsigned char *) &diamond_spr;
       suit_sprite.penpal[0] = 0x20;
+      tcol = 0x02;
       break;
     case SUIT_SPADE:
       suit_sprite.data = (unsigned char *) &spade_spr;
-      suit_sprite.penpal[0] = 0x10;
+      suit_sprite.penpal[0] = 0x10;							// Black
+      tcol = 0x01;											// Black
       break;
     case SUIT_CLUB:
       suit_sprite.data = (unsigned char *) &club_spr;
       suit_sprite.penpal[0] = 0x10;
+      tcol = 0x01;
       break;
   }
 
-  tgi_sprite(&card_sprite);
-  tgi_sprite(&suit_sprite);
-  if (suit < SUIT_SPADE)
-    outtext_4x6(x+2, y+2, 0x02, bg, rank);        // red
+  tgi_sprite(&card_sprite);							// draw card outline and bg (always white)
+  tgi_sprite(&suit_sprite);							// draw card suit sprite
+
+  if (rank[0] == '1') {								// is this a 10?
+    outtext_4x6(x+2, y+2, tcol, 0x00, "1");			// shift 10 over slightly
+    outtext_4x6(x+5, y+2, tcol, 0x00, "0");
+  }
   else
-    outtext_4x6(x+2, y+2, 0x01, bg, rank);        // black
+    outtext_4x6(x+2, y+2, tcol, 0x00, rank);		// bg 0x00 is transparent
 }
 
 
@@ -165,6 +175,8 @@ void lynx_draw_facedown_card(uint8_t x, uint8_t y)
 {
     facedown_card_sprite.hpos = x;
     facedown_card_sprite.vpos = y;
+    facedown_card_sprite.penpal[1] = (facedown_card_sprite.penpal[1] & 0x0F) | (lynx_card_fringe_color << 4);
+
     tgi_sprite(&facedown_card_sprite);
 }
 
@@ -183,15 +195,13 @@ void initGraphics()
     // Init Fujinet - since we don't have Lynx in network-lib yet
     fnio_init();
 
-    // setup for double buffering
-    dblbuffer = 0;
-    drawpage = 0;
+    // setup for double buffering (double buffer disabled for now)
+    //dblbuffer = 0;
+    //drawpage = 0;
     tgi_setviewpage(0);
     tgi_setdrawpage(0);
 
-    // Initial background color
-    //lynx_bg_color = TGI_COLOR_GREEN;
-    //lynx_fg_color = TGI_COLOR_WHITE;
+    // Initial color mode
     colorMode = 0;
     setColorMode(colorMode);
 
@@ -215,12 +225,12 @@ void enableDoubleBuffer()
   /*tgi_updatedisplay();
   drawpage = !drawpage;
   while (tgi_busy());
-   
+
   dblbuffer = 1; */
 }
 
 void disableDoubleBuffer()
-{  
+{
    /*tgi_setviewpage(drawpage);
    dblbuffer = 0;*/
 }
@@ -247,16 +257,10 @@ void waitvsync()
 // Draw cards at corners of screen
 void drawBorder() {
     // draw aces in each corner
-    lynx_drawcard(2, 2, "A", SUIT_SPADE, TGI_COLOR_WHITE);
-    lynx_drawcard(148, 2, "A", SUIT_HEART, TGI_COLOR_WHITE);
-    lynx_drawcard(2, 78, "A", SUIT_DIAMOND, TGI_COLOR_WHITE);
-    lynx_drawcard(148, 78, "A", SUIT_CLUB, TGI_COLOR_WHITE);
-
-    lynx_draw_partial_card(2, 20, 0);
-    lynx_draw_partial_card(2, 40, 1);
-
-
-
+    lynx_drawcard(2, 2, "A", SUIT_SPADE);
+    lynx_drawcard(148, 2, "A", SUIT_HEART);
+    lynx_drawcard(2, 78, "A", SUIT_DIAMOND);
+    lynx_drawcard(148, 78, "A", SUIT_CLUB);
 }
 
 
@@ -284,6 +288,7 @@ void drawStatusTextAt(unsigned char x, const char* s)
 
 
 void drawStatusText(const char* s) {
+  clearStatusBar();
   outtext_4x6(0, LYNX_STATUS_Y, LYNX_LINE_COLOR, lynx_bg_color, (char *) s);
 }
 
@@ -369,7 +374,7 @@ void drawCard(unsigned char x, unsigned char y, unsigned char partial, const cha
     }
 
     // Draw face up card
-    lynx_drawcard(sx, sy, rank, suit, (isHidden ? 0x04 : TGI_COLOR_WHITE));
+    lynx_drawcard(sx, sy, rank, suit);
 }
 
 
@@ -407,11 +412,24 @@ void hideLine(unsigned char x, unsigned char y, unsigned char w)
 
 void drawBox(unsigned char x, unsigned char y, unsigned char w, unsigned char h)
 {
-    tgi_setcolor(LYNX_BOX_COLOR);   
-    tgi_line(_char_x_scr(x)+2, _char_y_scr(y)+4, _char_x_scr(x+w)+4, _char_y_scr(y)+4);     // top line
-    tgi_lineto(_char_x_scr(x+w)+4, _char_y_scr(y+h)+8);       							// right line
-    tgi_lineto(_char_x_scr(x)+2, _char_y_scr(y+h)+8);         							// bottom line
-    tgi_lineto(_char_x_scr(x)+2, _char_y_scr(y)+4);           							// left line
+	// draw the box
+    tgi_setcolor(LYNX_BOX_COLOR);
+    //tgi_line(_char_x_scr(x)+2, _char_y_scr(y)+4, _char_x_scr(x+w)+4, _char_y_scr(y)+4);     	// top line
+    //tgi_lineto(_char_x_scr(x+w)+4, _char_y_scr(y+h)+8);       								// right line
+    //tgi_lineto(_char_x_scr(x)+2, _char_y_scr(y+h)+8);         								// bottom line
+    //tgi_lineto(_char_x_scr(x)+2, _char_y_scr(y)+4);           								// left line
+
+    tgi_line(_char_x_scr(x)+3, _char_y_scr(y)+4, _char_x_scr(x+w)+3, _char_y_scr(y)+4);     	// top
+    tgi_line(_char_x_scr(x)+3, _char_y_scr(y+h)+8, _char_x_scr(x+w)+3, _char_y_scr(y+h)+8);    	// bottom
+    tgi_line(_char_x_scr(x+w)+4, _char_y_scr(y)+5, _char_x_scr(x+w)+4, _char_y_scr(y+h)+7);     // right
+    tgi_line(_char_x_scr(x)+2, _char_y_scr(y)+5, _char_x_scr(x)+2, _char_y_scr(y+h)+7);     	// left
+
+	// round the edges
+	tgi_setpixel(_char_x_scr(x)+3, _char_y_scr(y)+5);			// TL
+	tgi_setpixel(_char_x_scr(x+w)+3, _char_y_scr(y)+5);			// TR
+	tgi_setpixel(_char_x_scr(x+w)+3, _char_y_scr(y+h)+7);		// BR
+	tgi_setpixel(_char_x_scr(x)+3, _char_y_scr(y+h)+7);			// BL
+
     tgi_setcolor(lynx_fg_color);
 }
 

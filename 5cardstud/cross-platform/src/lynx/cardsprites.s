@@ -1,4 +1,4 @@
-    .export _card_up_spr, _halfcard_down_spr, _small_chip_spr
+    .export _card_up_spr, _card_down_spr, _halfcard_down_spr, _small_chip_spr
     .export _heart_spr, _diamond_spr, _spade_spr, _club_spr
 
 
@@ -6,6 +6,8 @@
 
 _card_up_spr:
     .incbin "./card_sprites/card-face-up.spr"
+_card_down_spr:
+    .incbin "./card_sprites/card-face-down.spr"
 _halfcard_down_spr:
     .incbin "./card_sprites/half-card-face-down.spr"
 
