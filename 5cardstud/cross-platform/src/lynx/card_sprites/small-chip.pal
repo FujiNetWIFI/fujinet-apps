@@ -1,0 +1,2 @@
+small-chip_redir:	dc.b $9F,$00,$00,$00,$00,$00,$00,$00
+small-chip_pal:	DP 000,008,800,808,080,088,880,888,CCC,00F,F00,F0F,0F0,0FF,FF0,FFF

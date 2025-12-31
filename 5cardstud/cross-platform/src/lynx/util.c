@@ -24,5 +24,5 @@ int getTime()
 
 void quit()
 {
-    while(1);
+    // don't really need to do anything here
 }

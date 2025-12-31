@@ -3,11 +3,11 @@
 #include "vars.h"
 
 // Screen specific player/bet coordinates
-unsigned char playerXMaster[] = { 15,  0,  0, 0, 15, 37, 37, 37 };
+unsigned char playerXMaster[] = { 16,  0,  0, 0, 16, 37, 37, 37 };
 unsigned char playerYMaster[] = { 13, 13,  8, 2,  2,  2,  8, 13 };
 
 char playerDirMaster[] = { 1,1,1,1,1,-1,-1,-1 };
-char playerBetXMaster[] = {  2, 10, 10, 10, 2, -9, -9, -9 };
+char playerBetXMaster[] = {  1, 10, 10, 10, 1, -9, -9, -9 };
 char playerBetYMaster[] = { -2, -3,  0,  3, 3,  3,  0, -2 };
 
 

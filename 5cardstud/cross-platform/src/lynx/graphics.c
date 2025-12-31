@@ -18,8 +18,12 @@
 #define LYNX_LINE_COLOR   TGI_COLOR_YELLOW
 #define LYNX_BOX_COLOR    TGI_COLOR_BROWN
 
-//unsigned char dblbuffer;
-//unsigned char drawpage;
+
+#define SCREEN0   ((volatile unsigned char *) 0xC038)
+#define SCREEN1   ((volatile unsigned char *) 0xE018)
+#define SCRSIZE   8160
+unsigned char drawpage;
+
 unsigned char lynx_fg_color;
 unsigned char lynx_bg_color;
 unsigned char lynx_card_fringe_color;
@@ -33,6 +37,8 @@ unsigned char always_render_full_cards = 0;
 #define SUIT_DIAMOND  1
 #define SUIT_SPADE    2
 #define SUIT_CLUB     3
+
+
 
 // Card, Chip and Suit Sprites
 SCB_REHV_PAL card_sprite = {
@@ -181,6 +187,24 @@ void lynx_draw_facedown_card(uint8_t x, uint8_t y)
 }
 
 
+void clear_cards_right(uint8_t x, uint8_t y)
+{
+	tgi_setcolor(lynx_bg_color);
+	tgi_bar(x+8, y, x+39, y+17);
+	tgi_setcolor(lynx_fg_color);
+}
+
+
+void clear_cards_left(uint8_t x, uint8_t y)
+{
+	tgi_setcolor(lynx_bg_color);
+	tgi_bar(x-32, y, x-1, y+17);
+	tgi_setcolor(lynx_fg_color);
+}
+
+
+
+
 // Initialize TGI, and screen
 void initGraphics()
 {
@@ -195,9 +219,8 @@ void initGraphics()
     // Init Fujinet - since we don't have Lynx in network-lib yet
     fnio_init();
 
-    // setup for double buffering (double buffer disabled for now)
-    //dblbuffer = 0;
-    //drawpage = 0;
+    // setup for double buffering
+    drawpage = 0;
     tgi_setviewpage(0);
     tgi_setdrawpage(0);
 
@@ -213,6 +236,7 @@ void initGraphics()
 void resetScreen()
 {
     // clear the screen
+
     tgi_setcolor(lynx_bg_color);
     tgi_clear();
     tgi_bar(0, 0, 159, 101);
@@ -222,26 +246,48 @@ void resetScreen()
 
 void enableDoubleBuffer()
 {
-  /*tgi_updatedisplay();
-  drawpage = !drawpage;
+  /*
   while (tgi_busy());
 
-  dblbuffer = 1; */
+  // copy viewpage to drawpage
+  memcpy((void *) SCREEN1, (void *) SCREEN0, SCRSIZE);
+
+  // set our drawing page to SCREEN1
+  // viewpage is always SCREEN0
+  drawpage = 1;
+  
+  tgi_setdrawpage(1);
+  */
 }
+
 
 void disableDoubleBuffer()
 {
-   /*tgi_setviewpage(drawpage);
-   dblbuffer = 0;*/
+  /*
+  drawBuffer();
+
+  // set our drawing page back to SCREEN0
+  // viewpage is always SCREEN0
+  while (tgi_busy());
+  drawpage = 0;
+  tgi_setdrawpage(0);
+  */
 }
 
 void drawBuffer()
 {
-  /*if (dblbuffer) {
-    tgi_updatedisplay();
-    drawpage = !drawpage;
+  /*
+  if (drawpage == 1) {
+    // wait for Suzy to stop drawing anything
     while (tgi_busy());
-  }*/
+  
+    // wait for vsync
+    waitvsync();
+
+    // copy the drawing screen to view
+    memcpy((void *) SCREEN0, (void *) SCREEN1, SCRSIZE);
+  }
+  */
 }
 
 
@@ -331,8 +377,14 @@ void drawCard(unsigned char x, unsigned char y, unsigned char partial, const cha
 
     // Card face down?
     if (s[0] == '?') {
-        lynx_draw_facedown_card(sx, sy);
-        return;
+		  // Clear all face up cards to right or left
+		  if (x < 20)
+			  clear_cards_right(sx, sy);
+		  else
+			  clear_cards_left(sx, sy);
+
+      lynx_draw_facedown_card(sx, sy);
+      return;
     }
 
     // Draw partial top of card
@@ -381,7 +433,7 @@ void drawCard(unsigned char x, unsigned char y, unsigned char partial, const cha
 void drawChip(unsigned char x, unsigned char y)
 {
   chip_sprite.hpos = _char_x_scr(x);
-  chip_sprite.vpos = _char_y_scr(y)+2;
+  chip_sprite.vpos = _char_y_scr(y)+1;
   tgi_sprite(&chip_sprite);
 }
 
@@ -443,7 +495,7 @@ unsigned char cycleNextColor() {
 void setColorMode(unsigned char mode) {
   colorMode = mode;
 
-  if (colorMode == 0) {						    // White text on green BG
+  if (colorMode == 0) {						// White text on green BG
     lynx_fg_color = TGI_COLOR_WHITE;
     lynx_bg_color = TGI_COLOR_GREEN;
     lynx_card_fringe_color = 0x01;
@@ -465,17 +517,18 @@ void setColorMode(unsigned char mode) {
 
 void platformStatusKeyLegend()
 {
-					      //0123456789012345678901234567890123456789
+				  //0123456789012345678901234567890123456789
 	drawStatusText("2: REFRESH  P: HELP  1: COLOR  1+2: NAME");
 }
 
 
-void platformStatusMenuKeys()
+void platformMenuKeys()
 {
-	drawBox(8, 4, 24, 7);
-					        //0123456789012345678901
-	drawText(10, 6,  "FLIP:    QUIT TABLE");
+	drawBox(8, 4, 24, 8);
+					//0123456789012345678901
+	drawText(10, 6,  "RESTART: QUIT TABLE");
 	drawText(10, 7,  "PAUSE:   HOW TO PLAY");
 	drawText(10, 8,  "OPTION1: CHANGE COLORS");
-	drawText(10, 10, "OPTION2: KEEP PLAYING");
+  drawText(10, 9,  "FLIP:    FLIP SCREEN");
+	drawText(10, 11, "OPTION2: KEEP PLAYING");
  }

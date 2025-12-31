@@ -116,7 +116,11 @@ void showHelpScreen() {
 
   clearCommonInput();
 #ifdef USE_PLATFORM_SPECIFIC_INPUT
-  getPlatformKey_helpscreen();
+	#ifdef __LYNX__
+  		getPlatformKey_helpscreen();
+  	#else
+  		getPlatformKey();
+  	#endif
 #else
   cgetc();
 #endif
@@ -167,7 +171,11 @@ bool inputFieldCycle(uint8_t x, uint8_t y, uint8_t max, char* buffer) {
 
   // Process any waiting keystrokes
   #ifdef USE_PLATFORM_SPECIFIC_INPUT
-  inputKey = getPlatformKey_inputfield(x+curx, y, (curx == max));
+  	#ifdef __LYNX__			// lynx has no keyboard, needs a special input routine
+  		inputKey = getPlatformKey_inputfield(x+curx, y, (curx == max));
+  	#else
+  		inputKey = getPlatformKey();
+  	#endif
   if (inputKey) {
     done=0;
     disableDoubleBuffer();
@@ -517,7 +525,7 @@ void showInGameMenuScreen() {
     y = HEIGHT/2-3;
 
 	#ifdef USE_PLATFORM_SPECIFIC_KEYS
-		platformStatusMenuKeys();
+		platformMenuKeys();
 	#else
     	drawBox(x-3,y-2,22,9);
     	drawText(x,y,    "  Q: QUIT TABLE");

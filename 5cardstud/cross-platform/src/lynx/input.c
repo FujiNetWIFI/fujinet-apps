@@ -30,6 +30,7 @@ void getPlatformKey_helpscreen(void)
 {
 	unsigned char joy;
 
+	// any button or keypress exits
 	while(1) {
 		if (kbhit()) {
 			cgetc();
@@ -63,14 +64,15 @@ int getPlatformKey_common(void)
 			return('C');
 		case 'P':					// help
 			return('H');
-		case '2':					// refresh
+		case '2':					// refresh / in-game menu
 			return('R');
 		case '3':					// name
 			return('N');
-		case 'R':					// escape
-			return(KEY_ESCAPE);
-		case 'F':					// flip
+		case 'R':					// Quit the game
 			return('Q');
+		case 'F':					// flip the screen
+			tgi_flip();
+			break;
 	}
 
 	return(0);

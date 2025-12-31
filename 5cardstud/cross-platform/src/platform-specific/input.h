@@ -17,12 +17,17 @@
 unsigned char readJoystick();
 
 #ifdef USE_PLATFORM_SPECIFIC_INPUT
-void initPlatformKeyboardInput();
-void getPlatformKey_helpscreen(void);
-int getPlatformKey_common(void);
-int getPlatformKey_inputfield(int8_t x, int8_t y, int8_t at_max);
+	void initPlatformKeyboardInput();
 
-//int getPlatformKey(void);
+	// screen specfic input functions for Atari Lynx
+	// could be useful for other game consoles
+	#ifdef __LYNX__
+		void getPlatformKey_helpscreen(void);
+		int getPlatformKey_common(void);
+		int getPlatformKey_inputfield(int8_t x, int8_t y, int8_t at_max);
+	#else
+		int getPlatformKey(void);
+	#endif
 #endif
 
 #endif /* INPUT_H */

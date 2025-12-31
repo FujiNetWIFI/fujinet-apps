@@ -63,9 +63,12 @@ uint8_t cycleNextColor();
 void setColorMode();
 extern unsigned char colorMode;
 
+// For platforms that do not have keyboards, or may want to use different keys
+// platformStatusKeyLegend is the status line displayed during select table screen
+// platformStatusMenuKeys is the in-game menu
 #ifdef USE_PLATFORM_SPECIFIC_KEYS
 void platformStatusKeyLegend();
-void platformStatusMenuKeys();
+void platformMenuKeys();
 #endif
 
 #endif /* GRAPHICS_H */

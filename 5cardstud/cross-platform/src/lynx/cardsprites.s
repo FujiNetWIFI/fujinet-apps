@@ -22,3 +22,4 @@ _spade_spr:
     .incbin "./card_sprites/spade.spr"
 _club_spr:
     .incbin "./card_sprites/club.spr"
+    
