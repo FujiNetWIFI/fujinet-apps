@@ -70,6 +70,8 @@ uint8_t getResponse(char *url, unsigned char *buffer, uint16_t max_length)
         r = fnio_recv(NET_DEV, (char *) &buffer[i], &len);
         //if (((r & 0xF0) != NM_ACK) || (len == 0))
         //    return(0);
+        if (len==0) // break out if nothing more received
+          break;
     }
 
     // Close the channel

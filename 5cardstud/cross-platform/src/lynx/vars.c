@@ -8,7 +8,7 @@ unsigned char playerYMaster[] = { 13, 13,  8, 2,  2,  2,  8, 13 };
 
 char playerDirMaster[] = { 1,1,1,1,1,-1,-1,-1 };
 char playerBetXMaster[] = {  1, 10, 10, 10, 1, -9, -9, -9 };
-char playerBetYMaster[] = { -2, -3,  0,  3, 3,  3,  0, -2 };
+char playerBetYMaster[] = { -2, -2,  0,  3, 3,  3,  0, -2 };
 
 
 // Simple hard coded arrangment of players around the table based on player count.
