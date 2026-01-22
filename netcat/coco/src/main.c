@@ -8,68 +8,76 @@
 
 #include <cmoc.h>
 #include <coco.h>
-#include "net.h"
 
-NetworkStatus ns;
+#include <fujinet-fuji.h>
+#include <fujinet-network.h>
+#include "net.h"
+#include "cocotext.h"
+
+uint16_t bytesWaiting;
+unsigned char conn;
+unsigned char error;
 
 byte rxBuf[2048];
-byte showCursor = 1;
+char url[256];
+
+void presskey(void)
+{
+    printf("PRESS ANY KEY TO CLOSE...\n");
+    waitkey(0);
+}
 
 int open_connection(void)
 {
-    char *s;
+    char s[256];    
 
     char url[256], login[256], password[256];
 
-    width(40);
-    cls(5);
+    clear_screen(5);
 
     printf("WELCOME TO NETCAT\n");
     printf("ENTER URL, e.g.\n");
     printf("N:TELNET://BBS.FOZZTEXX.COM/\n");
     printf("\n\n");
-
-    s = readline();
-    strcpy(url,s);
+    get_line(url,255);
 
     printf("\nENTER LOGIN, OR enter\nFOR NONE\n");
-    s = readline();
-    strcpy(login,s);
-    net_login(0,login);
+
+    get_line(login,255);
+    net_login(url,login);
     
     printf("\nENTER PASSWORD, OR enter\nFOR NONE\n");
-    s = readline();
-    strcpy(password,s);
-    net_password(0,password);
+    get_line(password,255);
+    net_password(url,password);
     
-    return net_open(0,12,0,url);
+    return network_open(url, OPEN_MODE_RW, OPEN_TRANS_NONE);
 }
 
 void close_connection(void)
 {
-    net_close(0);
+    network_close(url);
     printf("DISCONNECTED.\n");
 }
 
 byte in(void)
 {
-    net_status(0,&ns);
+    network_status(url, &bytesWaiting, &conn, &error);
 
-    if (!ns.bytesWaiting)
+    if (!bytesWaiting)
     {
-        net_status(0,&ns);
-        return net_error(0);
+        network_status(url, &bytesWaiting, &conn, &error);
+        return fn_error(error);
     }
-    else if (ns.bytesWaiting > sizeof(rxBuf))
+    else if (bytesWaiting > sizeof(rxBuf))
     {
-        ns.bytesWaiting = sizeof(rxBuf);
+        bytesWaiting = sizeof(rxBuf);
     }
     
-    net_read(0,rxBuf,ns.bytesWaiting);
+    network_read(url, rxBuf, bytesWaiting);
 
     putchar('\x08'); // backspace cursor
     
-    for (int i=0;i<ns.bytesWaiting;i++)
+    for (int i=0;i<bytesWaiting;i++)
     {
         char c = rxBuf[i];
 
@@ -79,16 +87,17 @@ byte in(void)
 
     putchar(0xAF); // cursor.
 
-    return net_error(0);
+    return fn_error(error);
 }
 
 void out(void)
 {
-    byte k=inkey();
+    cursor(false);
+    byte k=cgetc();
 
     if (k)
     {
-        net_write(0,&k,1);
+        network_write(url, &k, 1);
     }
 }
 
@@ -97,26 +106,66 @@ byte nc(void)
     out();
     in();
 
-    return net_error(0);
+    return conn;
 }
 
 int main(void)
 {
-    setCaseFlag(0);
-    
-    if (!open_connection())
+    initCoCoSupport();
+    textMode = getTextMode();
+    clear_screen(5);
+
+    if (isCoCo3)
     {
-        printf("OPEN ERR: %u\n",net_error(0));
+        printf("(H)IRES 42, (4)0 OR (8)0 COLUMNS?");
+        char mode = 0;
+        bool modeselect_done = false;
+
+		while (!modeselect_done)
+		{
+            mode = cgetc();
+
+			switch (mode)
+			{
+			case '4':
+				set_text_width(40);
+                modeselect_done = true;
+				break;
+			case '8':
+				set_text_width(80);
+                modeselect_done = true;
+                break;
+			case 'h':
+			case 'H':
+				set_text_width(42);
+                modeselect_done = true;
+				break;
+			}
+		}
+	}
+    else
+    {
+        set_text_width(42);
+    }
+    
+    cursor(false);
+
+    if (open_connection())
+    {
+        printf("OPEN ERR: %u\n",fn_error(0));
+        presskey();
+        hirestxt_close();
         return 1;
     }
 
-    net_status(0,&ns);
+    network_status(url, &bytesWaiting, &conn, &error);
 
     while(nc() == 1);
     
     close_connection();
-
-    setCaseFlag(1);
     
+    presskey();
+
+    hirestxt_close();
     return 0;
 }

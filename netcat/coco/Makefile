@@ -1,37 +1,41 @@
-TARGET_EXEC ?= netcat
+PRODUCT = netcat
+PLATFORMS = coco
 
-BUILD_DIR ?= ./build
-SRC_DIRS ?= ./src
+# You can run 'make <platform>' to build for a specific platform,
+# or 'make <platform>/<target>' for a platform-specific target.
+# Example shortcuts:
+#   make coco        → build for coco
+#   make apple2/disk → build the 'disk' target for apple2
 
-CC=cmoc
+# SRC_DIRS may use the literal %PLATFORM% token.
+# It expands to the chosen PLATFORM plus any of its combos.
+SRC_DIRS = src src/%PLATFORM%
 
-SRCS := $(shell find $(SRC_DIRS) -name *.c)
-OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
-DEPS := $(OBJS:.o=.d)
+# FUJINET_LIB can be
+# - a version number such as 4.7.6
+# - a directory which contains the libs for each platform
+# - a zip file with an archived fujinet-lib
+# - a URL to a git repo
+# - empty which will use whatever is the latest
+# - undefined, no fujinet-lib will be used
+FUJINET_LIB = 4.9.0
 
-CFLAGS=
-LDFLAGS=-o$(TARGET_EXEC).bin
+# Define extra dirs ("combos") that expand with a platform.
+# Format: platform+=combo1,combo2
+PLATFORM_COMBOS = \
+  c64+=commodore \
+  atarixe+=atari \
+  msxrom+=msx \
+  msxdos+=msx \
+  adam_cpm+=adam
 
-INC_DIRS := $(shell find $(SRC_DIRS) -type d)
-INC_FLAGS := $(addprefix -I,$(INC_DIRS))
+include hirestxt-mod-lib.mk
+include ../mekkogx/toplevel-rules.mk
 
-$(BUILD_DIR)/$(TARGET_EXEC): $(OBJS)
-	$(CC) $(LDFLAGS) $(OBJS)
-	$(RM) $(TARGET_EXEC)
-	decb dskini $(TARGET_EXEC).dsk
-	writecocofile $(TARGET_EXEC).dsk $(TARGET_EXEC).bin
-	cp $(TARGET_EXEC).dsk ~/tnfs/
+# If you need to add extra platform-specific steps, do it below:
+#   coco/r2r:: coco/custom-step1
+#   coco/r2r:: coco/custom-step2
+# or
+#   apple2/disk: apple2/custom-step1 apple2/custom-step2
 
-# c source
-$(BUILD_DIR)/%.c.o: %.c
-	$(MKDIR_P) $(dir $@)
-	$(CC) $(CFLAGS) -o $@ -c $<
-
-.PHONY: clean
-
-clean:
-	$(RM) -r $(TARGET_EXEC)* build*
-
--include $(DEPS)
-
-MKDIR_P ?= mkdir -p
+EXTRA_C_DEPS_COCO = .get_hirestxt_lib
