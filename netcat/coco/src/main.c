@@ -33,7 +33,7 @@ int open_connection(void)
 
     char url[256], login[256], password[256];
 
-    clear_screen(5);
+    clear_screen(bgcolor);
 
     printf("WELCOME TO NETCAT\n");
     printf("ENTER URL, e.g.\n");
@@ -111,15 +111,23 @@ byte nc(void)
 
 int main(void)
 {
-    initCoCoSupport();
-    textMode = getTextMode();
-    clear_screen(5);
+	char mode = 0;
+	bool modeselect_done = false;
+	char colorchar = 0;
+	bool colorselect_done = false;
 
-    if (isCoCo3)
+	initCoCoSupport();
+	textMode = getTextMode();
+	colorset = COLORSET_WHITE;
+	bgcolor = SCREEN_WHITE; 
+    hirestxt_mode = false;
+
+	clear_screen(bgcolor);
+
+	if (isCoCo3)
     {
-        printf("(H)IRES 42, (4)0 OR (8)0 COLUMNS?");
-        char mode = 0;
-        bool modeselect_done = false;
+        printf("(V)T52 42, (4)0 OR (8)0 COLUMNS?");
+
 
 		while (!modeselect_done)
 		{
@@ -135,19 +143,44 @@ int main(void)
 				set_text_width(80);
                 modeselect_done = true;
                 break;
-			case 'h':
-			case 'H':
+			case 'v':
+			case 'V':
 				set_text_width(42);
                 modeselect_done = true;
 				break;
 			}
 		}
+
+        printf("\n");
 	}
     else
     {
         set_text_width(42);
     }
+
+    printf("BACKGROUND: (W)HITE OR (G)REEN?");
+
+    while (!colorselect_done)
+    {
+        colorchar = cgetc();
+
+		switch (colorchar)
+		{
+		case 'g':
+		case 'G':
+			switch_colorset(); // Started with white - switch to green.
+			bgcolor = SCREEN_GREEN;
+			colorselect_done = true;
+			break;
+		case 'w':
+		case 'W':
+			bgcolor = SCREEN_WHITE;
+			colorselect_done = true;
+			break;
+		}
+	}
     
+    printf("\n");
     cursor(false);
 
     if (open_connection())

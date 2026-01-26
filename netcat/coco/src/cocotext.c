@@ -12,7 +12,8 @@
  */
 static char uppercase_tmp[321];
 
-byte colorset = 1;
+byte colorset = COLORSET_WHITE;
+byte bgcolor = SCREEN_WHITE;
 bool hirestxt_mode = false;
 byte textMode = 32;
 bool cursor_on = false;
@@ -59,13 +60,13 @@ void switch_colorset(void)
 {
     if (hirestxt_mode)
     {
-        if (colorset == 0)
+        if (colorset == COLORSET_GREEN)
         {
-            colorset = 1;
+            colorset = COLORSET_WHITE;
         }
         else
         {
-            colorset = 0;
+            colorset = COLORSET_GREEN;
         }
 
         screen(1, colorset);
@@ -192,19 +193,22 @@ byte cgetc()
             }
         }
 
-        if (isKeyPressed(KEY_PROBE_SHIFT, KEY_BIT_SHIFT))
-        {
-            shift = 0x00;
-        }
-        else
+		if (isKeyPressed(KEY_PROBE_SHIFT, KEY_BIT_SHIFT))
+		{
+			if (k == BREAK)
+			{
+				shift = 0x18; // Send an ESC key if SHIFT+BREAK is hit
+			}
+			else
+			{
+				shift = 0x00;
+			}
+		}
+		else
         {
             if (k > '@' && k < '[')
             {
                 shift = 0x20;
-            }
-            else if (k == BREAK)
-            {
-                shift = 0x18; // Send an ESC key if SHIFT+BREAK is hit
             }
         }
 
