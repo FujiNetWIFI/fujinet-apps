@@ -13,6 +13,11 @@
 #define ENTER 0x0D
 #define BREAK 0x03
 
+#define COLORSET_WHITE 1
+#define COLORSET_GREEN 0
+#define SCREEN_WHITE 5
+#define SCREEN_GREEN 1
+
 #define gotox(x) moveCursor(x, getCursorRow())
 
 void hirestxt_init(void);
@@ -31,5 +36,7 @@ void get_line(char *buf, uint8_t max_len);
 extern bool hirestxt_mode;
 extern byte textMode;
 extern bool cursor_on;
+extern byte colorset;
+extern byte bgcolor;
 
 #endif // COCOTEXT_H
