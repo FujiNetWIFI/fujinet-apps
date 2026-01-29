@@ -14,7 +14,7 @@ static char response_buffer[2048];
 
 static const char *urlBase = "N:HTTPS://fujinet.online/8bitwiki/wiki.php";
 static const char *articles_printf_spec = "%s?t=lf&ps=%dx%d&l=%u&p=%u&s=%s";
-static const char *article_printf_spec = "%s?t=lf&ps=%dx%d&p=%u&a=%s";
+static const char *article_printf_spec = "%s?t=lf&ps=%dx%d&p=%u&h=1&a=%s";
 
 void url_encode(char *dest, const char *src)
 {
