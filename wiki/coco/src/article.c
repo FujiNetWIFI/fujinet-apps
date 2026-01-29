@@ -60,43 +60,44 @@ void parse_article_response(char *input)
 {
     char *p;
     char *slash;
-    char *nl;
 
     if (!input)
         return;
 
-    /* title starts at beginning */
+    /* First line = title */
     title = input;
 
-    /* find " Pg:" (note leading space) */
-    p = strstr(input, " Pg:");
+    /* Find first newline */
+    p = strchr(input, '\n');
     if (!p)
         return;
 
-    /* terminate title at the space before Pg: */
-    *p = '\0';
+    *p = '\0';          /* terminate title */
+    p++;
 
-    /* page string begins after " Pg:" */
-    page = p + 4;
+    /* Second line = page */
+    page = p;
+    /* Move past "Pg:"*/
+    page += 3;
 
-    /* find slash in page string */
-    slash = strchr(page, '/');
-    if (slash)
-    {
-        /* atoi reads until non-digit, so this is safe */
-        page_max = atoi(slash + 1);
-    }
-
-    /* find end of first line */
-    nl = strchr(page, '\n');
-    if (!nl)
+    /* Find second newline */
+    p = strchr(p, '\n');
+    if (!p)
         return;
 
-    /* terminate first line */
-    *nl = '\0';
+    *p = '\0';          /* terminate page line */
+    p++;
 
-    /* remainder is article body */
-    pageData = nl + 1;
+    /* Rest = pageData */
+    pageData = p;
+
+    /* Extract page_max from "Pg:X/Y" */
+
+    slash = strchr(page, '/');
+    if (slash)
+        page_max = atoi(slash + 1);
+    else
+        page_max = 0;
 }
 
 /**
