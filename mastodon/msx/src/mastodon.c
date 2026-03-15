@@ -111,7 +111,7 @@ void fetch_post(char *display_name, char *date, char *toot)
     memset(toot,0,5120);
 
     network_init();
-    network_open(url,OPEN_MODE_HTTP_GET,OPEN_TRANS_NONE);
+    network_open(url,OPEN_MODE_HTTP_GET,0x00); // Strip SGML
     network_json_parse(url);
     network_json_query(url,display_name_query,tmp);
     strncpy(display_name, tmp, 31);
@@ -151,11 +151,17 @@ void show_toot(const char* display_name, const char* date, const char *toot)
 
     gotoxy(0,6);
 
-    for (int i=0;i<512-32;i++)
+    int in_tag = 0;
+
+    for (int i = 0; i < 512-32; i++)
         if (!toot[i])
             break;
         else
         {
+            if (toot[i] == '<') { in_tag = 1; continue; }
+            if (toot[i] == '>') { in_tag = 0; continue; }
+            if (in_tag) continue;
+
             tikcnt = 0;
             cputc(toot[i]);
             psg_tone(1,psgT(370));
@@ -166,7 +172,7 @@ void show_toot(const char* display_name, const char* date, const char *toot)
             while (tikcnt<2);
         }
 
-    if (strlen(i)>512-32)
+    if (strlen(toot) > 512-32)
         cputs("...");
 }
 
@@ -182,7 +188,7 @@ void main(void)
         show_toot(_display_name,_date,_toot);
 
         tikcnt=0;
-        while(tikcnt<8192)
+        while(tikcnt<4096)
         {
             wait_vblank();
             cursorTimer++;

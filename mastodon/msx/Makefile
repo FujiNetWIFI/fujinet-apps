@@ -32,7 +32,7 @@ PLATFORM_COMBOS = \
 
 include mekkogx/toplevel-rules.mk
 
-LDFLAGS_EXTRA_MSXROM += --generic-console -pragma-redirect:CRT_FONT=_font -create-app -lm
+LDFLAGS_EXTRA_MSXROM += --generic-console -pragma-redirect:CRT_FONT=_font -create-app -lm -lmsxbios
 
 # If you need to add extra platform-specific steps, do it below:
 #   coco/r2r:: coco/custom-step1

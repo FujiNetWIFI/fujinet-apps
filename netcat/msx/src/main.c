@@ -34,7 +34,7 @@ void in()
         for (int i=0;i<len;i++)
         {
             cputc(rxBuf[i]);
-            vdp_put_sprite_16(0,wherex()*8,wherey()*8,0,6);
+            //vdp_put_sprite_16(0,wherex()*8,wherey()*8,0,6);
         }
 
         bw -= len;
@@ -44,9 +44,9 @@ void in()
 void main()
 {
     network_init();
-    vdp_set_mode(1);
-    vdp_set_sprite_mode(sprite_large);
-    vdp_set_sprite_16(0,cursor);
+    vdp_set_mode(0);
+    //vdp_set_sprite_mode(sprite_large);
+    //vdp_set_sprite_16(0,cursor);
     clrscr();
     cprintf("WELCOME TO NETCAT!\n\n");
     cprintf("ENTER URL, OR <-| for\nN:TELNET://BBS FOZZTEXX.COM/\n");

@@ -31,7 +31,7 @@ PLATFORM_COMBOS = \
 
 include mekkogx/toplevel-rules.mk
 
-LDFLAGS_EXTRA_MSXROM += --generic-console -create-app -lndos 
+LDFLAGS_EXTRA_MSXROM += -create-app -lndos -lmsxbios 
 
 # If you need to add extra platform-specific steps, do it below:
 #   coco/r2r:: coco/custom-step1
