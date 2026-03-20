@@ -8,13 +8,13 @@
 #include "lynxfnio.h"
 
 
-struct _oc
+struct _cmd_pkt
 {
   unsigned char cmd;
   unsigned char mode;
   unsigned char trans;
   char url[128];
-} OC; // open command data
+} PKT; // packet for open and other commands
 
 typedef struct
 {
@@ -29,15 +29,15 @@ unsigned char network_status(NetStatus *s)
     unsigned char r;
     unsigned short len;
 
-
-    r = fnio_send(NET_DEV, "S", 1); 
-    //if ((r & 0xF0) != NM_ACK)
-    //    return(0);
+    PKT.cmd = FUJICMD_STATUS;
+    r = fnio_send_buf(FUJI_DEVICEID_NETWORK, (char *) &PKT, 1); 
+    if (!r)
+      return(0);
 
     // Receive response
-    r = fnio_recv(NET_DEV, (char *) s, &len);
-    //if (((r & 0xF0) != NM_ACK) || (len == 0))
-    //    return(0);
+    r = fnio_recv_buf((char *) s, &len);
+    if (!r || !len)
+      return(0);
 
   return(1);
 }
@@ -47,34 +47,45 @@ uint8_t getResponse(char *url, unsigned char *buffer, uint16_t max_length)
 {
     unsigned short len;
     unsigned char r;
-    unsigned int i;
+    uint16_t i;
     NetStatus ns;
     
 
-    // Build packet to open URL
-    OC.cmd = 'O';
-    OC.mode = 12;
-    OC.trans = 0;
-    strncpy(OC.url, url, sizeof(OC.url));
+    // Build packet to open URL (and reuse for commands)
+    PKT.cmd = FUJICMD_OPEN;
+    PKT.mode = 12;
+    PKT.trans = 0;
+    strncpy(PKT.url, url, sizeof(PKT.url));
 
     // Open the URL
-    r = fnio_send(NET_DEV, (char *) &OC, sizeof(OC)); 
-    //if ((r & 0xF0) != NM_ACK)
-    //    return(0);
+    r = fnio_send_buf(FUJI_DEVICEID_NETWORK, (char *) &PKT, sizeof(PKT)); 
+    if (!r)
+     return(0);
+    r = fnio_recv_ack();    // get the ACK or NAK of command completion
+    if (!r)
+     return(0);
 
-    //r = network_status(&ns);
-    //if (!r) return(0);
-  
-    for(i=0; i<max_length; i+=256) {
+    // get the bytes waiting
+    r = network_status(&ns);
+    if (!r)
+      return(0);
+
+    // read the data
+    PKT.cmd = FUJICMD_READ;
+    for(i=0; i<ns.rxBytesWaiting; i+=SERIAL_PACKET_SIZE) {
+        r = fnio_send_buf(FUJI_DEVICEID_NETWORK, (char *) &PKT, 1);
+        if (!r)
+          return(0);
+                
         // Receive response
-        r = fnio_recv(NET_DEV, (char *) &buffer[i], &len);
-        //if (((r & 0xF0) != NM_ACK) || (len == 0))
-        //    return(0);
-        if (len==0) // break out if nothing more received
+        r = fnio_recv_buf((char *) &buffer[i], &len);
+        if (len == 0 || r == 0) // break out if nothing more received, or error
           break;
     }
 
     // Close the channel
-    fnio_send(NET_DEV, (char *) "C", 1);
+    PKT.cmd = FUJICMD_CLOSE;
+    fnio_send_buf(FUJI_DEVICEID_NETWORK, (char *) &PKT, 1);
+    fnio_recv_ack();
     return(1);
 }

@@ -24,6 +24,7 @@ ext_plus4 := prg
 ext_c64 := prg
 ext_atari := xex
 ext_apple2 := apl
+ext_lynx := lnx
 
 APPLE2_DIST := _libs/apple2-dist
 APPLE2_DIST_AC := $(APPLE2_DIST)/ac.jar
