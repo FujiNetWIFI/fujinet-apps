@@ -34,7 +34,7 @@ void in()
            short bw; // Bytes waiting
   unsigned short b,i,j,err;
 
-  for(j=0; j<2000;j++);
+  for(j=0; j<1000;j++);
   
   screen_unuse();
 
@@ -101,11 +101,13 @@ void main(void)
 
   sp_status(cpm,'B');
 
-  screen_puts("FujiNet CP/M.\r\n");
+  screen_puts("FujiNet CP/M.");
+  screen_cr();
+  screen_lf();
   
   if (sp_payload[0]==1)
   {
-      screen_puts("CP/M Device Found. Booting CP/M.\r\n\r\n");
+      screen_puts("CP/M Device Found. Booting CP/M.");
       dev = cpm;
       sp_payload[0]=1;
       sp_payload[1]=0;
@@ -115,8 +117,7 @@ void main(void)
   }
   else
   {
-      screen_puts("CP/M Not Found. Halted.");
-      while(1);
+      screen_puts("CP/M Device running, reconnecting");
   }
   
   screen_cr();
