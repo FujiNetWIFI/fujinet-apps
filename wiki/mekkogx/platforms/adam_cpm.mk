@@ -11,7 +11,7 @@ include $(MWD)/toolchains/z88dk.mk
 ADAM_FLAGS = +cpm -subtype=adam
 CFLAGS += $(ADAM_FLAGS)
 LDFLAGS += $(ADAM_FLAGS)
-LIBS += -lndos
+LIBS +=
 
 r2r:: $(BUILD_DISK) $(BUILD_EXEC) $(BUILD_LIB) $(R2R_EXTRA_DEPS)
 	make -f $(PLATFORM_MK) $(PLATFORM)/r2r-post

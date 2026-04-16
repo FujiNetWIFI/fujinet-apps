@@ -8,6 +8,9 @@ include $(MWD)/toolchains/z88dk.mk
 MSXROM_FLAGS = +msx -subtype=rom
 CFLAGS += $(MSXROM_FLAGS)
 LDFLAGS += $(MSXROM_FLAGS)
+ifneq ($(IS_LIBRARY),1)
+  LDFLAGS += -create-app
+endif
 
 r2r:: $(EXECUTABLE) $(R2R_EXTRA_DEPS)
 	make -f $(PLATFORM_MK) $(PLATFORM)/r2r-post

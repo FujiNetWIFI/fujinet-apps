@@ -5,7 +5,7 @@ AR_DEFAULT ?= wlib
 
 include $(MWD)/tc-common.mk
 
-CFLAGS += -0 -bt=dos -ms -s -osh -zu -fr=$(basename $@).err
+CFLAGS += -0 -bt=dos -fr=$(basename $@).err
 ASFLAGS +=
 LDFLAGS += SYSTEM dos
 ifneq ($(FUJINET_LIB),__UNDEFINED__)
@@ -38,7 +38,7 @@ define link-bin
     disable 1014 \
     name $1 \
     file {$2} \
-$(if $(filter __UNDEFINED__,$(FUJINET_LIB)),,$(space) library {$(LIBS)} \)
+$(if $(filter __UNDEFINED__,$(FUJINET_LIB)),,$(space) library {$(LIBS)} )
 endef
 
 define compile
