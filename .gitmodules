@@ -1,0 +1,3 @@
+[submodule "fujitzee"]
+	path = fujitzee
+	url = https://github.com/FujiNetWIFI/fujinet-fujitzee.git
