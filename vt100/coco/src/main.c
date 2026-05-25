@@ -169,11 +169,12 @@ static void show_help(void)
     screen_overlay_line(2,  "ALT + NUMBER = SYMBOL:");
     screen_overlay_line(3,  "  1 [   2 ]   3 {   4 }   5 |");
     screen_overlay_line(4,  "  6 \\   7 _   8 ~   9 `   0 ^");
-    screen_overlay_line(6,  "CTRL + LETTER = CONTROL CODE");
-    screen_overlay_line(7,  "BREAK         = ESC");
-    screen_overlay_line(8,  "CLEAR         = TAB");
-    screen_overlay_line(9,  "CTRL + BREAK  = QUIT TERMINAL");
-    screen_overlay_line(11, "PRESS ANY KEY TO RETURN");
+    screen_overlay_line(6,  "CTRL + NUMBER = F1 - F10");
+    screen_overlay_line(7,  "CTRL + LETTER = CONTROL CODE");
+    screen_overlay_line(8,  "BREAK         = ESC");
+    screen_overlay_line(9,  "CLEAR         = TAB");
+    screen_overlay_line(10, "CTRL + BREAK  = QUIT TERMINAL");
+    screen_overlay_line(12, "PRESS ANY KEY TO RETURN");
 
     while (isKeyPressed(KEY_PROBE_F1, KEY_BIT_F1)) ;   /* let F1 come back up */
     while (inkey()) ;                                  /* drain it */
@@ -191,6 +192,20 @@ static void send_cursor(char final)
     seq[0] = 0x1B;
     seq[1] = screen_appcursor() ? 'O' : '[';
     seq[2] = (unsigned char) final;
+    network_write(devicespec, seq, 3);
+}
+
+/* Function keys F1..F10 (idx 0..9), as the VT100 sends them: ESC O <final>,
+   with final from the vt100 terminfo kf1..kf10 (P Q R S t u v l w x). vt100 has
+   no F11/F12, so the row stops at F10. */
+static const char fkey_final[] = "PQRStuvlwx";
+
+static void send_fkey(unsigned char idx)
+{
+    unsigned char seq[3];
+    seq[0] = 0x1B;
+    seq[1] = 'O';
+    seq[2] = (unsigned char) fkey_final[idx];
     network_write(devicespec, seq, 3);
 }
 
@@ -229,6 +244,12 @@ static void out_keys(void)
         unsigned char tab = 0x09;
         network_write(devicespec, &tab, 1);
         return;
+    }
+
+    if (isKeyPressed(KEY_PROBE_CTRL, KEY_BIT_CTRL)) /* CTRL + number row -> F1-F10 */
+    {
+        if (k >= '1' && k <= '9') { send_fkey(k - '1'); return; }
+        if (k == '0')             { send_fkey(9);       return; }
     }
 
     k = decode_key(k);
@@ -324,7 +345,8 @@ static unsigned char get_url(void)
     feed("E.G. TELNET://HOST:PORT  (N: ASSUMED)\r\n");
     feed("CTRL-BREAK DISCONNECTS\r\n\r\n");
     feed("ALT+1-0 = [ ] { } | \\ _ ~ ` ^\r\n");
-    feed("CTRL+LTR=CODE BREAK=ESC F1=HELP\r\n\r\n");
+    feed("CTRL+1-0=F1-F10 CTRL+LTR=CODE\r\n");
+    feed("BREAK=ESC F1=HELP\r\n\r\n");
     screen_flush();
 
     term_get_line(line, 96);
