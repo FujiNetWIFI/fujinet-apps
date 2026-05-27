@@ -22,6 +22,8 @@ static char devicespec[160];
 static unsigned char rx_buf[RXSZ];
 static unsigned char running;
 
+/* ---- terminal stream output ---- */
+
 /* Write a byte buffer to the screen: bulk-write runs of printable ASCII
    straight into the shadow (one call per run) when the decoder is in CHAR
    state, and route control/escape bytes through the engine. This is the hot
@@ -59,6 +61,8 @@ static void net_sendback(char c)
 {
     network_write(devicespec, (const unsigned char *) &c, 1);
 }
+
+/* ---- prompt input ---- */
 
 /* ALT + the number row produces the 10 ASCII characters the CoCo keyboard
    lacks. Indexed by (key - '0'):  0='^' 1='[' 2=']' 3='{' 4='}' 5='|' 6='\'
@@ -160,6 +164,99 @@ static void term_get_line(char *buf, unsigned char max)
     screen_flush();
 }
 
+/* one-time monitor-type selection (affects how palette colours are shown) */
+static void choose_monitor(void)
+{
+    unsigned char k;
+
+    feed("\x1b[2J\x1b[HMONITOR TYPE?\r\n\r\n");
+    feed("  R = RGB (DEFAULT)\r\n");
+    feed("  C = COMPOSITE\r\n");
+    screen_flush();
+
+    while ((k = inkey()) == 0) ;
+    if (k == 'C' || k == 'c')
+        screen_palette(1);
+}
+
+static unsigned char get_url(void)
+{
+    /* The RX buffer is idle while we sit at the connect prompt, so carve the
+       scratch buffers out of it rather than spend 352 bytes of permanent BSS.
+       devicespec holds the finished URL before the session reuses rx_buf. */
+    char *line = (char *) rx_buf;          /*   0..95  (96) */
+    char *user = (char *) rx_buf + 96;     /*  96..143 (48) */
+    char *pass = (char *) rx_buf + 144;    /* 144..191 (48) */
+    char *full = (char *) rx_buf + 192;    /* 192..351 (160) */
+    char *sep;
+    unsigned int pre;
+
+    feed("\x1b[2J\x1b[HFUJINET VT100 TERMINAL\r\n\r\n");
+    feed("DEVICESPEC? (BLANK TO QUIT)\r\n");
+    feed("E.G. TELNET://HOST:PORT  (N: ASSUMED)\r\n");
+    feed("CTRL-BREAK DISCONNECTS\r\n\r\n");
+    feed("ALT+1-0 = [ ] { } | \\ _ ~ ` ^\r\n");
+    feed("CTRL+1-0=F1-F10 CTRL+LTR=CODE\r\n");
+    feed("BREAK=ESC F1=HELP\r\n\r\n");
+    screen_flush();
+
+    term_get_line(line, 96);
+    if (line[0] == 0)
+        return 0;
+
+    /* assume an "N:" prefix if the user didn't type one */
+    if (line[0] == 'N' || line[0] == 'n')
+        strcpy(devicespec, line);
+    else
+    {
+        strcpy(devicespec, "N:");
+        strcat(devicespec, line);
+    }
+
+    /* optional credentials (ssh/ftp/...): the firmware reads user:0@host
+       from the URL, so splice them in after the "://" - no special call. */
+    feed("\r\nUSERNAME (BLANK = NONE)?\r\n");
+    screen_flush();
+    term_get_line(user, 48);
+
+    if (user[0])
+    {
+        feed("PASSWORD (BLANK = NONE)?\r\n");
+        screen_flush();
+        term_get_line(pass, 48);
+
+        sep = strstr(devicespec, "://");
+        if (sep)
+        {
+            pre = (unsigned int) (sep - devicespec) + 3;
+            memcpy(full, devicespec, pre);
+            full[pre] = 0;
+            strcat(full, user);
+            if (pass[0])
+            {
+                strcat(full, ":");
+                strcat(full, pass);
+            }
+            strcat(full, "@");
+            strcat(full, sep + 3);
+            strcpy(devicespec, full);
+        }
+    }
+
+    /* Always tell the host we are a VT100 of our fixed 80x24 size. The firmware
+       reads ?term/?cols/?rows for telnet (TTYPE/NAWS) and ssh (pty-req); other
+       protocols ignore the query. */
+    if (strlen(devicespec) + 28 < sizeof(devicespec))
+    {
+        strcat(devicespec, strstr(devicespec, "?") ? "&" : "?");
+        strcat(devicespec, "term=vt100&cols=80&rows=24");
+    }
+
+    return 1;
+}
+
+/* ---- keyboard output ---- */
+
 /* F1 key reference. Drawn straight to the hardware screen (not the shadow),
    so one re-blit restores the live session. Hit F1 to show, any key to return. */
 static void show_help(void)
@@ -257,6 +354,8 @@ static void out_keys(void)
         network_write(devicespec, &k, 1);
 }
 
+/* ---- network input and session lifecycle ---- */
+
 /* network -> engine -> screen. Drain everything FujiNet has buffered, feeding
    it all to the engine, and blit only ONCE afterwards - not once per read.
    (Flushing per read meant a full-screen blit for every small chunk, which is
@@ -313,97 +412,6 @@ static void in_data(void)
         screen_flush();
 }
 
-/* one-time monitor-type selection (affects how palette colours are shown) */
-static void choose_monitor(void)
-{
-    unsigned char k;
-
-    feed("\x1b[2J\x1b[HMONITOR TYPE?\r\n\r\n");
-    feed("  R = RGB (DEFAULT)\r\n");
-    feed("  C = COMPOSITE\r\n");
-    screen_flush();
-
-    while ((k = inkey()) == 0) ;
-    if (k == 'C' || k == 'c')
-        screen_palette(1);
-}
-
-static unsigned char get_url(void)
-{
-    /* The RX buffer is idle while we sit at the connect prompt, so carve the
-       scratch buffers out of it rather than spend 352 bytes of permanent BSS.
-       devicespec holds the finished URL before the session reuses rx_buf. */
-    char *line = (char *) rx_buf;          /*   0..95  (96) */
-    char *user = (char *) rx_buf + 96;     /*  96..143 (48) */
-    char *pass = (char *) rx_buf + 144;    /* 144..191 (48) */
-    char *full = (char *) rx_buf + 192;    /* 192..351 (160) */
-    char *sep;
-    unsigned int pre;
-
-    feed("\x1b[2J\x1b[HFUJINET VT100 TERMINAL\r\n\r\n");
-    feed("DEVICESPEC? (BLANK TO QUIT)\r\n");
-    feed("E.G. TELNET://HOST:PORT  (N: ASSUMED)\r\n");
-    feed("CTRL-BREAK DISCONNECTS\r\n\r\n");
-    feed("ALT+1-0 = [ ] { } | \\ _ ~ ` ^\r\n");
-    feed("CTRL+1-0=F1-F10 CTRL+LTR=CODE\r\n");
-    feed("BREAK=ESC F1=HELP\r\n\r\n");
-    screen_flush();
-
-    term_get_line(line, 96);
-    if (line[0] == 0)
-        return 0;
-
-    /* assume an "N:" prefix if the user didn't type one */
-    if (line[0] == 'N' || line[0] == 'n')
-        strcpy(devicespec, line);
-    else
-    {
-        strcpy(devicespec, "N:");
-        strcat(devicespec, line);
-    }
-
-    /* optional credentials (ssh/ftp/...): the firmware reads user:0@host
-       from the URL, so splice them in after the "://" - no special call. */
-    feed("\r\nUSERNAME (BLANK = NONE)?\r\n");
-    screen_flush();
-    term_get_line(user, 48);
-
-    if (user[0])
-    {
-        feed("PASSWORD (BLANK = NONE)?\r\n");
-        screen_flush();
-        term_get_line(pass, 48);
-
-        sep = strstr(devicespec, "://");
-        if (sep)
-        {
-            pre = (unsigned int) (sep - devicespec) + 3;
-            memcpy(full, devicespec, pre);
-            full[pre] = 0;
-            strcat(full, user);
-            if (pass[0])
-            {
-                strcat(full, ":");
-                strcat(full, pass);
-            }
-            strcat(full, "@");
-            strcat(full, sep + 3);
-            strcpy(devicespec, full);
-        }
-    }
-
-    /* Always tell the host we are a VT100 of our fixed 80x24 size. The firmware
-       reads ?term/?cols/?rows for telnet (TTYPE/NAWS) and ssh (pty-req); other
-       protocols ignore the query. */
-    if (strlen(devicespec) + 28 < sizeof(devicespec))
-    {
-        strcat(devicespec, strstr(devicespec, "?") ? "&" : "?");
-        strcat(devicespec, "term=vt100&cols=80&rows=24");
-    }
-
-    return 1;
-}
-
 static void connect_and_run(void)
 {
     char nb[8];
@@ -435,18 +443,8 @@ static void connect_and_run(void)
     network_close(devicespec);
     term_sendback = 0;
 
-    /* clean slate before the prompt returns (esp. after CTRL-BREAK): reset the
-       decoder so a half-parsed escape can't eat the clear, default the colors,
-       and clear the screen. */
-    vt100_reset();
-    screen_attr_reset();
-    screen_set_reverse(0);            /* undo DECSCNM before touching colours */
-    screen_set_region(0, 0);          /* drop any scroll region vi/etc. left set */
-    screen_set_autowrap(1);           /* and any DECAWM/DECOM/DECCKM modes */
-    screen_set_origin(0);
-    screen_set_appcursor(0);
-    screen_clear();
-    screen_set_pos(0, 0);
+    /* Clean slate before the prompt returns, especially after CTRL-BREAK. */
+    vt100_terminal_reset();
     screen_flush();
 }
 
@@ -471,6 +469,6 @@ int main(void)
     while (get_url())
         connect_and_run();
 
-    width(32);
+    screen_shutdown();
     return 0;
 }

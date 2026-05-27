@@ -69,71 +69,14 @@ static char _private=0;
 
 /*********************************************************************/
 
-/* response injection */
-extern void sendback(char c);
+/* Set by main.c so DSR/cursor replies can be sent back over the wire. */
+void (*term_sendback)(char c) = 0;
 
-/* Character commands */
-extern void bel(void);
-extern void bs(void);
-extern void tab(void);
-extern void lf(void);
-extern void cr(void);
-extern void xoff(void);
-extern void xon(void);
-extern void toscreen(char c);
-
-/* Cursor control */
-extern void cuu(void);
-extern void cud(void);
-extern void cur(void);
-extern void cul(void);
-extern void cup(unsigned char r, unsigned char c);
-extern void set_region(unsigned char top, unsigned char bottom);
-extern void ind(void);
-extern void ri(void);
-extern void nel(void);
-extern void whereami(unsigned char *r, unsigned char *c);
-extern void save_cursor(void);
-extern void restore_cursor(void);
-extern void decaln(void);
-extern void set_autowrap(unsigned char on);
-extern void set_origin(unsigned char on);
-extern void set_reverse(unsigned char on);
-extern void set_appcursor(unsigned char on);
-
-/* insert/delete */
-extern void insert_line(unsigned char n);
-extern void delete_line(unsigned char n);
-
-/* Tab control */
-extern void hts(void);
-extern void clear_current_tab_stop(void);
-extern void clear_all_tab_stops(void);
-
-/* Character attributes */
-extern void reset_attributes(void);
-extern void bold(void);
-extern void lo(void);
-extern void underline(void);
-extern void blink(void);
-extern void inverse(void);
-extern void invisible(void);
-extern void fg_color(unsigned char c);
-extern void bg_color(unsigned char c);
-extern void fg_default(void);
-extern void bg_default(void);
-
-/* Clear commands */
-extern void clear_cursor_to_end(void);
-extern void clear_beginning_to_cursor(void);
-extern void clear_entire_screen(void);
-extern void clear_to_end_of_line(void);
-extern void clear_line_until_cursor(void);
-extern void clear_entire_line(void);
-
-/* Media Control commands */
-extern void printer_off(void);
-extern void printer_on(void);
+static void sendback(char c)
+{
+  if (term_sendback)
+    term_sendback(c);
+}
 
 /*********************************************************************/
 
@@ -160,49 +103,65 @@ static void _vt100_cleanup(void)
 /**
  * @brief wrap cursor commands to handle repeat
  */
-void _vt100_bracketcommand_cursor(void)
+static void _vt100_bracketcommand_cursor(void)
 {
-  unsigned char i;
   unsigned char r = _pv[0];
 
   if (r==0)
     r=1;
-  
-  for (i=0;i<r;i++)
+
+  switch(_c)
     {
-      switch(_c)
-	{
-	case 'A': /* CURSOR UP */
-	  cuu();
-	  break;
-	case 'B': /* CURSOR DN */
-	  cud();
-	  break;
-	case 'C': /* CURSOR RT */
-	  cur();
-	  break;
-	case 'D': /* CURSOR LF */
-	  cul();
-	  break;
-	}
+    case 'A': /* CURSOR UP */
+      screen_cursor_up(r);
+      break;
+    case 'B': /* CURSOR DN */
+      screen_cursor_down(r);
+      break;
+    case 'C': /* CURSOR RT */
+      screen_cursor_right(r);
+      break;
+    case 'D': /* CURSOR LF */
+      screen_cursor_left(r);
+      break;
     }
 }
 
 /**
  * @brief insert line
  */
-void il(void)
+static void il(void)
 {
   if (_pv[0]==0)
     _pv[0]=1;
 
-  insert_line(_pv[0]);
+  screen_insert_line(_pv[0]);
+}
+
+static void cup(unsigned char r, unsigned char c)
+{
+  if (!r) r = 1;
+  if (!c) c = 1;
+  screen_set_pos(c - 1, r - 1);
+}
+
+static void _vt100_terminal_reset(void)
+{
+  _vt100_cleanup();
+  screen_set_reverse(0);
+  screen_set_appcursor(0);
+  screen_attr_reset();
+  screen_set_region(0,0);
+  screen_set_autowrap(1);
+  screen_set_origin(0);
+  screen_clear();
+  cup(1,1);
 }
 
 /**
  * @brief Set Character Attributes
  */
-void sgr(void)
+static void sgr(void)
 {
   unsigned char i;
 
@@ -211,41 +170,41 @@ void sgr(void)
       switch(_pv[i])
 	{
 	case 0:
-	  reset_attributes();
+	  screen_attr_reset();
 	  break;
 	case 1:
-	  bold();
+	  /* Bold has no hardware bit in CoCo 3 40/80-column text mode. */
 	  break;
 	case 2:
-	  lo();
+	  screen_attr_reset();
 	  break;
 	case 4:
-	  underline();
+	  screen_attr_underline();
 	  break;
 	case 5:
-	  blink();
+	  screen_attr_blink();
 	  break;
 	case 7:
-	  inverse();
+	  screen_attr_inverse();
 	  break;
 	case 8:
-	  invisible();
+	  screen_attr_invisible();
 	  break;
 	case 39:
-	  fg_default();
+	  screen_set_fg(7);
 	  break;
 	case 49:
-	  bg_default();
+	  screen_set_bg(0);
 	  break;
 	default:
 	  if (_pv[i] >= 30 && _pv[i] <= 37)
-	    fg_color(_pv[i] - 30);
+	    screen_set_fg(_pv[i] - 30);
 	  else if (_pv[i] >= 90 && _pv[i] <= 97)
-	    fg_color(_pv[i] - 90);
+	    screen_set_fg(_pv[i] - 90);
 	  else if (_pv[i] >= 40 && _pv[i] <= 47)
-	    bg_color(_pv[i] - 40);
+	    screen_set_bg(_pv[i] - 40);
 	  else if (_pv[i] >= 100 && _pv[i] <= 107)
-	    bg_color(_pv[i] - 100);
+	    screen_set_bg(_pv[i] - 100);
 	  break;
 	}
     }
@@ -254,18 +213,18 @@ void sgr(void)
 /**
  * @brief Erase in Display
  */
-void ed(void)
+static void ed(void)
 {
   switch(_pv[0])
     {
     case 0: /* CURSOR TO END */
-      clear_cursor_to_end();
+      screen_clear_cursor_to_end();
       break;
     case 1: /* BEGINNING TO CURSOR */
-      clear_beginning_to_cursor();
+      screen_clear_beg_to_cursor();
       break;
     case 2: /* ENTIRE SCREEN */
-      clear_entire_screen();
+      screen_clear();
       break;
     }
 }
@@ -273,34 +232,18 @@ void ed(void)
 /**
  * @brief Erase in line
  */
-void el(void)
+static void el(void)
 {
   switch(_pv[0])
     {
     case 0:
-      clear_to_end_of_line();
+      screen_clear_to_end_of_line();
       break;
     case 1:
-      clear_line_until_cursor();
+      screen_clear_line_to_cursor();
       break;
     case 2:
-      clear_entire_line();
-      break;
-    }
-}
-
-/**
- * @brief Media control (printer on/off)
- */
-void mc(void)
-{
-  switch (_pv[0])
-    {
-    case 4:
-      printer_off();
-      break;
-    case 5:
-      printer_on();
+      screen_clear_current_line();
       break;
     }
 }
@@ -308,15 +251,15 @@ void mc(void)
 /**
  * @brief Tab Clear control
  */
-void tbc(void)
+static void tbc(void)
 {
   switch (_pv[0])
     {
     case 0:
-      clear_current_tab_stop();
+      screen_clear_tab();
       break;
     case 3:
-      clear_all_tab_stops();
+      screen_clear_all_tabs();
       break;
     }
 }
@@ -324,7 +267,7 @@ void tbc(void)
 /**
  * @brief Device Status Report
  */
-void dsr(void)
+static void dsr(void)
 {
   unsigned char r,c,i;
   char num[6];
@@ -338,7 +281,7 @@ void dsr(void)
       sendback('n');
       break;
     case 6: // Where are we on screen?
-      whereami(&r,&c);
+      screen_get_pos(&r,&c);
 
       /* CPR reply, built with itoa10 to avoid pulling in printf/sprintf
          (which cost >1KB and overflowed the tight $4000-$7FFF stack space).
@@ -359,7 +302,7 @@ void dsr(void)
  * @brief Device Attributes (DA): reply identifying us as a VT100 with the
  *        Advanced Video Option (we have attributes/colour). vttest queries this.
  */
-void da(void)
+static void da(void)
 {
   static const char r[] = "\x1b[?1;2c";
   unsigned char i;
@@ -375,16 +318,17 @@ static void _vt100_command(void)
   switch(_c)
     {
     case 'D':
-      ind();
+      screen_lf();
       break;
     case 'M':
-      ri();
+      screen_ri();
       break;
     case 'E':
-      nel();
+      screen_cr();
+      screen_lf();
       break;
     case 'H':
-      hts();
+      screen_set_tab();
       break;
     }
   
@@ -396,8 +340,6 @@ static void _vt100_command(void)
  */
 static void _vt100_bracketcommand(void)
 {
-  char tmp[5] = {0,0,0,0,0};
-  
   switch(_c)
     {
     case 'A': /* CURSOR UP */
@@ -413,16 +355,16 @@ static void _vt100_bracketcommand(void)
       cup(_pv[0],_pv[1]);
       break;
     case 'r': /* SET SCROLL REGION (DECSTBM) */
-      set_region(_pv[0],_pv[1]);
+      screen_set_region(_pv[0],_pv[1]);
       break;
     case 'c': /* DEVICE ATTRIBUTES */
       da();
       break;
     case 's': /* SAVE CURSOR (ANSI) */
-      save_cursor();
+      screen_save_cursor();
       break;
     case 'u': /* RESTORE CURSOR (ANSI) */
-      restore_cursor();
+      screen_restore_cursor();
       break;
     case 'm': /* SET ATTRIBUTES */
       sgr();
@@ -437,13 +379,12 @@ static void _vt100_bracketcommand(void)
       il();
       break;
     case 'M': /* DELETE LINE(s)*/
-      delete_line(_pv[0]);
+      screen_delete_line(_pv[0]);
       break;
     case 'g': /* TAB CLEAR */
       tbc();
       break;
-    case 'i': /* PRINTER CONTROL */
-      mc();
+    case 'i': /* PRINTER CONTROL: consumed, not supported on CoCo */
       break;
     case 'n': /* DEVICE STATUS REPORT */
       dsr();
@@ -507,7 +448,7 @@ static void _vt100_charset(void)
 static void _vt100_hash(void)
 {
   if (_c == '8')
-    decaln();
+    screen_decaln();
   vt100_state = CHAR;
 }
 
@@ -527,20 +468,20 @@ static void _vt100_private_command(void)
 	  switch (_pv[i])
 	    {
 	    case 1:                    /* DECCKM: application cursor keys */
-	      set_appcursor(set);
+	      screen_set_appcursor(set);
 	      break;
 	    case 3:                    /* DECCOLM: we can't change width on the */
-	      clear_entire_screen();   /* CoCo, but the mode switch clears and  */
+	      screen_clear();          /* CoCo, but the mode switch clears and  */
 	      cup(1,1);                /* homes the cursor on a real VT100      */
 	      break;
 	    case 5:                    /* DECSCNM: reverse video */
-	      set_reverse(set);
+	      screen_set_reverse(set);
 	      break;
 	    case 6:                    /* DECOM: origin mode */
-	      set_origin(set);
+	      screen_set_origin(set);
 	      break;
 	    case 7:                    /* DECAWM: autowrap */
-	      set_autowrap(set);
+	      screen_set_autowrap(set);
 	      break;
 	    }
 	}
@@ -610,21 +551,11 @@ static void _vt100_escape(void)
   else if (_c == '#')
     vt100_state=HASH;           /* line-size / DECALN: handle next byte */
   else if (_c == '7')
-    { save_cursor(); vt100_state=CHAR; }        /* DECSC */
+    { screen_save_cursor(); vt100_state=CHAR; }        /* DECSC */
   else if (_c == '8')
-    { restore_cursor(); vt100_state=CHAR; }     /* DECRC */
+    { screen_restore_cursor(); vt100_state=CHAR; }     /* DECRC */
   else if (_c == 'c')
-    {                                           /* RIS - reset to initial state */
-      set_reverse(0);
-      set_appcursor(0);
-      reset_attributes();
-      set_region(0,0);
-      set_autowrap(1);
-      set_origin(0);
-      clear_entire_screen();
-      cup(1,1);
-      vt100_state=CHAR;
-    }
+    _vt100_terminal_reset();                   /* RIS - reset to initial state */
   else if (IS_COMMAND(_c))
     {
       /* ESC-letter commands (IND/RI/NEL/HTS) are a single byte after ESC, so
@@ -653,34 +584,22 @@ static void _vt100_char(void)
 
   switch (_c)
     {
-    case BEL:
-      bel();
-      break;
     case BS:
-      bs();
+      screen_bs();
       break;
     case TAB:
-      tab();
+      screen_tab();
       break;
     case VT:
     case FF:
     case LF:
-      lf();
+      screen_lf();
       break;
     case CR:
-      cr();
-      break;
-    case DC1:
-      xoff();
-      break;
-    case DC3:
-      xon();
+      screen_cr();
       break;
     case ESC:
       vt100_state=ESCAPE;
-      break;
-    default:
-      toscreen(_c);
       break;
     }
 }
@@ -762,9 +681,7 @@ unsigned char vt100_char_state(void)
   return vt100_state == CHAR;
 }
 
-/* Reset the decoder to a clean CHAR state (e.g. after an abrupt disconnect,
-   so a following clear sequence isn't swallowed by a half-parsed escape). */
-void vt100_reset(void)
+void vt100_terminal_reset(void)
 {
-  _vt100_cleanup();
+  _vt100_terminal_reset();
 }

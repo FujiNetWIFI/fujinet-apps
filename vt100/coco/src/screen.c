@@ -27,7 +27,7 @@
    reference it by name. */
 unsigned char vt_shadow[BUFSZ];
 
-/* Cursor position - extern, read by term.c (whereami, ri). */
+/* Cursor position. */
 unsigned char _row = 0;
 unsigned char _col = 0;
 
@@ -89,31 +89,33 @@ static void mark_dirty(unsigned char row)
     if (row > dmax) dmax = row;
 }
 
-/* ---- platform hooks (no-ops on CoCo) ---- */
-void screen_bell(void) { }
+static void blank_cells(unsigned char x, unsigned char y, unsigned char n)
+{
+    unsigned char i;
+
+    if (y >= ROWS)
+        return;
+    for (i = 0; i < n && (unsigned char) (x + i) < COLS; i++)
+        set_cell(cell_off(x + i, y), ' ', _def_attr);
+    mark_dirty(y);
+}
 
 /* ---- character output ---- */
 void screen_scroll_up(void)
 {
-    unsigned char x;
     memmove(vt_shadow + (unsigned int) _top * STRIDE,
             vt_shadow + (unsigned int) (_top + 1) * STRIDE,
             (unsigned int) (_bot - _top) * STRIDE);
-    for (x = 0; x < COLS; x++)
-        set_cell(cell_off(x, _bot), ' ', _def_attr);
+    blank_cells(0, _bot, COLS);
     mark_dirty(_top);
-    mark_dirty(_bot);
 }
 
 void screen_scroll_down(void)
 {
-    unsigned char x;
     memmove(vt_shadow + (unsigned int) (_top + 1) * STRIDE,
             vt_shadow + (unsigned int) _top * STRIDE,
             (unsigned int) (_bot - _top) * STRIDE);
-    for (x = 0; x < COLS; x++)
-        set_cell(cell_off(x, _top), ' ', _def_attr);
-    mark_dirty(_top);
+    blank_cells(0, _top, COLS);
     mark_dirty(_bot);
 }
 
@@ -376,38 +378,34 @@ void screen_set_pos(unsigned char x, unsigned char y)
     _row = (y < ROWS) ? y : (ROWS - 1);
 }
 
-/* ---- clearing (cleared cells use the default attribute) ---- */
-void screen_clear_line(unsigned char x, unsigned char y, unsigned char n)
+void screen_get_pos(unsigned char *row, unsigned char *col)
 {
-    unsigned char i;
-    if (y >= ROWS)
-        return;
-    for (i = 0; i < n && (unsigned char) (x + i) < COLS; i++)
-        set_cell(cell_off(x + i, y), ' ', _def_attr);
-    mark_dirty(y);
+    *row = _row;
+    *col = _col;
 }
 
+/* ---- clearing (cleared cells use the default attribute) ---- */
 void screen_clear(void)
 {
     unsigned char y;
     for (y = 0; y < ROWS; y++)
-        screen_clear_line(0, y, COLS);
+        blank_cells(0, y, COLS);
 }
 
 void screen_clear_to_end_of_line(void)
 {
-    screen_clear_line(_col, _row, COLS - _col);
+    blank_cells(_col, _row, COLS - _col);
 }
 
 void screen_clear_current_line(void)
 {
-    screen_clear_line(0, _row, COLS);
+    blank_cells(0, _row, COLS);
 }
 
 /* EL mode 1: current line only, from the start to the cursor. */
 void screen_clear_line_to_cursor(void)
 {
-    screen_clear_line(0, _row, _col + 1);
+    blank_cells(0, _row, _col + 1);
 }
 
 /* ED mode 1: whole display from top-left to the cursor - every row above the
@@ -416,16 +414,16 @@ void screen_clear_beg_to_cursor(void)
 {
     unsigned char r;
     for (r = 0; r < _row; r++)
-        screen_clear_line(0, r, COLS);
-    screen_clear_line(0, _row, _col + 1);
+        blank_cells(0, r, COLS);
+    blank_cells(0, _row, _col + 1);
 }
 
 void screen_clear_cursor_to_end(void)
 {
     unsigned char r;
-    screen_clear_line(_col, _row, COLS - _col);
+    blank_cells(_col, _row, COLS - _col);
     for (r = _row + 1; r < ROWS; r++)
-        screen_clear_line(0, r, COLS);
+        blank_cells(0, r, COLS);
 }
 
 /* ---- insert / delete line ---- */
@@ -438,7 +436,7 @@ void screen_insert_line(unsigned char n)
         for (r = ROWS - 1; r > _row; r--)
             memcpy(vt_shadow + (unsigned int) r * STRIDE,
                    vt_shadow + (unsigned int) (r - 1) * STRIDE, STRIDE);
-        screen_clear_line(0, _row, COLS);
+        blank_cells(0, _row, COLS);
     }
     mark_dirty(_row);
     mark_dirty(ROWS - 1);
@@ -453,7 +451,7 @@ void screen_delete_line(unsigned char n)
         for (r = _row; r < ROWS - 1; r++)
             memcpy(vt_shadow + (unsigned int) r * STRIDE,
                    vt_shadow + (unsigned int) (r + 1) * STRIDE, STRIDE);
-        screen_clear_line(0, ROWS - 1, COLS);
+        blank_cells(0, ROWS - 1, COLS);
     }
     mark_dirty(_row);
     mark_dirty(ROWS - 1);
@@ -463,7 +461,6 @@ void screen_delete_line(unsigned char n)
 void screen_attr_reset(void)     { _attr = _def_attr; }
 void screen_attr_underline(void) { _attr |= 0x40; }
 void screen_attr_blink(void)     { _attr |= 0x80; }
-void screen_attr_bold(void)      { /* TODO: brighten foreground */ }
 
 void screen_attr_inverse(void)
 {
@@ -676,4 +673,12 @@ void screen_init(void)
     _col = 0;
     screen_clear();
     screen_flush();
+}
+
+void screen_shutdown(void)
+{
+    resetPalette(1);             /* restore the CoCo 3 RGB text palette */
+    rgb();
+    width(32);
+    cls(255);                    /* CLS with no colour argument */
 }
