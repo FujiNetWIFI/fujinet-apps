@@ -1,11 +1,9 @@
 /**
  * @brief FujiNet VT100 terminal for the CoCo 3.
  *
- * Mirrors the Atari port's general-terminal structure (prompt for a devicespec,
- * open the N: network device, loop) and the Apple II port's polling read loop
- * that feeds each received byte to the vt100() engine. The Atari's PROCEED
- * interrupt isn't available on the CoCo, so we poll network_status like the
- * Apple II polls sp_bytes_waiting. Transport is fujinet-lib-coco (N: device).
+ * Mirrors the Atari port (prompt for a devicespec, open N:, loop) but uses
+ * the Apple II port's polling read loop since the CoCo lacks PROCEED.
+ * Transport is fujinet-lib-coco.
  */
 
 #include <cmoc.h>
@@ -35,15 +33,14 @@ static char devicespec[160];
 static unsigned char rx_buf[RXSZ];
 static unsigned char running;
 
-/* Holds the bare URL of a one-shot N-path session so offer_save() can ask
-   whether to keep it. oneshot_too_long is set instead when the URL exceeded
-   PB_URL_LEN; offer_save shows an explicit message in that case. */
+/* Bare URL of a one-shot N-path session, held for offer_save(); empty if
+   none pending. oneshot_too_long: URL exceeded PB_URL_LEN, show a message
+   instead of the save prompt. */
 static char oneshot_url[PB_URL_LEN];
 static unsigned char oneshot_too_long;
 
-/* rx_buf is idle while the phonebook/URL prompt is up, so phonebook scratch
-   is carved from it - no permanent BSS. PB_KEYBUF needs 66 bytes
-   (fuji_read_appkey wants keysize+2). */
+/* Phonebook scratch carved from rx_buf (idle at the prompt). PB_KEYBUF needs
+   66 bytes - fuji_read_appkey wants keysize+2. */
 #define PB_KEYBUF  ((uint8_t *)(rx_buf + 0))    /*   0..65  */
 #define PB_LINE    ((char *)   (rx_buf + 80))   /*  80..159 */
 #define PB_NAMEBUF ((char *)   (rx_buf + 160))  /* 160..176 */
@@ -52,10 +49,9 @@ static unsigned char oneshot_too_long;
 
 /* ---- terminal stream output ---- */
 
-/* Write a byte buffer to the screen: bulk-write runs of printable ASCII
-   straight into the shadow (one call per run) when the decoder is in CHAR
-   state, and route control/escape bytes through the engine. This is the hot
-   path for both the live network stream and feed(). */
+/* Hot path: when the decoder is in CHAR state, bulk-write runs of printable
+   bytes to the shadow in one screen_puts_run call; route control/escape
+   bytes through the engine. */
 static void vt_write(const unsigned char *buf, uint16_t len)
 {
     uint16_t j = 0, s;
@@ -78,13 +74,12 @@ static void vt_write(const unsigned char *buf, uint16_t len)
     }
 }
 
-/* feed a NUL-terminated stream through the screen */
 static void feed(const char *s)
 {
     vt_write((const unsigned char *) s, (uint16_t) strlen(s));
 }
 
-/* DSR / cursor-position replies from the engine -> back over the connection */
+/* DSR / cursor-position replies from the engine -> network */
 static void net_sendback(char c)
 {
     network_write(devicespec, (const unsigned char *) &c, 1);
@@ -97,23 +92,18 @@ static void net_sendback(char c)
    7='_' 8='~' 9='`'  */
 static const char alt_syms[10] = { '^','[',']','{','}','|','\\','_','~','`' };
 
-/* Decode one raw inkey() byte into the single byte to use, applying the
-   keyboard scheme by probing modifiers the same way SHIFT is probed:
-   ALT+digit -> missing symbol, CTRL+letter -> control code, BREAK -> ESC,
-   and the default upper->lower fold (SHIFT keeps caps). The multi-byte arrow
-   keys are handled by the caller (out_keys). */
+/* Apply the keyboard scheme by probing modifiers: ALT+digit -> missing symbol,
+   CTRL+letter -> control code, BREAK -> ESC, default upper->lower fold (SHIFT
+   keeps caps). Arrow keys are handled by the caller (out_keys). Stray modifier
+   keystrokes (ALT alone, CTRL alone) are swallowed. */
 static unsigned char decode_key(unsigned char k)
 {
     if (!k)
         return 0;
 
-    if (k == 0x03)                                   /* BREAK alone -> ESC */
+    if (k == 0x03)                                   /* BREAK -> ESC */
         return 0x1B;
 
-    /* ALT is the symbol shift: ONLY ALT+digit produces output. Anything else
-       while ALT is held - including the stray code the ALT key itself emits -
-       is swallowed (inkey/POLCAT reflects the live matrix, so ALT is still
-       held when its own code is read). */
     if (isKeyPressed(KEY_PROBE_ALT, KEY_BIT_ALT))
     {
         if (k >= '0' && k <= '9')
@@ -121,8 +111,6 @@ static unsigned char decode_key(unsigned char k)
         return 0;
     }
 
-    /* CTRL: ONLY CTRL+letter produces a control code; the CTRL key's own stray
-       code (and any other non-letter while CTRL is held) is swallowed. */
     if (isKeyPressed(KEY_PROBE_CTRL, KEY_BIT_CTRL))
     {
         if (k >= 'A' && k <= 'Z') return k & 0x1F;
@@ -136,14 +124,12 @@ static unsigned char decode_key(unsigned char k)
     return k;
 }
 
-/* one decoded keystroke (used by the line editor) */
 static unsigned char read_key(void)
 {
     return decode_key(inkey());
 }
 
-/* 80-column line editor: SHIFT-aware input, echoes through the engine, blinking
-   block cursor. Returns the line in buf (no newline). */
+/* 80-col line editor, blinking block cursor. Returns the line in buf (no \n). */
 static void term_get_line(char *buf, unsigned char max)
 {
     unsigned char i = 0, k, blink = 1;
@@ -166,16 +152,17 @@ static void term_get_line(char *buf, unsigned char max)
 
         screen_show_cursor(1);                    /* solid while typing */
 
-        if (k == 13)                              /* ENTER */
+        if (k == 13)
             break;
-        if (k == 8)                               /* backspace (left arrow) */
+        if (k == 8)                               /* BS (left arrow) */
         {
             if (i > 0)
             {
                 i--;
-                vt100(8);             /* BS only moves left, so erase by */
-                screen_putc(' ');     /* overwriting with a space and */
-                vt100(8);             /* stepping back over it */
+                /* BS only moves: erase by overwriting with a space and stepping back */
+                vt100(8);
+                screen_putc(' ');
+                vt100(8);
             }
         }
         else if (k >= 0x20 && k < 0x7F && i < (unsigned char) (max - 1))
@@ -192,7 +179,7 @@ static void term_get_line(char *buf, unsigned char max)
     screen_flush();
 }
 
-/* one-time monitor-type selection (affects how palette colours are shown) */
+/* One-time monitor-type prompt (selects the palette). */
 static void choose_monitor(void)
 {
     unsigned char k;
@@ -222,13 +209,12 @@ static void set_devicespec_from_url(const char *url)
 }
 
 /* Prompt for user/pass, splice into devicespec as user:pass@host, append the
-   ?term=...&cols=...&rows=... the firmware reads for telnet TTYPE/NAWS and
-   ssh pty-req. */
+   ?term/?cols/?rows the firmware reads for telnet TTYPE/NAWS and ssh pty-req. */
 static void prompt_creds_and_finalize(void)
 {
-    char *user = (char *) rx_buf + 0;       /*   0..47  (48) */
-    char *pass = (char *) rx_buf + 48;      /*  48..95  (48) */
-    char *full = (char *) rx_buf + 96;      /*  96..255 (160) */
+    char *user = (char *) rx_buf + 0;       /*   0..47  */
+    char *pass = (char *) rx_buf + 48;      /*  48..95  */
+    char *full = (char *) rx_buf + 96;      /*  96..255 */
     char *sep;
     unsigned int pre;
 
@@ -291,7 +277,7 @@ static unsigned char prompt_url(void)
 
 /* ---- phonebook (appkey-backed) ---- */
 
-/* Returns 1 if a non-empty entry was decoded. *out is zeroed first so empty
+/* Returns 1 if a non-empty entry was decoded. *out is zeroed first, so empty
    slots and read failures look identical to the caller. */
 static unsigned char pb_load(unsigned char idx, PBEntry *out)
 {
@@ -318,8 +304,7 @@ static unsigned char pb_save(unsigned char idx, const PBEntry *in)
     return fuji_write_appkey(idx, sizeof(PBEntry), (uint8_t *) in);
 }
 
-/* Full menu repaint. Arrow movement uses pb_move_selection instead, since
-   reading 8 appkeys per arrow press would feel sluggish. */
+/* Full repaint (8 appkey reads). Arrow keys use pb_move_selection instead. */
 static void pb_draw_menu(unsigned char sel)
 {
     char *line = PB_LINE;
@@ -359,16 +344,14 @@ static void pb_draw_menu(unsigned char sel)
     screen_overlay_line(12, "D DELETE     N NEW URL       Q QUIT");
 }
 
-/* screen_overlay_line stops at NUL, so a one-char string only touches col 0
-   - cheap enough to use for arrow-key marker updates. */
+/* screen_overlay_line stops at NUL, so a one-char string only touches col 0. */
 static void pb_move_selection(unsigned char old_sel, unsigned char new_sel)
 {
     screen_overlay_line(2 + old_sel, " ");
     screen_overlay_line(2 + new_sel, ">");
 }
 
-/* Blank input keeps the current field. Only saves when both fields end up
-   non-empty (otherwise the slot remains as it was, or empty). */
+/* Blank input keeps the current field. Saves only when both end up non-empty. */
 static void pb_edit(unsigned char idx)
 {
     PBEntry *e = PB_CURRENT;
@@ -406,7 +389,7 @@ static void pb_edit(unsigned char idx)
         pb_save(idx, e);
 }
 
-/* Block until inkey() + decode_key returns something meaningful. */
+/* Block on inkey() + decode_key until a non-zero result. */
 static unsigned char wait_key(void)
 {
     unsigned char k;
@@ -513,8 +496,7 @@ static unsigned char pb_menu(void)
             {
                 if (!prompt_url())
                     break;
-                /* Stash the bare URL before prompt_creds_and_finalize mangles
-                   devicespec with creds and ?term args. */
+                /* Stash the bare URL before creds and ?term args are spliced in. */
                 bare = devicespec;
                 if ((bare[0] == 'N' || bare[0] == 'n') && bare[1] == ':')
                     bare += 2;
@@ -563,8 +545,7 @@ static unsigned char pb_menu(void)
 
 /* ---- keyboard output ---- */
 
-/* F1 key reference. Drawn straight to the hardware screen (not the shadow),
-   so one re-blit restores the live session. Hit F1 to show, any key to return. */
+/* F1 help. Direct hardware write (bypasses shadow); screen_redraw restores. */
 static void show_help(void)
 {
     screen_overlay_clear();
@@ -579,16 +560,14 @@ static void show_help(void)
     screen_overlay_line(10, "CTRL + BREAK  = QUIT TERMINAL");
     screen_overlay_line(12, "PRESS ANY KEY TO RETURN");
 
-    while (isKeyPressed(KEY_PROBE_F1, KEY_BIT_F1)) ;   /* let F1 come back up */
+    while (isKeyPressed(KEY_PROBE_F1, KEY_BIT_F1)) ;   /* let F1 lift */
     while (inkey()) ;                                  /* drain it */
     while (!inkey()) ;                                 /* any key returns */
 
-    screen_redraw();                                   /* restore the session */
+    screen_redraw();
 }
 
-/* Send an arrow key as the sequence the host expects: the application-cursor
-   form (ESC O x) when the host turned on DECCKM (mc, vi, etc.), else the normal
-   form (ESC [ x). 'final' is one of A/B/C/D. */
+/* Send arrow as ESC O x (DECCKM set) or ESC [ x (reset). final = A/B/C/D. */
 static void send_cursor(char final)
 {
     unsigned char seq[3];
@@ -598,9 +577,7 @@ static void send_cursor(char final)
     network_write(devicespec, seq, 3);
 }
 
-/* Function keys F1..F10 (idx 0..9), as the VT100 sends them: ESC O <final>,
-   with final from the vt100 terminfo kf1..kf10 (P Q R S t u v l w x). vt100 has
-   no F11/F12, so the row stops at F10. */
+/* F1..F10: ESC O <final>, from the vt100 terminfo kf1..kf10. No F11/F12. */
 static const char fkey_final[] = "PQRStuvlwx";
 
 static void send_fkey(unsigned char idx)
@@ -612,11 +589,8 @@ static void send_fkey(unsigned char idx)
     network_write(devicespec, seq, 3);
 }
 
-/* keyboard -> network. CTRL+BREAK quits locally; F1 shows the key help. The
-   four arrow keys send VT100 cursor sequences (DECCKM-aware), the CLEAR key
-   sends Tab, and the prompt's own editor still uses the left arrow for local
-   backspace (term_get_line, separate path). Backspace to the host is CTRL+H.
-   Everything else goes through decode_key (ALT/CTRL/SHIFT/BREAK). */
+/* keyboard -> network. CTRL+BREAK quits, F1 shows help, arrows send DECCKM-
+   aware sequences, CLEAR sends Tab; everything else goes via decode_key. */
 static void out_keys(void)
 {
     unsigned char k;
@@ -662,11 +636,9 @@ static void out_keys(void)
 
 /* ---- network input and session lifecycle ---- */
 
-/* network -> engine -> screen. Drain everything FujiNet has buffered, feeding
-   it all to the engine, and blit only ONCE afterwards - not once per read.
-   (Flushing per read meant a full-screen blit for every small chunk, which is
-   what made streaming output crawl.) Capped per call so the keyboard still
-   gets serviced during a continuous stream. */
+/* Drain FujiNet's buffered bytes into the engine and flush ONCE at the end -
+   a flush per read would be a full-screen blit per chunk. Iteration-capped so
+   the keyboard still gets serviced during a continuous stream. */
 static void in_data(void)
 {
     int16_t n;
@@ -685,12 +657,11 @@ static void in_data(void)
             running = 0;
             break;
         }
-        if (n == 0)                       /* nothing buffered right now */
+        if (n == 0)
         {
-            /* The peer may have hung up with no data left (e.g. ssh `exit`).
-               Poll status for disconnect (extended error 136 = EOF/closed,
-               same as the Atari port) - but only every few idle passes, so we
-               aren't doing two FujiNet round-trips per loop while idle. */
+            /* Empty read: poll for EOF every few idle passes (extended error
+               136 = remote closed, same as the Atari port). Rate-limited to
+               avoid two FujiNet round-trips per loop while idle. */
             if (++idle >= 8)
             {
                 idle = 0;
@@ -700,7 +671,7 @@ static void in_data(void)
             }
             break;
         }
-        idle = 0;                         /* data is flowing */
+        idle = 0;
 
         vt_write(rx_buf, (uint16_t) n);
         got = 1;
@@ -710,7 +681,7 @@ static void in_data(void)
             running = 0;
             break;
         }
-        if (++iters >= 8)                 /* yield to the keyboard periodically */
+        if (++iters >= 8)                 /* yield to the keyboard */
             break;
     }
 
@@ -735,7 +706,7 @@ static void connect_and_run(void)
         return;
     }
 
-    feed("\x1b[2J\x1b[H");            /* clear for the session */
+    feed("\x1b[2J\x1b[H");
     screen_flush();
     term_sendback = net_sendback;
 
@@ -749,7 +720,7 @@ static void connect_and_run(void)
     network_close(devicespec);
     term_sendback = 0;
 
-    /* Clean slate before the prompt returns, especially after CTRL-BREAK. */
+    /* Clean slate before returning to the menu, especially after CTRL-BREAK. */
     vt100_terminal_reset();
     screen_flush();
 }

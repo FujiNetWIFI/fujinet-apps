@@ -1,15 +1,14 @@
 /**
  * @brief CoCo 3 80-column screen driver for the vt100 terminal.
  *
- * The 3840-byte shadow buffer lives in MMU-banked physical block $F4 instead
- * of normal BSS; it's paged into slot 1 ($2000-$3FFF) on demand. This freed
- * the BSS room needed for the phonebook. ALL shadow access must sit between
- * shadow_acquire() and shadow_release(); static helpers (set_cell,
- * blank_cells) inherit the caller's bracket. Public functions that call each
- * other (screen_lf -> scroll_up, screen_putc -> scroll_up, etc.) use the
- * unbracketed scroll_{up,down}_raw inner versions to avoid nested brackets.
- * screen_flush bounces one row at a time through blit_scratch via slot 1
- * flipping between $F4 (shadow) and $F6 (screen).
+ * Shadow lives in MMU-banked block $F4 (paged into slot 1 on demand); the
+ * shadow_acquire/release bracket gates ALL access. Static helpers inherit the
+ * caller's bracket. Publics that call each other use scroll_{up,down}_raw to
+ * avoid nesting. screen_flush bounces row-by-row through blit_scratch.
+ *
+ * Screen access uses $36 (low 6 bits of $F6): the GIME display register is
+ * 6-bit, so on a 2MB DAT-board CoCo3 with 8-bit MMU regs, $F6 would select a
+ * block GIME isn't displaying. $36 hits the right block on 128K/512K/2MB.
  */
 
 #include <cmoc.h>
@@ -23,10 +22,8 @@
 #define BG_COLOR 0               /* 6-bit colour code for the border (black) */
 #define DEF_ATTR 0x38            /* fg slot 7 (white) / bg slot 0 (black) */
 
-/* Shadow window: valid only between shadow_acquire/shadow_release. */
-#define VT_SHADOW ((unsigned char *)0x2000)
+#define VT_SHADOW ((unsigned char *)0x2000)   /* valid only inside the bracket */
 
-/* Per-row bounce buffer for the flush blit. */
 unsigned char blit_scratch[STRIDE];
 
 static void shadow_acquire(void)
@@ -49,39 +46,27 @@ static void shadow_release(void)
     }
 }
 
-/* Cursor position. */
 unsigned char _row = 0;
 unsigned char _col = 0;
 
 static unsigned char _attr = DEF_ATTR;
 static unsigned char _cursor_on = 1;
 
-/* Scrolling region (DECSTBM). Default is the whole screen; vi and other
-   full-screen apps set this to reserve a status line. Scrolling and index/
-   reverse-index operate within [_top.._bot] inclusive. */
+/* Scrolling region [_top.._bot], inclusive (DECSTBM). */
 static unsigned char _top = 0;
 static unsigned char _bot = ROWS - 1;
 
-/* DECAWM (autowrap, default on) and DECOM (origin mode, default off). */
-static unsigned char _autowrap = 1;
-static unsigned char _origin = 0;
-
-/* DECSCNM screen reverse video (default off) and the current default attribute
-   for clears/blanks/reset, which flips fg/bg when reverse video is toggled. */
-static unsigned char _reverse = 0;
+static unsigned char _autowrap = 1;       /* DECAWM */
+static unsigned char _origin = 0;         /* DECOM */
+static unsigned char _reverse = 0;        /* DECSCNM */
 static unsigned char _def_attr = DEF_ATTR;
+static unsigned char _appcursor = 0;      /* DECCKM - read by the keyboard layer */
 
-/* DECCKM application cursor key mode (default off). Affects what the keyboard
-   sends for the arrow keys (ESC O x vs ESC [ x), not the display itself. */
-static unsigned char _appcursor = 0;
-
-/* Last-column flag (pending wrap): set after a glyph is written in the final
-   column. The cursor stays ON that column; the wrap happens when the NEXT
-   glyph is written. Any cursor movement clears it. This matches the VT100 and
-   is what makes backspace/tab at the right margin behave correctly. */
+/* Pending-wrap (last-column flag). Cursor sits ON the last column after a
+   glyph is written there; the wrap happens on the NEXT glyph. */
 static unsigned char _pending = 0;
 
-/* set_cell / blank_cells assume the caller already holds shadow_acquire. */
+/* set_cell / blank_cells require the caller to hold shadow_acquire. */
 static void set_cell(unsigned int o, unsigned char ch, unsigned char at)
 {
     VT_SHADOW[o]     = ch;
@@ -93,15 +78,12 @@ static unsigned int cell_off(unsigned char x, unsigned char y)
     return (unsigned int) y * STRIDE + (unsigned int) x * 2;
 }
 
-/* Dirty-row range: screen_flush() blits only rows that changed, instead of all
-   3840 bytes every time - a big win for interactive (one-row-at-a-time) output.
-   dmin > dmax means "nothing dirty". */
+/* Dirty range for screen_flush. dmin > dmax means nothing dirty. */
 static unsigned char dmin = ROWS;
 static unsigned char dmax = 0;
 static unsigned char last_cur_row = 0;
 
-/* Read by the per-row blit asm: $2000 + row*STRIDE within slot 1's window. */
-unsigned int row_off;
+unsigned int row_off;                       /* read by the per-row blit asm */
 
 static void mark_dirty(unsigned char row)
 {
@@ -111,7 +93,7 @@ static void mark_dirty(unsigned char row)
     if (row > dmax) dmax = row;
 }
 
-/* Caller must hold the shadow bracket. */
+/* Caller must hold shadow_acquire. */
 static void blank_cells(unsigned char x, unsigned char y, unsigned char n)
 {
     unsigned char i;
@@ -124,8 +106,7 @@ static void blank_cells(unsigned char x, unsigned char y, unsigned char n)
 }
 
 /* ---- scrolling ----
-   Raw inner versions for callers that already hold the shadow bracket
-   (screen_putc, screen_puts_run, screen_lf, screen_ri). */
+   The _raw versions are for callers that already hold shadow_acquire. */
 static void scroll_up_raw(void)
 {
     memmove(VT_SHADOW + (unsigned int) _top * STRIDE,
@@ -158,21 +139,20 @@ void screen_scroll_down(void)
     shadow_release();
 }
 
-/* DECSTBM: set scrolling region. top/bottom are 1-based VT100 rows; 0 means
-   default (the whole screen). Setting the region homes the cursor. */
+/* DECSTBM: top/bottom are 1-based; 0 means default. Homes the cursor. */
 void screen_set_region(unsigned char top, unsigned char bottom)
 {
     if (bottom == 0 || bottom > ROWS) bottom = ROWS;
     if (top == 0) top = 1;
-    if (top >= bottom) { top = 1; bottom = ROWS; }   /* invalid -> full screen */
+    if (top >= bottom) { top = 1; bottom = ROWS; }
     _top = top - 1;
     _bot = bottom - 1;
     _pending = 0;
     _col = 0;
-    _row = _origin ? _top : 0;        /* home: region top in origin mode, else (1,1) */
+    _row = _origin ? _top : 0;
 }
 
-/* Reverse index: move up one line, scrolling the region down at the top margin. */
+/* Reverse index: up one row, scrolling the region down at the top margin. */
 void screen_ri(void)
 {
     _pending = 0;
@@ -186,15 +166,9 @@ void screen_ri(void)
         _row--;
 }
 
-/* DECAWM: enable/disable autowrap at the right margin. */
-void screen_set_autowrap(unsigned char on)
-{
-    _autowrap = on;
-}
+void screen_set_autowrap(unsigned char on) { _autowrap = on; }     /* DECAWM */
 
-/* DECOM: origin mode. When set, cursor addressing is relative to the scroll
-   region and the cursor homes to the region top; when reset, absolute. Either
-   way the cursor moves home. */
+/* DECOM: cursor addressing relative to region (set) or absolute (reset). */
 void screen_set_origin(unsigned char on)
 {
     _origin = on;
@@ -203,22 +177,19 @@ void screen_set_origin(unsigned char on)
     _row = on ? _top : 0;
 }
 
-/* DECCKM: application cursor key mode. The keyboard layer queries this to pick
-   the arrow-key form (ESC O x when set, ESC [ x when reset). */
-void screen_set_appcursor(unsigned char on) { _appcursor = on; }
+void screen_set_appcursor(unsigned char on) { _appcursor = on; }   /* DECCKM */
 unsigned char screen_appcursor(void)        { return _appcursor; }
 
-/* DECSCNM: reverse video for the whole screen. Implemented by swapping fg/bg of
-   the default attribute (so new/cleared cells follow) and of every existing
-   cell. Works because palette slots 0-7 (bg) and 8-15 (fg) hold the same 8
-   colours, so swapping the 3-bit fields swaps the displayed colours. */
+/* DECSCNM: swap fg/bg of every existing cell + the default attribute.
+   Palette slots 0-7 (bg) and 8-15 (fg) hold the same 8 colours, so swapping
+   the 3-bit attribute fields swaps the displayed colours. */
 void screen_set_reverse(unsigned char on)
 {
     unsigned int o;
     unsigned char a;
 
     if ((on != 0) == (_reverse != 0))
-        return;                       /* no change */
+        return;
     _reverse = on;
 
     _attr     = (_attr     & 0xC0) | ((_attr     & 0x07) << 3) | ((_attr     >> 3) & 0x07);
@@ -242,7 +213,7 @@ void screen_putc(unsigned char c)
 
     shadow_acquire();
 
-    if (_pending)                     /* finish a wrap armed by the last glyph */
+    if (_pending)                     /* finish wrap armed by the previous glyph */
     {
         _pending = 0;
         if (_autowrap)
@@ -253,10 +224,8 @@ void screen_putc(unsigned char c)
             else if (_row < ROWS - 1)
                 _row++;
         }
-        /* DECAWM off: stay on the last column and overwrite it */
     }
 
-    /* flattened hot path: no calls to putcxy/cell_off/set_cell/mark_dirty */
     o = (unsigned int) _row * STRIDE + (unsigned int) _col * 2;
     VT_SHADOW[o]     = c;
     VT_SHADOW[o + 1] = _attr;
@@ -264,15 +233,14 @@ void screen_putc(unsigned char c)
     if (_row > dmax) dmax = _row;
 
     if (_col >= COLS - 1)
-        _pending = 1;                 /* wrote the last column: arm wrap, stay put */
+        _pending = 1;
     else
         _col++;
 
     shadow_release();
 }
 
-/* Write a run of printable bytes directly into the shadow - one call for the
-   whole run instead of per-character engine dispatch. Caller must guarantee
+/* Bulk-write a run of printable ASCII to the shadow. Caller must guarantee
    the decoder is in CHAR state and every byte is printable. */
 void screen_puts_run(const unsigned char *buf, unsigned int len)
 {
@@ -289,7 +257,7 @@ void screen_puts_run(const unsigned char *buf, unsigned int len)
 
     while (len)
     {
-        if (_pending)                        /* finish a wrap armed by last glyph */
+        if (_pending)
         {
             _pending = 0;
             if (_autowrap)
@@ -299,23 +267,22 @@ void screen_puts_run(const unsigned char *buf, unsigned int len)
                 {
                     _col = 0;
                     _row = row;
-                    scroll_up_raw();         /* scrolls; marks all rows dirty */
+                    scroll_up_raw();
                 }
                 else if (row < ROWS - 1)
                     row++;
             }
-            /* DECAWM off: stay on the last column */
         }
 
         if (row < dmin) dmin = row;
         if (row > dmax) dmax = row;
 
-        /* fast inner run: write up to (not including) the last column */
+        /* inner run: write up to (not including) the last column */
         p = VT_SHADOW + (unsigned int) row * STRIDE + (unsigned int) col * 2;
         while (len && col < COLS - 1)
         {
-            *p++ = *buf++;                   /* character */
-            *p++ = attr;                     /* attribute */
+            *p++ = *buf++;
+            *p++ = attr;
             col++;
             len--;
         }
@@ -351,10 +318,8 @@ void screen_lf(void)
         _row++;
 }
 
-/* VT100 backspace is non-destructive: move the cursor left one column, stop at
-   the left margin. (Erasing is the caller's job - e.g. the host sends BS space
-   BS.) The old version wrote a space here, which erased a cell when a stream
-   used BS purely to move - e.g. vttest's bottom '+' border. */
+/* VT100 BS is non-destructive: move left, stop at the left margin. The host
+   handles erasure (BS space BS). */
 void screen_bs(void)
 {
     _pending = 0;
@@ -362,14 +327,14 @@ void screen_bs(void)
         _col--;
 }
 
-/* Tab stops: 1 = stop at that column. HTS sets, TBC clears, advanced by HT. */
+/* Tab stops: 1 = stop. HTS sets, TBC clears, HT advances. */
 static unsigned char _tabstop[COLS];
 
 static void screen_default_tabs(void)
 {
     unsigned char i;
     for (i = 0; i < COLS; i++)
-        _tabstop[i] = (i && (i % 8 == 0)) ? 1 : 0;   /* 8,16,24,...,72 */
+        _tabstop[i] = (i && (i % 8 == 0)) ? 1 : 0;
 }
 
 void screen_tab(void)
@@ -378,12 +343,12 @@ void screen_tab(void)
     _pending = 0;
     for (c = _col + 1; c < COLS; c++)
         if (_tabstop[c]) { _col = c; return; }
-    _col = COLS - 1;                                 /* no stop: go to last col */
+    _col = COLS - 1;
 }
 
-void screen_set_tab(void)        { if (_col < COLS) _tabstop[_col] = 1; }  /* HTS */
-void screen_clear_tab(void)      { if (_col < COLS) _tabstop[_col] = 0; }  /* TBC 0 */
-void screen_clear_all_tabs(void) { unsigned char i; for (i = 0; i < COLS; i++) _tabstop[i] = 0; } /* TBC 3 */
+void screen_set_tab(void)        { if (_col < COLS) _tabstop[_col] = 1; }
+void screen_clear_tab(void)      { if (_col < COLS) _tabstop[_col] = 0; }
+void screen_clear_all_tabs(void) { unsigned char i; for (i = 0; i < COLS; i++) _tabstop[i] = 0; }
 
 void screen_cursor_right(unsigned char n)
 {
@@ -404,7 +369,7 @@ void screen_cursor_left(unsigned char n)
 
 void screen_cursor_up(unsigned char n)
 {
-    unsigned char limit = (_row >= _top) ? _top : 0;   /* stop at the region top */
+    unsigned char limit = (_row >= _top) ? _top : 0;
     unsigned char t;
     _pending = 0;
     if (!n) n = 1;
@@ -414,7 +379,7 @@ void screen_cursor_up(unsigned char n)
 
 void screen_cursor_down(unsigned char n)
 {
-    unsigned char limit = (_row <= _bot) ? _bot : (ROWS - 1); /* stop at region bottom */
+    unsigned char limit = (_row <= _bot) ? _bot : (ROWS - 1);
     _pending = 0;
     if (!n) n = 1;
     if ((unsigned int) _row + n > limit)
@@ -427,7 +392,7 @@ void screen_set_pos(unsigned char x, unsigned char y)
 {
     _pending = 0;
     _col = (x < COLS) ? x : (COLS - 1);
-    if (_origin)                      /* DECOM: row is relative to the region */
+    if (_origin)                              /* DECOM: row relative to region */
     {
         y = (unsigned char) (y + _top);
         if (y > _bot)
@@ -442,7 +407,7 @@ void screen_get_pos(unsigned char *row, unsigned char *col)
     *col = _col;
 }
 
-/* ---- clearing (cleared cells use the default attribute) ---- */
+/* ---- clearing (blanked cells get _def_attr) ---- */
 void screen_clear(void)
 {
     unsigned char y;
@@ -466,7 +431,7 @@ void screen_clear_current_line(void)
     shadow_release();
 }
 
-/* EL mode 1: current line only, from the start to the cursor. */
+/* EL 1: start of line to cursor. */
 void screen_clear_line_to_cursor(void)
 {
     shadow_acquire();
@@ -474,8 +439,7 @@ void screen_clear_line_to_cursor(void)
     shadow_release();
 }
 
-/* ED mode 1: whole display from top-left to the cursor - every row above the
-   cursor, plus the current line up to the cursor. (Mirror of cursor_to_end.) */
+/* ED 1: top-left to cursor (mirror of cursor_to_end). */
 void screen_clear_beg_to_cursor(void)
 {
     unsigned char r;
@@ -544,7 +508,7 @@ void screen_attr_inverse(void)
 void screen_attr_invisible(void)
 {
     unsigned char bg = _attr & 0x07;
-    _attr = (_attr & 0xC0) | (bg << 3) | bg;     /* foreground = background */
+    _attr = (_attr & 0xC0) | (bg << 3) | bg;     /* fg = bg */
 }
 
 
@@ -556,7 +520,7 @@ void screen_show_cursor(unsigned char on)
     _cursor_on = on;
 }
 
-/* ---- cursor save/restore (DECSC/DECRC, ESC 7 / ESC 8) ---- */
+/* ---- DECSC / DECRC ---- */
 static unsigned char sc_row, sc_col, sc_attr;
 
 void screen_save_cursor(void)
@@ -574,8 +538,7 @@ void screen_restore_cursor(void)
     _pending = 0;
 }
 
-/* DECALN: fill the whole screen with 'E' in the default attribute, cursor home.
-   (vttest's screen-alignment pattern.) */
+/* DECALN: fill the screen with 'E', home the cursor. */
 void screen_decaln(void)
 {
     unsigned int o;
@@ -592,20 +555,19 @@ void screen_decaln(void)
     mark_dirty(ROWS - 1);
 }
 
-/* ---- transient direct-to-hardware overlay (the F1 help) ----
-   Draws straight to the mapped 80-col screen WITHOUT touching VT_SHADOW, so a
-   normal re-blit (screen_redraw) restores the live session afterwards. */
+/* ---- transient overlay (F1 help) ----
+   Writes straight to the 80-col screen, bypassing the shadow. screen_redraw
+   restores the live session afterwards. */
 unsigned int ov_src, ov_dst;
 unsigned char ov_attr;
 
-/* blank the whole hardware screen */
 void screen_overlay_clear(void)
 {
     ov_attr = DEF_ATTR;
     asm
     {
         orcc    #$50
-        lda     #$F6
+        lda     #$36            ; screen
         sta     $FFA1
         ldy     #$2000
         ldb     _ov_attr
@@ -621,7 +583,6 @@ void screen_overlay_clear(void)
     }
 }
 
-/* draw a NUL-terminated string at the start of a hardware row */
 void screen_overlay_line(unsigned char row, const char *s)
 {
     ov_src = (unsigned int) s;
@@ -630,7 +591,7 @@ void screen_overlay_line(unsigned char row, const char *s)
     asm
     {
         orcc    #$50
-        lda     #$F6
+        lda     #$36            ; screen
         sta     $FFA1
         ldx     _ov_src
         ldy     _ov_dst
@@ -648,7 +609,7 @@ void screen_overlay_line(unsigned char row, const char *s)
     }
 }
 
-/* re-blit the entire (untouched) shadow, restoring the session under an overlay */
+/* Re-blit the entire shadow (used to clear an overlay). */
 void screen_redraw(void)
 {
     mark_dirty(0);
@@ -656,8 +617,8 @@ void screen_redraw(void)
     screen_flush();
 }
 
-/* shadow -> bounce -> screen for one row, IRQs masked across both halves.
-   Uses X/Y only - U is cmoc's frame pointer and must NOT be clobbered. */
+/* shadow -> bounce -> screen for one row, IRQs masked throughout.
+   X/Y only: U is cmoc's frame pointer and must not be clobbered. */
 static void flush_row(unsigned char r)
 {
     row_off = 0x2000 + (unsigned int) r * STRIDE;
@@ -676,7 +637,7 @@ static void flush_row(unsigned char r)
         cmpy    #_blit_scratch+160
         blo     @in
         ; map screen into slot 1
-        lda     #$F6
+        lda     #$36            ; screen
         sta     $FFA1
         ; blit_scratch -> screen row
         ldx     #_blit_scratch
@@ -693,7 +654,7 @@ static void flush_row(unsigned char r)
     }
 }
 
-/* ---- blit changed rows -> hardware screen, with a block cursor ---- */
+/* Blit dirty rows + draw the block cursor by inverting one cell's attribute. */
 void screen_flush(void)
 {
     unsigned int co = 0;
@@ -701,19 +662,18 @@ void screen_flush(void)
     unsigned char have_cursor;
     unsigned char r;
 
-    /* redraw the cursor's row and the row it last sat on (so it follows the
-       cursor and the old block is erased) */
+    /* mark the cursor's row and its previous row so the block follows it */
     mark_dirty(last_cur_row);
     if (_row < ROWS)
         mark_dirty(_row);
 
-    if (dmin > dmax)                          /* nothing changed */
+    if (dmin > dmax)
         return;
 
     have_cursor = _cursor_on && (_col < COLS && _row < ROWS);
     if (have_cursor)
     {
-        co = cell_off(_col, _row) + 1;        /* attribute byte */
+        co = cell_off(_col, _row) + 1;        /* attr byte */
         shadow_acquire();
         saved = VT_SHADOW[co];
         VT_SHADOW[co] = (saved & 0xC0) | ((saved & 0x07) << 3) | ((saved >> 3) & 0x07);
@@ -735,15 +695,13 @@ void screen_flush(void)
     last_cur_row = (_row < ROWS) ? _row : (ROWS - 1);
 }
 
-/* Select monitor type and load the 8 ANSI colours into palette slots 0-7. */
+/* Load the 8 ANSI colours into palette slots 0-7 (bg) and 8-15 (fg). */
 void screen_palette(unsigned char composite)
 {
     if (composite)
         cmp();
     else
         rgb();
-    /* CoCo 3 text attributes take BACKGROUND from palette slots 0-7 and
-       FOREGROUND from slots 8-15, so both halves get the 8 ANSI colours. */
     paletteRGB(0, 0, 0, 0);  paletteRGB(8,  0, 0, 0);   /* black   */
     paletteRGB(1, 3, 0, 0);  paletteRGB(9,  3, 0, 0);   /* red     */
     paletteRGB(2, 0, 3, 0);  paletteRGB(10, 0, 3, 0);   /* green   */
@@ -752,7 +710,7 @@ void screen_palette(unsigned char composite)
     paletteRGB(5, 3, 0, 3);  paletteRGB(13, 3, 0, 3);   /* magenta */
     paletteRGB(6, 0, 3, 3);  paletteRGB(14, 0, 3, 3);   /* cyan    */
     paletteRGB(7, 3, 3, 3);  paletteRGB(15, 3, 3, 3);   /* white   */
-    setBorderColor(BG_COLOR);   /* black border */
+    setBorderColor(BG_COLOR);
 }
 
 void screen_init(void)
