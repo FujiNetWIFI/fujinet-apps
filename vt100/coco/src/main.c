@@ -13,14 +13,44 @@
 #include "vt100.h"
 #include "screen.h"
 #include "fujinet-network.h"
+#include "fujinet-fuji.h"
 
 #define RXSZ 512
+
+#define PB_CREATOR  0x0901
+#define PB_APP      0x02
+#define PB_SLOTS    8
+#define PB_NAME_LEN 16
+#define PB_URL_LEN  47
+
+typedef struct
+{
+    char name[PB_NAME_LEN];
+    char url[PB_URL_LEN];
+} PBEntry;
 
 extern void (*term_sendback)(char c);   /* set so DSR/cursor replies go to the wire */
 
 static char devicespec[160];
 static unsigned char rx_buf[RXSZ];
 static unsigned char running;
+
+/* Holds the bare URL of a one-shot N-path session so offer_save() can ask
+   whether to keep it. oneshot_too_long is set instead when the URL exceeded
+   PB_URL_LEN; offer_save shows an explicit message in that case. */
+static char oneshot_url[PB_URL_LEN];
+static unsigned char oneshot_too_long;
+
+/* rx_buf is idle while the phonebook/URL prompt is up, so phonebook scratch
+   is carved from it - no permanent BSS. PB_KEYBUF needs 66 bytes
+   (fuji_read_appkey wants keysize+2). */
+#define PB_KEYBUF  ((uint8_t *)(rx_buf + 0))    /*   0..65  */
+#define PB_LINE    ((char *)   (rx_buf + 80))   /*  80..159 */
+#define PB_NAMEBUF ((char *)   (rx_buf + 160))  /* 160..176 */
+#define PB_URLBUF  ((char *)   (rx_buf + 180))  /* 180..227 */
+#define PB_CURRENT ((PBEntry *)(rx_buf + 256))  /* 256..318 */
+
+/* ---- terminal stream output ---- */
 
 /* Write a byte buffer to the screen: bulk-write runs of printable ASCII
    straight into the shadow (one call per run) when the decoder is in CHAR
@@ -59,6 +89,8 @@ static void net_sendback(char c)
 {
     network_write(devicespec, (const unsigned char *) &c, 1);
 }
+
+/* ---- prompt input ---- */
 
 /* ALT + the number row produces the 10 ASCII characters the CoCo keyboard
    lacks. Indexed by (key - '0'):  0='^' 1='[' 2=']' 3='{' 4='}' 5='|' 6='\'
@@ -160,6 +192,377 @@ static void term_get_line(char *buf, unsigned char max)
     screen_flush();
 }
 
+/* one-time monitor-type selection (affects how palette colours are shown) */
+static void choose_monitor(void)
+{
+    unsigned char k;
+
+    feed("\x1b[2J\x1b[HMONITOR TYPE?\r\n\r\n");
+    feed("  R = RGB (DEFAULT)\r\n");
+    feed("  C = COMPOSITE\r\n");
+    screen_flush();
+
+    while ((k = inkey()) == 0) ;
+    if (k == 'C' || k == 'c')
+        screen_palette(1);
+}
+
+/* ---- URL prompt and credential finalization ---- */
+
+/* Append "N:" if the user didn't, then store the URL in devicespec. */
+static void set_devicespec_from_url(const char *url)
+{
+    if (url[0] == 'N' || url[0] == 'n')
+        strcpy(devicespec, url);
+    else
+    {
+        strcpy(devicespec, "N:");
+        strcat(devicespec, url);
+    }
+}
+
+/* Prompt for user/pass, splice into devicespec as user:pass@host, append the
+   ?term=...&cols=...&rows=... the firmware reads for telnet TTYPE/NAWS and
+   ssh pty-req. */
+static void prompt_creds_and_finalize(void)
+{
+    char *user = (char *) rx_buf + 0;       /*   0..47  (48) */
+    char *pass = (char *) rx_buf + 48;      /*  48..95  (48) */
+    char *full = (char *) rx_buf + 96;      /*  96..255 (160) */
+    char *sep;
+    unsigned int pre;
+
+    feed("\r\nUSERNAME (BLANK = NONE)?\r\n");
+    screen_flush();
+    term_get_line(user, 48);
+
+    if (user[0])
+    {
+        feed("PASSWORD (BLANK = NONE)?\r\n");
+        screen_flush();
+        term_get_line(pass, 48);
+
+        sep = strstr(devicespec, "://");
+        if (sep)
+        {
+            pre = (unsigned int) (sep - devicespec) + 3;
+            memcpy(full, devicespec, pre);
+            full[pre] = 0;
+            strcat(full, user);
+            if (pass[0])
+            {
+                strcat(full, ":");
+                strcat(full, pass);
+            }
+            strcat(full, "@");
+            strcat(full, sep + 3);
+            strcpy(devicespec, full);
+        }
+    }
+
+    if (strlen(devicespec) + 28 < sizeof(devicespec))
+    {
+        strcat(devicespec, strstr(devicespec, "?") ? "&" : "?");
+        strcat(devicespec, "term=vt100&cols=80&rows=24");
+    }
+}
+
+/* Returns 0 if user pressed ENTER on a blank line, 1 with devicespec set. */
+static unsigned char prompt_url(void)
+{
+    char *line = (char *) rx_buf;
+
+    feed("\x1b[2J\x1b[HFUJINET VT100 TERMINAL\r\n\r\n");
+    feed("DEVICESPEC? (BLANK = PHONEBOOK)\r\n");
+    feed("E.G. TELNET://HOST:PORT  (N: ASSUMED)\r\n");
+    feed("CTRL-BREAK DISCONNECTS\r\n\r\n");
+    feed("ALT+1-0 = [ ] { } | \\ _ ~ ` ^\r\n");
+    feed("CTRL+1-0=F1-F10 CTRL+LTR=CODE\r\n");
+    feed("BREAK=ESC F1=HELP\r\n\r\n");
+    screen_flush();
+
+    term_get_line(line, 96);
+    if (line[0] == 0)
+        return 0;
+
+    set_devicespec_from_url(line);
+    return 1;
+}
+
+/* ---- phonebook (appkey-backed) ---- */
+
+/* Returns 1 if a non-empty entry was decoded. *out is zeroed first so empty
+   slots and read failures look identical to the caller. */
+static unsigned char pb_load(unsigned char idx, PBEntry *out)
+{
+    uint16_t count = 0;
+    uint8_t *buf = PB_KEYBUF;
+
+    memset(out, 0, sizeof(PBEntry));
+
+    if (!fuji_read_appkey(idx, &count, buf))
+        return 0;
+    if (count == 0)
+        return 0;
+    if (count > sizeof(PBEntry))
+        count = sizeof(PBEntry);
+    memcpy(out, buf, count);
+
+    out->name[PB_NAME_LEN - 1] = 0;        /* enforce nul-termination */
+    out->url[PB_URL_LEN - 1] = 0;
+    return out->name[0] ? 1 : 0;
+}
+
+static unsigned char pb_save(unsigned char idx, const PBEntry *in)
+{
+    return fuji_write_appkey(idx, sizeof(PBEntry), (uint8_t *) in);
+}
+
+/* Full menu repaint. Arrow movement uses pb_move_selection instead, since
+   reading 8 appkeys per arrow press would feel sluggish. */
+static void pb_draw_menu(unsigned char sel)
+{
+    char *line = PB_LINE;
+    PBEntry *e = PB_CURRENT;
+    unsigned char i, j;
+
+    screen_overlay_clear();
+    screen_overlay_line(0, "FUJINET VT100 - PHONEBOOK");
+
+    for (i = 0; i < PB_SLOTS; i++)
+    {
+        memset(line, 0, 80);
+        line[0] = (i == sel) ? '>' : ' ';
+        line[1] = ' ';
+        line[2] = '1' + i;
+        line[3] = '.';
+        line[4] = ' ';
+
+        if (pb_load(i, e))
+        {
+            for (j = 0; j < PB_NAME_LEN - 1 && e->name[j]; j++)
+                line[5 + j] = e->name[j];
+            for (; j < PB_NAME_LEN; j++)
+                line[5 + j] = ' ';
+            line[5 + PB_NAME_LEN] = ' ';
+            for (j = 0; j < PB_URL_LEN - 1 && e->url[j]; j++)
+                line[5 + PB_NAME_LEN + 1 + j] = e->url[j];
+        }
+        else
+        {
+            strcpy(line + 5, "(EMPTY)");
+        }
+        screen_overlay_line(2 + i, line);
+    }
+
+    screen_overlay_line(11, "UP/DN MOVE   ENTER CONNECT   E EDIT");
+    screen_overlay_line(12, "D DELETE     N NEW URL       Q QUIT");
+}
+
+/* screen_overlay_line stops at NUL, so a one-char string only touches col 0
+   - cheap enough to use for arrow-key marker updates. */
+static void pb_move_selection(unsigned char old_sel, unsigned char new_sel)
+{
+    screen_overlay_line(2 + old_sel, " ");
+    screen_overlay_line(2 + new_sel, ">");
+}
+
+/* Blank input keeps the current field. Only saves when both fields end up
+   non-empty (otherwise the slot remains as it was, or empty). */
+static void pb_edit(unsigned char idx)
+{
+    PBEntry *e = PB_CURRENT;
+    char *name = PB_NAMEBUF;
+    char *url = PB_URLBUF;
+    char nb[4];
+
+    pb_load(idx, e);
+
+    feed("\x1b[2J\x1b[HEDIT SLOT ");
+    itoa10(idx + 1, nb);
+    feed(nb);
+    feed("\r\n\r\n");
+
+    feed("CURRENT NAME: ");
+    feed(e->name[0] ? (const char *) e->name : "(NONE)");
+    feed("\r\nNEW NAME (BLANK = KEEP, MAX 15)?\r\n");
+    screen_flush();
+    name[0] = 0;
+    term_get_line(name, PB_NAME_LEN);
+
+    feed("\r\nCURRENT URL: ");
+    feed(e->url[0] ? (const char *) e->url : "(NONE)");
+    feed("\r\nNEW URL (BLANK = KEEP, MAX 46)?\r\n");
+    screen_flush();
+    url[0] = 0;
+    term_get_line(url, PB_URL_LEN);
+
+    if (name[0])
+        strcpy(e->name, name);
+    if (url[0])
+        strcpy(e->url, url);
+
+    if (e->name[0] && e->url[0])
+        pb_save(idx, e);
+}
+
+/* Block until inkey() + decode_key returns something meaningful. */
+static unsigned char wait_key(void)
+{
+    unsigned char k;
+    do {
+        while ((k = inkey()) == 0) ;
+        k = decode_key(k);
+    } while (k == 0);
+    return k;
+}
+
+/* Y/N -> slot 1-8 -> NAME, or a "too long" message if the URL didn't fit.
+   Driven by oneshot_url / oneshot_too_long which the N handler sets. */
+static void offer_save(void)
+{
+    PBEntry *e = PB_CURRENT;
+    char *name = PB_NAMEBUF;
+    unsigned char k, slot;
+
+    if (oneshot_too_long)
+    {
+        feed("\x1b[2J\x1b[HURL TOO LONG TO SAVE (>46)\r\n\r\nPRESS A KEY\r\n");
+        screen_flush();
+        wait_key();
+        oneshot_too_long = 0;
+        return;
+    }
+
+    if (!oneshot_url[0])
+        return;
+
+    feed("\x1b[2J\x1b[HSAVE TO PHONEBOOK? (Y/N)\r\n\r\nURL: ");
+    feed(oneshot_url);
+    feed("\r\n");
+    screen_flush();
+
+    k = wait_key();
+    if (k != 'y')
+    {
+        oneshot_url[0] = 0;
+        return;
+    }
+
+    feed("\r\nSLOT 1-8?\r\n");
+    screen_flush();
+
+    k = wait_key();
+    if (k < '1' || k > '8')
+    {
+        oneshot_url[0] = 0;
+        return;
+    }
+    slot = k - '1';
+
+    feed("\r\nNAME (MAX 15)?\r\n");
+    screen_flush();
+    name[0] = 0;
+    term_get_line(name, PB_NAME_LEN);
+
+    if (name[0])
+    {
+        memset(e, 0, sizeof(PBEntry));
+        strcpy(e->name, name);
+        strcpy(e->url, oneshot_url);
+        pb_save(slot, e);
+    }
+
+    oneshot_url[0] = 0;
+}
+
+/* Returns 1 with devicespec set and ready to connect, 0 if the user quit. */
+static unsigned char pb_menu(void)
+{
+    PBEntry *e = PB_CURRENT;
+    unsigned char sel = 0;
+    unsigned char k;
+    const char *bare;
+
+    offer_save();
+
+    for (;;)
+    {
+        pb_draw_menu(sel);
+
+        for (;;)
+        {
+            do {
+                while ((k = inkey()) == 0) ;
+                k = decode_key(k);
+            } while (k == 0);
+
+            if (k == 0x5E)                   /* up arrow */
+            {
+                if (sel > 0) { pb_move_selection(sel, sel - 1); sel--; }
+                continue;
+            }
+            if (k == 0x0A)                   /* down arrow */
+            {
+                if (sel + 1 < PB_SLOTS) { pb_move_selection(sel, sel + 1); sel++; }
+                continue;
+            }
+            if (k == 'q')
+                return 0;
+            if (k == 'n')                    /* one-shot URL; save offered on return */
+            {
+                if (!prompt_url())
+                    break;
+                /* Stash the bare URL before prompt_creds_and_finalize mangles
+                   devicespec with creds and ?term args. */
+                bare = devicespec;
+                if ((bare[0] == 'N' || bare[0] == 'n') && bare[1] == ':')
+                    bare += 2;
+                if (strlen(bare) < PB_URL_LEN)
+                {
+                    strcpy(oneshot_url, bare);
+                    oneshot_too_long = 0;
+                }
+                else
+                {
+                    oneshot_url[0] = 0;
+                    oneshot_too_long = 1;
+                }
+                prompt_creds_and_finalize();
+                return 1;
+            }
+            if (k == 'e')
+            {
+                pb_edit(sel);
+                break;                       /* redraw menu */
+            }
+            if (k == 'd')
+            {
+                memset(e, 0, sizeof(PBEntry));
+                pb_save(sel, e);
+                break;                       /* redraw menu */
+            }
+            if (k == 13)                     /* ENTER -> connect */
+            {
+                if (!pb_load(sel, e) || !e->url[0])
+                    continue;                /* empty slot, ignore */
+
+                set_devicespec_from_url(e->url);
+
+                feed("\x1b[2J\x1b[HCONNECTING TO ");
+                feed(e->name);
+                feed("\r\n");
+                screen_flush();
+
+                prompt_creds_and_finalize();
+                return 1;
+            }
+        }
+    }
+}
+
+/* ---- keyboard output ---- */
+
 /* F1 key reference. Drawn straight to the hardware screen (not the shadow),
    so one re-blit restores the live session. Hit F1 to show, any key to return. */
 static void show_help(void)
@@ -257,6 +660,8 @@ static void out_keys(void)
         network_write(devicespec, &k, 1);
 }
 
+/* ---- network input and session lifecycle ---- */
+
 /* network -> engine -> screen. Drain everything FujiNet has buffered, feeding
    it all to the engine, and blit only ONCE afterwards - not once per read.
    (Flushing per read meant a full-screen blit for every small chunk, which is
@@ -313,97 +718,6 @@ static void in_data(void)
         screen_flush();
 }
 
-/* one-time monitor-type selection (affects how palette colours are shown) */
-static void choose_monitor(void)
-{
-    unsigned char k;
-
-    feed("\x1b[2J\x1b[HMONITOR TYPE?\r\n\r\n");
-    feed("  R = RGB (DEFAULT)\r\n");
-    feed("  C = COMPOSITE\r\n");
-    screen_flush();
-
-    while ((k = inkey()) == 0) ;
-    if (k == 'C' || k == 'c')
-        screen_palette(1);
-}
-
-static unsigned char get_url(void)
-{
-    /* The RX buffer is idle while we sit at the connect prompt, so carve the
-       scratch buffers out of it rather than spend 352 bytes of permanent BSS.
-       devicespec holds the finished URL before the session reuses rx_buf. */
-    char *line = (char *) rx_buf;          /*   0..95  (96) */
-    char *user = (char *) rx_buf + 96;     /*  96..143 (48) */
-    char *pass = (char *) rx_buf + 144;    /* 144..191 (48) */
-    char *full = (char *) rx_buf + 192;    /* 192..351 (160) */
-    char *sep;
-    unsigned int pre;
-
-    feed("\x1b[2J\x1b[HFUJINET VT100 TERMINAL\r\n\r\n");
-    feed("DEVICESPEC? (BLANK TO QUIT)\r\n");
-    feed("E.G. TELNET://HOST:PORT  (N: ASSUMED)\r\n");
-    feed("CTRL-BREAK DISCONNECTS\r\n\r\n");
-    feed("ALT+1-0 = [ ] { } | \\ _ ~ ` ^\r\n");
-    feed("CTRL+1-0=F1-F10 CTRL+LTR=CODE\r\n");
-    feed("BREAK=ESC F1=HELP\r\n\r\n");
-    screen_flush();
-
-    term_get_line(line, 96);
-    if (line[0] == 0)
-        return 0;
-
-    /* assume an "N:" prefix if the user didn't type one */
-    if (line[0] == 'N' || line[0] == 'n')
-        strcpy(devicespec, line);
-    else
-    {
-        strcpy(devicespec, "N:");
-        strcat(devicespec, line);
-    }
-
-    /* optional credentials (ssh/ftp/...): the firmware reads user:0@host
-       from the URL, so splice them in after the "://" - no special call. */
-    feed("\r\nUSERNAME (BLANK = NONE)?\r\n");
-    screen_flush();
-    term_get_line(user, 48);
-
-    if (user[0])
-    {
-        feed("PASSWORD (BLANK = NONE)?\r\n");
-        screen_flush();
-        term_get_line(pass, 48);
-
-        sep = strstr(devicespec, "://");
-        if (sep)
-        {
-            pre = (unsigned int) (sep - devicespec) + 3;
-            memcpy(full, devicespec, pre);
-            full[pre] = 0;
-            strcat(full, user);
-            if (pass[0])
-            {
-                strcat(full, ":");
-                strcat(full, pass);
-            }
-            strcat(full, "@");
-            strcat(full, sep + 3);
-            strcpy(devicespec, full);
-        }
-    }
-
-    /* Always tell the host we are a VT100 of our fixed 80x24 size. The firmware
-       reads ?term/?cols/?rows for telnet (TTYPE/NAWS) and ssh (pty-req); other
-       protocols ignore the query. */
-    if (strlen(devicespec) + 28 < sizeof(devicespec))
-    {
-        strcat(devicespec, strstr(devicespec, "?") ? "&" : "?");
-        strcat(devicespec, "term=vt100&cols=80&rows=24");
-    }
-
-    return 1;
-}
-
 static void connect_and_run(void)
 {
     char nb[8];
@@ -435,18 +749,8 @@ static void connect_and_run(void)
     network_close(devicespec);
     term_sendback = 0;
 
-    /* clean slate before the prompt returns (esp. after CTRL-BREAK): reset the
-       decoder so a half-parsed escape can't eat the clear, default the colors,
-       and clear the screen. */
-    vt100_reset();
-    screen_attr_reset();
-    screen_set_reverse(0);            /* undo DECSCNM before touching colours */
-    screen_set_region(0, 0);          /* drop any scroll region vi/etc. left set */
-    screen_set_autowrap(1);           /* and any DECAWM/DECOM/DECCKM modes */
-    screen_set_origin(0);
-    screen_set_appcursor(0);
-    screen_clear();
-    screen_set_pos(0, 0);
+    /* Clean slate before the prompt returns, especially after CTRL-BREAK. */
+    vt100_terminal_reset();
     screen_flush();
 }
 
@@ -465,12 +769,14 @@ int main(void)
         return 1;
     }
 
+    fuji_set_appkey_details(PB_CREATOR, PB_APP, DEFAULT);
+
     screen_init();
     choose_monitor();
 
-    while (get_url())
+    while (pb_menu())
         connect_and_run();
 
-    width(32);
+    screen_shutdown();
     return 0;
 }

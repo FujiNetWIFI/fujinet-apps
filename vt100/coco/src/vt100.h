@@ -55,7 +55,7 @@ void vt100(char __c);
 /* True when the decoder is in CHAR state (not mid escape sequence) */
 unsigned char vt100_char_state(void);
 
-/* Reset the decoder to CHAR state (e.g. after an abrupt disconnect) */
-void vt100_reset(void);
+/* Reset decoder state, terminal modes, attributes, and the screen image */
+void vt100_terminal_reset(void);
 
 #endif /* VT100_H */
