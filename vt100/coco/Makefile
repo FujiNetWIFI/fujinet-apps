@@ -5,6 +5,10 @@ NAME   = vt100
 VPATH  = src
 PLATFORM = coco
 
+# Version shown on the F1 help screen. Scoped to vt100* tags so the monorepo's
+# other app tags don't leak in; falls back to the short commit hash.
+VERSION := $(shell git describe --tags --always --dirty --match 'vt100*' 2>/dev/null || echo dev)
+
 # fnlib.py resolves where fujinet-lib comes from. FUJINET_LIB can be:
 #   empty                          - latest GitHub release (downloads to _cache/)
 #   a version number (e.g. 4.10.0) - that specific release
@@ -35,7 +39,7 @@ ifeq ($(strip $(FUJINET_LIB_LDLIB)),)
 endif
 
 %.o: %.c
-	$(CMOC) --coco -c -Isrc -I$(FUJINET_LIB_INCLUDE) -o $@ $<
+	$(CMOC) --coco -c -Isrc -I$(FUJINET_LIB_INCLUDE) -DVT100_VERSION='"$(VERSION)"' -o $@ $<
 
 $(NAME).bin: $(OBJS)
 	$(CMOC) --coco --org=$(ORG) -o $@ $(OBJS) -L$(FUJINET_LIB_DIR) -l$(FUJINET_LIB_LDLIB)
