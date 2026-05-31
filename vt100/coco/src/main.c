@@ -15,9 +15,14 @@
 
 #define RXSZ 512
 
+#ifndef VT100_VERSION
+#define VT100_VERSION "dev"
+#endif
+
 #define PB_CREATOR  0x0901
 #define PB_APP      0x02
 #define PB_SLOTS    8
+#define PB_SETTINGS 8           /* appkey key just past the 8 phonebook slots */
 #define PB_NAME_LEN 16
 #define PB_URL_LEN  47
 
@@ -179,9 +184,11 @@ static void term_get_line(char *buf, unsigned char max)
     screen_flush();
 }
 
-/* One-time monitor-type prompt (selects the palette). */
-static void choose_monitor(void)
+/* Prompt R/C, apply the palette, and persist the choice (appkey PB_SETTINGS).
+   Used on first run and from the phonebook menu's "M" option. */
+static void monitor_prompt(void)
 {
+    unsigned char composite = 0;
     unsigned char k;
 
     feed("\x1b[2J\x1b[HMONITOR TYPE?\r\n\r\n");
@@ -191,7 +198,26 @@ static void choose_monitor(void)
 
     while ((k = inkey()) == 0) ;
     if (k == 'C' || k == 'c')
-        screen_palette(1);
+        composite = 1;
+
+    screen_palette(composite);
+    fuji_write_appkey(PB_SETTINGS, 1, &composite);
+}
+
+/* Monitor type persists in the phonebook's appkey store (key PB_SETTINGS).
+   Prompt only on first run; later runs read the saved choice and skip it. */
+static void choose_monitor(void)
+{
+    uint16_t count = 0;
+
+    if (fuji_read_appkey(PB_SETTINGS, &count, PB_KEYBUF) && count)
+    {
+        if (PB_KEYBUF[0])
+            screen_palette(1);
+        return;
+    }
+
+    monitor_prompt();
 }
 
 /* ---- URL prompt and credential finalization ---- */
@@ -208,8 +234,22 @@ static void set_devicespec_from_url(const char *url)
     }
 }
 
+/* True if the authority already carries credentials (an '@' between "://" and
+   the next '/' or '?'), e.g. ssh://user:pass@host - then skip the cred prompt. */
+static unsigned char url_has_creds(const char *url)
+{
+    const char *p = strstr(url, "://");
+    if (!p)
+        return 0;
+    for (p += 3; *p && *p != '/' && *p != '?'; p++)
+        if (*p == '@')
+            return 1;
+    return 0;
+}
+
 /* Prompt for user/pass, splice into devicespec as user:pass@host, append the
-   ?term/?cols/?rows the firmware reads for telnet TTYPE/NAWS and ssh pty-req. */
+   ?term/?cols/?rows the firmware reads for telnet TTYPE/NAWS and ssh pty-req.
+   Skips the prompt entirely when the URL already embeds credentials. */
 static void prompt_creds_and_finalize(void)
 {
     char *user = (char *) rx_buf + 0;       /*   0..47  */
@@ -218,31 +258,34 @@ static void prompt_creds_and_finalize(void)
     char *sep;
     unsigned int pre;
 
-    feed("\r\nUSERNAME (BLANK = NONE)?\r\n");
-    screen_flush();
-    term_get_line(user, 48);
-
-    if (user[0])
+    if (!url_has_creds(devicespec))
     {
-        feed("PASSWORD (BLANK = NONE)?\r\n");
+        feed("\r\nUSERNAME (BLANK = NONE)?\r\n");
         screen_flush();
-        term_get_line(pass, 48);
+        term_get_line(user, 48);
 
-        sep = strstr(devicespec, "://");
-        if (sep)
+        if (user[0])
         {
-            pre = (unsigned int) (sep - devicespec) + 3;
-            memcpy(full, devicespec, pre);
-            full[pre] = 0;
-            strcat(full, user);
-            if (pass[0])
+            feed("PASSWORD (BLANK = NONE)?\r\n");
+            screen_flush();
+            term_get_line(pass, 48);
+
+            sep = strstr(devicespec, "://");
+            if (sep)
             {
-                strcat(full, ":");
-                strcat(full, pass);
+                pre = (unsigned int) (sep - devicespec) + 3;
+                memcpy(full, devicespec, pre);
+                full[pre] = 0;
+                strcat(full, user);
+                if (pass[0])
+                {
+                    strcat(full, ":");
+                    strcat(full, pass);
+                }
+                strcat(full, "@");
+                strcat(full, sep + 3);
+                strcpy(devicespec, full);
             }
-            strcat(full, "@");
-            strcat(full, sep + 3);
-            strcpy(devicespec, full);
         }
     }
 
@@ -260,11 +303,11 @@ static unsigned char prompt_url(void)
 
     feed("\x1b[2J\x1b[HFUJINET VT100 TERMINAL\r\n\r\n");
     feed("DEVICESPEC? (BLANK = PHONEBOOK)\r\n");
-    feed("E.G. TELNET://HOST:PORT  (N: ASSUMED)\r\n");
-    feed("CTRL-BREAK DISCONNECTS\r\n\r\n");
+    feed("E.G. TELNET://HOST:PORT  (N: ASSUMED)\r\n\r\n");
     feed("ALT+1-0 = [ ] { } | \\ _ ~ ` ^\r\n");
     feed("CTRL+1-0=F1-F10 CTRL+LTR=CODE\r\n");
-    feed("BREAK=ESC F1=HELP\r\n\r\n");
+    feed("CTRL+RIGHT=TAB CTRL+LEFT=BS CLEAR=DEL\r\n");
+    feed("BREAK=ESC CTRL-BREAK=DISCONNECT F1=HELP\r\n\r\n");
     screen_flush();
 
     term_get_line(line, 96);
@@ -342,6 +385,7 @@ static void pb_draw_menu(unsigned char sel)
 
     screen_overlay_line(11, "UP/DN MOVE   ENTER CONNECT   E EDIT");
     screen_overlay_line(12, "D DELETE     N NEW URL       Q QUIT");
+    screen_overlay_line(13, "M MONITOR (RGB/COMPOSITE)");
 }
 
 /* screen_overlay_line stops at NUL, so a one-char string only touches col 0. */
@@ -513,6 +557,11 @@ static unsigned char pb_menu(void)
                 prompt_creds_and_finalize();
                 return 1;
             }
+            if (k == 'm')
+            {
+                monitor_prompt();
+                break;                       /* redraw menu with new palette */
+            }
             if (k == 'e')
             {
                 pb_edit(sel);
@@ -548,6 +597,8 @@ static unsigned char pb_menu(void)
 /* F1 help. Direct hardware write (bypasses shadow); screen_redraw restores. */
 static void show_help(void)
 {
+    char ver[40];
+
     screen_overlay_clear();
     screen_overlay_line(0,  "FUJINET VT100 - KEY HELP");
     screen_overlay_line(2,  "ALT + NUMBER = SYMBOL:");
@@ -555,10 +606,16 @@ static void show_help(void)
     screen_overlay_line(4,  "  6 \\   7 _   8 ~   9 `   0 ^");
     screen_overlay_line(6,  "CTRL + NUMBER = F1 - F10");
     screen_overlay_line(7,  "CTRL + LETTER = CONTROL CODE");
-    screen_overlay_line(8,  "BREAK         = ESC");
-    screen_overlay_line(9,  "CLEAR         = TAB");
-    screen_overlay_line(10, "CTRL + BREAK  = QUIT TERMINAL");
-    screen_overlay_line(12, "PRESS ANY KEY TO RETURN");
+    screen_overlay_line(8,  "CTRL + RIGHT  = TAB");
+    screen_overlay_line(9,  "CTRL + LEFT   = BACKSPACE");
+    screen_overlay_line(10, "CLEAR         = DEL");
+    screen_overlay_line(11, "BREAK         = ESC");
+    screen_overlay_line(12, "CTRL + BREAK  = DISCONNECT");
+
+    strcpy(ver, "VERSION: ");
+    strcat(ver, VT100_VERSION);
+    screen_overlay_line(14, ver);
+    screen_overlay_line(16, "PRESS ANY KEY TO RETURN");
 
     while (isKeyPressed(KEY_PROBE_F1, KEY_BIT_F1)) ;   /* let F1 lift */
     while (inkey()) ;                                  /* drain it */
@@ -589,8 +646,9 @@ static void send_fkey(unsigned char idx)
     network_write(devicespec, seq, 3);
 }
 
-/* keyboard -> network. CTRL+BREAK quits, F1 shows help, arrows send DECCKM-
-   aware sequences, CLEAR sends Tab; everything else goes via decode_key. */
+/* keyboard -> network. CTRL+BREAK quits, F1 shows help, plain arrows send
+   DECCKM-aware sequences, CTRL+left/right send BS/TAB, CLEAR sends DEL;
+   everything else goes via decode_key. */
 static void out_keys(void)
 {
     unsigned char k;
@@ -612,21 +670,24 @@ static void out_keys(void)
     if (!k)
         return;
 
+    if (isKeyPressed(KEY_PROBE_CTRL, KEY_BIT_CTRL))
+    {
+        unsigned char b;
+        if (k == 0x08) { b = 0x08; network_write(devicespec, &b, 1); return; }  /* CTRL+left  -> BS  */
+        if (k == 0x09) { b = 0x09; network_write(devicespec, &b, 1); return; }  /* CTRL+right -> TAB */
+        if (k >= '1' && k <= '9') { send_fkey(k - '1'); return; }               /* CTRL+1-9   -> F1-F9 */
+        if (k == '0')             { send_fkey(9);       return; }               /* CTRL+0     -> F10 */
+    }
+
     if (k == 0x5E) { send_cursor('A'); return; }   /* up arrow    */
     if (k == 0x0A) { send_cursor('B'); return; }   /* down arrow  */
     if (k == 0x08) { send_cursor('D'); return; }   /* left arrow  */
     if (k == 0x09) { send_cursor('C'); return; }   /* right arrow */
-    if (k == 0x0C)                                 /* CLEAR key -> Tab */
+    if (k == 0x0C)                                 /* CLEAR key -> DEL */
     {
-        unsigned char tab = 0x09;
-        network_write(devicespec, &tab, 1);
+        unsigned char del = 0x7F;
+        network_write(devicespec, &del, 1);
         return;
-    }
-
-    if (isKeyPressed(KEY_PROBE_CTRL, KEY_BIT_CTRL)) /* CTRL + number row -> F1-F10 */
-    {
-        if (k >= '1' && k <= '9') { send_fkey(k - '1'); return; }
-        if (k == '0')             { send_fkey(9);       return; }
     }
 
     k = decode_key(k);
