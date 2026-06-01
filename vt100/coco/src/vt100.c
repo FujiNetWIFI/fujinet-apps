@@ -72,6 +72,9 @@ static char _private=0;
 /* Set by main.c so DSR/cursor replies can be sent back over the wire. */
 void (*term_sendback)(char c) = 0;
 
+/* Set by main.c so a received BEL can ring the platform bell. */
+void (*term_bell)(void) = 0;
+
 static void sendback(char c)
 {
   if (term_sendback)
@@ -584,6 +587,10 @@ static void _vt100_char(void)
 
   switch (_c)
     {
+    case BEL:
+      if (term_bell)
+        term_bell();
+      break;
     case BS:
       screen_bs();
       break;
