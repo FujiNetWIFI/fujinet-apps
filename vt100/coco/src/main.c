@@ -33,6 +33,7 @@ typedef struct
 } PBEntry;
 
 extern void (*term_sendback)(char c);   /* set so DSR/cursor replies go to the wire */
+extern void (*term_bell)(void);          /* set so a received BEL rings the speaker */
 
 static char devicespec[160];
 static unsigned char rx_buf[RXSZ];
@@ -88,6 +89,24 @@ static void feed(const char *s)
 static void net_sendback(char c)
 {
     network_write(devicespec, (const unsigned char *) &c, 1);
+}
+
+/* Ring the speaker for a received BEL. ROM sound() drives the 6-bit DAC at
+   $FF20 and the sound-enable at $FF23. A bit-banger FujiNet (fujinet-coco-
+   devkitc) shares $FF20 for serial TX, so save/restore both registers to leave
+   the serial idle line untouched; a DriveWire/Becker FujiNet (fujiversal)
+   doesn't use $FF20 for comms, so the save/restore is simply harmless there. */
+static void net_bell(void)
+{
+    unsigned char *pia20 = (unsigned char *) 0xFF20;
+    unsigned char *pia23 = (unsigned char *) 0xFF23;
+    unsigned char s20 = *pia20;
+    unsigned char s23 = *pia23;
+
+    sound(150, 2);
+
+    *pia23 = s23;
+    *pia20 = s20;
 }
 
 /* ---- prompt input ---- */
@@ -305,6 +324,7 @@ static unsigned char prompt_url(void)
     feed("DEVICESPEC? (BLANK = PHONEBOOK)\r\n");
     feed("E.G. TELNET://HOST:PORT  (N: ASSUMED)\r\n\r\n");
     feed("ALT+1-0 = [ ] { } | \\ _ ~ ` ^\r\n");
+    feed("ALT-9 SENDS A BACKTICK (SHOWN AS DEGREE)\r\n");
     feed("CTRL+1-0=F1-F10 CTRL+LTR=CODE\r\n");
     feed("CTRL+RIGHT=TAB CTRL+LEFT=BS CLEAR=DEL\r\n");
     feed("BREAK=ESC CTRL-BREAK=DISCONNECT F1=HELP\r\n\r\n");
@@ -383,8 +403,8 @@ static void pb_draw_menu(unsigned char sel)
         screen_overlay_line(2 + i, line);
     }
 
-    screen_overlay_line(11, "UP/DN MOVE   ENTER CONNECT   E EDIT");
-    screen_overlay_line(12, "D DELETE     N NEW URL       Q QUIT");
+    screen_overlay_line(11, "UP/DN OR 1-8 MOVE   ENTER CONNECT");
+    screen_overlay_line(12, "E EDIT   D DELETE   N NEW   Q QUIT");
     screen_overlay_line(13, "M MONITOR (RGB/COMPOSITE)");
 }
 
@@ -534,6 +554,12 @@ static unsigned char pb_menu(void)
                 if (sel + 1 < PB_SLOTS) { pb_move_selection(sel, sel + 1); sel++; }
                 continue;
             }
+            if (k >= '1' && k <= '8')        /* number key jumps to that slot */
+            {
+                unsigned char n = k - '1';
+                if (n != sel) { pb_move_selection(sel, n); sel = n; }
+                continue;
+            }
             if (k == 'q')
                 return 0;
             if (k == 'n')                    /* one-shot URL; save offered on return */
@@ -604,6 +630,7 @@ static void show_help(void)
     screen_overlay_line(2,  "ALT + NUMBER = SYMBOL:");
     screen_overlay_line(3,  "  1 [   2 ]   3 {   4 }   5 |");
     screen_overlay_line(4,  "  6 \\   7 _   8 ~   9 `   0 ^");
+    screen_overlay_line(5,  "  9 = BACKTICK (SHOWN AS DEGREE)");
     screen_overlay_line(6,  "CTRL + NUMBER = F1 - F10");
     screen_overlay_line(7,  "CTRL + LETTER = CONTROL CODE");
     screen_overlay_line(8,  "CTRL + RIGHT  = TAB");
@@ -770,6 +797,7 @@ static void connect_and_run(void)
     feed("\x1b[2J\x1b[H");
     screen_flush();
     term_sendback = net_sendback;
+    term_bell = net_bell;
 
     running = 1;
     while (running)
@@ -780,6 +808,7 @@ static void connect_and_run(void)
 
     network_close(devicespec);
     term_sendback = 0;
+    term_bell = 0;
 
     /* Clean slate before returning to the menu, especially after CTRL-BREAK. */
     vt100_terminal_reset();
