@@ -24,6 +24,18 @@
 
 #define VT_SHADOW ((unsigned char *)0x2000)   /* valid only inside the bracket */
 
+/* The CoCo3 80-col font carries real caret and underscore glyphs, but at
+   shifted code points: caret at 0x60, underscore at 0x7F. It has no backtick
+   glyph at all (0x60 is the caret), so we show an incoming backtick as the
+   degree symbol (glyph 0x1E) to keep it distinct from a true caret. Remap on
+   DISPLAY only - the wire and stored strings always keep true ASCII. */
+#define CARET_ASCII  0x5E
+#define CARET_GLYPH  0x60
+#define USCORE_ASCII 0x5F
+#define USCORE_GLYPH 0x7F
+#define BTICK_ASCII  0x60
+#define BTICK_GLYPH  0x1E
+
 unsigned char blit_scratch[STRIDE];
 
 static void shadow_acquire(void)
@@ -227,6 +239,9 @@ void screen_putc(unsigned char c)
     }
 
     o = (unsigned int) _row * STRIDE + (unsigned int) _col * 2;
+    if (c == CARET_ASCII)       c = CARET_GLYPH;
+    else if (c == USCORE_ASCII) c = USCORE_GLYPH;
+    else if (c == BTICK_ASCII)  c = BTICK_GLYPH;
     VT_SHADOW[o]     = c;
     VT_SHADOW[o + 1] = _attr;
     if (_row < dmin) dmin = _row;
@@ -281,7 +296,11 @@ void screen_puts_run(const unsigned char *buf, unsigned int len)
         p = VT_SHADOW + (unsigned int) row * STRIDE + (unsigned int) col * 2;
         while (len && col < COLS - 1)
         {
-            *p++ = *buf++;
+            unsigned char ch = *buf++;
+            if (ch == CARET_ASCII)       ch = CARET_GLYPH;
+            else if (ch == USCORE_ASCII) ch = USCORE_GLYPH;
+            else if (ch == BTICK_ASCII)  ch = BTICK_GLYPH;
+            *p++ = ch;
             *p++ = attr;
             col++;
             len--;
@@ -289,7 +308,11 @@ void screen_puts_run(const unsigned char *buf, unsigned int len)
 
         if (len && col == COLS - 1)          /* last column: write, then arm wrap */
         {
-            *p++ = *buf++;
+            unsigned char ch = *buf++;
+            if (ch == CARET_ASCII)       ch = CARET_GLYPH;
+            else if (ch == USCORE_ASCII) ch = USCORE_GLYPH;
+            else if (ch == BTICK_ASCII)  ch = BTICK_GLYPH;
+            *p++ = ch;
             *p = attr;
             _pending = 1;
             len--;
@@ -599,6 +622,20 @@ void screen_overlay_line(unsigned char row, const char *s)
 @ovl
         lda     ,x+
         beq     @ovld
+        cmpa    #$5E            ; '^' -> caret glyph 0x60
+        bne     @ov1
+        lda     #$60
+        bra     @ovw
+@ov1
+        cmpa    #$5F            ; '_' -> underscore glyph 0x7F
+        bne     @ov2
+        lda     #$7F
+        bra     @ovw
+@ov2
+        cmpa    #$60            ; '`' -> degree glyph 0x1E
+        bne     @ovw
+        lda     #$1E
+@ovw
         sta     ,y+
         stb     ,y+
         bra     @ovl

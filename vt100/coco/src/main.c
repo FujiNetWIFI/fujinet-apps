@@ -305,6 +305,7 @@ static unsigned char prompt_url(void)
     feed("DEVICESPEC? (BLANK = PHONEBOOK)\r\n");
     feed("E.G. TELNET://HOST:PORT  (N: ASSUMED)\r\n\r\n");
     feed("ALT+1-0 = [ ] { } | \\ _ ~ ` ^\r\n");
+    feed("ALT-9 SENDS A BACKTICK (SHOWN AS DEGREE)\r\n");
     feed("CTRL+1-0=F1-F10 CTRL+LTR=CODE\r\n");
     feed("CTRL+RIGHT=TAB CTRL+LEFT=BS CLEAR=DEL\r\n");
     feed("BREAK=ESC CTRL-BREAK=DISCONNECT F1=HELP\r\n\r\n");
@@ -604,6 +605,7 @@ static void show_help(void)
     screen_overlay_line(2,  "ALT + NUMBER = SYMBOL:");
     screen_overlay_line(3,  "  1 [   2 ]   3 {   4 }   5 |");
     screen_overlay_line(4,  "  6 \\   7 _   8 ~   9 `   0 ^");
+    screen_overlay_line(5,  "  9 = BACKTICK (SHOWN AS DEGREE)");
     screen_overlay_line(6,  "CTRL + NUMBER = F1 - F10");
     screen_overlay_line(7,  "CTRL + LETTER = CONTROL CODE");
     screen_overlay_line(8,  "CTRL + RIGHT  = TAB");
