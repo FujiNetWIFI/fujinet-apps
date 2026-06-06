@@ -1,5 +1,5 @@
-PRODUCT = mastodon 
-PLATFORMS = msxrom 
+PRODUCT = mastodon
+PLATFORMS = msxrom
 
 # You can run 'make <platform>' to build for a specific platform,
 # or 'make <platform>/<target>' for a platform-specific target.
@@ -32,7 +32,7 @@ PLATFORM_COMBOS = \
 
 include mekkogx/toplevel-rules.mk
 
-LDFLAGS_EXTRA_MSXROM += --generic-console -pragma-redirect:CRT_FONT=_font -create-app -lm 
+LDFLAGS_EXTRA_MSXROM += --generic-console -pragma-redirect:CRT_FONT=_font -create-app -lm
 
 # If you need to add extra platform-specific steps, do it below:
 #   coco/r2r:: coco/custom-step1
