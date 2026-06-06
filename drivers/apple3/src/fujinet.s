@@ -265,7 +265,7 @@ DIB3_Blks:  .word    $0000            ; # Blocks in device
 ;
 DIB_4:      .word    DIB_5            ; Link pointer
             .word    Entry            ; Entry pointer
-            .byte    $08              ; Name length byte
+DIB4_Len:   .byte    $08              ; Name length byte
 DIB4_Name:  .byte    ".NETWORK       "; Device name
             .byte    $80              ; Active
 DIB4_Slot:  .byte    AutoScan         ; Slot number
@@ -282,7 +282,7 @@ DIB4_Slot:  .byte    AutoScan         ; Slot number
 ;
 DIB_5:      .word    DIB_6            ; Link pointer
             .word    Entry            ; Entry pointer
-            .byte    $08              ; Name length byte
+DIB5_Len:   .byte    $08              ; Name length byte
 DIB5_Name:  .byte    ".PRINTER       "; Device name
             .byte    $80              ; Active
 DIB5_Slot:  .byte    AutoScan         ; Slot number
@@ -299,7 +299,7 @@ DIB5_Slot:  .byte    AutoScan         ; Slot number
 ;
 DIB_6:      .word    DIB_7            ; Link pointer
             .word    Entry            ; Entry pointer
-            .byte    $04              ; Name length byte
+DIB6_Len:   .byte    $04              ; Name length byte
 DIB6_Name:  .byte    ".CPM           "; Device name
             .byte    $80              ; Active
 DIB6_Slot:  .byte    AutoScan         ; Slot number
@@ -317,7 +317,7 @@ DIB6_Slot:  .byte    AutoScan         ; Slot number
 ;
 DIB_7:      .word    DIB_8            ; Link pointer
             .word    Entry            ; Entry pointer
-            .byte    $06              ; Name length byte
+DIB7_Len:   .byte    $06              ; Name length byte
 DIB7_Name:  .byte    ".RS232         "; Device name
             .byte    $80              ; Active
 DIB7_Slot:  .byte    AutoScan         ; Slot number
@@ -335,7 +335,7 @@ DIB7_Slot:  .byte    AutoScan         ; Slot number
 ;
 DIB_8:      .word    $0000            ; Link pointer
             .word    Entry            ; Entry pointer
-            .byte    $09              ; Name length byte
+DIB8_Len:   .byte    $09              ; Name length byte
 DIB8_Name:  .byte    ".FN_CLOCK      "; Device name
             .byte    $80              ; Active
 DIB8_Slot:  .byte    AutoScan         ; Slot number
@@ -384,11 +384,14 @@ SPUnitMap:  .byte   $01                 ; block dev0 (mapping not used, assume t
             .byte   $02                 ; block dev1 (mapping not used, assume they are always the first 4)
             .byte   $03                 ; block dev2 (mapping not used, assume they are always the first 4)
             .byte   $04                 ; block dev3 (mapping not used, assume they are always the first 4)
-            .byte   $07                 ; Network device unit#
-PrtUnit:    .byte   $08                 ; Printer device unit#
-            .byte   $05                 ; CPM device unit#
-            .byte   $09                 ; Modem device unit#
-            .byte   $06                 ; FN_Clock device unit#
+NetUnit:    .byte   $00                 ; Network device unit#
+PrtUnit:    .byte   $00                 ; Printer device unit#
+CPMUnit:    .byte   $00                 ; CPM device unit#
+ModUnit:    .byte   $00                 ; Modem device unit#
+ClkUnit:    .byte   $00                 ; FN_Clock device unit#
+
+ModName:    .byte   ".MODEM"            ; add dot as we start looking at the second char
+ModLen:     .byte   6
 
 BytesReadL: .byte   $00                 ; temp storage for X & Y returned from SP call
 BytesReadH: .byte   $00
@@ -633,61 +636,73 @@ CheckNext:  ldy     #$05                ; <-- hack, just check the 3 sig bytes, 
             jmp     NoDevice
 @11:
             lda     Buffer              ; First byte returned is the num devices
-            beq     NoDevice            ; if zero, no devices attached
-            sta     NumSPDevs
-            jmp     FoundCard
+            bne     HaveDevs
+            jmp     NoDevice            ; if zero, no devices attached
 
-; Todo, just hard mapped for now
-;;; scan for the char dev names and map them to the SOS unit numbers
-;;            lda     #3
-;;            sta     StatParam+4         ; Set status call type - 03 (get DIB)
-;;
-;;NextDev:    inc     StatParam+1         ; next unit
-;;            lda     StatParam+1
-;;            cmp     NumSPDevs
-;;            beq     @1
-;;            bcs     FoundCard           ; all done
-;;@1:
-;;            jsr     SmartPort
-;;            bcs     NoDevice
-;;
-;;            ldx     #0
-;;NextChar:   lda     Buffer+5,x          ; start of name in dib
-;;            cmp     DIB4_Name+1,x       ; is it NETWORK?
-;;            bne     NextName
-;;            inx
-;;            cpx     #7
-;;            bne     NextChar
-;;            lda     StatParam+1         ; yes, save the unit#
-;;            sta     SPUnitMap
-;;            bne     NextDev             ; check next device (bra)
-;;
-;;NextName:   cmp     DIB5_Name+1,x       ; is it PRINTER?
-;;            bne     NextName2
-;;            inx
-;;            cpx     #7
-;;            bne     NextChar
-;;            lda     StatParam+1         ; yes, save the unit#
-;;            sta     SPUnitMap+1
-;;            bne     NextDev             ; check next device (bra)
-;;
-;;NextName2:  cmp     DIB6_Name+1,x       ; is it CPM?
-;;            bne     NextName3
-;;            inx
-;;            cpx     #3
-;;            bne     NextChar
-;;            lda     StatParam+1         ; yes, save the unit#
-;;            sta     SPUnitMap+2
-;;            bne     NextDev             ; check next device (bra)
-;;
-;;NextName3:  cmp     DIB7_DCB+1,x        ; is it MODEM? (RS232)
-;;            bne     NextDev
-;;            inx
-;;            cpx     #5
-;;            bne     NextChar
-;;            lda     StatParam+1         ; yes, save the unit#
-;;            sta     SPUnitMap+3
-;;            bne     NextDev             ; check next device (bra)
+HaveDevs:   sta     NumSPDevs
+
+; scan for the char dev names and map them to the SOS unit numbers
+            lda     #3
+            sta     StatParam+4         ; Set status call type - 03 (get DIB)
+
+NextDev:    inc     StatParam+1         ; next unit (was 0 from above)
+            lda     StatParam+1
+            cmp     NumSPDevs
+            bcc     @1
+            beq     @1
+            jmp     FoundCard           ; all done
+@1:
+            jsr     SmartPort
+            bcc     @ok1
+            jmp     NoDevice
+@ok1:
+            ldx     #1
+NextChar:   lda     Buffer+4,x          ; start of name in dib
+            cmp     DIB4_Name,x         ; is it NETWORK?
+            bne     NextName
+            inx
+            cpx     DIB4_Len
+            bne     NextChar
+            lda     StatParam+1         ; yes, save the unit#
+            sta     NetUnit
+            jmp     NextDev             ; check next device
+
+NextName:   cmp     DIB5_Name,x         ; is it PRINTER?
+            bne     NextName2
+            inx
+            cpx     DIB5_Len
+            bne     NextChar
+            lda     StatParam+1         ; yes, save the unit#
+            sta     PrtUnit
+            jmp     NextDev             ; check next device
+
+NextName2:  cmp     DIB6_Name,x         ; is it CPM?
+            bne     NextName3
+            inx
+            cpx     DIB6_Len
+            bne     NextChar
+            lda     StatParam+1         ; yes, save the unit#
+            sta     CPMUnit
+            jmp     NextDev             ; check next device
+
+NextName3:  cmp     DIB8_Name,x         ; is it FN_CLOCK?
+            bne     NextName4
+            inx
+            cpx     DIB8_Len
+            bne     NextChar
+            lda     StatParam+1         ; yes, save the unit#
+            sta     ClkUnit
+            jmp     NextDev             ; check next device
+
+NextName4:  cmp     ModName,x           ; is it MODEM? (RS232 DIB7)
+            bne     NextDev
+            inx
+            cpx     ModLen
+            bne     NextChar
+            lda     StatParam+1         ; yes, save the unit#
+            sta     ModUnit
+            jmp     NextDev             ; check next device
+
 
 NoMatch:    dec     Pointer+1           ; Try next slot
             lda     Pointer+1

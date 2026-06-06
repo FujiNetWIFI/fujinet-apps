@@ -1,8 +1,8 @@
 # Makefile for Apple /// Fujinet driver
 AC = build/ac.jar
-OUTPUTDISK1 = disks/sos15_selector_hd.po
-OUTPUTDISK2 = disks/sos_selector_hd.po
-OUTPUTDISK3 = disks/businessbasic_hd.po
+OUTPUTDISK1 = disks/sos15_selector_fn_hd.po
+OUTPUTDISK2 = disks/sos_selector_fn_hd.po
+OUTPUTDISK3 = disks/businessbasic_fn_hd.po
 
 default:
 	mkdir -p lst
