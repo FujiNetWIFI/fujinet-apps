@@ -13,7 +13,7 @@
 #include "fujinet-network.h"
 #include "fujinet-fuji.h"
 
-#define RXSZ 512
+#define RXSZ 320
 
 #ifndef VT100_VERSION
 #define VT100_VERSION "dev"
@@ -26,10 +26,16 @@
 #define PB_NAME_LEN 16
 #define PB_URL_LEN  47
 
+#define SCH_TELNET  0
+#define SCH_SSH     1
+#define SCH_CPM     2
+#define SCH_OTHER   3
+
 typedef struct
 {
     char name[PB_NAME_LEN];
     char url[PB_URL_LEN];
+    unsigned char scheme;       /* trailing byte: old 63-byte entries load as telnet */
 } PBEntry;
 
 extern void (*term_sendback)(char c);   /* set so DSR/cursor replies go to the wire */
@@ -44,6 +50,7 @@ static unsigned char running;
    instead of the save prompt. */
 static char oneshot_url[PB_URL_LEN];
 static unsigned char oneshot_too_long;
+static unsigned char oneshot_scheme;
 
 /* Phonebook scratch carved from rx_buf (idle at the prompt). PB_KEYBUF needs
    66 bytes - fuji_read_appkey wants keysize+2. */
@@ -51,7 +58,7 @@ static unsigned char oneshot_too_long;
 #define PB_LINE    ((char *)   (rx_buf + 80))   /*  80..159 */
 #define PB_NAMEBUF ((char *)   (rx_buf + 160))  /* 160..176 */
 #define PB_URLBUF  ((char *)   (rx_buf + 180))  /* 180..227 */
-#define PB_CURRENT ((PBEntry *)(rx_buf + 256))  /* 256..318 */
+#define PB_CURRENT ((PBEntry *)(rx_buf + 256))  /* 256..319 */
 
 /* ---- terminal stream output ---- */
 
@@ -241,16 +248,46 @@ static void choose_monitor(void)
 
 /* ---- URL prompt and credential finalization ---- */
 
-/* Append "N:" if the user didn't, then store the URL in devicespec. */
-static void set_devicespec_from_url(const char *url)
+static unsigned char starts_with_ci(const char *u, const char *p)
 {
-    if (url[0] == 'N' || url[0] == 'n')
-        strcpy(devicespec, url);
-    else
+    for (; *p; u++, p++)
     {
-        strcpy(devicespec, "N:");
-        strcat(devicespec, url);
+        char a = (*u >= 'A' && *u <= 'Z') ? (char) (*u + 0x20) : *u;
+        if (a != *p)
+            return 0;
     }
+    return 1;
+}
+
+/* By scheme prefix; bare URL = telnet, an unrecognized "scheme://" = SCH_OTHER. */
+static unsigned char url_scheme(const char *u)
+{
+    if (starts_with_ci(u, "telnet:")) return SCH_TELNET;
+    if (starts_with_ci(u, "ssh:"))    return SCH_SSH;
+    if (starts_with_ci(u, "cpm:"))    return SCH_CPM;
+    if (strstr(u, "://"))             return SCH_OTHER;
+    return SCH_TELNET;
+}
+
+/* Build "N:[scheme://]url"; CP/M is always N:cpm:/// regardless of url. */
+static void set_devicespec_from_url(const char *url, unsigned char scheme)
+{
+    const char *body = url;
+
+    if (scheme == SCH_CPM)
+    {
+        strcpy(devicespec, "N:cpm:///");
+        return;
+    }
+
+    if ((body[0] == 'N' || body[0] == 'n') && body[1] == ':')
+        body += 2;
+
+    strcpy(devicespec, "N:");
+    if (!strstr(body, "://"))
+        strcat(devicespec, scheme == SCH_CPM ? "cpm://" :
+                           scheme == SCH_SSH ? "ssh://" : "telnet://");
+    strcat(devicespec, body);
 }
 
 /* True if the authority already carries credentials (an '@' between "://" and
@@ -276,6 +313,10 @@ static void prompt_creds_and_finalize(void)
     char *full = (char *) rx_buf + 96;      /*  96..255 */
     char *sep;
     unsigned int pre;
+
+    /* CP/M and unknown schemes: no login prompt, no ?term. */
+    if (url_scheme(devicespec + 2) >= SCH_CPM)
+        return;
 
     if (!url_has_creds(devicespec))
     {
@@ -322,19 +363,15 @@ static unsigned char prompt_url(void)
 
     feed("\x1b[2J\x1b[HFUJINET VT100 TERMINAL\r\n\r\n");
     feed("DEVICESPEC? (BLANK = PHONEBOOK)\r\n");
-    feed("E.G. TELNET://HOST:PORT  (N: ASSUMED)\r\n\r\n");
-    feed("ALT+1-0 = [ ] { } | \\ _ ~ ` ^\r\n");
-    feed("ALT-9 SENDS A BACKTICK (SHOWN AS DEGREE)\r\n");
-    feed("CTRL+1-0=F1-F10 CTRL+LTR=CODE\r\n");
-    feed("CTRL+RIGHT=TAB CTRL+LEFT=BS CLEAR=DEL\r\n");
-    feed("BREAK=ESC CTRL-BREAK=DISCONNECT F1=HELP\r\n\r\n");
+    feed("E.G. HOST:PORT  (TELNET:// & N: ASSUMED)\r\n\r\n");
+    feed("F1 AT MENU = FULL KEY HELP\r\n\r\n");
     screen_flush();
 
     term_get_line(line, 96);
     if (line[0] == 0)
         return 0;
 
-    set_devicespec_from_url(line);
+    set_devicespec_from_url(line, SCH_TELNET);
     return 1;
 }
 
@@ -359,6 +396,11 @@ static unsigned char pb_load(unsigned char idx, PBEntry *out)
 
     out->name[PB_NAME_LEN - 1] = 0;        /* enforce nul-termination */
     out->url[PB_URL_LEN - 1] = 0;
+
+    /* URL scheme overrides a stale stored type (CP/M url "/" has no "://"). */
+    if (strstr((char *) out->url, "://"))
+        out->scheme = url_scheme((char *) out->url);
+
     return out->name[0] ? 1 : 0;
 }
 
@@ -366,6 +408,9 @@ static unsigned char pb_save(unsigned char idx, const PBEntry *in)
 {
     return fuji_write_appkey(idx, sizeof(PBEntry), (uint8_t *) in);
 }
+
+/* Shown for CP/M entries in place of the (too-long-to-store) name. */
+static const char cpm_label[] = "FujiNet Internal CP/M";
 
 /* Full repaint (8 appkey reads). Arrow keys use pb_move_selection instead. */
 static void pb_draw_menu(unsigned char sel)
@@ -376,6 +421,7 @@ static void pb_draw_menu(unsigned char sel)
 
     screen_overlay_clear();
     screen_overlay_line(0, "FUJINET VT100 - PHONEBOOK");
+    screen_overlay_line(1, "  T/S/C = TELNET/SSH/CPM");
 
     for (i = 0; i < PB_SLOTS; i++)
     {
@@ -388,13 +434,23 @@ static void pb_draw_menu(unsigned char sel)
 
         if (pb_load(i, e))
         {
-            for (j = 0; j < PB_NAME_LEN - 1 && e->name[j]; j++)
-                line[5 + j] = e->name[j];
-            for (; j < PB_NAME_LEN; j++)
-                line[5 + j] = ' ';
-            line[5 + PB_NAME_LEN] = ' ';
-            for (j = 0; j < PB_URL_LEN - 1 && e->url[j]; j++)
-                line[5 + PB_NAME_LEN + 1 + j] = e->url[j];
+            line[5] = e->scheme == SCH_CPM ? 'C' : e->scheme == SCH_SSH ? 'S' :
+                      e->scheme == SCH_TELNET ? 'T' : ' ';
+            line[6] = ' ';
+            if (e->scheme == SCH_CPM)
+            {
+                strcpy(line + 7, cpm_label);
+            }
+            else
+            {
+                for (j = 0; j < PB_NAME_LEN - 1 && e->name[j]; j++)
+                    line[7 + j] = e->name[j];
+                for (; j < PB_NAME_LEN; j++)
+                    line[7 + j] = ' ';
+                line[7 + PB_NAME_LEN] = ' ';
+                for (j = 0; j < PB_URL_LEN - 1 && e->url[j]; j++)
+                    line[7 + PB_NAME_LEN + 1 + j] = e->url[j];
+            }
         }
         else
         {
@@ -405,7 +461,9 @@ static void pb_draw_menu(unsigned char sel)
 
     screen_overlay_line(11, "UP/DN OR 1-8 MOVE   ENTER CONNECT");
     screen_overlay_line(12, "E EDIT   D DELETE   N NEW   Q QUIT");
-    screen_overlay_line(13, "M MONITOR (RGB/COMPOSITE)");
+    screen_overlay_line(13, "M MONITOR   F1 KEY HELP");
+    screen_overlay_line(15, "IN SESSION: F1 = HELP");
+    screen_overlay_line(16, "  CTRL-BREAK = DISCONNECT");
 }
 
 /* screen_overlay_line stops at NUL, so a one-char string only touches col 0. */
@@ -423,6 +481,8 @@ static void pb_edit(unsigned char idx)
     char *url = PB_URLBUF;
     char nb[4];
 
+    unsigned char scheme;
+
     pb_load(idx, e);
 
     feed("\x1b[2J\x1b[HEDIT SLOT ");
@@ -430,7 +490,30 @@ static void pb_edit(unsigned char idx)
     feed(nb);
     feed("\r\n\r\n");
 
-    feed("CURRENT NAME: ");
+    feed("CURRENT TYPE: ");
+    feed(e->scheme == SCH_CPM ? "CPM" : e->scheme == SCH_SSH ? "SSH" :
+         e->scheme == SCH_TELNET ? "TELNET" : "OTHER");
+    feed("\r\nTYPE (T=TELNET S=SSH C=CPM, BLANK=OTHER)?\r\n");
+    screen_flush();
+    nb[0] = 0;
+    term_get_line(nb, sizeof(nb));
+
+    if (nb[0] == 'C' || nb[0] == 'c')      scheme = SCH_CPM;
+    else if (nb[0] == 'S' || nb[0] == 's') scheme = SCH_SSH;
+    else if (nb[0] == 'T' || nb[0] == 't') scheme = SCH_TELNET;
+    else                                   scheme = e->scheme;
+
+    if (scheme == SCH_CPM)
+    {
+        memset(e, 0, sizeof(PBEntry));
+        strcpy(e->name, "CP/M");      /* placeholder; menu shows cpm_label */
+        strcpy(e->url, "/");
+        e->scheme = SCH_CPM;
+        pb_save(idx, e);
+        return;
+    }
+
+    feed("\r\nCURRENT NAME: ");
     feed(e->name[0] ? (const char *) e->name : "(NONE)");
     feed("\r\nNEW NAME (BLANK = KEEP, MAX 15)?\r\n");
     screen_flush();
@@ -448,6 +531,11 @@ static void pb_edit(unsigned char idx)
         strcpy(e->name, name);
     if (url[0])
         strcpy(e->url, url);
+
+    e->scheme = scheme;
+    /* explicit scheme in the URL overrides the picked type */
+    if (strstr(e->url, "://"))
+        e->scheme = url_scheme(e->url);
 
     if (e->name[0] && e->url[0])
         pb_save(idx, e);
@@ -517,11 +605,14 @@ static void offer_save(void)
         memset(e, 0, sizeof(PBEntry));
         strcpy(e->name, name);
         strcpy(e->url, oneshot_url);
+        e->scheme = oneshot_scheme;
         pb_save(slot, e);
     }
 
     oneshot_url[0] = 0;
 }
+
+static void show_help(void);
 
 /* Returns 1 with devicespec set and ready to connect, 0 if the user quit. */
 static unsigned char pb_menu(void)
@@ -539,10 +630,20 @@ static unsigned char pb_menu(void)
 
         for (;;)
         {
-            do {
-                while ((k = inkey()) == 0) ;
-                k = decode_key(k);
-            } while (k == 0);
+            for (;;)
+            {
+                if (isKeyPressed(KEY_PROBE_F1, KEY_BIT_F1))
+                {
+                    show_help();
+                    pb_draw_menu(sel);
+                    continue;
+                }
+                if ((k = inkey()) != 0)
+                    break;
+            }
+            k = decode_key(k);
+            if (k == 0)
+                continue;
 
             if (k == 0x5E)                   /* up arrow */
             {
@@ -573,6 +674,7 @@ static unsigned char pb_menu(void)
                 if (strlen(bare) < PB_URL_LEN)
                 {
                     strcpy(oneshot_url, bare);
+                    oneshot_scheme = url_scheme(bare);
                     oneshot_too_long = 0;
                 }
                 else
@@ -604,10 +706,10 @@ static unsigned char pb_menu(void)
                 if (!pb_load(sel, e) || !e->url[0])
                     continue;                /* empty slot, ignore */
 
-                set_devicespec_from_url(e->url);
+                set_devicespec_from_url(e->url, e->scheme);
 
                 feed("\x1b[2J\x1b[HCONNECTING TO ");
-                feed(e->name);
+                feed(e->scheme == SCH_CPM ? cpm_label : (const char *) e->name);
                 feed("\r\n");
                 screen_flush();
 
@@ -764,11 +866,6 @@ static void in_data(void)
         vt_write(rx_buf, (uint16_t) n);
         got = 1;
 
-        if (fn_network_error == 136)      /* remote closed */
-        {
-            running = 0;
-            break;
-        }
         if (++iters >= 8)                 /* yield to the keyboard */
             break;
     }
