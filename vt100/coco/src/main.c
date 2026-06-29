@@ -29,14 +29,13 @@
 #define SCH_TELNET  0
 #define SCH_SSH     1
 #define SCH_CPM     2
-#define SCH_OTHER   3           /* a "scheme://" we don't recognize; shown untyped */
+#define SCH_OTHER   3
 
 typedef struct
 {
     char name[PB_NAME_LEN];
     char url[PB_URL_LEN];
-    unsigned char scheme;       /* 0 = telnet, 1 = ssh. Trailing byte keeps old
-                                   63-byte entries readable (defaults to telnet). */
+    unsigned char scheme;       /* trailing byte: old 63-byte entries load as telnet */
 } PBEntry;
 
 extern void (*term_sendback)(char c);   /* set so DSR/cursor replies go to the wire */
@@ -51,7 +50,7 @@ static unsigned char running;
    instead of the save prompt. */
 static char oneshot_url[PB_URL_LEN];
 static unsigned char oneshot_too_long;
-static unsigned char oneshot_scheme;    /* scheme of oneshot_url, for offer_save() */
+static unsigned char oneshot_scheme;
 
 /* Phonebook scratch carved from rx_buf (idle at the prompt). PB_KEYBUF needs
    66 bytes - fuji_read_appkey wants keysize+2. */
@@ -249,7 +248,6 @@ static void choose_monitor(void)
 
 /* ---- URL prompt and credential finalization ---- */
 
-/* Case-insensitive test: does u begin with the (lower-case) prefix p? */
 static unsigned char starts_with_ci(const char *u, const char *p)
 {
     for (; *p; u++, p++)
@@ -261,9 +259,7 @@ static unsigned char starts_with_ci(const char *u, const char *p)
     return 1;
 }
 
-/* Classify a URL by its scheme. A recognized telnet://, ssh:// or cpm:// maps
-   to its SCH_* value; a bare URL with no "scheme://" is assumed telnet; any
-   other "scheme://" is SCH_OTHER - left for the firmware to handle, untyped. */
+/* By scheme prefix; bare URL = telnet, an unrecognized "scheme://" = SCH_OTHER. */
 static unsigned char url_scheme(const char *u)
 {
     if (starts_with_ci(u, "telnet:")) return SCH_TELNET;
@@ -273,15 +269,12 @@ static unsigned char url_scheme(const char *u)
     return SCH_TELNET;
 }
 
-/* Build devicespec from a URL: prepend "N:", and when the URL carries no
-   "scheme://" of its own, insert the scheme per the flag. A user-typed "N:"
-   prefix is honored. CP/M targets the FujiNet's internal emulator; its URL is
-   just "/", giving "N:cpm:///". */
+/* Build "N:[scheme://]url"; CP/M is always N:cpm:/// regardless of url. */
 static void set_devicespec_from_url(const char *url, unsigned char scheme)
 {
     const char *body = url;
 
-    if (scheme == SCH_CPM)              /* internal CP/M: URL is irrelevant */
+    if (scheme == SCH_CPM)
     {
         strcpy(devicespec, "N:cpm:///");
         return;
@@ -321,8 +314,7 @@ static void prompt_creds_and_finalize(void)
     char *sep;
     unsigned int pre;
 
-    /* CP/M (local emulator) and unrecognized schemes get no login prompt and no
-       ?term negotiation - pass the URL through untouched. */
+    /* CP/M and unknown schemes: no login prompt, no ?term. */
     if (url_scheme(devicespec + 2) >= SCH_CPM)
         return;
 
@@ -405,9 +397,7 @@ static unsigned char pb_load(unsigned char idx, PBEntry *out)
     out->name[PB_NAME_LEN - 1] = 0;        /* enforce nul-termination */
     out->url[PB_URL_LEN - 1] = 0;
 
-    /* An explicit telnet://|ssh:// in the URL is authoritative - corrects the
-       type of older entries whose stored scheme byte disagrees. CP/M (url "/")
-       has no "://" so it is left untouched. */
+    /* URL scheme overrides a stale stored type (CP/M url "/" has no "://"). */
     if (strstr((char *) out->url, "://"))
         out->scheme = url_scheme((char *) out->url);
 
@@ -511,12 +501,12 @@ static void pb_edit(unsigned char idx)
     if (nb[0] == 'C' || nb[0] == 'c')      scheme = SCH_CPM;
     else if (nb[0] == 'S' || nb[0] == 's') scheme = SCH_SSH;
     else if (nb[0] == 'T' || nb[0] == 't') scheme = SCH_TELNET;
-    else                                   scheme = e->scheme;   /* blank: keep/other - URL decides below */
+    else                                   scheme = e->scheme;
 
-    if (scheme == SCH_CPM)             /* internal CP/M: no name/URL prompts */
+    if (scheme == SCH_CPM)
     {
         memset(e, 0, sizeof(PBEntry));
-        strcpy(e->name, "CP/M");      /* placeholder; menu shows the full label */
+        strcpy(e->name, "CP/M");      /* placeholder; menu shows cpm_label */
         strcpy(e->url, "/");
         e->scheme = SCH_CPM;
         pb_save(idx, e);
@@ -543,8 +533,7 @@ static void pb_edit(unsigned char idx)
         strcpy(e->url, url);
 
     e->scheme = scheme;
-    /* An explicit telnet://|ssh:// in the final URL always wins over the picked
-       type, whether the URL was just typed or kept from before. */
+    /* explicit scheme in the URL overrides the picked type */
     if (strstr(e->url, "://"))
         e->scheme = url_scheme(e->url);
 
