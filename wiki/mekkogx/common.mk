@@ -22,15 +22,37 @@ PLATFORM := $(basename $(notdir $(lastword $(PLATFORM_MK))))
 PLATFORM_UC := $(shell echo "$(PLATFORM)" | tr '[:lower:]' '[:upper:]')
 $(info Building for PLATFORM=$(PLATFORM))
 
-include $(CURDIR)/Makefile
+MEKKO_CONFIG ?= Makefile
+$(info MEKKO_CONFIG=$(MEKKO_CONFIG))
+include $(CURDIR)/$(MEKKO_CONFIG)
 
 # Define GIT_VERSION to be used in macro define to CFLAGS, includes
 # tag if available, short commit hash, appends '*' if changes haven't
 # been commited
 GIT_VERSION := $(shell git rev-parse --short HEAD)$(shell git status --porcelain | grep -q '^[ MADRCU]' && echo '*')
 
+# A pass with MEKKO_PRODUCT set builds that one product, without it the
+# pass builds the disk from all of PRODUCTS
+ifeq ($(strip $(MEKKO_PRODUCT)),)
+  MEKKO_MULTI := $(if $(strip $(PRODUCTS)),1,)
+else
+  PRODUCT := $(MEKKO_PRODUCT)
+endif
+
+# <product>_CFLAGS is appended to CFLAGS, and so on for any variable
+ifneq ($(MEKKO_MULTI),1)
+  ifneq ($(strip $(PRODUCT)),)
+    $(foreach v,$(filter $(PRODUCT)_%,$(.VARIABLES)), \
+      $(eval $(patsubst $(PRODUCT)_%,%,$(v)) += $(value $(v))))
+  endif
+endif
+
 IS_LIBRARY := $(if $(filter %.lib,$(PRODUCT)),1,0)
-ifeq ($(IS_LIBRARY),1)
+ifeq ($(MEKKO_MULTI),1)
+  PRODUCT := $(PRODUCTS_DISK_NAME)
+  PRODUCT_BASE = $(PRODUCT)
+  BUILD_DISK = $(DISK)
+else ifeq ($(IS_LIBRARY),1)
   PRODUCT_BASE = $(basename $(PRODUCT))
   BUILD_LIB = $(LIBRARY)
 else
@@ -57,16 +79,34 @@ PC_DEFAULT = $(PC_$(TOOLCHAIN_UC))
 endif
 
 R2R_PD := $(R2R_DIR)/$(PLATFORM)
-OBJ_DIR := $(BUILD_DIR)/$(PLATFORM)
+OBJ_DIR := $(BUILD_DIR)/$(PRODUCT)/$(PLATFORM)
 CACHE_PLATFORM := $(CACHE_DIR)/$(PLATFORM)
 MKDIR_P ?= mkdir -p
+
+# Lets the disk pass name executables it did not build itself
+EXECUTABLE ?= $(R2R_PD)/$(PRODUCT_BASE)$(EXEC_SUFFIX)
+
+# Library products are built but not copied onto the disk
+ifeq ($(MEKKO_MULTI),1)
+  DISK_EXECUTABLES ?= $(foreach p,$(filter-out %.lib,$(PRODUCTS)),$(R2R_PD)/$(p)$(EXEC_SUFFIX))
+else
+  DISK_EXECUTABLES ?= $(BUILD_EXEC)
+endif
+
+DISK_BOOT_EXEC ?= $(firstword $(DISK_EXECUTABLES))
 
 # Expand PLATFORM_COMBOS entries into a lookup form
 #   c64+=commodore,eightbit -> c64 commodore eightbit
 # PLATFORM_COMBOS is a flat list of entries like "dragon+=coco"
 # $1 = the platform to expand
-get_combos = $(foreach e,$(PLATFORM_COMBOS),\
-  $(if $(filter $1+=%, $(e)), $(lastword $(subst +=, ,$(e)))))
+comma := ,
+define get_combos
+$(foreach e,$(PLATFORM_COMBOS), \
+  $(if $(filter $1+=%,$(e)), \
+    $(subst $(comma), ,$(lastword $(subst +=, ,$(e)))) \
+  ) \
+)
+endef
 
 # Expands patterns with %PLATFORM% to the platform + its combos
 expand_platform_pattern = \
@@ -146,7 +186,7 @@ vpath %.s $(SRC_DIRS_EXPANDED)
 vpath %.asm $(SRC_DIRS_EXPANDED)
 vpath %.pas $(SRC_DIRS_EXPANDED)
 
-.PHONY: clean debug r2r $(PLATFORM)/r2r disk $(PLATFORM)/disk
+.PHONY: clean debug r2r $(PLATFORM)/r2r disk $(PLATFORM)/disk $(PLATFORM)/release
 
 clean::
 	rm -rf $(OBJ_DIR) $(CACHE_PLATFORM) $(R2R_PD)
@@ -154,6 +194,26 @@ clean::
 debug::
 	echo 'What should debug target do?'
 	exit 1
+
+.PHONY: product products
+product: $(BUILD_EXEC) $(BUILD_LIB)
+
+# Built in the order PRODUCTS lists them so a library can come first
+products:
+	@for p in $(PRODUCTS); do \
+	  $(MAKE) -f $(PLATFORM_MK) MEKKO_CONFIG=$(MEKKO_CONFIG) MEKKO_PRODUCT=$$p product \
+	    || exit 1; \
+	done
+
+ifeq ($(MEKKO_MULTI),1)
+r2r:: products
+ifneq ($(strip $(BUILD_DISK)),)
+$(BUILD_DISK): products
+endif
+
+clean::
+	rm -rf $(foreach p,$(PRODUCTS),$(BUILD_DIR)/$(p)/$(PLATFORM))
+endif
 
 # These targets allow adding platform-specific steps from the top-level Makefile.
 # Examples:
@@ -164,6 +224,7 @@ debug::
 # The double-colon form appends without overwriting existing deps.
 r2r:: $(PLATFORM)/r2r
 disk:: $(PLATFORM)/disk
+release:: $(PLATFORM)/release
 
 # Fallback rule so every <platform>/disk-post target exists.
 # Does nothing by default (@:).
@@ -184,6 +245,16 @@ $(PLATFORM)/executable-post::
 # Same as $(PLATFORM)/disk-post above
 $(PLATFORM)/library-post::
 	@:
+
+RELEASE_INCLUDES ?= $(foreach dir,$(INCLUDE_DIRS),$(wildcard $(dir)/*.h $(dir)/*.inc))
+RELEASE_INCLUDES += $(wildcard Changelog.md)
+RELEASE_VERSION ?= $(shell git describe --tags --abbrev=0 2>/dev/null || echo dev)
+RELEASE_ZIP = $(RELEASE_DIR)/$(PRODUCT)-$(RELEASE_VERSION)-$(PLATFORM).zip
+
+$(PLATFORM)/release: $(RELEASE_ZIP)
+$(RELEASE_ZIP):: $(LIBRARY)
+	$(MKDIR_P) $(RELEASE_DIR)
+	zip -j $@ $(RELEASE_INCLUDES) $(BUILD_LIB)
 
 # include autodeps
 DEPS := $(OBJS:.o=.d)
@@ -206,9 +277,21 @@ else
         $(FUJINET_LIB) | tr '\n' '|')))
   ifeq ($(strip $(FUJINET_LIB_LDLIB)),)
     ifeq ($(FUJINET_LIB_OPTIONAL),)
-      $(error fujinet-lib not available)
+      $(error fujinet-lib not available for $(PLATFORM))
     else
       $(info fujinet-lib not available, but skipping because FUJINET_LIB_SKIP_MISSING is set)
     endif
   endif
 endif # FUJINET_LIB
+
+HIRESTXT_LIB ?= __UNDEFINED__
+ifeq ($(HIRESTXT_LIB),__UNDEFINED__)
+  $(info HIRESTXT_LIB not defined)
+else
+  ifneq ($(filter coco dragon,$(PLATFORM)),)
+    $(eval $(subst |,$(_newline),$(shell PLATFORM=$(PLATFORM) CACHE_DIR=$(CACHE_DIR) \
+        $(MWD)/hirestxtlib.py $(HIRESTXT_LIB) | tr '\n' '|')))
+  else
+    $(info HIRESTXT_LIB ignored for PLATFORM=$(PLATFORM) (coco/dragon only))
+  endif
+endif # HIRESTXT_LIB

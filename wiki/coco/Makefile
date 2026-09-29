@@ -19,6 +19,7 @@ SRC_DIRS = src src/%PLATFORM%
 # - empty which will use whatever is the latest
 # - undefined, no fujinet-lib will be used
 FUJINET_LIB = 4.9.0
+HIRESTXT_LIB =
 
 # Define extra dirs ("combos") that expand with a platform.
 # Format: platform+=combo1,combo2
@@ -29,7 +30,6 @@ PLATFORM_COMBOS = \
   msxdos+=msx \
   adam_cpm+=adam
 
-include hirestxt-mod-lib.mk
 include ../mekkogx/toplevel-rules.mk
 
 # If you need to add extra platform-specific steps, do it below:
@@ -38,5 +38,4 @@ include ../mekkogx/toplevel-rules.mk
 # or
 #   apple2/disk: apple2/custom-step1 apple2/custom-step2
 
-EXTRA_C_DEPS_COCO = .get_hirestxt_lib
 LDFLAGS_EXTRA_COCO = --org=2200 --limit=7C00

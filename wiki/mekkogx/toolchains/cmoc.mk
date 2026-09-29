@@ -9,7 +9,12 @@ CFLAGS += --intdir=$(OBJ_DIR)
 ASFLAGS +=
 LDFLAGS +=
 
-CFLAGS += -DGIT_VERSION='"$(GIT_VERSION)"'
+DSTRING_OPEN = '"
+DSTRING_CLOSE = "'
+CFLAGS += -DGIT_VERSION=$(DSTRING_OPEN)$(GIT_VERSION)$(DSTRING_CLOSE)
+ifneq ($(FUJINET_LIB_VERSION),)
+  CFLAGS += -DFNLIB_VERSION_FULL='"$(FUJINET_LIB_VERSION)"'
+endif
 
 # Needed because of using sed on error messages
 SHELL = /bin/bash -o pipefail
