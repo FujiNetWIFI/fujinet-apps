@@ -325,7 +325,9 @@ class LibLocator:
     return None
 
   def getInclude(self):
-    parent = os.path.dirname(self.MV.FUJINET_LIB_DIR.rstrip("/"))
+    parent = self.MV.FUJINET_LIB_DIR.rstrip("/")
+    if '/' in parent:
+      parent = os.path.dirname(parent)
     checkDirs = [self.MV.FUJINET_LIB_DIR, parent, os.path.join(parent, "include")]
     components = self.MV.FUJINET_LIB_DIR.split(os.path.sep)
     if components[-1] == self.MV.FUJINET_LIB_PLATFORM and components[-2] in ("r2r", "build"):
@@ -341,8 +343,12 @@ class LibLocator:
 
   def printMakeVariables(self):
     self.MV.printValues()
+    flags = {}
     if self.MV.FUJINET_LIB_LDLIB:
-      print(f"CFLAGS_EXTRA_{self.PLATFORM.upper()}+=-DUSING_FUJINET_LIB")
+      flags['USING_FUJINET_LIB'] = 1
+    if flags:
+      fmt_flags = " ".join(f"-D{name}={val}" for name, val in flags.items())
+      print(f"CFLAGS_EXTRA_{self.PLATFORM.upper()}+={fmt_flags}")
     return
 
   @staticmethod

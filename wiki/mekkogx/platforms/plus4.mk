@@ -1,4 +1,4 @@
-EXECUTABLE = $(R2R_PD)/$(PRODUCT_BASE).prg
+EXEC_SUFFIX = .prg
 LIBRARY = $(R2R_PD)/$(PRODUCT_BASE).$(PLATFORM).lib
 
 MWD := $(realpath $(dir $(lastword $(MAKEFILE_LIST)))..)

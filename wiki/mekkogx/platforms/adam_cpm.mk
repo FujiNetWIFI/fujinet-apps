@@ -1,4 +1,4 @@
-EXECUTABLE = $(R2R_PD)/$(PRODUCT_BASE).com
+EXEC_SUFFIX = .com
 DISK = $(R2R_PD)/$(PRODUCT_BASE).dsk
 LIBRARY = $(R2R_PD)/$(PRODUCT_BASE).$(PLATFORM).lib
 DISK_TOOL = cpmcp
@@ -19,10 +19,10 @@ r2r:: $(BUILD_DISK) $(BUILD_EXEC) $(BUILD_LIB) $(R2R_EXTRA_DEPS)
 CPM_BLANK = blank160-bootable.dsk
 CPM_DISK = $(CACHE_PLATFORM)/$(CPM_BLANK)
 
-$(BUILD_DISK): $(BUILD_EXEC) $(CPM_DISK) $(DISK_EXTRA_DEPS) $(DISK_EXTRA_FILES) | $(R2R_PD)
+$(BUILD_DISK): $(DISK_EXECUTABLES) $(CPM_DISK) $(DISK_EXTRA_DEPS) $(DISK_EXTRA_FILES) | $(R2R_PD)
 	$(call require,$(DISK_TOOL),$(DISK_TOOL_INFO))
 	cp $(CPM_DISK) $@
-	$(foreach f,$< $(DISK_EXTRA_FILES),$(call copy-to-disk,,$(f),0:,$@);)
+	$(foreach f,$(DISK_EXECUTABLES) $(DISK_EXTRA_FILES),$(call copy-to-disk,,$(f),0:,$@);)
 	make -f $(PLATFORM_MK) $(PLATFORM)/disk-post
 
 CPM_DISK_URL = https://retrobattlestations.com/Coleco-Adam

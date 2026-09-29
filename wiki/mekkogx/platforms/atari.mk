@@ -1,4 +1,4 @@
-EXECUTABLE = $(R2R_PD)/$(PRODUCT_BASE).com
+EXEC_SUFFIX = .com
 DISK = $(R2R_PD)/$(PRODUCT_BASE).atr
 LIBRARY = $(R2R_PD)/$(PRODUCT_BASE).$(PLATFORM).lib
 DISK_TOOL = dir2atr
@@ -15,13 +15,21 @@ r2r:: $(BUILD_DISK) $(BUILD_LIB) $(R2R_EXTRA_DEPS)
 
 PICOBOOT_BIN = picoboot.bin
 ATRBOOT := $(CACHE_PLATFORM)/$(PICOBOOT_BIN)
-DISK_TOOL_FLAGS_ATARI ?= -S -m -B $(ATRBOOT)
 
-$(BUILD_DISK): $(BUILD_EXEC) $(ATRBOOT) $(DISK_EXTRA_DEPS) $(DISK_EXTRA_FILES) | $(R2R_PD)
+# picoboot runs a single program, so multiple products boot a menu
+ATARI_MENU_DOS ?= MyPicoDos406
+ifeq ($(MEKKO_MULTI),1)
+  DISK_TOOL_FLAGS_ATARI ?= -S -m -b $(ATARI_MENU_DOS)
+else
+  DISK_TOOL_FLAGS_ATARI ?= -S -m -B $(ATRBOOT)
+endif
+
+$(BUILD_DISK): $(DISK_EXECUTABLES) $(ATRBOOT) $(DISK_EXTRA_DEPS) $(DISK_EXTRA_FILES) | $(R2R_PD)
 	$(RM) $@
 	$(RM) -rf $(CACHE_PLATFORM)/disk
 	$(MKDIR_P) $(CACHE_PLATFORM)/disk
-	cp $< $(CACHE_PLATFORM)/disk/$(EXEC_NAME_ATARI)
+	cp $(DISK_BOOT_EXEC) $(CACHE_PLATFORM)/disk/$(EXEC_NAME_ATARI)
+	$(foreach e,$(filter-out $(DISK_BOOT_EXEC),$(DISK_EXECUTABLES)),cp $(e) $(CACHE_PLATFORM)/disk ; )
 	$(call require,$(DISK_TOOL),$(DISK_TOOL_INFO))
 	$(call require,$(DISK_TOOL_COPY),$(DISK_TOOL_COPY_INFO))
 	$(foreach f,$(DISK_EXTRA_FILES),cp $(f) $(CACHE_PLATFORM)/disk ; )

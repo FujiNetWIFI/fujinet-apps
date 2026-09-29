@@ -66,6 +66,9 @@ apple-tools/*.dsk
 build/
 dist/
 obj/
+_cache/
+__pycache__/
+wiki/coco/r2r/
 
 # emulator configs
 altirra-debug.ini

@@ -34,7 +34,8 @@ build, and the top-level Makefile defines *what* to build.
 The **project’s Makefile** is the only file you should need to edit
 when starting a new project. It contains:
 
-- Your project’s `PRODUCT` name.
+- Your project’s `PRODUCT` name, or `PRODUCTS` if several binaries
+  share one disk image.
 - The `PLATFORMS` you want to build for.
 - The `SRC_DIRS` containing your source code.
 - Optional project-specific rules or custom targets.
@@ -156,6 +157,56 @@ With `SRC_DIRS = src src/%PLATFORM%`, building for `c64` would expand `%PLATFORM
 - `src/c64`
 - `src/commodore`
 - `src/eightbit`
+
+### Multiple binaries on one disk (`PRODUCTS`)
+
+`PRODUCT` names a single binary, and everything found in `SRC_DIRS` is
+compiled into it. To build several binaries and put them all onto one
+disk image, list them in `PRODUCTS` and name the shared image with
+`PRODUCTS_DISK_NAME`:
+
+```
+PRODUCTS = hello world
+PRODUCTS_DISK_NAME = games
+```
+
+Each product is built by its own pass with its own object directory, so
+products can be compiled with different settings. Any variable prefixed
+with a product name is appended to the matching variable while that
+product is being built:
+
+```
+SRC_DIRS = src src/%PLATFORM%
+
+hello_SRC_DIRS = src/hello
+hello_CFLAGS   = -DGREETING=1
+
+world_SRC_DIRS = src/world
+world_CFLAGS   = -DGREETING=2
+```
+
+Notes:
+
+* Products are built in the order listed, so a library can be declared
+  ahead of the binaries that link against it.
+* A product ending in `.lib` is built as a library and is *not* copied
+  onto the disk image.
+* A single-product disk boots straight into that product. A
+  multi-product disk boots a selector instead, so any of the products
+  can be chosen: the ProDOS selector (Bitsy Bye) on Apple II, and the
+  MyPicoDos menu on Atari. Other platforms load programs by name and
+  are unaffected.
+* On Apple II `BASIC.SYSTEM` is left off a multi-product disk. While it
+  is present ProDOS hands control to BASIC when a program quits;
+  without it control returns to the selector, so the next product can
+  be picked straight away. Set `DISK_BASIC_SYSTEM = BASIC.SYSTEM` to
+  put it back.
+* Platforms that have no disk image simply build every binary into
+  `r2r/<platform>/`.
+* If a product needs a completely different set of sources rather than
+  extra ones, leave the shared `SRC_DIRS` unset and give every product
+  its own.
+* Projects that use `PRODUCT` on its own are unaffected.
 
 ### The `r2r` "Ready 2 Run" Target
 
