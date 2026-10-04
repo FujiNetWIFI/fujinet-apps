@@ -52,6 +52,17 @@ static char _pv[10];
  */
 static char _private=0;
 
+#ifndef COCO3
+/**
+ * @brief Character sets (CoCo 1/2): the designator being read ('(' = G0,
+ *        ')' = G1), which of G0/G1 is DEC Special Graphics, and which is
+ *        shifted in (SI = G0, SO = G1).
+ */
+static char _cs_slot;
+static unsigned char _g[2];
+static unsigned char _gl;
+#endif
+
 /**
  * @brief is char c a number?
  */
@@ -151,6 +162,10 @@ static void cup(unsigned char r, unsigned char c)
 static void _vt100_terminal_reset(void)
 {
   _vt100_cleanup();
+#ifndef COCO3
+  _g[0] = _g[1] = _gl = 0;
+  screen_set_gfx(0);
+#endif
   screen_set_reverse(0);
   screen_set_appcursor(0);
   screen_attr_reset();
@@ -177,6 +192,9 @@ static void sgr(void)
 	  break;
 	case 1:
 	  /* Bold has no hardware bit in CoCo 3 40/80-column text mode. */
+#ifndef COCO3
+	  screen_attr_bold();
+#endif
 	  break;
 	case 2:
 	  screen_attr_reset();
@@ -303,7 +321,7 @@ static void dsr(void)
 
 /**
  * @brief Device Attributes (DA): reply identifying us as a VT100 with the
- *        Advanced Video Option (we have attributes/colour). vttest queries this.
+ *        Advanced Video Option (we have attributes/color). vttest queries this.
  */
 static void da(void)
 {
@@ -435,12 +453,20 @@ static void _vt100_private(void)
 }
 
 /**
- * @brief Consume a character-set designator (ESC ( / ) / * / + <char>). We use
- *        one fixed CoCo font, so the designator is read and ignored - this
- *        stops sequences like ESC(B or ESC(0 from leaking their final byte.
+ * @brief Consume a character-set designator (ESC ( / ) / * / + <char>). The
+ *        CoCo 3 uses one fixed font, so the designator is read and ignored -
+ *        this stops sequences like ESC(B or ESC(0 from leaking their final
+ *        byte. CoCo 1/2 honors '0' (DEC Special Graphics) for G0/G1.
  */
 static void _vt100_charset(void)
 {
+#ifndef COCO3
+  if (_cs_slot == '(' || _cs_slot == ')')
+    {
+      _g[_cs_slot == ')'] = (_c == '0');
+      screen_set_gfx(_g[_gl]);
+    }
+#endif
   vt100_state = CHAR;
 }
 
@@ -550,7 +576,11 @@ static void _vt100_escape(void)
   else if (_c == '\\')
     vt100_state=CHAR;           /* ST (ESC \) string terminator: just end it */
   else if (_c == '(' || _c == ')' || _c == '*' || _c == '+')
+#ifdef COCO3
     vt100_state=CHARSET;        /* G0-G3 charset designation: consume designator */
+#else
+    { _cs_slot=_c; vt100_state=CHARSET; }
+#endif
   else if (_c == '#')
     vt100_state=HASH;           /* line-size / DECALN: handle next byte */
   else if (_c == '7')
@@ -578,8 +608,13 @@ static void _vt100_char(void)
 {
   /* CoCo fast path: printable characters are the common case, so handle them
      first and go straight to the screen, skipping the control-code compare
-     chain and the toscreen() indirection. Same rule as toscreen() (c > 0x1F). */
+     chain and the toscreen() indirection. Same rule as toscreen() (c > 0x1F).
+     CoCo 1/2 compares unsigned so ISO-8859-1 bytes reach the screen. */
+#ifdef COCO3
   if (_c > 0x1F)
+#else
+  if ((unsigned char) _c > 0x1F)
+#endif
     {
       screen_putc(_c);
       return;
@@ -608,6 +643,16 @@ static void _vt100_char(void)
     case ESC:
       vt100_state=ESCAPE;
       break;
+#ifndef COCO3
+    case SO:
+      _gl = 1;
+      screen_set_gfx(_g[1]);
+      break;
+    case SI:
+      _gl = 0;
+      screen_set_gfx(_g[0]);
+      break;
+#endif
     }
 }
 

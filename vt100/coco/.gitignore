@@ -6,3 +6,4 @@
 *.s
 *.asm
 _cache/
+build/
