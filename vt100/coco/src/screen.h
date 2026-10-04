@@ -1,12 +1,19 @@
 /**
- * @brief CoCo 3 80-column screen driver API.
+ * @brief Screen driver API: CoCo 3 80-column text, or CoCo 1/2 hirestxt 42x24.
  *
- * All drawing operations update the RAM shadow buffer. screen_flush() copies
- * dirty shadow rows to the hardware 40/80-column text screen.
+ * All drawing operations update the RAM shadow buffer. On CoCo 3,
+ * screen_flush() copies dirty shadow rows to the 80-column text screen; on
+ * CoCo 1/2 cells are drawn as written and screen_flush() places the cursor.
  */
 
 #ifndef SCREEN_H
 #define SCREEN_H
+
+#ifdef COCO3
+#define SCREEN_COLS 80
+#else
+#define SCREEN_COLS 42
+#endif
 
 /* ---- lifecycle / hardware display ---- */
 
@@ -14,7 +21,7 @@ void screen_init(void);
 void screen_shutdown(void);
 void screen_flush(void);
 void screen_redraw(void);
-void screen_palette(unsigned char composite);
+void screen_palette(unsigned char mode);     /* CoCo 3: composite flag; CoCo 1/2: color set */
 
 /* ---- character output ---- */
 
@@ -76,6 +83,10 @@ void screen_attr_inverse(void);
 void screen_attr_invisible(void);
 void screen_set_fg(unsigned char c);
 void screen_set_bg(unsigned char c);
+#ifndef COCO3
+void screen_attr_bold(void);
+void screen_set_gfx(unsigned char on);
+#endif
 
 /* ---- transient direct-to-hardware overlay ---- */
 

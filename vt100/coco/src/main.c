@@ -1,5 +1,5 @@
 /**
- * @brief FujiNet VT100 terminal for the CoCo 3.
+ * @brief FujiNet VT100 terminal for the CoCo 3 (80x24) and CoCo 1/2 (42x24).
  *
  * Mirrors the Atari port (prompt for a devicespec, open N:, loop) but uses
  * the Apple II port's polling read loop since the CoCo lacks PROCEED.
@@ -26,6 +26,28 @@
 #define PB_NAME_LEN 16
 #define PB_URL_LEN  47
 
+#ifndef COCO3
+#define PB_COLORS   9           /* CoCo 1/2 color set; PB_SETTINGS is the CoCo 3's */
+#endif
+
+/* CoCo 1/2 has no CTRL/ALT/F1: CLEAR stands in for CTRL, SHIFT-BREAK for F1. */
+#ifdef COCO3
+#define CTRL_KEY()   isKeyPressed(KEY_PROBE_CTRL, KEY_BIT_CTRL)
+#define HELP_KEY()   isKeyPressed(KEY_PROBE_F1, KEY_BIT_F1)
+#define CTRL_NAME    "CTRL"
+#define HELP_NAME    "F1"
+#define MONITOR_NAME "MONITOR"
+#define TERM_QUERY   "term=vt100&cols=80&rows=24"
+#else
+#define CTRL_KEY()   isKeyPressed(KEY_PROBE_CLEAR, KEY_BIT_CLEAR)
+#define HELP_KEY()   (isKeyPressed(KEY_PROBE_BREAK, KEY_BIT_BREAK) && \
+                      isKeyPressed(KEY_PROBE_SHIFT, KEY_BIT_SHIFT))
+#define CTRL_NAME    "CLEAR"
+#define HELP_NAME    "SHIFT-BREAK"
+#define MONITOR_NAME "COLORS"
+#define TERM_QUERY   "term=vt100&cols=42&rows=24"
+#endif
+
 #define SCH_TELNET  0
 #define SCH_SSH     1
 #define SCH_CPM     2
@@ -42,7 +64,12 @@ extern void (*term_sendback)(char c);   /* set so DSR/cursor replies go to the w
 extern void (*term_bell)(void);          /* set so a received BEL rings the speaker */
 
 static char devicespec[160];
+#ifdef COCO3
 static unsigned char rx_buf[RXSZ];
+#else
+/* The VDG text page is idle while PMODE 4 is shown. */
+#define rx_buf ((unsigned char *) 0x0400)
+#endif
 static unsigned char running;
 
 /* Bare URL of a one-shot N-path session, held for offer_save(); empty if
@@ -73,12 +100,21 @@ static void vt_write(const unsigned char *buf, uint16_t len)
     while (j < len)
     {
         c = buf[j];
+#ifdef COCO3
         if (c >= 0x20 && c < 0x7F && vt100_char_state())
         {
             s = j;
             do { j++; } while (j < len && buf[j] >= 0x20 && buf[j] < 0x7F);
             screen_puts_run(&buf[s], j - s);
         }
+#else
+        if (((c >= 0x20 && c < 0x7F) || c >= 0xA0) && vt100_char_state())
+        {
+            s = j;
+            do { j++; } while (j < len && ((buf[j] >= 0x20 && buf[j] < 0x7F) || buf[j] >= 0xA0));
+            screen_puts_run(&buf[s], j - s);
+        }
+#endif
         else
         {
             vt100((char) c);
@@ -118,15 +154,16 @@ static void net_bell(void)
 
 /* ---- prompt input ---- */
 
-/* ALT + the number row produces the 10 ASCII characters the CoCo keyboard
-   lacks. Indexed by (key - '0'):  0='^' 1='[' 2=']' 3='{' 4='}' 5='|' 6='\'
-   7='_' 8='~' 9='`'  */
+/* ALT (CoCo 1/2: CLEAR+SHIFT) + the number row produces the 10 ASCII
+   characters the CoCo keyboard lacks. Indexed by digit:  0='^' 1='[' 2=']'
+   3='{' 4='}' 5='|' 6='\' 7='_' 8='~' 9='`'  */
 static const char alt_syms[10] = { '^','[',']','{','}','|','\\','_','~','`' };
 
 /* Apply the keyboard scheme by probing modifiers: ALT+digit -> missing symbol,
    CTRL+letter -> control code, BREAK -> ESC, default upper->lower fold (SHIFT
    keeps caps). Arrow keys are handled by the caller (out_keys). Stray modifier
-   keystrokes (ALT alone, CTRL alone) are swallowed. */
+   keystrokes (ALT alone, CTRL alone) are swallowed. CoCo 1/2: CLEAR+SHIFT+
+   digit -> symbol, CLEAR+letter -> control code. */
 static unsigned char decode_key(unsigned char k)
 {
     if (!k)
@@ -135,6 +172,7 @@ static unsigned char decode_key(unsigned char k)
     if (k == 0x03)                                   /* BREAK -> ESC */
         return 0x1B;
 
+#ifdef COCO3
     if (isKeyPressed(KEY_PROBE_ALT, KEY_BIT_ALT))
     {
         if (k >= '0' && k <= '9')
@@ -148,6 +186,18 @@ static unsigned char decode_key(unsigned char k)
         if (k >= 'a' && k <= 'z') return k & 0x1F;
         return 0;
     }
+#else
+    if (CTRL_KEY())
+    {
+        if (k >= '!' && k <= ')')                    /* SHIFT+1..9 */
+            return alt_syms[k - 0x20];
+        if (k == '\\')                               /* SHIFT+CLEAR */
+            return k;
+        if (k >= 'A' && k <= 'Z') return k & 0x1F;
+        if (k >= 'a' && k <= 'z') return k & 0x1F;
+        return 0;
+    }
+#endif
 
     if (k >= 'A' && k <= 'Z' && !isKeyPressed(KEY_PROBE_SHIFT, KEY_BIT_SHIFT))
         k += 0x20;                                   /* default to lower-case */
@@ -155,12 +205,30 @@ static unsigned char decode_key(unsigned char k)
     return k;
 }
 
+#ifndef COCO3
+/* CLEAR+SHIFT+0 = '^'. Read from the matrix before POLCAT can eat SHIFT+0 as
+   the caps toggle, and held until 0 lifts. */
+static unsigned char clear_caret(void)
+{
+    if (!CTRL_KEY() || !isKeyPressed(KEY_PROBE_SHIFT, KEY_BIT_SHIFT) ||
+        !isKeyPressed(KEY_PROBE_0, KEY_BIT_0))
+        return 0;
+    while (isKeyPressed(KEY_PROBE_0, KEY_BIT_0)) ;
+    return '^';
+}
+#endif
+
 static unsigned char read_key(void)
 {
+#ifndef COCO3
+    unsigned char k = clear_caret();
+    if (k)
+        return k;
+#endif
     return decode_key(inkey());
 }
 
-/* 80-col line editor, blinking block cursor. Returns the line in buf (no \n). */
+/* Line editor, blinking block cursor. Returns the line in buf (no \n). */
 static void term_get_line(char *buf, unsigned char max)
 {
     unsigned char i = 0, k, blink = 1;
@@ -210,6 +278,7 @@ static void term_get_line(char *buf, unsigned char max)
     screen_flush();
 }
 
+#ifdef COCO3
 /* Prompt R/C, apply the palette, and persist the choice (appkey PB_SETTINGS).
    Used on first run and from the phonebook menu's "M" option. */
 static void monitor_prompt(void)
@@ -229,19 +298,50 @@ static void monitor_prompt(void)
     screen_palette(composite);
     fuji_write_appkey(PB_SETTINGS, 1, &composite);
 }
+#else
+/* Prompt for a color set (see screen_palette) and persist it (appkey
+   PB_COLORS). Used on first run and from the phonebook menu's "M" option. */
+static void monitor_prompt(void)
+{
+    unsigned char mode = 1;
+    unsigned char k;
 
-/* Monitor type persists in the phonebook's appkey store (key PB_SETTINGS).
-   Prompt only on first run; later runs read the saved choice and skip it. */
+    feed("\x1b[2J\x1b[HSCREEN COLORS?\r\n\r\n");
+    feed("  1 = GREEN ON BLACK (DEFAULT)\r\n");
+    feed("  2 = BLACK ON GREEN\r\n");
+    feed("  3 = BUFF ON BLACK\r\n");
+    feed("  4 = BLACK ON BUFF\r\n");
+    screen_flush();
+
+    while ((k = inkey()) == 0) ;
+    if (k >= '1' && k <= '4')
+        mode = (k - '1') ^ 1;
+
+    screen_palette(mode);
+    fuji_write_appkey(PB_COLORS, 1, &mode);
+}
+#endif
+
+/* Monitor type (CoCo 1/2: color set) persists in the phonebook's appkey
+   store. Prompt only on first run; later runs read the saved choice. */
 static void choose_monitor(void)
 {
     uint16_t count = 0;
 
+#ifdef COCO3
     if (fuji_read_appkey(PB_SETTINGS, &count, PB_KEYBUF) && count)
     {
         if (PB_KEYBUF[0])
             screen_palette(1);
         return;
     }
+#else
+    if (fuji_read_appkey(PB_COLORS, &count, PB_KEYBUF) && count)
+    {
+        screen_palette(PB_KEYBUF[0]);
+        return;
+    }
+#endif
 
     monitor_prompt();
 }
@@ -352,7 +452,7 @@ static void prompt_creds_and_finalize(void)
     if (strlen(devicespec) + 28 < sizeof(devicespec))
     {
         strcat(devicespec, strstr(devicespec, "?") ? "&" : "?");
-        strcat(devicespec, "term=vt100&cols=80&rows=24");
+        strcat(devicespec, TERM_QUERY);
     }
 }
 
@@ -364,7 +464,7 @@ static unsigned char prompt_url(void)
     feed("\x1b[2J\x1b[HFUJINET VT100 TERMINAL\r\n\r\n");
     feed("DEVICESPEC? (BLANK = PHONEBOOK)\r\n");
     feed("E.G. HOST:PORT  (TELNET:// & N: ASSUMED)\r\n\r\n");
-    feed("F1 AT MENU = FULL KEY HELP\r\n\r\n");
+    feed(HELP_NAME " AT MENU = FULL KEY HELP\r\n\r\n");
     screen_flush();
 
     term_get_line(line, 96);
@@ -461,9 +561,9 @@ static void pb_draw_menu(unsigned char sel)
 
     screen_overlay_line(11, "UP/DN OR 1-8 MOVE   ENTER CONNECT");
     screen_overlay_line(12, "E EDIT   D DELETE   N NEW   Q QUIT");
-    screen_overlay_line(13, "M MONITOR   F1 KEY HELP");
-    screen_overlay_line(15, "IN SESSION: F1 = HELP");
-    screen_overlay_line(16, "  CTRL-BREAK = DISCONNECT");
+    screen_overlay_line(13, "M " MONITOR_NAME "   " HELP_NAME " KEY HELP");
+    screen_overlay_line(15, "IN SESSION: " HELP_NAME " = HELP");
+    screen_overlay_line(16, "  " CTRL_NAME "-BREAK = DISCONNECT");
 }
 
 /* screen_overlay_line stops at NUL, so a one-char string only touches col 0. */
@@ -632,7 +732,7 @@ static unsigned char pb_menu(void)
         {
             for (;;)
             {
-                if (isKeyPressed(KEY_PROBE_F1, KEY_BIT_F1))
+                if (HELP_KEY())
                 {
                     show_help();
                     pb_draw_menu(sel);
@@ -729,6 +829,7 @@ static void show_help(void)
 
     screen_overlay_clear();
     screen_overlay_line(0,  "FUJINET VT100 - KEY HELP");
+#ifdef COCO3
     screen_overlay_line(2,  "ALT + NUMBER = SYMBOL:");
     screen_overlay_line(3,  "  1 [   2 ]   3 {   4 }   5 |");
     screen_overlay_line(4,  "  6 \\   7 _   8 ~   9 `   0 ^");
@@ -740,13 +841,26 @@ static void show_help(void)
     screen_overlay_line(10, "CLEAR         = DEL");
     screen_overlay_line(11, "BREAK         = ESC");
     screen_overlay_line(12, "CTRL + BREAK  = DISCONNECT");
+#else
+    screen_overlay_line(2,  "CLEAR + SHIFT + NUMBER = SYMBOL:");
+    screen_overlay_line(3,  "  1 [   2 ]   3 {   4 }   5 |");
+    screen_overlay_line(4,  "  6 \\   7 _   8 ~   9 `   0 ^");
+    screen_overlay_line(5,  "SHIFT + UP/DN/RT/CLEAR = _ [ ] \\");
+    screen_overlay_line(6,  "CLEAR + NUMBER = F1 - F10");
+    screen_overlay_line(7,  "CLEAR + LETTER = CONTROL CODE");
+    screen_overlay_line(8,  "CLEAR + RIGHT  = TAB");
+    screen_overlay_line(9,  "CLEAR + LEFT   = BACKSPACE");
+    screen_overlay_line(10, "SHIFT + LEFT   = DEL");
+    screen_overlay_line(11, "BREAK          = ESC");
+    screen_overlay_line(12, "CLEAR + BREAK  = DISCONNECT");
+#endif
 
     strcpy(ver, "VERSION: ");
     strcat(ver, VT100_VERSION);
     screen_overlay_line(14, ver);
     screen_overlay_line(16, "PRESS ANY KEY TO RETURN");
 
-    while (isKeyPressed(KEY_PROBE_F1, KEY_BIT_F1)) ;   /* let F1 lift */
+    while (HELP_KEY()) ;                               /* let the help key lift */
     while (inkey()) ;                                  /* drain it */
     while (!inkey()) ;                                 /* any key returns */
 
@@ -777,29 +891,38 @@ static void send_fkey(unsigned char idx)
 
 /* keyboard -> network. CTRL+BREAK quits, F1 shows help, plain arrows send
    DECCKM-aware sequences, CTRL+left/right send BS/TAB, CLEAR sends DEL;
-   everything else goes via decode_key. */
+   everything else goes via decode_key. CoCo 1/2: CLEAR for CTRL,
+   SHIFT-BREAK for F1, SHIFT+left for DEL. */
 static void out_keys(void)
 {
     unsigned char k;
 
     if (isKeyPressed(KEY_PROBE_BREAK, KEY_BIT_BREAK) &&
-        isKeyPressed(KEY_PROBE_CTRL, KEY_BIT_CTRL))
+        CTRL_KEY())
     {
         running = 0;
         return;
     }
 
-    if (isKeyPressed(KEY_PROBE_F1, KEY_BIT_F1))
+    if (HELP_KEY())
     {
         show_help();
         return;
     }
 
+#ifndef COCO3
+    if ((k = clear_caret()) != 0)
+    {
+        network_write(devicespec, &k, 1);
+        return;
+    }
+#endif
+
     k = inkey();
     if (!k)
         return;
 
-    if (isKeyPressed(KEY_PROBE_CTRL, KEY_BIT_CTRL))
+    if (CTRL_KEY())
     {
         unsigned char b;
         if (k == 0x08) { b = 0x08; network_write(devicespec, &b, 1); return; }  /* CTRL+left  -> BS  */
@@ -812,7 +935,11 @@ static void out_keys(void)
     if (k == 0x0A) { send_cursor('B'); return; }   /* down arrow  */
     if (k == 0x08) { send_cursor('D'); return; }   /* left arrow  */
     if (k == 0x09) { send_cursor('C'); return; }   /* right arrow */
+#ifdef COCO3
     if (k == 0x0C)                                 /* CLEAR key -> DEL */
+#else
+    if (k == 0x15)                                 /* SHIFT+left -> DEL */
+#endif
     {
         unsigned char del = 0x7F;
         network_write(devicespec, &del, 1);
@@ -915,11 +1042,13 @@ static void connect_and_run(void)
 int main(void)
 {
     initCoCoSupport();
+#ifdef COCO3
     if (!isCoCo3)
     {
         putstr("REQUIRES A COCO 3.\r", 19);
         return 1;
     }
+#endif
 
     if (network_init() != FN_ERR_OK)
     {
